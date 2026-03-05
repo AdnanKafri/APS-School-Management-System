@@ -1,0 +1,386 @@
+﻿require base_path('routes/teacher.php');
+// ============================================================
+// SECURITY FIX: /SMT/admin/* routes now require type=2 (Admin)
+// Previously: only 'auth' â€” any logged-in user could access.
+// Now: 'auth' + 'roleadmin' â€” only Admin (type=2) can enter.
+// Admin workflow is 100% unchanged. Non-admins are redirected.
+// ============================================================
+Route::group(['middleware' => ['auth', 'roleadmin']], function () {
+  Route::group(['prefix' => 'SMT/admin'], function () {
+
+
+    Route::get('/all_workschedule/{id}', 'ReportController@all_workschedule')->name('all_workschedule');
+
+    Route::get('/reports', 'ReportController@index')->name('reports');
+    Route::get('/report_student', 'ReportController@students')->name('report_student');
+    Route::get('/getteachers2', 'ReportController@getteachers2')->name('getteachers2');
+    Route::get('/student_pdf', 'ReportController@student_pdf')->name('student_pdf');
+    Route::get('/teacher_pdf', 'ReportController@teacher_pdf')->name('teacher_pdf');
+    Route::get('/teacher_attend', 'ReportController@teacher_attend')->name('teacher_attend');
+    Route::get('/getstudents2', 'ReportController@getstudents2')->name('getstudents2');
+    Route::post('/getstudent_with_attend', 'ReportController@getstudent_with_attend')->name('getstudent_with_attend');
+    Route::get('/update_tracer', 'ReportController@update_tracer')->name('update_tracer');
+    Route::get('teachers_schedule', 'ReportController@teachers_schedule')->name('teachers_schedule');
+    Route::get('/getstudentsdetails/{id}', 'ReportController@getstudentsdetails')->name('getstudentsdetails');
+
+    Route::post('/export_student', 'ReportController@export_student')->name('export_student');
+    Route::get('/getstudent/select2/','ReportController@getstudent_select2')->name('getstudent_select2');
+    Route::get('/student/report/chart/','ReportController@student_report_chart')->name('student_report_chart');
+    Route::get('/get_data_chart','ReportController@get_data_chart')->name('get_data_chart');
+    Route::get('/get_info_class_bystudent','ReportController@get_info_class_bystudent')->name('get_info_class_bystudent');
+    Route::get('/get_info_class','ReportController@get_info_class')->name('get_info_class');
+    Route::get('/start-queue-worker', 'DashboardController@startQueueWorker')->name('start-queue-worker');
+    Route::get('/chat', 'DashboardController@chat_admin')->name('chat_admin');
+    Route::get('/getchat', 'DashboardController@getchat')->name('getchat');
+    Route::get('/all_chat', 'DashboardController@all_chat')->name('all_chat');
+    Route::get('/getchat2', 'DashboardController@getchat2')->name('getchat2');
+    Route::get('/get_chat_admin', 'DashboardController@get_chat_admin')->name('get_chat_admin');
+    Route::post('/storechat', 'DashboardController@storechat')->name('storechat');
+    Route::post('/changemessage', 'DashboardController@changemessage')->name('changemessage');
+    Route::post('/employee_delete', 'DashboardController@employee_delete')->name('employee_delete');
+    Route::post('/recognize_employee', 'DashboardController@recognize_employee')->name('recognize_employee');
+
+
+    Route::post('/student/probe', 'DashboardController@probe_student')->name('probe_student');
+    Route::post('/change_password', 'DashboardController@change_password')->name('change_password');
+
+    Route::get('/getstudentsprobe', 'DashboardController@getstudentsprobe')->name('getstudentsprobe');
+    Route::get('/studentprobe', 'DashboardController@studentprobe')->name('studentprobe');
+
+
+
+    Route::put('supervisors/supervisor_update/{supervisor_id}', 'DashboardController@supervisor_update')->name('supervisor_update');
+    Route::put('acadsupervisors/supervisor_update/{supervisor_id}', 'DashboardController@acadsupervisor_update')->name('acadsupervisor_update');
+
+
+    Route::post('/delete_student', 'DashboardController@delete_student')->name('delete_student');
+    Route::post('/importedatabase', 'DashboardController@importedatabase')->name('importedatabase');
+
+    Route::get('/index', 'DashboardController@index')->name('dashboard.index');
+
+    Route::get('/teachers', 'DashboardController@teachers')->name('teachers');
+    Route::get('/employees', 'DashboardController@employees')->name('employees');
+    Route::get('/library', 'DashboardController@library')->name('library');
+    Route::get('/library/classvideos/{class_id}', 'DashboardController@library_class_videos')->name('library_class_videos');
+    Route::get('/library/get_teacher_subjects/{teacher_id}', 'DashboardController@get_teacher_subjects')->name('get_teacher_subjects');
+    Route::post('/library/classvideos/store', 'DashboardController@library_video_store')->name('library_video_store');
+    Route::post('/library/classvideos/update', 'DashboardController@library_video_update')->name('library_video_update');
+    Route::post('/library/classvideos/delete', 'DashboardController@library_video_delete')->name('library_video_delete');
+
+    Route::get('/students', 'DashboardController@students')->name('students');
+    Route::get('/studentadmission', 'DashboardController@studentadmission')->name('studentadmission');
+    Route::get('/students/financial', 'DashboardController@students_financial')->name('students_financial');
+
+    Route::get('/students/financial_transport', 'TransportationController@students_financial_transport')->name('students_financial_transport');
+    Route::get('/students/financial_transport_student_filter', 'TransportationController@financial_transport_student_filter')->name('financial_transport_student_filter');
+    Route::get('/students/transport_invoices/{student_id}', 'TransportationController@transport_invoices')->name('transport_invoices');
+    Route::post('/students/transport_invoice_store', 'TransportationController@transport_invoice_store')->name('transport_invoice_store');
+
+
+    Route::get('/getemployees', 'DashboardController@getemployees')->name('getemployees');
+    Route::get('/get_employee_detail', 'DashboardController@get_employee_detail')->name('get_employee_detail');
+    Route::get('/getstudents', 'DashboardController@getstudents')->name('getstudents');
+    Route::get('/getusers', 'DashboardController@getusers')->name('getusers');
+    Route::get('/getteachers', 'DashboardController@getteachers')->name('getteachers');
+    Route::get('/getterm', 'DashboardController@getterm')->name('getterm');
+    Route::get('/getyear', 'DashboardController@getyear')->name('getyear');
+    Route::get('/year/get_terms', 'DashboardController@getyear_terms')->name('getyear_terms');
+    Route::get('/getobj', 'DashboardController@getobj')->name('getobj');
+
+
+    Route::post('/term_store', 'DashboardController@term_store')->name('term_store');
+    Route::post('/term_update', 'DashboardController@term_update')->name('term_update');
+    Route::post('/year_store', 'DashboardController@year_store')->name('year_store');
+    Route::post('/year_update', 'DashboardController@year_update')->name('year_update');
+
+    //route for countries_currencies
+    Route::get('/countries_currencies', 'DashboardController@countries_currencies')->name('countries_currencies');
+    Route::post('/countries_currencies_store', 'DashboardController@add_countries_currencies')->name('add_countries_currencies');
+    Route::post('/countries_currencies_update', 'DashboardController@update_countries_currencies')->name('update_countries_currencies');
+    Route::post('/countries_currencies_archive', 'DashboardController@archive_countries_currencies')->name('archive_countries_currencies');
+    Route::post('/countries_currencies_archive/{id}', 'DashboardController@countries_currencies_archive')->name('activate');
+    //route for school_staf
+    Route::get('/school_staf', 'DashboardController@school_staf')->name('school_staf');
+    Route::post('/school_staf_store', 'DashboardController@add_school_staff')->name('add_school_staff');
+    Route::post('/school_staf_update', 'DashboardController@school_staf_update')->name('school_staf_update');
+    Route::post('/school_staf_delete', 'DashboardController@delete_school_staff')->name('delete_school_staff');
+         Route::get('import_employe','DashboardController@import_employe')->name('import_employe');
+                     Route::post('employeesimport','DashboardController@employeesimport')->name('admin.employeesimport');
+     //files of school staff
+    Route::get('/employee/{id}', 'DashboardController@school_staff_files')->name('employee.attendance');
+    Route::post('/staf_file_store/{id}', 'DashboardController@add_staff_file')->name('staff_file_store');
+    Route::post('/school_staf_file_delete', 'DashboardController@delete_school_staff_file')->name('delete_school_staff_file');
+ //electronic section routes
+    Route::get('/electronic_section', 'DashboardController@electronic_sections')->name('electronic_section');
+    Route::post('/electronic_section_store', 'DashboardController@add_electronic_sections')->name('electronic_section_store');
+    Route::post('/electronic_section_update', 'DashboardController@update_electronic_sections')->name('electronic_section_update');
+    Route::post('/electronic_section_delete', 'DashboardController@delete_electronic_sections')->name('electronic_section_delete');
+
+    // electronic files
+    Route::get('/electronic_files/{id}', 'DashboardController@school_electronic_files')->name('school_electronic_files');
+    Route::post('/electronic_files/{id}', 'DashboardController@add_electronic_file')->name('add_electronic_file');
+    Route::post('/electronic_files_delete', 'DashboardController@delete_electronic_file')->name('delete_electronic_file');
+    Route::get('/getstudentsapprove', 'DashboardController@getstudentsapprove')->name('getstudentsapprove');
+    Route::get('/getstudentsfina', 'DashboardController@getstudentsfina')->name('getstudentsfina');
+
+    Route::post('/teachers/store', 'DashboardController@teacher_store')->name('teacher_store');
+    Route::post('/student/approve', 'DashboardController@approve_student')->name('approve_student');
+
+
+    Route::post('/student/student/request/delete', 'DashboardController@delete_student_request')->name('delete_student_request');
+    Route::post('/student/student/request/delete/multiple', 'DashboardController@delete_multiple_student')->name('delete_multiple_student');
+
+
+    Route::post('teachers/teacher_update', 'DashboardController@teacher_update')->name('teacher_update');
+
+    Route::get('teacher/set_task/{teacher_id}', 'DashboardController@set_task')->name('teacher.set_task');
+
+    Route::post('teacher/store_set_task', 'DashboardController@store_set_task')->name('teacher.store_set_task');
+    Route::post('/news/store', 'DashboardController@news_store')->name('news.store');
+    Route::get('classes/teacher_lessons/{class_id}', 'DashboardController@teacher_lessons')->name('teacher_lessons');
+    Route::get('classes/rooms/{class_id}', 'DashboardController@rooms')->name('rooms');
+    Route::post('students/change', 'DashboardController@student_change')->name('student_change');
+    Route::post('students/invoice_store', 'DashboardController@invoice_store')->name('invoice_store');
+    Route::post('student/change_lang', 'DashboardController@change_lang')->name('change_lang');
+    Route::post('send_message', 'DashboardController@send_message')->name('send_message');
+    Route::post('student/less', 'DashboardController@student_less')->name('student.less');
+    Route::post('student/super', 'DashboardController@student_super')->name('student.super');
+
+    Route::get('classes/rooms2/{class_id}/{room_id}', 'DashboardController@rooms2')->name('rooms2');
+    Route::get('classes/rooms22', 'DashboardController@rooms22')->name('rooms22');
+    Route::get('classes/rooms23', 'DashboardController@rooms23')->name('rooms23');
+
+
+
+    Route::get('students/invoices_details/{student_id}', 'DashboardController@invoices_details')->name('invoices_details');
+    Route::get('students/invoices_print/{invoices_id}', 'DashboardController@invoices_print')->name('invoices_print');
+
+
+    Route::get('students/remain_account/{student_id}/{class_id}', 'DashboardController@remain_account')->name('remain_account');
+
+    Route::get('students/archive/{student_id}', 'DashboardController@student_archive')->name('student_archive');
+
+    Route::get('students/student_details/{student_id}', 'DashboardController@student_details')->name('student_details');
+
+
+    Route::get('students/student_vaccines/{student_id}', 'ExtentiondashboardController@student_vaccines')->name('student_vaccines');
+    Route::put('students/student_vaccines_update/{student_id}', 'ExtentiondashboardController@student_vaccines_update')->name('student_vaccines_update');
+    
+    Route::post('reset_student_password/{student_id}', 'DashboardController@reset_student_password')->name('reset_student_password');
+
+    Route::post('students/student_update/{student_id}', 'DashboardController@student_update')->name('student_update');
+
+    Route::post('reset_password/{id}', 'DashboardController@reset_password')->name('reset_password');
+
+    Route::get('mainDepartments', 'adminstrationcontroller@mainDepartments')->name('mainDepartments');
+    Route::post('mainDepartments/mainDepartment_store', 'adminstrationcontroller@mainDepartment_store')->name('mainDepartment_store');
+
+
+    Route::get('subDepartments/{mainDepartment_id}', 'adminstrationcontroller@subDepartments')->name('subDepartments');
+    Route::post('subDepartments/subDepartment_store', 'adminstrationcontroller@subDepartment_store')->name('subDepartment_store');
+
+    Route::get('adminstrators', 'adminstrationcontroller@adminstrators')->name('adminstrators');
+    Route::post('adminstrators/adminstrator_store', 'adminstrationcontroller@adminstrator_store')->name('adminstrator_store');
+
+
+
+    Route::get('adminEmployees/{subDepartment_id}', 'adminstrationcontroller@adminEmployees')->name('adminEmployees');
+    Route::post('adminEmployees/adminEmployee_store', 'adminstrationcontroller@adminEmployee_store')->name('adminEmployee_store');
+    Route::post('adminEmployees/adminEmployee_update', 'adminstrationcontroller@adminEmployee_update')->name('adminEmployee_update');
+
+////////ظ‚ط³ظ… ط§ظ„ظ…ظˆط§طµظ„ط§طھ
+    Route::get('transportation', 'TransportationController@transportation')->name('transportations');
+    Route::post('transportation/bus_lines_store', 'TransportationController@bus_lines_store')->name('bus_lines_store');
+    Route::post('transportation/bus_lines_update', 'TransportationController@bus_lines_update')->name('bus_lines_update');
+
+    //////ظ‚ط³ظ… ظ…ط´ط±ظپظٹظ† ط§ظ„ط¨ط§طµط§طھ
+
+    Route::get('bus_supervisor', 'TransportationController@bus_supervisor')->name('bus_supervisor');
+    Route::post('/bus_supervisor/store', 'TransportationController@bus_supervisor_store')->name('bus_supervisor_store');
+    Route::post('bus_supervisor/bus_supervisor_update', 'TransportationController@bus_supervisor_update')->name('bus_supervisor_update');
+    Route::post('bus_supervisor/bus_supervisor_delete', 'TransportationController@bus_supervisor_delete')->name('bus_supervisor_delete');
+
+
+     //////ظ‚ط³ظ… ط³ط§ط¦ظ‚ظٹظ† ط§ظ„ط¨ط§طµط§طھ
+
+    Route::get('bus_driver', 'TransportationController@bus_driver')->name('bus_driver');
+    Route::post('/bus_driver/store', 'TransportationController@bus_driver_store')->name('bus_driver_store');
+    Route::post('bus_driver/bus_driver_update', 'TransportationController@bus_driver_update')->name('bus_driver_update');
+    Route::post('bus_driver/bus_driver_delete', 'TransportationController@bus_driver_delete')->name('bus_driver_delete');
+
+
+
+    ////ظ‚ط³ظ… ط§ظ„ط¨ط§طµط§طھ
+    Route::get('buses/{id}', 'TransportationController@buses')->name('buses');
+    Route::post('buses/buses_store', 'TransportationController@buses_store')->name('buses_store');
+    Route::post('buses/buses_update', 'TransportationController@buses_update')->name('buses_update');
+    
+// ظ‚ط³ظ… ط·ظ„ط§ط¨ ط§ظ„ط¨ط§طµط§طھ 
+
+    Route::get('bus_students/{bus_id}', 'TransportationController@bus_students')->name('bus_students');
+    Route::post('bus_students_store', 'TransportationController@bus_students_store')->name('bus_students_store');
+    Route::post('bus_students_delete', 'TransportationController@bus_students_delete')->name('bus_students_delete');
+
+
+
+    Route::get('classes', 'DashboardController@classes')->name('classes');
+
+    Route::post('session_update', 'DashboardController@session_update')->name('session_update');
+    Route::post('session_delete', 'DashboardController@session_delete')->name('session_delete');
+    Route::post('session_store', 'DashboardController@session_store')->name('session_store');
+    Route::post('session_store1', 'DashboardController@session_store1')->name('session_store1');
+
+    Route::get('sessions', 'DashboardController@sessions')->name('sessions');
+    Route::get('session_class/{id}', 'DashboardController@session_class')->name('session_class');
+
+    Route::post('classroom/lesson/admin/student_mark_admin', 'admincontroller@student_mark_admin')->name('student_mark_admin');
+    // ط§ط¶ط§ظپط© طھظپط§طµظٹظ„ ط¹ظ„ط§ظ…ط§طھ ظ„ظ„ظƒظ„
+    Route::post('classroom/lesson/admin/student_mark_admin_details', 'admincontroller@student_mark_admin_details')->name('student_mark_admin_details');
+    Route::get('classroom/{id}', 'DashboardController@classroom')->name('classroom');
+
+    Route::get('classroom/workschedule/{room_id}', 'DashboardController@workschedule')->name('workschedule');
+    Route::get('classroom/workschedule_exam/{room_id}', 'DashboardController@workschedule_exam')->name('workschedule_exam');
+
+    Route::get('classroom/workschedule_manager/{room_id}', 'DashboardController@workschedule_manager')->name('workschedule_manager');
+
+
+    Route::post('save_schedule', 'DashboardController@save_schedule')->name('save.schedule');
+    Route::post('dashboard/room/delete_lecture_time', 'DashboardController@delete_lecture_time')->name('dashboard.room.delete.lecture_time');
+
+
+    Route::post('classes/class_update', 'DashboardController@class_update')->name('class_update');
+    Route::post('classes/class_store', 'DashboardController@class_store')->name('class_store');
+    Route::post('classes/class_delete', 'DashboardController@class_delete')->name('class_delete');
+    Route::post('session/delete', 'DashboardController@allsession_delete')->name('allsession_delete');
+
+
+    Route::post('classes/update_room', 'DashboardController@room_update')->name('room_update');
+    Route::post('classes/delete_room', 'DashboardController@room_delete')->name('room_delete');
+
+    Route::post('classroom/room_store', 'DashboardController@room_store')->name('room_store');
+
+    Route::get('classroom/roomlessons/{class_id}/{room_id}', 'DashboardController@roomlessons')->name('roomlessons');
+    Route::get('classroom/roomteachers/{class_id}/{room_id}', 'DashboardController@roomteachers')->name('roomteachers');
+    Route::get('classroom/StudentsRoomLesson/{room_id}/{lesson_id}', 'DashboardController@StudentsRoomLesson')->name('StudentsRoomLesson');
+    Route::get('classroom/StudentsRoomLesson_pdf/{room_id}/{lesson_id}', 'DashboardController@StudentsRoomLesson_pdf')->name('StudentsRoomLesson_pdf');
+    Route::get('classroom/StudentsRoomLesson_excel/{room_id}/{lesson_id}', 'DashboardController@StudentsRoomLesson_excel')->name('StudentsRoomLesson_excel');
+
+
+    Route::post('classroom/lesson/student_mark', 'admincontroller@student_mark')->name('student_mark');
+
+    Route::get('classroom/roomstudent/{id1}/{id2}', 'DashboardController@roomstudent')->name('roomstudent');
+
+    Route::post('students/store', 'DashboardController@student_store')->name('student_store');
+
+    Route::get('students/result_active', 'DashboardController@result_active')->name('students.result_active');
+    Route::get('students/result_disable', 'DashboardController@result_disable')->name('students.result_disable');
+
+
+    Route::get('lessons/{id}', 'DashboardController@lessons')->name('lessons');
+
+    Route::get('/classes/lessons', 'DashboardController@lessons2')->name('lessons2');
+    Route::post('/lesson/delete', 'DashboardController@lesson_delete')->name('lesson.delete');
+
+    Route::post('lessons/store', 'DashboardController@lesson_store')->name('lesson_store');
+
+    Route::post('lessons/update_lesson', 'DashboardController@lesson_update')->name('lesson_update');
+    Route::post('lessons/delete_lesson', 'DashboardController@lesson_delete2')->name('lesson_delete');
+    Route::post('lessons/teacher_delete', 'DashboardController@teacher_delete')->name('teacher_delete');
+
+
+    Route::post('/event/delete', 'DashboardController@event_delete')->name('event.delete');
+
+    Route::post('/book/update', 'DashboardController@book_update')->name('book_update');
+
+    Route::get('/delete_books/{lesson_id}/{id}', 'DashboardController@delete_books')->name('delete_books');
+
+    Route::get('backups', 'DashboardController@backups')->name('backups');
+
+    Route::get('get-backup', 'DashboardController@databasebackup')->name('get-backup');
+
+    Route::get('zip/{id}', 'DashboardController@zipfile')->name('zip');
+
+    Route::post('backup_del', 'DashboardController@backup_del')->name('backup_del');
+
+    Route::get('teacher_schedule/{id}', 'DashboardController@teacher_schedule')->name('admin.teacher_schedule');
+    Route::get('teacher_attendance/{id}', 'DashboardController@teacher_attendance')->name('admin.teacher_attendance');
+    Route::get('student_attendance/{id}/{room_id}/{month}', 'DashboardController@student_attendance')->name('admin.student_attendance');
+
+
+    Route::get('supervisors', 'DashboardController@supervisors')->name('supervisors');
+    Route::get('acadsupervisors', 'DashboardController@acadsupervisors')->name('acadsupervisors');
+
+    Route::get('acadsupervisors/supervisor_details/{supervisor_id}', 'DashboardController@acadsupervisor_details')->name('acadsupervisor_details');
+    Route::get('acadsupervisor/set_supervisor_task/{supervisor_id}', 'DashboardController@set_acadsupervisor_task')->name('set_acadsupervisor_task');
+    Route::get('acadsupervisor/edit_supervisor_task/{supervisor_id}', 'DashboardController@edit_acadsupervisor_task')->name('edit_acadsupervisor_task');
+
+
+    Route::get('supervisors/supervisor_details/{supervisor_id}', 'DashboardController@supervisor_details')->name('supervisor_details');
+    Route::get('supervisor/set_supervisor_task/{supervisor_id}', 'DashboardController@set_supervisor_task')->name('set_supervisor_task');
+    Route::get('supervisor/edit_supervisor_task/{supervisor_id}', 'DashboardController@edit_supervisor_task')->name('edit_supervisor_task');
+
+    Route::post('acadsupervisor/store', 'DashboardController@acadsupervisor_store')->name('acadsupervisor_store');
+
+    Route::post('supervisor/store', 'DashboardController@supervisor_store')->name('supervisor_store');
+
+    Route::post('acadsupervisor/store_supervisor_set_task', 'DashboardController@store_acadsupervisor_set_task')->name('acadsupervisor.store_acadsupervisor_set_task');
+    Route::post('acadsupervisor/update_supervisor_set_task', 'DashboardController@update_acadsupervisor_set_task')->name('acadsupervisor.update_acadsupervisor_set_task');
+
+    Route::post('supervisor/store_supervisor_set_task', 'DashboardController@store_supervisor_set_task')->name('supervisor.store_supervisor_set_task');
+    Route::post('supervisor/update_supervisor_set_task', 'DashboardController@update_supervisor_set_task')->name('supervisor.update_supervisor_set_task');
+
+
+    // coordinator routes
+    Route::get('coordinators', 'DashboardController@coordinators')->name('coordinators');
+    Route::post('coordinator/update', 'DashboardController@coordinator_update')->name('coordinator_update');
+
+    Route::get('coordinator/details/{coordinator_id}', 'DashboardController@coordinator_details')->name('coordinator_details');
+    Route::get('coordinator/set_task/{coordinator_id}', 'DashboardController@set_coordinator_task')->name('set_coordinator_task');
+    Route::get('coordinator/edit_coordinator_task/{coordinator_id}', 'DashboardController@edit_coordinator_task')->name('edit_coordinator_task');
+
+    Route::post('coordinator/store', 'DashboardController@coordinator_store')->name('coordinator_store');
+
+    Route::post('coordinator/store_coordinator_task', 'DashboardController@store_coordinator_task')->name('coordinator.store_task');
+
+    Route::post('coordinator/update_coordinator_set_task', 'DashboardController@update_coordinator_task')->name('coordinator.update_task');
+
+    // end coordinator routes
+
+
+    // acadsupervisor routes
+    // DUPLICATE-FIX: The following block was a copy-paste duplicate of lines 1586-1606 above.
+    // All routes below (acadsupervisors, acadsupervisor_details, acadsupervisor_store, etc.)
+    // already exist with identical names and handlers. Laravel was silently using the last
+    // definition, causing unpredictable route() helper behavior.
+    // The first definition (above) is kept as the authoritative one.
+    //
+    // Route::get('acadsupervisors', 'DashboardController@acadsupervisors')->name('acadsupervisors');
+    // Route::post('acadsupervisor/update', 'DashboardController@acadsupervisor_update')->name('acadsupervisor_update');
+    // Route::get('acadsupervisor/details/{acadsupervisor_id}', 'DashboardController@acadsupervisor_details')->name('acadsupervisor_details');
+    // Route::get('acadsupervisor/set_task/{acadsupervisor_id}', 'DashboardController@set_acadsupervisor_task')->name('set_acadsupervisor_task');
+    // Route::get('acadsupervisor/edit_acadsupervisor_task/{acadsupervisor_id}', 'DashboardController@edit_acadsupervisor_task')->name('edit_acadsupervisor_task');
+    // Route::post('acadsupervisor/store', 'DashboardController@acadsupervisor_store')->name('acadsupervisor_store');
+    // Route::post('acadsupervisor/store_acadsupervisor_task', 'DashboardController@store_acadsupervisor_task')->name('acadsupervisor.store_task');
+    // Route::post('acadsupervisor/update_acadsupervisor_set_task', 'DashboardController@update_acadsupervisor_task')->name('acadsupervisor.update_task');
+    // end acadsupervisor routes (duplicate block removed)
+    // ط¬ط¯ظˆظ„ ط§ظ„ط­ط¶ظˆط± ظˆط§ظ„ط§ط®طھط¨ط§ط±ط§طھ
+    Route::get('classes/manager', 'DashboardController@classes_manager')->name('classes.manager');
+    Route::get('classroom/manager/{id}', 'DashboardController@classroom_manager')->name('classroom_manager');
+    Route::get('classes/view/exams', 'DashboardController@classes_view_exams')->name('classes.view.exams');
+    Route::get('classroom/exams/{id}', 'DashboardController@classroom_exams')->name('classroom_exams');
+    Route::get('class/room/quizes/{room_id}', 'DashboardController@room_quizes')->name('room_quizes');
+    Route::post('class/room/quize/store', 'DashboardController@quize_store')->name('quize.store');
+    Route::post('class/room/quize/update', 'DashboardController@quize_update')->name('quize.update');
+    Route::get('class/room/exams/{room_id}', 'DashboardController@room_exams')->name('room_exams');
+    Route::post('class/room/exam/store', 'DashboardController@exam_store')->name('exam.store');
+    Route::post('class/room/exam/update', 'DashboardController@exam_update')->name('exam.update');
+    Route::post('class/room/exam_quize/delete', 'DashboardController@exam_quize_delete')->name('exam_quize.delete');
+    Route::get('class/room/students/exams/{room_id}/{exam_id}', 'DashboardController@room_students_exam')->name('room_students_exam');
+     // ط¥ط¹ط§ط¯ط© طھظپط¹ظٹظ„ ط§ظ„ط§ظ…طھط­ط§ظ†
+     Route::post('dashboard/teacher/exam_reactivate', 'teacherscontroller@exam_reactivate')->name('exam_reactivate');
+    // users >
+    Route::get('users', 'DashboardController@users')->name('users');
+    Route::post('user_store', 'DashboardController@user_store')->name('admin.user_store');
+    Route::post('user_update', 'DashboardController@user_update')->name('admin.user_update');
+    Route::post('user_delete', 'DashboardController@user_delete')->name('admin.user_delete');
+

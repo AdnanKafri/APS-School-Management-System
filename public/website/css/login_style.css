@@ -1,0 +1,345 @@
+@media(min-width:200px) and (max-width:325px){
+    button{
+     position: relative;
+     left: 0%;
+     width: 200px !important;
+
+    }
+  }
+  @media(min-width:326px) and (max-width:389px){
+    button{
+     position: relative;
+     left: 0%;
+     width: 266px !important;
+
+    }
+  }
+  @media(min-width:390px) and (max-width:481px){
+    button{
+     position: relative;
+     left: -2%;
+     width: 290px !important;
+
+    }
+  }
+
+  @media(min-width:482px) and (max-width:581px){
+    button{
+     position: relative;
+     left: -9%;
+
+    }
+  }
+  @media(min-width:582px) and (max-width:781px){
+    button{
+     position: relative;
+     left: -9%;
+
+    }
+  }
+  @media(min-width:782px) and (max-width:990px)
+  {
+    button{
+        position: relative;
+        right: 20% !important;
+
+       }
+
+  }
+
+
+  @media(min-width:200px) and (max-width:1000px){
+    .field-set{
+      margin: auto;
+    }
+    form{
+      width: 100% !important;
+      margin: auto;
+    }
+
+  }
+   body{
+    background: linear-gradient(100deg, #BDE0FE     20%, #A2D2FF   80%) !important;
+    background-size: cover;
+
+    font-family: "Cairo", "Montserrat", sans-serif !important;
+  }
+  /*css for form*/
+
+ .form-control{
+  text-align: right !important;
+ }
+
+  /* Start form  attributes */
+  form {
+    width: 450px;
+    min-height: 500px;
+    height: auto;
+    text-align: right;
+
+    border-radius: 5px;
+    margin: 2% auto;
+    padding: 2%;
+    background-color: #fff;
+    border-radius: 10px;
+  }
+  /* form Container */
+  form .con {
+    display: -webkit-flex;
+    display: flex;
+
+    -webkit-justify-content: space-around;
+    justify-content: space-around;
+
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+
+    margin: 0 auto;
+  }
+
+  /* the header form form */
+  header {
+    margin: 2% auto 10% auto;
+    text-align: center;
+  }
+  /* Login title form form */
+  header h2 {
+    font-size: 250%;
+    font-family: "Playfair Display", serif;
+    color: #3e403f;
+  }
+  /*  A welcome message or an explanation of the login form */
+
+
+  /* //////////////////////////////////////////// */
+  /* //////////////////////////////////////////// */
+
+  .input-item {
+    background: #fff;
+    color: #333;
+    padding: 14.5px 0px 15px 9px;
+    border-radius: 5px 0px 0px 5px;
+  }
+
+  /* Show/hide password Font Icon */
+  #eye {
+    background: #fff;
+    color: #333;
+
+    margin: 5.9px 0 0 0;
+    margin-left: -20px;
+    padding: 15px 9px 19px 0px;
+    border-radius: 0px 5px 5px 0px;
+
+    float: right;
+    position: relative;
+    right: 1%;
+    top: -0.2%;
+    z-index: 5;
+
+    cursor: pointer;
+  }
+  /* inputs form  */
+  input[class="form-input"] {
+    width: 240px;
+    height: 50px;
+
+    margin-top: 2%;
+    padding: 15px;
+
+    font-size: 16px;
+    font-family: "Abel", sans-serif;
+    color: #5e6472;
+
+    outline: none;
+    border: none;
+
+    border-radius: 0px 5px 5px 0px;
+    transition: 0.2s linear;
+  }
+  input[id="txt-input"] {
+    width: 250px;
+  }
+  /* focus  */
+  input:focus {
+    transform: translateX(-2px);
+    border-radius: 5px;
+  }
+
+  /* //////////////////////////////////////////// */
+  /* //////////////////////////////////////////// */
+
+  /* input[type="text"] {min-width: 250px;} */
+  /* buttons  */
+  button {
+   /* display: inline-block;
+    color: #fff;
+
+   /* width: 280px;*/
+    /*height: 50px;
+
+    padding: 0 30px;
+    background: #4382E0 ;
+    border-radius: 5px;
+
+    outline: none;
+    border: none;
+
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s linear;
+
+    margin: 7% auto;*/
+    justify-content: center !important;
+   font-weight: 600!important;
+
+font-family: "Cairo", "Montserrat", sans-serif !important;
+background: linear-gradient(to right ,#BDE0FE ,#A2D2FF );
+border-radius: 999px;
+
+box-sizing: border-box;
+color: #FFFFFF !important;
+cursor: pointer;
+width: 350px;
+text-align: center !important;
+font-size: 20px;
+font-weight: 700;
+line-height: 24px;
+opacity: 1;
+outline: 0 solid transparent;
+padding: 20px 20px;
+user-select: none;
+-webkit-user-select: none;
+touch-action: manipulation;
+
+word-break: break-word;
+border: 0;
+position: relative;
+right: 50%;
+
+
+  }
+
+  button:hover {
+    transform: translatey(3px);
+    box-shadow: none;
+  }
+
+  /* buttons hover Animation */
+  button:hover {
+    animation: ani9 0.4s ease-in-out infinite alternate;
+  }
+  @keyframes ani9 {
+    0% {
+      transform: translateY(3px);
+    }
+    100% {
+      transform: translateY(5px);
+    }
+  }
+  .logo{
+    max-width: 70%;
+    align-content: center;
+    margin: 29px;
+    aspect-ratio: 1;
+  }
+ a{
+  text-decoration: none;
+ }
+ hr.new1 {
+border-top: 1px solid gray;
+}
+
+select{
+
+border: none !important;
+}
+select::after{
+border: none !important;
+}
+.circle{
+margin: 0 auto;
+background: linear-gradient(to right ,#CDB4DB,#CDB4DB );
+border-radius: 50%;
+width: 220px;
+height: 220px;
+margin-top: -80px;
+border: 2px solid #A2D2FF;
+
+}
+.screen {
+background-color: #B682D8   ;
+position: relative;
+height:480px;
+width: 533px;
+border-radius: 10%;
+/*box-shadow: 0px 0px 24px #001e4b;*/
+}
+/*style for input */
+
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans:400,400i,700,700i&subset=greek-ext');
+
+
+
+.input-container{
+position:relative;
+margin-bottom:25px;
+margin: 0 auto !important;
+ text-align: center !important;
+
+}
+.input-container label{
+position:absolute;
+top:0px;
+right: 20%;
+font-size:30px;
+color:#fff;
+pointer-event:none;
+transition: all 0.5s ease-in-out;
+
+}
+.input-container input{
+border:0;
+border-bottom: 2px solid #fff;
+background:transparent !important;
+width:60%;
+padding:8px 12px 5px 12px;
+font-size:16px;
+color:#fff;
+
+}
+.input-container input:focus{
+border:none;
+outline:none;
+border-bottom:1px solid white;
+}
+
+/*.btn:after{
+content:"";
+position:absolute;
+background:rgba(0,0,0,0.50);
+top:0;
+right:0;
+width:100%;
+height:100%;
+}*/
+.input-container input:focus ~ label,
+.input-container input:valid ~ label{
+top:-26px;
+font-size:18px;
+direction: rtl;
+
+}
+
+/*end style for input */
+.fa-key{
+content: '&#xf084' !important ;
+}
+.user-popUp ul.loginHeadTab li a.loginFormTab:before{
+content: '\e6de';
+}
+.login__input{
+width: 75%;
+text-align: center;
+}
+/*end css*/

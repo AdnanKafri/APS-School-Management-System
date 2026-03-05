@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>الجلاء المدرسي </title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min-2.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+<!--===============================================================================================-->
+<link href="https://cdn.rawgit.com/michalsnik/aos/2.1.1/dist/aos.css" rel="stylesheet">
+
+<style>
+	
+   /*checkbox */
+   @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:600&display=swap');
+
+input[type="checkbox"] {
+  
+  text-align: right;
+  position: relative;
+  width: 1.1em;
+  height: 1.1em;
+  color: #094e89;
+  border: 1px solid #094e89;
+  border-radius: 4px;
+  appearance: none;
+  outline: 0;
+  cursor: pointer;
+  transition: background 175ms cubic-bezier(0.1, 0.1, 0.25, 1);
+}
+input[type="checkbox"]::before {
+  position: absolute;
+  content: '';
+  display: block;
+  top: 2px;
+  right: 7px;
+  width: 4px;
+  height: 10px;
+  border-style: solid;
+  border-color: #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+}
+input[type="checkbox"]:checked {
+  color: #fff;
+  border-color: #ffb832;
+  background: #ffb832;
+}
+input[type="checkbox"]:checked::before {
+  opacity: 1;
+}
+input[type="checkbox"]:checked ~ label::before {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+label {
+  color: #0b273f;
+  position: relative;
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: 400;
+  padding: 0 0.25em 0;
+  user-select: none;
+}
+label::before {
+  position: absolute;
+  content: attr(data-content);
+  color: #9c9e9f;
+  clip-path: polygon(0 0, 0 0, 0% 100%, 0 100%);
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+  text-decoration-color: #363839;
+  transition: clip-path 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+   /*end checkbox*/
+   /*cards*/
+
+.data-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 55.75em;
+  
+  min-height: auto;
+  overflow: hidden;
+  border-radius: 0.5em;
+  text-decoration: none;
+  background: white;
+  margin: 1em;
+  padding: 2.75em 5.5em;
+  text-align: right;
+  box-shadow: 0 1.8em 2.7em -0.7em rgba(0, 0, 0, 0.3);
+  transition: transform 0.45s ease, background 0.45s ease;
+}
+@media (max-width: 992px) {
+  .data-card {
+    padding: 177px 90px 33px 85px;
+  }
+
+ 
+
+  .data-card {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px)  {
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+
+  .data-card {
+    width: 100%;
+  }
+}
+
+@media only screen and (max-width: 868px)  {
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+
+  .data-card {
+    width: 100%;
+  }
+}
+@media only screen and (max-width: 968px)  {
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+
+  .data-card {
+    width: 100%;
+  }
+}
+@media only screen and (max-width: 985px)  {
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+
+  .data-card {
+    width: 100%;
+  }
+}
+@media only screen and (max-width: 988px)  {
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+
+  .data-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 772px) , (max-width:991px) , (max-width:992px){
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+  .data-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .data-card {
+    padding: 10px 15px 33px 15px;
+  }
+}
+
+.data-card h3 {
+  color: #2E3C40;
+  font-size: 3.5em;
+  font-weight: 600;
+  line-height: 1;
+  padding-bottom: 0.5em;
+  margin: 0 0 0.142857143em;
+  border-bottom: 2px solid #753BBD;
+  transition: color 0.45s ease, border 0.45s ease;
+}
+.data-card h4 {
+  color: #627084;
+  text-transform: uppercase;
+  font-size: 1.125em;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  margin: 0 0 1.777777778em;
+  transition: color 0.45s ease;
+}
+.data-card p {
+  opacity: 0;
+  color: #FFFFFF;
+  font-weight: 600;
+  line-height: 1.8;
+  margin: 0 0 1.25em;
+  transform: translateY(-1em);
+  transition: opacity 0.45s ease, transform 0.5s ease;
+}
+.data-card .link-text {
+  display: block;
+  color: #753BBD;
+  font-size: 1.125em;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: auto 0 0;
+  transition: color 0.45s ease;
+}
+.data-card .link-text svg {
+  margin-left: 0.5em;
+  transition: transform 0.6s ease;
+}
+.data-card .link-text svg path {
+  transition: fill 0.45s ease;
+}
+.data-card:hover {
+  background: #FFFFFF;
+  transform: scale(1.02);
+}
+.data-card:hover h3 {
+  color: #FFFFFF;
+  border-bottom-color: #A754C4;
+}
+.data-card:hover h4 {
+  color: #FFFFFF;
+}
+.data-card:hover p {
+  opacity: 1;
+  transform: none;
+}
+.data-card:hover .link-text {
+  color: #FFFFFF;
+}
+.data-card:hover .link-text svg {
+  animation: point 1.25s infinite alternate;
+}
+.data-card:hover .link-text svg path {
+  fill: #FFFFFF;
+}
+@keyframes point {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0.125em);
+  }
+}
+
+
+/*end cards*/
+
+/*input*/
+ /*
+=====
+HELPERS
+=====
+*/
+
+.ha-screen-reader{
+  width: var(--ha-screen-reader-width, 1px);
+  height: var(--ha-screen-reader-height, 1px);
+  padding: var(--ha-screen-reader-padding, 0);
+  border: var(--ha-screen-reader-border, none);
+
+  position: var(--ha-screen-reader-position, absolute);
+  clip: var(--ha-screen-reader-clip, rect(1px, 1px, 1px, 1px));
+  overflow: var(--ha-screen-reader-overflow, hidden);
+}
+
+/*
+=====
+RESET STYLES
+=====
+*/
+
+.field__input{ 
+  --uiFieldPlaceholderColor: var(--fieldPlaceholderColor, #767676);
+  
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  font-family: inherit;
+  font-size: inherit;
+  text-align: right;
+}
+
+.field__input:focus::-webkit-input-placeholder{
+  color: var(--uiFieldPlaceholderColor);
+}
+
+.field__input:focus::-moz-placeholder{
+  color: var(--uiFieldPlaceholderColor);
+}
+
+/*
+=====
+CORE STYLES
+=====
+*/
+
+.field{
+  --uiFieldBorderWidth: var(--fieldBorderWidth, 2px);
+  --uiFieldPaddingRight: var(--fieldPaddingRight, 1rem);
+  --uiFieldPaddingLeft: var(--fieldPaddingLeft, 1rem);   
+  --uiFieldBorderColorActive: var(--fieldBorderColorActive, rgba(22, 22, 22, 1));
+
+  display: var(--fieldDisplay, inline-flex);
+  position: relative;
+  font-size: var(--fieldFontSize, 1rem);
+  text-align: right;
+}
+
+.field__input{
+  box-sizing: border-box;
+  width: var(--fieldWidth, 100%);
+  height: var(--fieldHeight, 3rem);
+  padding: var(--fieldPaddingTop, 1.25rem) var(--uiFieldPaddingRight) var(--fieldPaddingBottom, .5rem) var(--uiFieldPaddingLeft);
+  border-bottom: var(--uiFieldBorderWidth) solid var(--fieldBorderColor, rgba(0, 0, 0, .25));  
+}
+
+.field__input:focus{
+  outline: none;
+}
+
+.field__input::-webkit-input-placeholder{
+  opacity: 0;
+  transition: opacity .2s ease-out;
+}
+
+.field__input::-moz-placeholder{
+  opacity: 0;
+  transition: opacity .2s ease-out;
+}
+
+.field__input:focus::-webkit-input-placeholder{
+  opacity: 1;
+  transition-delay: .2s;
+}
+
+.field__input:focus::-moz-placeholder{
+  opacity: 1;
+  transition-delay: .2s;
+}
+
+.field__label-wrap{
+  box-sizing: border-box;
+  pointer-events: none;
+  cursor: text;
+
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.field__label-wrap::after{
+  content: "";
+  box-sizing: border-box;
+  width: 100%;
+  height: 0;
+  opacity: 0;
+
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.field__input:focus ~ .field__label-wrap::after{
+  opacity: 1;
+}
+
+.field__label{
+  position: absolute;
+  left: var(--uiFieldPaddingLeft);
+  top: calc(50% - .5em);
+
+  line-height: 1;
+  font-size: var(--fieldHintFontSize, inherit);
+
+  transition: top .2s cubic-bezier(0.9, -0.15, 0.1, 1.15), opacity .2s ease-out, font-size .2s ease-out;
+  will-change: bottom, opacity, font-size;
+}
+
+.field__input:focus ~ .field__label-wrap .field__label,
+.field__input:not(:placeholder-shown) ~ .field__label-wrap .field__label{
+  --fieldHintFontSize: var(--fieldHintFontSizeFocused, .75rem);
+
+  top: var(--fieldHintTopHover, .25rem);
+}
+
+/* 
+effect 1
+*/
+
+.field_v1 .field__label-wrap::after{
+  border-bottom: var(--uiFieldBorderWidth) solid var(--uiFieldBorderColorActive);
+  transition: opacity .2s ease-out;
+  will-change: opacity;
+}
+
+/* 
+
+/*
+=====
+LEVEL 4. SETTINGS
+=====
+*/
+
+.field{
+  --fieldBorderColor: #9fb0cf;
+  --fieldBorderColorActive: #ffb832;
+}
+
+/*
+=====
+DEMO
+=====
+*/
+
+.tab1cards {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  grid-gap: 10px;
+  background-color: transparent;
+  padding: 10px;
+  /*margin-left: -50px;*/
+  justify-content:center ;
+  text-align: center;
+
+}
+@media (max-width: 576px) {
+  .grid-container {
+    padding: 10px 15px 33px 15px;
+  }
+}
+.myDiv{
+	display:none;
+} 
+@media only screen and (max-width: 876px), (max-width:991px) {
+  .grid-container {
+    padding: 10px 15px 33px 15px;
+    width: 100%;
+  }
+}
+
+@media only screen and (max-width: 579px) , (max-width:991px) {
+  .grid-container {
+    padding: 10px 15px 33px 15px;
+    width: 100%;
+  }
+}
+
+
+@media only screen and (max-width: 500px) {
+      .tab1cards {
+        width: calc( 100% - 10px);
+      }
+    }
+    
+    @media only screen and (max-width: 300px) {
+      .tab1cards {
+        width: 50%;
+      }
+    }
+
+    .Row {
+    display: table;
+    width: 100%; /*Optional*/
+    table-layout: fixed; /*Optional*/
+    border-spacing: 0px; /*Optional*/
+}
+.Column {
+  
+    display: table-cell;
+    background-color: transparent;
+     /*Optional*/
+}
+@media only screen and (max-width:480px){
+  .Row{
+     width: 120%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:780px){
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:360px){
+  .Row{
+     width: 120%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:579px){
+  .Row{
+     width: 120%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:679px){
+  .Row{
+     width: 120%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:500px) , (max-width:575px) {
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:522px){
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:529px){
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:547px){
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:529px) , (max-width:557px  ) , (max-width:596px  ) , (max-width:624px  )
+, (max-width:557px  ) , (max-width:579px  ) and (max-width:696px  )
+{
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:635px)
+{
+  .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width:682px)
+{
+  .Row{
+     width: 120%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media only screen and (max-width: 783px ) , (max-width:783px )  , ( max-width: 809px ) , ( max-width: 811px ), 
+( max-width: 823px ) , ( max-width: 854px ) , ( max-width: 856px ) 
+{
+
+ .Row{
+     width: 100%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media screen  and (max-width:861px) ,  (max-width:882px){
+
+  .Row{
+     width: 90%;
+     
+  }
+  .Column {
+    display: inline-block;
+   
+  }
+}
+@media screen  and (max-width:904px){
+
+.Row{
+   width: 80%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+}
+
+@media screen  and (max-width:911px){
+
+.Row{
+   width: 110%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+}
+@media screen  and (max-width:837px) , (max-width:841px) , (max-width:845px) , (max-width:850px), (max-width:869px), (max-width:872px), (max-width:875px),
+(max-width:886px), (max-width:909px){
+
+.Row{
+   width: 80%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+}
+@media screen and (max-width:918px), (max-width:921px), (max-width:929px), (max-width:949px), (max-width:960px),
+(max-width:974px) , (max-width:982px), (max-width:986px), (max-width:991px){
+  .Row{
+   width: 110%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+}
+@media screen and (max-width:994px) , (max-width:1000px),(max-width:1008px), (max-width:1016px), (max-width:1022px),
+(max-width:1032px) , (max-width:1044px), (max-width:1054px){
+  .Row{
+   width: 105%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+}
+
+@media screen and  (max-width:846px) , (max-width:580px),   (max-width:853px),  (max-width:861px),  (max-width:871px) , (max-width:873px) , 
+(max-width:875px) , (max-width:878px) ,(max-width:881px), 
+(max-width:885px) , (max-width:881px), (max-width:888px),(max-width:900px),(max-width:999px){
+  .Row{
+   width: 80%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+}
+
+@media screen and (max-width:960px) ,(max-width:964px) , (max-width:966px) , (max-width:971px), (max-width:983px), (max-width:984px),
+(max-width:990px){
+  .Row{
+   width: 110%;
+   
+}
+.Column {
+  display: inline-block;
+ 
+}
+
+}
+
+/*style table*/
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  direction: rtl;
+  text-align: right;
+}
+/* Zebra striping */
+tr:nth-of-type(odd) { 
+  background: #eee; 
+}
+th { 
+  background: #a1a8af; 
+  color: white; 
+  font-weight: bold; 
+}
+td, th { 
+  padding: 6px; 
+  border: 1px solid #ccc; 
+  text-align: right; 
+}
+@media 
+only screen and (max-width: 760px),
+(min-device-width: 768px) and (max-device-width: 1024px)  {
+
+	/* Force table to not be like tables anymore */
+	table, thead, tbody, th, td, tr { 
+		display: block; 
+	}
+	
+	/* Hide table headers (but not display: none;, for accessibility) */
+	thead tr { 
+		position: absolute;
+		top: -9999px;
+		left: -9999px;
+	}
+	
+	tr { border: 1px solid #ccc; }
+	
+	td { 
+		/* Behave  like a "row" */
+		border: none;
+		border-bottom: 1px solid #eee; 
+		position: relative;
+		padding-left: 50%; 
+	}
+	
+	td:before { 
+		/* Now like a table header */
+		position: absolute;
+		/* Top/left values mimic padding */
+		top: 6px;
+		left: 6px;
+		width: 45%; 
+		padding-right: 10px; 
+		white-space: nowrap;
+	}
+	
+	/*
+	Label the data
+	*/
+	td:nth-of-type(1):before { content: "المجالات "; }
+	td:nth-of-type(2):before { content: "غير مقبول "; }
+	td:nth-of-type(3):before { content: "مقبول "; }
+	td:nth-of-type(4):before { content: "جيد "; }
+	td:nth-of-type(5):before { content: "متميز"; }
+	td:nth-of-type(6):before { content: "ملاحظات "; }
+	td:nth-of-type(7):before { content: "Date of Birth"; }
+	td:nth-of-type(8):before { content: "Dream Vacation City"; }
+	td:nth-of-type(9):before { content: "GPA"; }
+	td:nth-of-type(10):before { content: "Arbitrary Data"; }
+}
+/*end style table */
+.search {
+  box-shadow: 0 20px 10px -10px rgba(200, 200, 200, 0.5);
+  display: inline-block;
+}
+.search__input {
+  background-color: #84a7c4;
+  border: 0;
+  
+  outline: 0;
+  line-height: 50px;
+  font-size: 14px;
+  padding: 0 18px;
+  float: right;
+  color: white;
+}
+::placeholder {
+  color: white;
+  opacity: 1; /* Firefox */
+}
+.search__button {
+  box-shadow: -10px 0 10px -5px rgba(90, 117, 238, 0.5);
+  color: white;
+  background-color: #094e89;
+  width: 50px;
+  line-height: 50px;
+  text-align: center;
+  border: 0;
+ 
+  padding: 0;
+  cursor: pointer;
+  outline: 0;
+  transition: box-shadow 0.3s ease-out;
+}
+.search__button:active {
+  box-shadow: -10px 0 10px -10px rgba(90, 238, 209, 0.5);
+}
+/*select and option */
+:root {
+  --background-gradient: linear-gradient(to right top, #f38639  20%, rgb(132, 167, 196))
+  --gray: #f38639 ;
+  --darkgray: #2c71ad;
+}
+
+select {
+  /* Reset Select */
+  appearance: none;
+  outline: 0;
+  border: 0;
+  box-shadow: #f38639;
+  /* Personalize */
+  flex: 1;
+  padding: 0 1em;
+  color: white;
+  background-color: var(--darkgray);
+  background-image: none;
+  cursor: pointer;
+  text-align: center;
+
+
+ 
+}
+/* Remove IE arrow */
+select::-ms-expand {
+  display: none;
+ 
+}
+/* Custom Select wrapper */
+.select {
+  position: relative;
+  display: flex;
+  width: 12em;
+  height: 3em;
+  border-radius: .25em;
+  overflow: hidden;
+  color: #f38639 ;
+}
+/* Arrow */
+.select::after {
+  content: '\25BC';
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1em;
+  background-color: #2c71ad ;
+  transition: .25s all ease;
+  pointer-events: none;
+  
+}
+/* Transition */
+.select:hover::after {
+  color: #f38639;
+}
+
+</style>
+</head>
+<body style=" background-image: url('../simages/IMG_3225.jpg');background-size: cover;
+">
+  
+
+	<form class="limiter"  >
+    
+		<div class="container-login100" >
+            
+			<div class="wrap-login100"  style="width:1290px" >
+
+     <!-- start row -->
+      <div class="grid-container" style="margin-top: -30px;">
+        <div class="Row" > 
+          <div class="Column">
+            <div class="page" >
+              <div class="field field_v1">
+                <label for="first-name" class="ha-screen-reader"></label>
+                <input id="first-name" class="field__input" placeholder=""  style="width: 120px;margin-left: 90px;" >
+                <span class="field__label-wrap" aria-hidden="true">
+                  <span class="field__label"></span>
+                </span>
+              </div> 
+            </div>
+          </div> 
+          <div class="Column"  > 
+            <h5 style="margin-right: 183px;">  : اللغة </h5>
+      </div>
+
+      <div class="Column">
+        <h4 style="margin-left: -190px;"> مرحلة التعليم الأساسي الحلقة الأولى </h4> 
+      </div>
+        
+      <div class="Column" >
+        <h3 style="margin-left: -15px;">الجمهورية العربية السورية </h3>
+        <br>
+        <h4 style="margin-left: -15px;">وزارة التربية </h4>
+        <br>
+      </div>
+     </div>
+    </div>
+    <!-- end row -->
+
+     <!-- start row -->
+     <div class="grid-container" style="margin-top: -30px;">
+      <div class="Row" > 
+        <div class="Column">
+          <div class="page" >
+            <div class="field field_v1">
+              <label for="first-name" class="ha-screen-reader"></label>
+              <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+              <span class="field__label-wrap" aria-hidden="true">
+                <span class="field__label"></span>
+              </span>
+            </div> 
+          </div>
+        </div> 
+        <div class="Column">
+          <h6 style="margin-right: 85px;"> الشعبة </h6> 
+        </div>
+        <div class="Column" >
+          <div class="page"  >
+            <div class="field field_v1" >
+              <label for="first-name" class="ha-screen-reader"></label>
+              <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+              <span class="field__label-wrap" aria-hidden="true">
+                <span class="field__label"></span>
+              </span>
+            </div> 
+          </div>
+        </div> 
+        <div class="Column">
+          <h6  style="margin-right: 77px;"> الصف </h6> 
+        </div>
+
+    <div class="Column">
+      <div class="page" >
+        <div class="field field_v1">
+          <label for="first-name" class="ha-screen-reader"></label>
+          <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+          <span class="field__label-wrap" aria-hidden="true">
+            <span class="field__label"></span>
+          </span>
+        </div> 
+      </div>
+    </div> 
+    <div class="Column">
+      <h6 style="margin-right: 62px;" > الرقم المتسلسل </h6> 
+    </div>
+      
+    <div class="Column" >
+      <h5 style="margin-left: -28px;">مدرسة البيان الافتراضية </h5>
+      
+    </div>
+   </div>
+  </div>
+  <!-- end row -->
+  <!-- start row -->
+   <div class="grid-container"> 
+    <div class="Row">
+      <div class="Column">
+        <div class="page" >
+          <div class="field field_v1">
+            <label for="first-name" class="ha-screen-reader"></label>
+            <input id="first-name" class="field__input" placeholder=""  style="width: 60px;" >
+            <span class="field__label-wrap" aria-hidden="true">
+              <span class="field__label"></span>
+            </span>
+          </div> 
+        </div>
+      </div>
+
+      <div class="Column">
+          <h6  style="margin-right: 17px;"> رقم السجل العام </h6>
+         </div>
+       <div class="Column">
+        <div class="page" >
+          <div class="field field_v1">
+            <label for="first-name" class="ha-screen-reader"></label>
+            <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+            <span class="field__label-wrap" aria-hidden="true">
+              <span class="field__label"></span>
+            </span>
+          </div> 
+        </div>
+      </div> 
+       <div class="Column"> 
+          <h6 style="margin-right: -7px;">تاريخ الميلاد </h6>
+       </div>
+       <div class="Column">
+         <div class="page">
+          <div class="field field_v1">
+            <label for="first-name" class="ha-screen-reader"></label>
+            <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+            <span class="field__label-wrap" aria-hidden="true">
+              <span class="field__label"></span>
+            </span>
+          </div> 
+         </div>
+       </div>
+
+       <div class="Column">
+           <h6 style="margin-right: 16px;">الأم </h6>
+       </div>
+
+       <div class="Column">
+        <div class="page">
+          <div class="field field_v1">
+            <label for="first-name" class="ha-screen-reader"></label>
+            <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+            <span class="field__label-wrap" aria-hidden="true">
+              <span class="field__label"></span>
+            </span>
+          </div> 
+         </div>
+       </div>
+
+       <div class="Column">
+         <h6 style="margin-right: 7px;">  الأب </h6>
+       </div>
+
+       <div class="Column">
+        <div class="page">
+          <div class="field field_v1">
+            <label for="first-name" class="ha-screen-reader"></label>
+            <input id="first-name" class="field__input" placeholder=""  style="width: 120px;" >
+            <span class="field__label-wrap" aria-hidden="true">
+              <span class="field__label"></span>
+            </span>
+          </div> 
+         </div>
+       </div>
+      
+       <div class="Column">
+         <h6 style="margin-right: -55px;"> اسم التلميذة </h6>
+       </div>
+    </div>
+   </div>
+   <!-- end row -->
+     
+   <div class="grid-container" > 
+     <div class="row" style="margin-top: 29px;margin-left: -95px;">
+      <table  style="height: 500px;">
+        <thead>
+            <tr>
+               
+                <th  rowspan="1" colspan="5"  style="text-align: center;" >جدول مواد التلميذ </th>
+            </tr>
+
+            <tr>
+             
+              <th colspan="1" rowspan="2" style="text-align: center;">الدوام المدرسي </th>
+              <th colspan="1" rowspan="2" style="text-align: center;"> الدوام الفعلي </th>
+              <th colspan="1" rowspan="2"  style="text-align: center;"> دوام التلميذ </th>
+              <th  rowspan="1"  colspan="2"  style="text-align: center;"> الغياب </th>
+            </tr>
+            <tr>
+
+              <th colspan="1" style="text-align: center;">مبرر</th>
+              <th colspan="1" style="text-align: center;">غير مبرر</th>
+            </tr>
+           
+
+        </thead>
+        <tbody>
+          <form>
+            <tr>
+               
+                <td> الفصل الأول</td>
+                <td ><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                
+                 <td> <input style="height: 50px; width:50px" class="form-control">   </td>
+                 <td> <input style="height: 50px; width:50px" class="form-control"> </td>
+            </tr>
+          </form>
+
+          <form>
+            <tr>
+              
+               <td> الفصل الثاني </td>
+              <td><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+              <td><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+              <td> <input style="height:50px; width:50px" class="form-control"> </td>
+              <td> <input style="height: 50px;width:50px" class="form-control">  </td> 
+          </tr>
+        </form>
+
+        <form>
+          <tr>
+           
+            <td> المجموع </td>
+            <td ><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+            <td><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+            <td><input style="height: 50px; width:50px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+           <td> <input style="height: 50px; width:50px" class="form-control"> </td>
+        </tr>
+      </form>
+      <form> 
+        <tr> 
+         
+                <td colspan="5" style="text-align: center;"> التوجيهات التربوية للمعلم  </td>
+        </tr>
+      </form>
+      <form>
+        <tr> 
+         
+                <td colspan="5" style="text-align: center;"> الفصل الأول  </td>
+
+        </tr>
+      </form> 
+      <form> 
+        <tr> 
+         
+          <td colspan="5" > <textarea class="form-control" rows="6"> </textarea></td>
+        </tr>
+      </form>
+      <form> 
+        <tr> 
+          <td colspan="5" style="text-align: center;" >الفصل الثاني  </td>
+        </tr>
+      </form>
+      <form>
+        <tr> 
+          <td colspan="5"> <textarea class="form-control" rows="6"> </textarea></td>
+        </tr>
+      </form>
+
+      <form> 
+         <tr> 
+           <td colspan="5"> <div class="tab1cards"> 
+             <h6  style="width: 50px;"> اسم المعلم </h6>&nbsp;&nbsp;
+              <input class="form-control" style="width: 210px;"> 
+           </div> </td>
+         </tr>
+      </form>
+      <form> 
+         <tr> 
+          <td colspan="5" style="text-align: center;"> نتيجة التلميذ </td>
+         </tr>
+      </form>
+      <form> 
+         <tr> 
+          <td colspan="5">
+             <div class="tab1cards"> 
+                <h6> نجاح الى الصف  </h6>&nbsp;&nbsp;
+                <input class="form-control" style="width: 166px;"> 
+             </div>
+             </td>
+         </tr>
+      </form>
+     <form> 
+         <tr> 
+           <td colspan="5"> 
+              <div class="tab1cards">
+                  <h6> رسوب في الصف </h6>&nbsp;&nbsp;
+                  <input class="form-control" style="width: 150px;"> 
+                 </div>
+           </td>
+         </tr>
+     </form>
+     <form>
+        <td colspan="5"> 
+           <div class="tab1cards">
+             <h6> نقل الى الصف </h6> &nbsp;&nbsp;
+             <input class="form-control" style="width: 166px;"> 
+           </div>
+        </td>
+     </form>
+     <form> 
+       <tr>
+        <td colspan="5">
+            <div class="tab1cards">
+              <h6>  نفل الى الصف </h6>  &nbsp;&nbsp;
+              <input class="form-control" style="width: 166px;"> 
+            </div>
+           </td>
+       </tr> 
+     </form>
+
+     
+        </tbody>
+      </table>
+
+      
+
+
+     <!--div  style="margin-top:-280px">
+      <table>
+        <thead>
+          <tr>
+            <th colspan="5" style="text-align: center;">النتيجة النهائية </th>
+           
+          </tr>
+
+          <tr>
+            <th colspan="5" style="background-color: transparent;">
+               <div class="tab1cards" style="background-color: transparent;color: #2E3C40;">   نجاح الى الصف &nbsp;
+                <input class="form-control" style="width:200px;height:40px;"> 
+               </div>
+              </th>
+          </tr>
+          <tr>
+            <th colspan="5" style="background-color: transparent;">
+               <div class="tab1cards" style="background-color: transparent;color: #2E3C40;">   رسوب في الصف &nbsp;
+                <input class="form-control" style="width:200px;height:40px;"> 
+               </div>
+              </th>
+          </tr>
+          <tr>
+            <th colspan="5" style="background-color: transparent;">
+               <div class="tab1cards" style="background-color: transparent;color: #363839;">   نقل الى الصف &nbsp; &nbsp;&nbsp;
+                <input class="form-control" style="width:200px;height:40px;"> 
+               </div>
+              </th>
+          </tr>
+
+        </thead>
+      </table>
+     </div-->
+
+
+    
+    
+     </div>
+
+       &nbsp;&nbsp;&nbsp;
+     <div class="row" style="margin-top: 29px;"> 
+        
+      <table >
+        <thead>
+            <tr>
+              <th  rowspan="3" style="text-align: center;" >المواد الدراسية </th>
+              <th  rowspan="3"    style="text-align: center;">الدرجة العظمى </th> 
+                <th colspan="4" rowspan="1"  style="text-align: center;" >الفصل الدراسي الأول </th>
+                <th colspan="4" rowspan="1" style="text-align: center;">الفصل الدراسي الثاني </th>
+                <th colspan="1" rowspan="3"> مجموع درجات الفصلين </th>
+                <th colspan="2"  rowspan="1"> الدرجة النهائية (محصلة الفصلين )</th>
+              
+                
+               
+            </tr>
+            <tr>
+              <th  colspan="1" rowspan="1" style="text-align: center;"> درجة الأعمال   </th>
+              <th colspan="1" rowspan="1"  style="text-align: center;">درجة الامتحان </th>
+              <th  colspan="2" rowspan="1"  style="text-align: center;"> مجموع الدرجات للفصل 
+                <br> الدراسي الأول </th>
+              <th colspan="1" rowspan="1" style="text-align: center;"> درجة الأعمال </th>
+              <th colspan="1" rowspan="1" style="text-align: center;"> درجة الامتحان </th>
+              <th colspan="2" rowspan="1"  style="text-align: center;"> مجموع الدرجات للفصل الدراسي الثاني </th>
+              <th rowspan="2" style="text-align: center;">رقم </th>
+              <th rowspan="2" style="text-align: center;"> كتابة </th>
+             
+
+            </tr>
+
+            <tr>
+              <th style="text-align:center"> 60 %</th>
+              <th style="text-align: center;"> 40 %</th>
+              <th style="text-align: center;"> رقما </th>
+              <th style="text-align: center;"> كتابة </th>
+              <th style="text-align: center;"> 60 %</th>
+              <th style="text-align: center;"> 40 %</th>
+              <th style="text-align: center;"> رقما </th>
+              <th  style="text-align: center;"> كتابة </th>
+            </tr>
+
+
+        </thead>
+        <tbody>
+          <form>
+            <tr>
+                <td>التربية الدينية</td>
+                <td> 100 </td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <input class="form-control" style="width: 70px;height:50px"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea>  </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+            </tr>
+          </form>
+
+          <form>
+            <tr>
+              <td>اللغة العربية / المهارات الشفوية </td>
+             <td>100</td>
+              <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+              <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+              <td> <input class="form-control" style="width: 70px;height:50px"></td>
+              <td> <textarea class="form-control"></textarea></td>
+              <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+              <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+              <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+              <td> <textarea class="form-control"> </textarea>  </td>
+              <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+              <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+              <td> <textarea class="form-control"> </textarea></td>
+             
+          </tr>
+        </form>
+
+        <form>
+          <tr>
+            <td>اللغة العربية / المهارات الكتابية </td>
+           <td>100</td>
+            <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+            <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+            <td> <input class="form-control" style="width: 70px;height:50px"></td>
+            <td> <textarea class="form-control"></textarea></td>
+            <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+            <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+            <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+            <td> <textarea class="form-control"> </textarea>  </td>
+            <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+            <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+            <td> <textarea class="form-control"> </textarea></td>
+          
+        </tr>
+      </form>
+
+     <form>
+      <tr>
+        <td>اللغة الاجنبية</td>
+                <td>100</td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <input class="form-control" style="width: 70px;height:50px"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea>  </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+    </tr>
+          </form>
+
+          <form>
+            <tr>
+              <td>الرياضيات </td>
+              <td>100</td>
+              <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+              <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+              <td> <input class="form-control" style="width: 70px;height:50px"></td>
+              <td> <textarea class="form-control"></textarea></td>
+              <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+              <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+              <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+              <td> <textarea class="form-control"> </textarea>  </td>
+              <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+              <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+              <td> <textarea class="form-control"> </textarea></td>
+             
+          </tr>
+          </form>
+
+       <form>
+        <tr>
+          <td>الدراسات الاجتماعية </td>
+                <td>100</td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <input class="form-control" style="width: 70px;height:50px"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea>  </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+      </tr>
+          </form>
+
+          <form>
+            <tr>
+              <td>العلوم والتربية الصحية </td>
+                <td>100</td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <input class="form-control" style="width: 70px;height:50px"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea>  </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+              
+          </tr>
+        </form>
+
+        <form>
+          <tr>
+            <td>التربية الموسيقية </td>
+            <td>100</td>
+            <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+            <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+            <td> <input class="form-control" style="width: 70px;height:50px"></td>
+            <td> <textarea class="form-control"></textarea></td>
+            <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+            <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+            <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+            <td> <textarea class="form-control"> </textarea>  </td>
+            <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+            <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+            <td> <textarea class="form-control"> </textarea></td>
+           
+        </tr>
+      </form>
+       
+      <form>
+        <tr>
+          <td>التربية الفنية والبصرية والجمالية </td>
+                <td>100</td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <input class="form-control" style="width: 70px;height:50px"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea>  </td>
+
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+      </tr>
+    </form>
+
+    <form>
+      <tr>
+        <td>التربية البدنية والرياضية </td>
+        <td>100</td>
+        <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+        <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+        <td> <input class="form-control" style="width: 70px;height:50px"></td>
+        <td> <textarea class="form-control"></textarea></td>
+        <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+        <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+        <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+        <td> <textarea class="form-control"> </textarea>  </td>
+        <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+        <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+        <td> <textarea class="form-control"> </textarea></td>
+       
+    </tr>
+    </form>
+
+    <form>
+      <tr>
+        <td>التربية الزراعية </td>
+        <td ><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <input class="form-control" style="width: 70px;height:50px"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea>  </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+    </tr>
+</form>
+
+  <form>
+    <tr>
+      <td>المشروع </td>
+      <td >100</td>
+                <td colspan="2" >
+                <input style="height: 50px; width:70px;margin:0 auto;"  class="common-input mb-20 form-control" required="" type="text">
+                </td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td colspan="2"><input class="form-control" style="height: 50px;width:70px; margin:0 auto">  </td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea></td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+               
+  </tr>
+</form>
+<form>
+  <tr>
+    <td>المحجموع العام </td>
+    <td >1100</td>
+                <td colspan="2" >
+                <input style="height: 50px; width:70px;margin:0 auto;"  class="common-input mb-20 form-control" required="" type="text">
+                </td>
+                <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+                <td> <textarea class="form-control"></textarea></td>
+                <td colspan="2"><input class="form-control" style="height: 50px;width:70px; margin:0 auto">  </td>
+                <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+                <td> <textarea class="form-control"> </textarea></td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+                <td> <textarea class="form-control"> </textarea></td>
+               
+               
+  </tr>
+</form>
+
+<form>
+  <tr>
+    <td>التربية المهنية </td>
+    <td ><input class="form-control" style="width:70px; height:50px"> </td>
+    <td colspan="2" >
+    <input style="height: 50px; width:70px;margin:0 auto;"  class="common-input mb-20 form-control" required="" type="text">
+    </td>
+    <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+    <td> <textarea class="form-control"></textarea></td>
+    <td colspan="2"><input class="form-control" style="height: 50px;width:70px; margin:0 auto">  </td>
+    <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+    <td> <textarea class="form-control"> </textarea></td>
+    <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+    <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+    <td> <textarea class="form-control"> </textarea></td>
+    
+   
+</tr>
+</form>
+<form> 
+  <tr>
+    <td>السلوك </td>
+    <td >100 </td>
+    <td colspan="2" >
+    <input style="height: 50px; width:70px;margin:0 auto;"  class="common-input mb-20 form-control" required="" type="text">
+    </td>
+    <td><input style="height: 50px; width:70px" name="name" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text"></td>
+    <td> <textarea class="form-control"></textarea></td>
+    <td colspan="2"><input class="form-control" style="height: 50px;width:70px; margin:0 auto">  </td>
+    <td> <input class="form-control" style="width:70px; height: 50px;"></td>
+    <td> <textarea class="form-control"> </textarea></td>
+    <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+    <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+    <td> <textarea class="form-control"> </textarea></td>
+   
+   
+</tr>
+</form>
+  <form> 
+    <tr> 
+      <td> النشاط المدرسي الطلابي </td>
+       <td> 100</td>
+       <td colspan="2"><input class="form-control" style="height: 50px; width:70px; margin:0 auto">  </td>
+       <td> <input style="height:50px; width:70px" class="form-control"> </td>
+       <td> <textarea class="form-control"> </textarea>  </td>
+       <td colspan="2">  <input class="form-control" style="width:70px; height:50px;margin: 0 auto;">  </td>
+       <td> <input class="form-control" style="width: 70px; height:50px">  </td>
+       <td> <textarea class="form-control"></textarea></td>
+       <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+       <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+       <td> <textarea class="form-control"> </textarea></td>
+      
+    </tr>
+  </form>
+    
+  <form>
+    <tr>
+      <td> المجموع العام </td>
+      <td>1300</td>
+      <td colspan="2"><input class="form-control" style="height: 50px; width:70px; margin:0 auto">  </td>
+      <td> <input style="height:50px; width:70px" class="form-control"> </td>
+      <td> <textarea class="form-control"> </textarea>  </td>
+      <td colspan="2">  <input class="form-control" style="width:70px; height:50px; margin: 0 auto;">  </td>
+      <td> <input class="form-control" style="width: 70px; height:50px">  </td>
+      <td> <textarea class="form-control"></textarea></td>
+      <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+      <td> <input class="form-control" style="height: 50px; width:70px"> </td>
+      <td> <textarea class="form-control"> </textarea></td>
+      
+   </tr>
+
+    </tr>
+  </form>
+   
+
+
+   <form> 
+     <tr>
+      <td colspan="2" style="text-align: center;">ملاحظات مدير المدرسة </td>
+      <td colspan="11"> <textarea class="form-control"></textarea> </td>
+     </tr>
+   </form>
+   <form>
+     <tr> 
+      <td colspan="2" style="text-align: center;"> ملاحظات ولي التلميذ </td>
+      <td colspan="11"> <textarea class="form-control"> </textarea></td>
+     </tr>
+   </form>
+
+
+
+        </tbody>
+      </table>
+     
+    </div>
+   </div>
+
+   <div class="tab1cards"  style="margin-top: 13px;"> 
+    <div>
+     <h6 style="margin-left: 20px;">اسم المدير </h6>
+     <h6 style="font-weight: 700;"> د . محمد كمال نجار</h6>
+   </div>
+    
+   <div style="margin-left: 220px;" >
+     <h6  >الختم </h6>
+       <br>
+     
+        
+   </div>
+ </div>
+
+     
+
+
+
+                    <div class="Row " style="margin: 0 auto ; text-align: center;"> 
+                    <button  class="btn btn-primary " 
+                    style="margin:0 auto; width: 200px; height:40px;margin-top: 100px;
+                    background-color: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196));;"> حفظ 
+                    </button> 
+                  </div>
+                 
+                </div><!--end warp-->
+             <!-- end card 2-->
+             
+     <!-- end form -->
+     
+			</div><!-- end container-->
+		</div>
+	</form>
+
+ 
+  
+	
+	
+  <script src="https://cdn.rawgit.com/michalsnik/aos/2.1.1/dist/aos.js"></script>
+  <script>
+    AOS.init();
+  </script>
+	
+<!--===============================================================================================-->	
+	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/bootstrap/js/popper.js"></script>
+	<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/tilt/tilt.jquery.min.js"></script>
+	<script >
+		$('.js-tilt').tilt({
+			scale: 1.1
+		})
+	</script>
+<!--===============================================================================================-->
+	<script src="js/main.js"></script>
+
+</body>
+</html>

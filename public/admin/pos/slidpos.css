@@ -1,0 +1,87 @@
+/*
+http://www.michaels.com/static/on/demandware.static/-/Sites-MichaelsUS-Library/default/v1499703132315/js/slick/slick.css
+*/
+
+.category-landing .product-slider .slider-wrapper.horizontal-slider {
+  width: 100%;
+}
+ul.slick-container {
+  /*width: 65%;*/
+}
+li.slick-slide,
+.slick-initialized li.slick-slide {
+  display: inline-block;
+  width: 150px;
+  padding: 10px;
+}
+.slider-wrapper.horizontal-slider .product-image,
+.slider-wrapper.horizontal-slider .product-name,
+.slider-wrapper.horizontal-slider .product-pricing {
+  display: block;
+  float: none;
+}
+.slider-wrapper.horizontal-slider .product-image {
+  width: auto;
+  /*float: none;*/
+  margin: 0 0 4px;
+}
+.product-image img {
+  width: 195px;
+  height: 100px;
+}
+.slider-wrapper .product-tile .product-name {
+  margin: 4px 0;
+  padding: 0;
+}
+.slider-wrapper .product-pricing {
+  margin: 4px 0;
+  padding: 0;
+}
+.slick-arrow {
+  background-position: -320px -117px;
+  display: block;
+  height: 50px;
+  position: absolute;
+  text-indent: -9999px;
+  top: 25%;
+  z-index: 99;
+  width: 51px;
+  background-image: url("http://pos/admin/images/sprite.png");
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+.slick-prev,
+.slick-prev:hover {
+  left: 0;
+  background-position: -320px -117px;
+}
+/*.slick-prev:hover {
+  background-position: -320px -185px;
+}*/
+.slick-next,
+.slick-next:hover {
+  right: 0;
+  background-position: -386px -117px;
+}
+/*.slick-next:hover {
+  background-position: -386px -185px;
+}*/
+ul.slick-dots li {
+  display: inline-block;
+  display: none;
+}
+
+@media only screen and (max-width: 767px) {
+  li.slick-slide,
+  .slick-initialized li.slick-slide {
+    width: 150px;
+    padding: 5px;
+  }
+  .product-image img {
+    width: 150px;
+    height: 150px;
+  }
+
+ 
+
+}

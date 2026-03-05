@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>استمارة طلب توظيف </title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+<!--===============================================================================================-->
+<style>
+	 .row{
+    display: grid;  
+   }
+
+   /*checkbox */
+   @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:600&display=swap');
+
+input[type="checkbox"] {
+  
+  text-align: right;
+  position: relative;
+  width: 1.1em;
+  height: 1.1em;
+  color: #094e89;
+  border: 1px solid #094e89;
+  border-radius: 4px;
+  appearance: none;
+  outline: 0;
+  cursor: pointer;
+  transition: background 175ms cubic-bezier(0.1, 0.1, 0.25, 1);
+}
+input[type="checkbox"]::before {
+  position: absolute;
+  content: '';
+  display: block;
+  top: 2px;
+  right: 7px;
+  width: 4px;
+  height: 10px;
+  border-style: solid;
+  border-color: #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+}
+input[type="checkbox"]:checked {
+  color: #fff;
+  border-color: #ffb832;
+  background: #ffb832;
+}
+input[type="checkbox"]:checked::before {
+  opacity: 1;
+}
+input[type="checkbox"]:checked ~ label::before {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+label {
+  color: #0b273f;
+  position: relative;
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: 400;
+  padding: 0 0.25em 0;
+  user-select: none;
+}
+label::before {
+  position: absolute;
+  content: attr(data-content);
+  color: #9c9e9f;
+  clip-path: polygon(0 0, 0 0, 0% 100%, 0 100%);
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+  text-decoration-color: #363839;
+  transition: clip-path 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+   /*end checkbox*/
+   /*cards*/
+
+.data-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 55.75em;
+  
+  min-height: auto;
+  overflow: hidden;
+  border-radius: 0.5em;
+  text-decoration: none;
+  background: white;
+  margin: 1em;
+  padding: 2.75em 2.5em;
+  text-align: right;
+  box-shadow: 0 1.8em 2.7em -0.7em rgba(0, 0, 0, 0.3);
+  transition: transform 0.45s ease, background 0.45s ease;
+}
+@media (max-width: 992px) {
+  .data-card {
+    padding: 177px 90px 33px 85px;
+  }
+
+ 
+
+  .data-card {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .data-card {
+    padding: 100px 80px 33px 80px;
+  }
+
+ 
+
+  .data-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .data-card {
+    padding: 100px 15px 33px 15px;
+  }
+}
+
+.data-card h3 {
+  color: #2E3C40;
+  font-size: 3.5em;
+  font-weight: 600;
+  line-height: 1;
+  padding-bottom: 0.5em;
+  margin: 0 0 0.142857143em;
+  border-bottom: 2px solid #753BBD;
+  transition: color 0.45s ease, border 0.45s ease;
+}
+.data-card h4 {
+  color: #627084;
+  text-transform: uppercase;
+  font-size: 1.125em;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  margin: 0 0 1.777777778em;
+  transition: color 0.45s ease;
+}
+.data-card p {
+  opacity: 0;
+  color: #FFFFFF;
+  font-weight: 600;
+  line-height: 1.8;
+  margin: 0 0 1.25em;
+  transform: translateY(-1em);
+  transition: opacity 0.45s ease, transform 0.5s ease;
+}
+.data-card .link-text {
+  display: block;
+  color: #753BBD;
+  font-size: 1.125em;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: auto 0 0;
+  transition: color 0.45s ease;
+}
+.data-card .link-text svg {
+  margin-left: 0.5em;
+  transition: transform 0.6s ease;
+}
+.data-card .link-text svg path {
+  transition: fill 0.45s ease;
+}
+.data-card:hover {
+  background: #FFFFFF;
+  transform: scale(1.02);
+}
+.data-card:hover h3 {
+  color: #FFFFFF;
+  border-bottom-color: #A754C4;
+}
+.data-card:hover h4 {
+  color: #FFFFFF;
+}
+.data-card:hover p {
+  opacity: 1;
+  transform: none;
+}
+.data-card:hover .link-text {
+  color: #FFFFFF;
+}
+.data-card:hover .link-text svg {
+  animation: point 1.25s infinite alternate;
+}
+.data-card:hover .link-text svg path {
+  fill: #FFFFFF;
+}
+@keyframes point {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0.125em);
+  }
+}
+
+
+/*end cards*/
+
+/*input*/
+ /*
+=====
+HELPERS
+=====
+*/
+
+.ha-screen-reader{
+  width: var(--ha-screen-reader-width, 1px);
+  height: var(--ha-screen-reader-height, 1px);
+  padding: var(--ha-screen-reader-padding, 0);
+  border: var(--ha-screen-reader-border, none);
+
+  position: var(--ha-screen-reader-position, absolute);
+  clip: var(--ha-screen-reader-clip, rect(1px, 1px, 1px, 1px));
+  overflow: var(--ha-screen-reader-overflow, hidden);
+}
+
+/*
+=====
+RESET STYLES
+=====
+*/
+
+.field__input{ 
+  --uiFieldPlaceholderColor: var(--fieldPlaceholderColor, #767676);
+  
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.field__input:focus::-webkit-input-placeholder{
+  color: var(--uiFieldPlaceholderColor);
+}
+
+.field__input:focus::-moz-placeholder{
+  color: var(--uiFieldPlaceholderColor);
+}
+
+/*
+=====
+CORE STYLES
+=====
+*/
+
+.field{
+  --uiFieldBorderWidth: var(--fieldBorderWidth, 2px);
+  --uiFieldPaddingRight: var(--fieldPaddingRight, 1rem);
+  --uiFieldPaddingLeft: var(--fieldPaddingLeft, 1rem);   
+  --uiFieldBorderColorActive: var(--fieldBorderColorActive, rgba(22, 22, 22, 1));
+
+  display: var(--fieldDisplay, inline-flex);
+  position: relative;
+  font-size: var(--fieldFontSize, 1rem);
+}
+
+.field__input{
+  box-sizing: border-box;
+  width: var(--fieldWidth, 100%);
+  height: var(--fieldHeight, 3rem);
+  padding: var(--fieldPaddingTop, 1.25rem) var(--uiFieldPaddingRight) var(--fieldPaddingBottom, .5rem) var(--uiFieldPaddingLeft);
+  border-bottom: var(--uiFieldBorderWidth) solid var(--fieldBorderColor, rgba(0, 0, 0, .25));  
+}
+
+.field__input:focus{
+  outline: none;
+}
+
+.field__input::-webkit-input-placeholder{
+  opacity: 0;
+  transition: opacity .2s ease-out;
+}
+
+.field__input::-moz-placeholder{
+  opacity: 0;
+  transition: opacity .2s ease-out;
+}
+
+.field__input:focus::-webkit-input-placeholder{
+  opacity: 1;
+  transition-delay: .2s;
+}
+
+.field__input:focus::-moz-placeholder{
+  opacity: 1;
+  transition-delay: .2s;
+}
+
+.field__label-wrap{
+  box-sizing: border-box;
+  pointer-events: none;
+  cursor: text;
+
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.field__label-wrap::after{
+  content: "";
+  box-sizing: border-box;
+  width: 100%;
+  height: 0;
+  opacity: 0;
+
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.field__input:focus ~ .field__label-wrap::after{
+  opacity: 1;
+}
+
+.field__label{
+  position: absolute;
+  left: var(--uiFieldPaddingLeft);
+  top: calc(50% - .5em);
+
+  line-height: 1;
+  font-size: var(--fieldHintFontSize, inherit);
+
+  transition: top .2s cubic-bezier(0.9, -0.15, 0.1, 1.15), opacity .2s ease-out, font-size .2s ease-out;
+  will-change: bottom, opacity, font-size;
+}
+
+.field__input:focus ~ .field__label-wrap .field__label,
+.field__input:not(:placeholder-shown) ~ .field__label-wrap .field__label{
+  --fieldHintFontSize: var(--fieldHintFontSizeFocused, .75rem);
+
+  top: var(--fieldHintTopHover, .25rem);
+}
+
+/* 
+effect 1
+*/
+
+.field_v1 .field__label-wrap::after{
+  border-bottom: var(--uiFieldBorderWidth) solid var(--uiFieldBorderColorActive);
+  transition: opacity .2s ease-out;
+  will-change: opacity;
+}
+
+/* 
+
+/*
+=====
+LEVEL 4. SETTINGS
+=====
+*/
+
+.field{
+  --fieldBorderColor: #D1C4E9;
+  --fieldBorderColorActive: #673AB7;
+}
+
+/*
+=====
+DEMO
+=====
+*/
+
+.tab1cards {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  grid-gap: 10px;
+  background-color: transparent;
+  padding: 10px;
+}
+.myDiv{
+	display:none;
+} 
+ 
+  
+</style>
+</head>
+<body>
+ 
+	<form class="limiter" >
+    
+		<div class="container-login100" style=" background-image: url('../new2.jpg');
+    background-repeat: no-repeat;background-size: cover;">
+            
+			<div class="wrap-login100"  >
+        <h4 style="margin: 0 auto ;text-align:center; color:#f38639"> استمارة طلب توظيف </h4>
+               <br>
+               <br>
+              <div class="container" style="text-align: right;">
+                 <div class="row "> 
+                   <div class="col-md"> 
+                      <h5 style="color: #094e89;">الوظيفة المقدم عليها  </h5>
+                   </div>
+                 </div>
+              </div>
+              <br>
+              <br> 
+
+              
+             <div class="container"  style="text-align: right;">
+                 <div class="row ">
+                    <div class="col-md"  >
+                       <!-- start checkbox -->
+                       <label for="to" >دوام كامل </label>
+                       <input type="checkbox" id="to" name="to" value="to">
+                      
+
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <label for="todo1" >نظام ساعات </label>
+                       <input type="checkbox" id="todo1" name="todo1" value="todo1">
+                      
+                                                               
+                    </div> 
+                 </div>
+             </div>
+
+             <div class="container">
+                <div class="row">
+                   <div class="col-md">
+
+                    <div class="data-card"  style="width: 800px;margin: 0 auto;" >
+                      <div class="text pl-3">
+                      <div class="grid-container "> 
+                       <div class="tab1cards"> 
+                        <br> 
+                        <div class="page" style="margin-top: -30px;">
+                          <div class="field field_v1">
+                            <label for="first-name" class="ha-screen-reader"></label>
+                            <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                            <span class="field__label-wrap" aria-hidden="true">
+                              <span class="field__label"></span>
+                            </span>
+                          </div>
+                   
+                        </div>
+                         &nbsp;&nbsp;
+                        <label for="todo2" >منسق مادة </label> 
+                        <input type="checkbox" id="todo2" name="todo2" value="todo2">
+                        <!-- input -->
+                        
+                      </div>
+                     <div class="tab1cards">
+                      <br>
+                      <div class="page" style="margin-top: -30px;">
+                        <div class="field field_v1">
+                          <label for="first-name" class="ha-screen-reader"></label>
+                          <input id="first-name" class="field__input" placeholder="" style="width:80px">
+                          <span class="field__label-wrap" aria-hidden="true">
+                            <span class="field__label"></span>
+                          </span>
+                        </div> 
+                      </div>
+                      &nbsp;&nbsp;&nbsp;&nbsp;
+                      <label for="todo3" > مدرس مادة </label> 
+                      <input type="checkbox" id="todo3" name="todo3" value="todo3">
+
+                     </div>
+
+                     <div class="tab1cards">
+                      <br>
+                      <div class="page"  style="margin-top: -30px;">
+                        <div class="field field_v1">
+                          <label for="first-name" class="ha-screen-reader"></label>
+                          <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                          <span class="field__label-wrap" aria-hidden="true">
+                            <span class="field__label"></span>
+                          </span>
+                        </div> 
+                      </div>
+                      &nbsp;&nbsp;
+                      <label for="todo4" >مساعد مدرس</label> 
+                      <input type="checkbox" id="todo4" name="todo4" value="todo4">
+
+                     </div>
+
+
+                    </div>
+
+                    <br>
+                    <br>
+                      <div class="tab1cards">
+                          <label for="to5" > امين سر </label>
+                          <input type="checkbox" id="to5" name="to5" value="to5">
+                            &nbsp;&nbsp;&nbsp;
+                          <label for="to6"> شؤوون موظفين </label>
+                          <input type="checkbox" id="to6" name="to6" value="to6">
+                          &nbsp;&nbsp;&nbsp;
+                          <label for="to7"> محاسب </label> 
+                          <input type="checkbox" id="to7" name="to7" value="to7">
+                          &nbsp;&nbsp;&nbsp;
+                          <label for="to8"> أمين المكتبة </label> 
+                          <input type="checkbox" id="to8" name="to8" value="to8">
+                          &nbsp;&nbsp;&nbsp;
+                          <label for="to9"> اختصاصي اجتماعي </label> 
+                          <input type="checkbox" id="to9" name="to9" value="to9">
+
+                      </div>
+                         <br>
+                      <div class="tab1cards">
+                        <label for="to11" > مسؤول جودة </label>
+                        <input type="checkbox" id="to11" name="to11" value="to11">
+                          &nbsp;&nbsp;&nbsp;
+                        <label for="to12"> استقبال </label>
+                        <input type="checkbox" id="to12" name="to12" value="to12">
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="to13"> مدخل بيانات </label> 
+                        <input type="checkbox" id="to13" name="to13" value="to13">
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="to14"> سكرتارية </label> 
+                        <input type="checkbox" id="to14" name="to14" value="to14">
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="to15"> طبيب </label> 
+                        <input type="checkbox" id="to15" name="to15" value="to15">
+
+                    </div>
+                           <br>
+
+                     <div class="tab1cards">
+                        <label for="to16"> ممرض </label>
+                        <input type="checkbox" id="to16" name="to16" value="to16">
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="to17"> امين مستودع </label>
+                        <input type="checkbox" id="to17" name="to16" value="to16"> 
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="to18"> أمن خاص </label>
+                        <input type="checkbox" id="to18" name="to18" value="to18"> 
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="to19">مشرف باص </label>
+                        <input type="checkbox" id="to19" name="to19" value="to19"> 
+                        &nbsp;&nbsp;&nbsp;
+                        <label for="tod12"> فني نظافة  </label>
+                        <input type="checkbox" id="tod12" name="tod12" value="tod12"> 
+                     </div>
+                      
+                   
+                        
+                        <!-- end input -->
+                          
+                      </div>     
+                       </div>                      
+
+                   </div>
+
+                </div>
+
+             </div> <!-- end card1-->
+
+             <div class="container" >
+               <div class="row" > 
+                  <div class="col-md"> 
+                    <div class="data-card" > <!-- start card -->
+                      <div class="text pl-3" >
+                      <div class="" > 
+                       <div class="tab1cards" style="text-align: right;margin-left: 20px;"> 
+                        <!--h5 style="text-align: right;float: right;"> البيانات الشخصية لمقدم الطلب </h5-->
+                        <div class="page" style="margin-top: -30px;">
+                          <div class="field field_v1">
+                            <label for="first-name" class="ha-screen-reader"></label>
+                            <input id="first-name" class="field__input" placeholder="" style="width:390px">
+                            <span class="field__label-wrap" aria-hidden="true">
+                              <span class="field__label"></span>
+                            </span>
+                          </div>
+                   
+                        </div>
+                          
+                        <h5> الاسم الثلاثي </h5>
+                    </div>
+                      <br>
+                      
+                    <!-- new -->
+                    <div class="grid-container" > 
+                      <div class="tab1cards" style="text-align: right;margin-left: 20px;"> 
+                       <!--h5 style="text-align: right;float: right;"> البيانات الشخصية لمقدم الطلب </h5-->
+                       <div class="page" style="margin-top: -30px;">
+                         <div class="field field_v1">
+                           <label for="first-name" class="ha-screen-reader"></label>
+                           <input id="first-name" class="field__input" placeholder="" style="width:360px">
+                           <span class="field__label-wrap" aria-hidden="true">
+                             <span class="field__label"></span>
+                           </span>
+                         </div>
+                       </div>
+
+                         &nbsp;
+                       <h5>مكان وتاريخ الميلاد </h5>
+                   </div>
+                    <!-- end new -->
+                      </div>
+                       <div class="tab1cards">
+                        <label for="tod29"> ذكر</label>
+                        <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                        &nbsp;&nbsp;
+                        <label for="tod29"> أنثى </label>
+                        <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                        &nbsp;
+                        <label for="tod29"> مسلم</label>
+                        <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                        &nbsp;
+                        <label for="tod29"> مسيحي</label>
+                        <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                            &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                        <h5 style="margin-right:-150px">الجنس والديانة </h5>
+                       </div>
+                       <div class="grid-container" > 
+                        <div class="tab1cards" style="text-align: right;margin-left: 20px;"> 
+                         <!--h5 style="text-align: right;float: right;"> البيانات الشخصية لمقدم الطلب </h5-->
+                         <div class="page" style="margin-top: -30px;">
+                           <div class="field field_v1">
+                             <label for="first-name" class="ha-screen-reader"></label>
+                             <input id="first-name" class="field__input" placeholder="" style="width:360px">
+                             <span class="field__label-wrap" aria-hidden="true">
+                               <span class="field__label"></span>
+                             </span>
+                           </div>
+                         </div>
+  
+                           &nbsp;
+                         <h5>رقم الهاتف الأرضي </h5>
+                     </div>
+                      <!-- end new -->
+                        </div> 
+                          <!-- new2-->
+                          <div class="grid-container" > 
+                            <div class="tab1cards" style="text-align: right;margin-left: 20px;"> 
+                             <!--h5 style="text-align: right;float: right;"> البيانات الشخصية لمقدم الطلب </h5-->
+                             <div class="page" style="margin-top: -30px;">
+                               <div class="field field_v1">
+                                 <label for="first-name" class="ha-screen-reader"></label>
+                                 <input id="first-name" class="field__input" placeholder="" style="width:360px">
+                                 <span class="field__label-wrap" aria-hidden="true">
+                                   <span class="field__label"></span>
+                                 </span>
+                               </div>
+                             </div>
+      
+                               &nbsp;
+                             <h5>رقم الهاتف الجوال </h5>
+                         </div>
+                          <!-- end new -->
+                            </div>
+                          <!--end new2-->
+
+                          <div class="grid-container" > 
+                            <div class="tab1cards" style="text-align: right;margin-left: 20px;"> 
+                             <!--h5 style="text-align: right;float: right;"> البيانات الشخصية لمقدم الطلب </h5-->
+                             <div class="page" style="margin-top: -30px;">
+                               <div class="field field_v1">
+                                 <label for="first-name" class="ha-screen-reader"></label>
+                                 <input  type="email"  class="field__input" placeholder="" style="width:360px">
+                                 <span class="field__label-wrap" aria-hidden="true">
+                                   <span class="field__label"></span>
+                                 </span>
+                               </div>
+                             </div>
+      
+                               &nbsp;
+                             <h5>البريد الالكتروني </h5>
+                         </div>
+                          <!-- end new -->
+                            </div>
+                          <!--end new2-->
+                          <div class="grid-container" > 
+                            <div class="tab1cards" style="text-align: right;margin-left: 20px;"> 
+                            
+                             <div class="page" style="margin-top: -30px;">
+                               <div class="field field_v1">
+                                 <label for="first-name" class="ha-screen-reader"></label>
+                                 <input id="first-name" class="field__input" placeholder="" style="width:360px">
+                                 <span class="field__label-wrap" aria-hidden="true">
+                                   <span class="field__label"></span>
+                                 </span>
+                               </div>
+                             </div>
+      
+                               &nbsp;
+                             <h5>عنوان الاقامة </h5>
+                         </div>
+                          <!-- end new -->
+                            </div>
+                          <!--end new2-->               
+                          <div class="tab1cards" style="margin-right: 80px;">
+                            <label for="tod29"> لم يخدم </label>
+                            <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                            &nbsp;&nbsp;
+                            <label for="tod29"> خدم </label>
+                            <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                            &nbsp;
+                            <label for="tod29"> دفع البدل </label>
+                            <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                            &nbsp;
+                            <label for="tod29"> معفى </label>
+                            <input type="checkbox" id="tod29" name="tod29" value="tod29"> 
+                                &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                            <h5 style="margin-right:-150px">الوضع العسكري </h5>
+                           </div>   
+                             <br>
+                           <div class="tab1cards" style="margin-right: 80px;">
+                              <label for="val1">أعزب  </label>
+                              <input type="checkbox" id="val1" name="val1" value="val1">
+                              &nbsp;&nbsp;
+                              <label for="val2">متزوج </label> 
+                              <input type="checkbox" id="val2" name="val2" value="val2">
+                              &nbsp;&nbsp;
+                              <label for="val3">مطلق</label> 
+                              <input type="checkbox" id="val3" name="val3" value="val3">
+                              &nbsp;&nbsp;
+                              <label for="val4">ارمل </label> 
+                              <input type="checkbox" id="val4" name="val4" value="val4">
+                              &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                              <h5 style="margin-right:-150px">الحالة الاجتماعية </h5>
+                               
+
+                           </div>
+                           
+                             
+
+
+                      </div>
+                  </div> <!-- end card-->
+
+                   
+
+               </div> 
+               <!-- new cards -->
+               <div class="container" >
+                <div class="row" > 
+                   <div class="col-md"> 
+                     <div class="data-card" > <!-- start card -->
+                      <div class="tab1cards" style="margin-right: 80px;">
+                        <label for="val1">لايوجد  </label>
+                        <input type="checkbox" id="val1" name="val1" value="val1">
+                        &nbsp;&nbsp;
+                        <label for="val2">اعدادي </label> 
+                        <input type="checkbox" id="val2" name="val2" value="val2">
+                        &nbsp;&nbsp;
+                        <label for="val3">ثانوي </label> 
+                        <input type="checkbox" id="val3" name="val3" value="val3">
+                        &nbsp;&nbsp;
+                        <label for="val4">معهد </label> 
+                        <input type="checkbox" id="val4" name="val4" value="val4">
+                        &nbsp;&nbsp;
+                        <label for="val5">جامعي </label> 
+                        <input type="checkbox" id="val5" name="val5" value="val5">
+                         &nbsp;&nbsp;
+                         <label for="val6">ماجستير </label>
+                         <input type="checkbox" id="val6" name="val6" value="val6"> 
+                        &nbsp;&nbsp; &nbsp;
+                        <h5 style="margin-right:-150px">المؤهل العلمي</h5>
+                     </div>
+                       
+                     <div class="grid-container" > 
+                      <div class="tab1cards" style="text-align: right;margin-left: 100px;"> 
+                      
+                       <div class="page" style="margin-top: -30px;">
+                         <div class="field field_v1">
+                           <label for="first-name" class="ha-screen-reader"></label>
+                           <input id="first-name" class="field__input" placeholder="" style="width:360px">
+                           <span class="field__label-wrap" aria-hidden="true">
+                             <span class="field__label"></span>
+                           </span>
+                         </div>
+                       </div>
+
+                         &nbsp;
+                       <h5>التخصص </h5>
+
+                     
+                   </div>
+                     </div>
+
+                      <div class="tab1cards">
+                        <div class="page" style="margin-top: -30px;">
+                        <div class="field field_v1">
+                          <label for="first-name" class="ha-screen-reader"></label>
+                          <input id="first-name" class="field__input" placeholder="" style="width:300px">
+                          <span class="field__label-wrap" aria-hidden="true">
+                            <span class="field__label"></span>
+                          </span>
+                        </div>
+                      </div>
+
+                        &nbsp;
+                      <h5>مكان وتاريخ المؤهل العلمي </h5>
+
+ 
+                      </div>
+                      <br> 
+                      
+                      <div class="tab1cards"> 
+                        <label for="vall">لايوجد </label>
+                        <input type="checkbox" id="vall" name="vall" value="vall"> 
+                        &nbsp;&nbsp;
+                        <label for="vall2">دبلوم  </label>
+                        <input type="checkbox" id="vall2"  name="vall2" value="vall2"> 
+                        &nbsp;&nbsp;
+                        <label for="vall3"> ماجستير</label>
+                        <input type="checkbox" id="vall3" name="vall3" value="vall3">
+                        &nbsp;&nbsp;
+                        <label for="vall4">دكتوراه  </label> 
+                        <input type="checkbox" id="vall4" name="vall4" value="vall4"> 
+                        &nbsp;&nbsp;&nbsp;
+                        <h5>المؤهل التربوي </h5>
+                      </div>
+                       <br>
+                       
+                      <div class="tab1cards">
+                        <div class="page" style="margin-top: -30px;">
+                        <div class="field field_v1">
+                          <label for="first-name" class="ha-screen-reader"></label>
+                          <input id="first-name" class="field__input" placeholder="" style="width:300px">
+                          <span class="field__label-wrap" aria-hidden="true">
+                            <span class="field__label"></span>
+                          </span>
+                        </div>
+                      </div>
+
+                        &nbsp;
+                      <h5>مكان وتاريخ المؤهل التربوي</h5>
+                      </div>  
+                    <div class="tab1cards">
+                          <label for="valc1"> مقبول</label>
+                          <input type="checkbox" id="valc1" name="valc1" value="valc1">&nbsp;
+                           &nbsp;&nbsp;
+                           <label for="valc2">ممتاز  </label>
+                           <input type="checkbox" id="valc2" name="valc2" value="valc2">&nbsp;&nbsp;
+                           <h7> العربية </h7> 
+                           &nbsp;&nbsp;
+
+                             <h5>|</h5>
+
+                           <label for="valc1"> مقبول</label>
+                           <input type="checkbox" id="valc1" name="valc1" value="valc1">&nbsp;
+                            &nbsp;&nbsp;
+                            <label for="valc2">ممتاز  </label>
+                            <input type="checkbox" id="valc2" name="valc2" value="valc2">&nbsp;&nbsp;
+                            <h7> الانكليزية </h7>
+                              &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+
+                         <h5>اللغات التي يجيدها </h5>
+                          
+
+                    </div>  
+                    <!-- end new -->
+                      </div>
+
+                     </div>
+                   </div>
+                </div>
+               </div>
+
+               <!-- end new cards-->
+
+               <!-- start table cards-->
+               <div class="container" >
+                <div class="row" > 
+                   <div class="col-md"> 
+                     <div class="data-card"  > <!-- start card -->
+                        <div class="grid-container"> 
+
+                            <h5>مكان التدريب  </h5>
+                            <h5>سنة الحصول عليها </h5>
+                            <h5> جهة التدريب </h5>
+                            <h5>اسم الدورة  &nbsp;&nbsp; <button><img src="./icons8-plus-30.png" width="20px;height:30px"></button></h5>
+                            
+                        </div>
+                        <div class="grid-container">
+                          <div class="page" style="margin-top: -30px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                          <!-- 1 new input-->
+                          <div class="page" style="margin-top: -30px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                        
+                          <!-- end new input -->
+
+                            <!-- 2 new input-->
+                            <div class="page" style="margin-top: -30px;">
+                              <div class="field field_v1">
+                                <label for="first-name" class="ha-screen-reader"></label>
+                                <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                                <span class="field__label-wrap" aria-hidden="true">
+                                  <span class="field__label"></span>
+                                </span>
+                              </div>
+                            </div> 
+                            <!-- end new input -->
+
+                              <!-- 3 new input-->
+                          <div class="page" style="margin-top: -30px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                          <!-- end new input -->
+                          <!-- start input -->
+                          <div class="page" style="margin-top: -10px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                          <!-- end input-->
+                          <!-- start 1 iput -->
+                          <div class="page" style="margin-top: -10px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                          <!-- end 1 input-->
+                           <!-- start 1 iput -->
+                           <div class="page" style="margin-top: -10px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                          <!-- end 1 input-->
+                           <!-- start 1 iput -->
+                           <div class="page" style="margin-top: -10px;">
+                            <div class="field field_v1">
+                              <label for="first-name" class="ha-screen-reader"></label>
+                              <input id="first-name" class="field__input" placeholder="" style="width:120px">
+                              <span class="field__label-wrap" aria-hidden="true">
+                                <span class="field__label"></span>
+                              </span>
+                            </div>
+                          </div> 
+                          <!-- end 1 input-->
+
+
+
+                          </div>
+                           
+  
+
+  
+                        </div>
+                      
+                     </div>
+                   </div>
+                  </div>
+                </div>
+                <!-- end table cards-->
+
+             </div>
+             </div>
+
+             
+             
+
+     
+          
+				   
+        
+				<br>
+				<br>   
+       <!--button   href="index.html"  class="btn btn-primary " 
+      style="margin:0 auto; width: 200px; height:40px;
+      background-color: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196));;"> حفظ </button--> 
+
+			</div>
+		</div>
+	</form>
+
+  <!-- end form for question-->
+	
+	
+
+	
+<!--===============================================================================================-->	
+	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/bootstrap/js/popper.js"></script>
+	<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/tilt/tilt.jquery.min.js"></script>
+	<script >
+		$('.js-tilt').tilt({
+			scale: 1.1
+		})
+	</script>
+<!--===============================================================================================-->
+	<script src="js/main.js"></script>
+
+</body>
+</html>

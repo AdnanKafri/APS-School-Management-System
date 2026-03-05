@@ -1,0 +1,17 @@
+admin.base_subject_delete
+admin.base_subject_store
+admin.base_subject_update
+admin.base_subjects
+admin.edu_supervisor.lecture_content
+admin.edu_supervisor.subjects
+admin.edu_supervisor.subjects.lectures
+admin.google_meet_add
+admin.gradebook.edit_class
+admin.gradebook.edit_settings
+admin.gradebook.edit_subject
+admin.gradebook.view_grid
+admin.objections
+admin.our_team
+admin.student_attendance
+admin.teacher_schedule
+admin.user_delete

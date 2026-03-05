@@ -1,0 +1,98 @@
+
+$prime : #00CCFF;
+$scond : #F49845;
+$arrow : #97CA03;
+@function shadow($color) {
+  $val: 0px 0px $color;
+  @for $i from 1 through 50 {
+    $val: #{$val}, #{$i}px #{$i}px #{$color};
+  }
+  @return $val;
+}
+.btn{
+  width: 150px;
+  height: 150px;
+  background: #ddd;
+  position: relative;
+  text-align: center;
+  margin: 15px;
+  overflow: hidden;
+  @include border-radius(100%);
+  display: inline-block;
+  &.download{
+     background: $prime;
+    .cloud{
+      @include box-shadow( shadow(darken($prime, 10%)));
+    }
+    .arrow{
+          @include animation(download 1s linear infinite);
+    }
+  }
+  &.upload{
+    background: $scond;
+    .cloud{
+      @include box-shadow( shadow(darken($scond, 10%)));
+    }
+    .arrow{
+      @include animation(uplaod 1s linear infinite);
+      &:after{
+        top: auto;
+        bottom: 100%;
+        border-color: transparent transparent $arrow transparent;
+      }
+    }
+  }
+}
+.cloud{
+  width: 100px;
+  height: 40px;
+  position: relative;
+  background: #fff;
+  display: inline-block;
+  @include border-radius(50px);
+  margin: 60px auto 0;
+  @include box-shadow( shadow(darken($prime, 10%)));
+  &:after, &:before{
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    @include border-radius(100%);
+    top: -20px;
+    background: #fff;
+    left: 5px;
+  }
+  &:before{
+    width: 40px;
+    height: 40px;
+    left: 50px;
+  }
+}
+.arrow{
+    position: absolute;
+    left: 0 ;
+    right: 0;
+    margin: auto;
+    z-index: 5;
+    top: 10px;
+    width: 15px;
+    height: 10px;
+    background: $arrow;
+    display: inline-block;
+    &:after{
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 100%;
+      border:15px solid transparent;
+      border-top-color: $arrow;
+    }
+  }
+@include keyframes(download){
+  0%{@include translateY(-20px)}
+  100%{@include translateY(20px); opacity: 0;}
+}
+@include keyframes(uplaod){
+  0%{@include translateY(20px)}
+  100%{@include translateY(-20px); opacity: 0;}
+}

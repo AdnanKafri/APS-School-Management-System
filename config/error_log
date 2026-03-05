@@ -1,0 +1,12 @@
+[12-Nov-2022 10:51:41 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/albayanvs/public_html/config/cache.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/albayanvs/public_html/config/cache.php on line 21
+[17-Nov-2022 02:55:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/albayanvs/public_html/config/cache.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/albayanvs/public_html/config/cache.php on line 21
+[17-Nov-2022 19:10:30 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/albayanvs/public_html/config/cache.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/albayanvs/public_html/config/cache.php on line 21

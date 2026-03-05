@@ -1,0 +1,134 @@
+@font-face {
+	font-family: "flaticon";
+	src: url("../fonts/flaticon3d79.ttf?e11e641fe808a66cb4561e3b7815c22c") format("truetype"),
+url("../fonts/flaticon3d79.woff?e11e641fe808a66cb4561e3b7815c22c") format("woff"),
+url("../fonts/flaticon3d79.woff2?e11e641fe808a66cb4561e3b7815c22c") format("woff2"),
+url("../fonts/flaticon3d79.eot?e11e641fe808a66cb4561e3b7815c22c#iefix") format("embedded-opentype"),
+url("../fonts/flaticon3d79.svg?e11e641fe808a66cb4561e3b7815c22c#flaticon_kidzieo") format("svg");
+}
+
+i[class^="flaticon"]:before, i[class*=" pbmit-kidzieo-icon-"]:before {
+	font-family: "flaticon" !important;
+	font-style: normal;
+	font-weight: normal !important;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.pbmit-kidzieo-icon-kindergarden:before {
+	content: "\f101";
+}
+.pbmit-kidzieo-icon-blocks:before {
+	content: "\f102";
+}
+.pbmit-kidzieo-icon-backpack:before {
+	content: "\f103";
+}
+.pbmit-kidzieo-icon-left-arrow:before {
+	content: "\f104";
+}
+.pbmit-kidzieo-icon-right-arrow:before {
+	content: "\f105";
+}
+.pbmit-kidzieo-icon-label:before {
+	content: "\f106";
+}
+.pbmit-kidzieo-icon-apple:before {
+	content: "\f107";
+}
+.pbmit-kidzieo-icon-juice:before {
+	content: "\f108";
+}
+.pbmit-kidzieo-icon-table:before {
+	content: "\f109";
+}
+.pbmit-kidzieo-icon-book:before {
+	content: "\f10a";
+}
+.pbmit-kidzieo-icon-teddy-bear:before {
+	content: "\f10b";
+}
+.pbmit-kidzieo-icon-pencil:before {
+	content: "\f10c";
+}
+.pbmit-kidzieo-icon-scissors:before {
+	content: "\f10d";
+}
+.pbmit-kidzieo-icon-blocks-1:before {
+	content: "\f10e";
+}
+.pbmit-kidzieo-icon-paint:before {
+	content: "\f10f";
+}
+.pbmit-kidzieo-icon-baby-cutlery:before {
+	content: "\f110";
+}
+.pbmit-kidzieo-icon-girl:before {
+	content: "\f111";
+}
+.pbmit-kidzieo-icon-spinning-top:before {
+	content: "\f112";
+}
+.pbmit-kidzieo-icon-ball:before {
+	content: "\f113";
+}
+.pbmit-kidzieo-icon-educator:before {
+	content: "\f114";
+}
+.pbmit-kidzieo-icon-slide:before {
+	content: "\f115";
+}
+.pbmit-kidzieo-icon-blocks-2:before {
+	content: "\f116";
+}
+.pbmit-kidzieo-icon-swing:before {
+	content: "\f117";
+}
+.pbmit-kidzieo-icon-clock:before {
+	content: "\f118";
+}
+.pbmit-kidzieo-icon-chalkboard:before {
+	content: "\f119";
+}
+.pbmit-kidzieo-icon-horse-toy:before {
+	content: "\f11a";
+}
+.pbmit-kidzieo-icon-keyboard:before {
+	content: "\f11b";
+}
+.pbmit-kidzieo-icon-abacus:before {
+	content: "\f11c";
+}
+.pbmit-kidzieo-icon-right-arrow-1:before {
+	content: "\f11d";
+}
+.pbmit-kidzieo-icon-right-arrow-2:before {
+	content: "\f11e";
+}
+.pbmit-kidzieo-icon-children:before {
+	content: "\f11f";
+}
+.pbmit-kidzieo-icon-clock-2:before {
+	content: "\f120";
+}
+.pbmit-kidzieo-icon-scalable:before {
+	content: "\f121";
+}
+.pbmit-kidzieo-icon-circle-check-solid:before {
+	content: "\f122";
+}
+.pbmit-kidzieo-icon-call:before {
+	content: "\f123";
+}
+.pbmit-kidzieo-icon-maps-and-flags:before {
+	content: "\f124";
+}
+.pbmit-kidzieo-icon-envelope:before {
+	content: "\f125";
+}
+.pbmit-kidzieo-icon-call-1:before {
+	content: "\f126";
+}
