@@ -143,27 +143,52 @@
                             <div class="home-hero-slider swiper">
                                 <div class="swiper-wrapper">
                                     @foreach ($heroSlides as $item)
+                                        @php
+                                            $heroSubtitle = !empty($item->subtitle) ? $item->subtitle : $item->key_word;
+                                            $heroTitle = !empty($item->title)
+                                                ? $item->title
+                                                : (!empty($item->header)
+                                                    ? $item->header
+                                                    : (optional($schoolData)->name ?: 'Aladham Private School'));
+                                            $heroDescription = !empty($item->description) ? $item->description : $item->content;
+                                            $primaryText = !empty($item->button_text) ? $item->button_text : __('site.Signup');
+                                            $secondaryText = !empty($item->button_text_secondary) ? $item->button_text_secondary : ($isRtl ? 'شاهد الفيديو' : 'Watch Video');
+                                            $primaryUrl = !empty($item->button_link) ? $item->button_link : Route('website.register');
+                                            $secondaryUrl = !empty($item->button_link_secondary) ? $item->button_link_secondary : Route('website.contact_us');
+                                            $heroBgFrom = !empty($item->background_from) ? $item->background_from : '#ffffff';
+                                            $heroBgMid = !empty($item->background_mid) ? $item->background_mid : '#f7f2ff';
+                                            $heroBgTo = !empty($item->background_to) ? $item->background_to : '#efe5ff';
+                                            $heroCircle = !empty($item->circle_color) ? $item->circle_color : '#b682d8';
+                                            $heroCircleSecondary = !empty($item->circle_color_secondary) ? $item->circle_color_secondary : '#efc3ff';
+                                        @endphp
                                         <div class="swiper-slide">
-                                            <article class="home-hero-item">
-                                                <div class="home-hero-grid">
-                                                    <div class="home-hero-content">
-                                                        @if (!empty($item->key_word))
-                                                            <span class="home-hero-label">{{ $item->key_word }}</span>
+                                            <article class="home-hero-item home-hero-v4"
+                                                style="--hero-bg-from: {{ $heroBgFrom }}; --hero-bg-mid: {{ $heroBgMid }}; --hero-bg-to: {{ $heroBgTo }}; --hero-circle: {{ $heroCircle }}; --hero-circle-2: {{ $heroCircleSecondary }};">
+                                                <div class="home-hero-grid home-hero-grid-v4">
+                                                    <div class="home-hero-content home-hero-content-v4">
+                                                        @if (!empty($heroSubtitle))
+                                                            <span class="home-hero-label home-hero-label-v4">{{ $heroSubtitle }}</span>
                                                         @endif
-                                                        <h1 class="home-hero-title">
-                                                            {{ $item->header ?: (optional($schoolData)->name ?: 'Aladham Private School') }}
+                                                        <h1 class="home-hero-title home-hero-title-v4">
+                                                            {{ $heroTitle }}
                                                         </h1>
-                                                        @if (!empty($item->content))
-                                                            <p class="home-hero-text">{{ $item->content }}</p>
+                                                        @if (!empty($heroDescription))
+                                                            <p class="home-hero-text home-hero-text-v4">{{ $heroDescription }}</p>
                                                         @endif
-                                                        <div class="home-hero-actions">
-                                                            <a href="{{ Route('website.register') }}" class="home-hero-btn home-hero-btn-primary">{{ __('site.Signup') }}</a>
-                                                            <a href="{{ Route('website.contact_us') }}" class="home-hero-btn home-hero-btn-ghost">{{ __('site.Contact Us') }}</a>
+                                                        <div class="home-hero-actions home-hero-actions-v4">
+                                                            <a href="{{ $primaryUrl }}"
+                                                                class="home-hero-btn home-hero-btn-primary home-hero-btn-primary-v4">{{ $primaryText }}</a>
+                                                            <a href="{{ $secondaryUrl }}"
+                                                                class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4">
+                                                                <i class="fa fa-play" aria-hidden="true"></i>
+                                                                <span>{{ $secondaryText }}</span>
+                                                            </a>
                                                         </div>
                                                     </div>
-                                                    <div class="home-hero-media">
+                                                    <div class="home-hero-media home-hero-media-v4">
+                                                        <span class="home-hero-circle-v4" aria-hidden="true"></span>
                                                         <img src="{{ $resolveImage($item->image, $heroFallback) }}"
-                                                            alt="{{ $item->header }}"
+                                                            alt="{{ $heroTitle }}"
                                                             onerror="this.onerror=null;this.src='{{ $heroFallback }}';">
                                                     </div>
                                                 </div>
@@ -181,27 +206,50 @@
                     @else
                         @php
                             $item = $heroSlides->first();
+                            $heroSubtitle = !empty(optional($item)->subtitle) ? $item->subtitle : optional($item)->key_word;
+                            $heroTitle = !empty(optional($item)->title)
+                                ? $item->title
+                                : (!empty(optional($item)->header)
+                                    ? $item->header
+                                    : (optional($schoolData)->name ?: 'Aladham Private School'));
+                            $heroDescription = !empty(optional($item)->description) ? $item->description : optional($item)->content;
+                            $primaryText = !empty(optional($item)->button_text) ? $item->button_text : __('site.Signup');
+                            $secondaryText = !empty(optional($item)->button_text_secondary) ? $item->button_text_secondary : ($isRtl ? 'شاهد الفيديو' : 'Watch Video');
+                            $primaryUrl = !empty(optional($item)->button_link) ? $item->button_link : Route('website.register');
+                            $secondaryUrl = !empty(optional($item)->button_link_secondary) ? $item->button_link_secondary : Route('website.contact_us');
+                            $heroBgFrom = !empty(optional($item)->background_from) ? $item->background_from : '#ffffff';
+                            $heroBgMid = !empty(optional($item)->background_mid) ? $item->background_mid : '#f7f2ff';
+                            $heroBgTo = !empty(optional($item)->background_to) ? $item->background_to : '#efe5ff';
+                            $heroCircle = !empty(optional($item)->circle_color) ? $item->circle_color : '#b682d8';
+                            $heroCircleSecondary = !empty(optional($item)->circle_color_secondary) ? $item->circle_color_secondary : '#efc3ff';
                         @endphp
-                        <article class="home-hero-item home-hero-static">
-                            <div class="home-hero-grid">
-                                <div class="home-hero-content">
-                                    @if (!empty(optional($item)->key_word))
-                                        <span class="home-hero-label">{{ $item->key_word }}</span>
+                        <article class="home-hero-item home-hero-static home-hero-v4"
+                            style="--hero-bg-from: {{ $heroBgFrom }}; --hero-bg-mid: {{ $heroBgMid }}; --hero-bg-to: {{ $heroBgTo }}; --hero-circle: {{ $heroCircle }}; --hero-circle-2: {{ $heroCircleSecondary }};">
+                            <div class="home-hero-grid home-hero-grid-v4">
+                                <div class="home-hero-content home-hero-content-v4">
+                                    @if (!empty($heroSubtitle))
+                                        <span class="home-hero-label home-hero-label-v4">{{ $heroSubtitle }}</span>
                                     @endif
-                                    <h1 class="home-hero-title">
-                                        {{ optional($item)->header ?: (optional($schoolData)->name ?: 'Aladham Private School') }}
+                                    <h1 class="home-hero-title home-hero-title-v4">
+                                        {{ $heroTitle }}
                                     </h1>
-                                    @if (!empty(optional($item)->content))
-                                        <p class="home-hero-text">{{ $item->content }}</p>
+                                    @if (!empty($heroDescription))
+                                        <p class="home-hero-text home-hero-text-v4">{{ $heroDescription }}</p>
                                     @endif
-                                    <div class="home-hero-actions">
-                                        <a href="{{ Route('website.register') }}" class="home-hero-btn home-hero-btn-primary">{{ __('site.Signup') }}</a>
-                                        <a href="{{ Route('website.contact_us') }}" class="home-hero-btn home-hero-btn-ghost">{{ __('site.Contact Us') }}</a>
+                                    <div class="home-hero-actions home-hero-actions-v4">
+                                        <a href="{{ $primaryUrl }}"
+                                            class="home-hero-btn home-hero-btn-primary home-hero-btn-primary-v4">{{ $primaryText }}</a>
+                                        <a href="{{ $secondaryUrl }}"
+                                            class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4">
+                                            <i class="fa fa-play" aria-hidden="true"></i>
+                                            <span>{{ $secondaryText }}</span>
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="home-hero-media">
+                                <div class="home-hero-media home-hero-media-v4">
+                                    <span class="home-hero-circle-v4" aria-hidden="true"></span>
                                     <img src="{{ $resolveImage(optional($item)->image, $heroFallback) }}"
-                                        alt="{{ optional($item)->header }}"
+                                        alt="{{ $heroTitle }}"
                                         onerror="this.onerror=null;this.src='{{ $heroFallback }}';">
                                 </div>
                             </div>
@@ -396,8 +444,11 @@
 
             new Swiper(hero, {
                 loop: true,
-                speed: 650,
-                effect: 'slide',
+                speed: 900,
+                effect: 'fade',
+                fadeEffect: {
+                    crossFade: true
+                },
                 autoplay: {
                     delay: 5000,
                     disableOnInteraction: false
