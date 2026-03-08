@@ -270,9 +270,29 @@
                     $featuredNews = $news->first();
                     $secondaryNews = $news->slice(1, 3);
                 @endphp
-                <div class="row g-4 align-items-stretch">
+                <div class="row g-4 align-items-stretch news-split-row">
+                    @if($secondaryNews->count())
+                        <div class="col-12 col-lg-5 news-list-col">
+                            <div class="news-list-stack h-100">
+                                @foreach($secondaryNews as $item)
+                                    <article class="news-compact-card">
+                                        <div class="news-compact-media">
+                                            <img src="{{ $makeMediaUrl($item->image1, $fallbackWide) }}" alt="{{ $item->title }}"
+                                                loading="lazy"
+                                                onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
+                                        </div>
+                                        <div class="news-compact-body">
+                                            <h3>{{ $item->title }}</h3>
+                                            <p>{{ \Illuminate\Support\Str::limit((string) $item->content, 95) }}</p>
+                                            <a href="{{ route('website.news.single', $item->id) }}" class="sch-link-more">{{ $txt['read_more'] }}</a>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                     @if($featuredNews)
-                        <div class="col-12 col-lg-6">
+                        <div class="col-12 {{ $secondaryNews->count() ? 'col-lg-7' : 'col-lg-12' }} news-featured-col">
                             <article class="news-featured-card h-100">
                                 <div class="news-featured-media">
                                     <img src="{{ $makeMediaUrl($featuredNews->image1, $fallbackWide) }}" alt="{{ $featuredNews->title }}"
@@ -287,26 +307,6 @@
                             </article>
                         </div>
                     @endif
-                    <div class="col-12 col-lg-6">
-                        <div class="row g-3">
-                            @foreach($secondaryNews as $item)
-                                <div class="col-12">
-                                    <article class="news-compact-card">
-                                        <div class="news-compact-media">
-                                            <img src="{{ $makeMediaUrl($item->image1, $fallbackWide) }}" alt="{{ $item->title }}"
-                                                loading="lazy"
-                                                onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
-                                        </div>
-                                        <div class="news-compact-body">
-                                            <h3>{{ $item->title }}</h3>
-                                            <p>{{ \Illuminate\Support\Str::limit((string) $item->content, 95) }}</p>
-                                            <a href="{{ route('website.news.single', $item->id) }}" class="sch-link-more">{{ $txt['read_more'] }}</a>
-                                        </div>
-                                    </article>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
