@@ -158,6 +158,54 @@
 
     @if(isset($classes) && $classes->count())
         <section class="sch-section sch-classes-section" id="classes">
+            @php
+                $normalizeClassLabel = function ($value) {
+                    $value = \Illuminate\Support\Str::lower(trim((string) $value));
+                    $value = strtr($value, ['٠'=>'0','١'=>'1','٢'=>'2','٣'=>'3','٤'=>'4','٥'=>'5','٦'=>'6','٧'=>'7','٨'=>'8','٩'=>'9']);
+                    $value = str_replace(['أ', 'إ', 'آ'], 'ا', $value);
+                    $value = str_replace('ى', 'ي', $value);
+                    $value = preg_replace('/\s+/u', ' ', $value);
+                    return trim((string) $value);
+                };
+
+                $gradeTokenMap = [
+                    12 => ['الثاني عشر', 'ثاني عشر', 'twelfth', 'grade 12', 'class 12'],
+                    11 => ['الحادي عشر', 'حادي عشر', 'eleventh', 'grade 11', 'class 11'],
+                    10 => ['العاشر', 'عاشر', 'tenth', 'grade 10', 'class 10'],
+                    9 => ['التاسع', 'تاسع', 'ninth', 'grade 9', 'class 9'],
+                    8 => ['الثامن', 'ثامن', 'eighth', 'grade 8', 'class 8'],
+                    7 => ['السابع', 'سابع', 'seventh', 'grade 7', 'class 7'],
+                    6 => ['السادس', 'سادس', 'sixth', 'grade 6', 'class 6'],
+                    5 => ['الخامس', 'خامس', 'fifth', 'grade 5', 'class 5'],
+                    4 => ['الرابع', 'رابع', 'fourth', 'grade 4', 'class 4'],
+                    3 => ['الثالث', 'ثالث', 'third', 'grade 3', 'class 3'],
+                    2 => ['الثاني', 'ثاني', 'second', 'grade 2', 'class 2'],
+                    1 => ['الاول', 'اول', 'first', 'grade 1', 'class 1'],
+                ];
+
+                $gradeIndex = function ($item) use ($normalizeClassLabel, $gradeTokenMap) {
+                    $label = $normalizeClassLabel(($item->name ?? '') . ' ' . ($item->name_en ?? ''));
+
+                    foreach ($gradeTokenMap as $index => $tokens) {
+                        if (\Illuminate\Support\Str::contains($label, $tokens)) {
+                            return $index;
+                        }
+                    }
+
+                    if (preg_match('/(?:^|\s)(1[0-2]|[1-9])(?:\s|$)/u', $label, $matches)) {
+                        return (int) $matches[1];
+                    }
+
+                    return 999;
+                };
+
+                $orderedClasses = collect($classes)
+                    ->sortBy(function ($item) use ($gradeIndex) {
+                        return sprintf('%03d-%08d', $gradeIndex($item), (int) ($item->id ?? 0));
+                    })
+                    ->reverse()
+                    ->values();
+            @endphp
             <div class="container">
                 <div class="sch-section-head d-flex justify-content-between align-items-center flex-wrap">
                     <h2>{{ $txt['classes'] }}</h2>
@@ -165,24 +213,44 @@
                 </div>
                 <div class="classes-marquee" dir="ltr">
                     <div class="classes-marquee-track">
-                        @foreach($classes as $item)
+                        @foreach($orderedClasses as $item)
+                            @php
+                                $className = $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name);
+                                $classInfo = $locale === 'ar'
+                                    ? ($item->description_ar ?: $item->description_en)
+                                    : ($item->description_en ?: $item->description_ar);
+                                $classInfo = \Illuminate\Support\Str::limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
+                            @endphp
                             <article class="class-marquee-card">
                                 <div class="class-marquee-media">
-                                    <img src="{{ $makeMediaUrl($item->image, $fallbackWide) }}" alt="{{ $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name) }}"
+                                    <img src="{{ $makeMediaUrl($item->image, $fallbackWide) }}" alt="{{ $className }}"
                                         loading="lazy"
                                         onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
                                 </div>
-                                <h3>{{ $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name) }}</h3>
+                                <h3>{{ $className }}</h3>
+                                <div class="class-marquee-info" aria-hidden="true">
+                                    <p>{{ $classInfo }}</p>
+                                </div>
                             </article>
                         @endforeach
-                        @foreach($classes as $item)
+                        @foreach($orderedClasses as $item)
+                            @php
+                                $className = $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name);
+                                $classInfo = $locale === 'ar'
+                                    ? ($item->description_ar ?: $item->description_en)
+                                    : ($item->description_en ?: $item->description_ar);
+                                $classInfo = \Illuminate\Support\Str::limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
+                            @endphp
                             <article class="class-marquee-card">
                                 <div class="class-marquee-media">
-                                    <img src="{{ $makeMediaUrl($item->image, $fallbackWide) }}" alt="{{ $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name) }}"
+                                    <img src="{{ $makeMediaUrl($item->image, $fallbackWide) }}" alt="{{ $className }}"
                                         loading="lazy"
                                         onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
                                 </div>
-                                <h3>{{ $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name) }}</h3>
+                                <h3>{{ $className }}</h3>
+                                <div class="class-marquee-info" aria-hidden="true">
+                                    <p>{{ $classInfo }}</p>
+                                </div>
                             </article>
                         @endforeach
                     </div>
