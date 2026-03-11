@@ -27,7 +27,7 @@
         'classes' => $isRtl ? 'الصفوف الدراسية' : 'Classes',
         'news' => $isRtl ? 'الأخبار' : 'News',
         'blogs' => $isRtl ? 'المدونة' : 'Blogs',
-        'testimonials' => $isRtl ? 'آراء أولياء الأمور' : 'Testimonials',
+        'testimonials' => $isRtl ? 'ماذا يقول طلابنا؟' : 'What Our Students Say',
         'gallery' => $isRtl ? 'المعرض' : 'Gallery',
         'more' => $isRtl ? 'المزيد' : 'More',
         'read_more' => $isRtl ? 'قراءة المزيد' : 'Read more',
@@ -239,18 +239,12 @@
                 $whyItems = collect($service)->values();
             }
             $whyItems = $whyItems->take(6)->values();
-            $whyIntro = $isRtl
-                ? 'مزايا تعليمية متكاملة تدعم نمو الطالب معرفياً وسلوكياً في بيئة آمنة.'
-                : 'Integrated educational advantages that support student growth in a safe environment.';
 
             $serviceItems = collect(isset($service) ? $service : [])->values();
             if ($serviceItems->isEmpty() && isset($our_services_feature) && $our_services_feature->count()) {
                 $serviceItems = collect($our_services_feature)->values();
             }
             $serviceItems = $serviceItems->take(8)->values();
-            $serviceIntro = $isRtl
-                ? 'حلول مدرسية مصممة لتسهيل رحلة الطالب والأسرة داخل المدرسة.'
-                : 'School services designed to support students and families throughout the school journey.';
         @endphp
 
         <section class="sch-section sch-services-rebuild-section" id="services">
@@ -259,23 +253,29 @@
                     <div class="services-block feature-stack-block feature-stack-block--why">
                         <div class="sch-section-head feature-stack-head">
                             <h2>{{ $txt['why_choose_school'] }}</h2>
-                            <p>{{ $whyIntro }}</p>
                         </div>
                         <div class="feature-stack-list">
                             @foreach($whyItems as $item)
                                 @php
-                                    $whyDesc = trim((string) ($item->description ?? ''));
+                                    $whyTitle = $locale === 'ar'
+                                        ? ($item->title_ar ?: ($item->title ?: $item->title_en))
+                                        : ($item->title_en ?: ($item->title ?: $item->title_ar));
+                                    $whyDesc = trim((string) (
+                                        $locale === 'ar'
+                                            ? ($item->description_ar ?: ($item->description ?: $item->description_en))
+                                            : ($item->description_en ?: ($item->description ?: $item->description_ar))
+                                    ));
                                     $whyIconRaw = (string) ($item->icon ?? '');
                                     $whyHasIconImage = !empty($whyIconRaw) && (
                                         \Illuminate\Support\Str::contains($whyIconRaw, ['/', '\\']) ||
                                         preg_match('/\.(png|jpe?g|svg|webp|gif)$/i', $whyIconRaw)
                                     );
-                                    $whyIconImage = !empty($item->image) ? $item->image : ($whyHasIconImage ? $whyIconRaw : null);
+                                    $whyIconImage = $whyHasIconImage ? $whyIconRaw : null;
                                 @endphp
                                 <article class="feature-stack-item">
                                     <span class="feature-stack-icon" aria-hidden="true">
                                         @if(!empty($whyIconImage))
-                                            <img src="{{ $makeMediaUrl($whyIconImage, $fallbackSquare) }}" alt="{{ $item->title }}"
+                                            <img src="{{ $makeMediaUrl($whyIconImage, $fallbackSquare) }}" alt="{{ $whyTitle }}"
                                                 loading="lazy"
                                                 onerror="this.onerror=null;this.src='{{ $fallbackSquare }}';">
                                         @elseif(!empty($item->icon))
@@ -285,7 +285,7 @@
                                         @endif
                                     </span>
                                     <div class="feature-stack-content">
-                                        <h3>{{ $item->title }}</h3>
+                                        <h3>{{ $whyTitle }}</h3>
                                         @if($whyDesc)
                                             <p>{{ $whyDesc }}</p>
                                         @endif
@@ -300,23 +300,24 @@
                     <div class="services-block feature-stack-block feature-stack-block--services">
                         <div class="sch-section-head feature-stack-head">
                             <h2>{{ $txt['services'] }}</h2>
-                            <p>{{ $serviceIntro }}</p>
                         </div>
                         <div class="feature-stack-list">
                             @foreach($serviceItems as $item)
                                 @php
-                                    $serviceDesc = trim((string) ($item->description ?? ''));
-                                    $serviceIconRaw = (string) ($item->icon ?? '');
-                                    $serviceHasIconImage = !empty($serviceIconRaw) && (
-                                        \Illuminate\Support\Str::contains($serviceIconRaw, ['/', '\\']) ||
-                                        preg_match('/\.(png|jpe?g|svg|webp|gif)$/i', $serviceIconRaw)
-                                    );
-                                    $serviceIconImage = !empty($item->image) ? $item->image : ($serviceHasIconImage ? $serviceIconRaw : null);
+                                    $serviceTitle = $locale === 'ar'
+                                        ? ($item->title_ar ?: ($item->title ?: $item->title_en))
+                                        : ($item->title_en ?: ($item->title ?: $item->title_ar));
+                                    $serviceDesc = trim((string) (
+                                        $locale === 'ar'
+                                            ? ($item->description_ar ?: ($item->description ?: $item->description_en))
+                                            : ($item->description_en ?: ($item->description ?: $item->description_ar))
+                                    ));
+                                    $serviceIconImage = !empty($item->image) ? $item->image : null;
                                 @endphp
                                 <article class="feature-stack-item feature-stack-item--service">
                                     <span class="feature-stack-icon" aria-hidden="true">
                                         @if(!empty($serviceIconImage))
-                                            <img src="{{ $makeMediaUrl($serviceIconImage, $fallbackSquare) }}" alt="{{ $item->title }}"
+                                            <img src="{{ $makeMediaUrl($serviceIconImage, $fallbackSquare) }}" alt="{{ $serviceTitle }}"
                                                 loading="lazy"
                                                 onerror="this.onerror=null;this.src='{{ $fallbackSquare }}';">
                                         @elseif(!empty($item->icon))
@@ -326,7 +327,7 @@
                                         @endif
                                     </span>
                                     <div class="feature-stack-content">
-                                        <h3>{{ $item->title }}</h3>
+                                        <h3>{{ $serviceTitle }}</h3>
                                         @if($serviceDesc)
                                             <p>{{ $serviceDesc }}</p>
                                         @endif
@@ -364,33 +365,125 @@
     @endif
 
     @if(isset($blogs_web) && $blogs_web->count())
-        <section class="sch-section sch-blog-section" id="Blog">
+        @php
+            $blogItems = collect($blogs_web)->values();
+            $featuredBlog = $blogItems->first();
+            $blogHeading = $isRtl ? 'آخر الأخبار والإعلانات' : 'School News & Announcements';
+            $blogSubheading = $isRtl ? 'تابع آخر الإعلانات المدرسية والأنشطة المهمة.' : 'Follow the latest school announcements and important activities.';
+            $getBlogTitle = function ($item) use ($locale) {
+                return $locale === 'ar'
+                    ? ($item->title_ar ?: ($item->title ?? $item->title_en))
+                    : ($item->title_en ?: ($item->title ?? $item->title_ar));
+            };
+            $getBlogDescription = function ($item) use ($locale) {
+                return trim((string) (
+                    $locale === 'ar'
+                        ? ($item->description_ar ?: ($item->description ?? $item->description_en))
+                        : ($item->description_en ?: ($item->description ?? $item->description_ar))
+                ));
+            };
+            $featuredTitle = $featuredBlog ? $getBlogTitle($featuredBlog) : '';
+            $featuredDescription = $featuredBlog ? $getBlogDescription($featuredBlog) : '';
+            $featuredImage = $featuredBlog ? $makeMediaUrl($featuredBlog->image, $fallbackWide) : $fallbackWide;
+        @endphp
+        <section class="sch-section sch-blog-section sch-blog-annc" id="Blog">
             <div class="container">
-                <div class="sch-section-head">
-                    <h2>{{ $txt['blogs'] }}</h2>
+                <div class="sch-section-head blog-annc-head">
+                    <h2>{{ $blogHeading }}</h2>
+                    <p>{{ $blogSubheading }}</p>
                 </div>
-                <div class="blog-centered-carousel swiper">
-                    <div class="swiper-wrapper">
-                        @foreach($blogs_web as $item)
-                            <div class="swiper-slide">
-                                <article class="blog-centered-card">
-                                    <div class="blog-centered-media">
-                                        <img src="{{ $makeMediaUrl($item->image, $fallbackWide) }}" alt="{{ $item->title }}"
-                                            loading="lazy"
-                                            onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
-                                    </div>
-                                    <div class="blog-centered-body">
-                                        <h3>{{ $item->title }}</h3>
-                                        <p>{{ \Illuminate\Support\Str::limit((string) $item->description, 130) }}</p>
-                                    </div>
-                                </article>
+
+                @if($featuredBlog)
+                    <div class="blog-annc-layout">
+                        <article class="blog-annc-featured" data-blog-featured>
+                            <div class="blog-annc-featured-media">
+                                <img src="{{ $featuredImage }}" alt="{{ $featuredTitle }}"
+                                    data-blog-featured-image
+                                    loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
                             </div>
-                        @endforeach
+                            <div class="blog-annc-featured-body">
+                                <h3 data-blog-featured-title>{{ $featuredTitle }}</h3>
+                                @if($featuredDescription)
+                                    <p data-blog-featured-desc>{{ $featuredDescription }}</p>
+                                @else
+                                    <p data-blog-featured-desc></p>
+                                @endif
+                            </div>
+                        </article>
+
+                        <aside class="blog-annc-rail-wrap" aria-label="{{ $txt['blogs'] }}">
+                            <div class="blog-annc-rail" data-blog-rail>
+                                @foreach($blogItems as $item)
+                                    @php
+                                        $itemTitle = $getBlogTitle($item);
+                                        $itemDescription = $getBlogDescription($item);
+                                        $itemImage = $makeMediaUrl($item->image, $fallbackWide);
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        class="blog-annc-mini @if($loop->first) is-active @endif"
+                                        data-news-title="{{ $itemTitle }}"
+                                        data-news-desc="{{ $itemDescription }}"
+                                        data-news-image="{{ $itemImage }}"
+                                        aria-label="{{ $itemTitle }}"
+                                    >
+                                        <span class="blog-annc-mini-thumb">
+                                            <img src="{{ $itemImage }}" alt="{{ $itemTitle }}"
+                                                loading="lazy"
+                                                onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
+                                        </span>
+                                        <span class="blog-annc-mini-content">
+                                            <strong>{{ $itemTitle }}</strong>
+                                            @if($itemDescription)
+                                                <small>{{ \Illuminate\Support\Str::limit($itemDescription, 88) }}</small>
+                                            @endif
+                                        </span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </aside>
                     </div>
-                    <div class="swiper-pagination"></div>
-                </div>
+                @endif
             </div>
         </section>
+        <script>
+            (function() {
+                var root = document.querySelector('.sch-blog-annc');
+                if (!root) return;
+
+                var featuredImage = root.querySelector('[data-blog-featured-image]');
+                var featuredTitle = root.querySelector('[data-blog-featured-title]');
+                var featuredDesc = root.querySelector('[data-blog-featured-desc]');
+                var cards = root.querySelectorAll('.blog-annc-mini');
+
+                if (!featuredImage || !featuredTitle || !cards.length) return;
+
+                var activate = function(card) {
+                    cards.forEach(function(item) {
+                        item.classList.remove('is-active');
+                    });
+                    card.classList.add('is-active');
+
+                    var nextImage = card.getAttribute('data-news-image') || '';
+                    var nextTitle = card.getAttribute('data-news-title') || '';
+                    var nextDesc = card.getAttribute('data-news-desc') || '';
+
+                    featuredImage.src = nextImage || featuredImage.src;
+                    featuredImage.alt = nextTitle || featuredImage.alt;
+                    featuredTitle.textContent = nextTitle;
+                    if (featuredDesc) {
+                        featuredDesc.textContent = nextDesc;
+                    }
+                };
+
+                cards.forEach(function(card) {
+                    card.addEventListener('click', function() {
+                        activate(card);
+                    });
+                });
+            })();
+        </script>
     @endif
 
     @if(isset($gallery) && $gallery->count())
