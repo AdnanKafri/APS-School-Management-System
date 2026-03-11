@@ -23,6 +23,7 @@
         'welcome' => $isRtl ? 'مرحباً بكم' : 'Welcome',
         'our_vision' => $isRtl ? 'رؤيتنا' : 'Our Vision',
         'services' => $isRtl ? 'خدماتنا' : 'Our Services',
+        'why_choose_school' => $isRtl ? 'لماذا تختار مدرستنا للأطفال؟' : 'Why Choose Our School for Children?',
         'classes' => $isRtl ? 'الصفوف الدراسية' : 'Classes',
         'news' => $isRtl ? 'الأخبار' : 'News',
         'blogs' => $isRtl ? 'المدونة' : 'Blogs',
@@ -128,34 +129,6 @@
         </div>
     </section>
 
-    @if(isset($service) && $service->count())
-        <section class="sch-section sch-services-section" id="services">
-            <div class="container">
-                <div class="sch-section-head">
-                    <h2>{{ $txt['services'] }}</h2>
-                </div>
-                <div class="row g-4">
-                    @foreach($service as $item)
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <article class="service-visual-card h-100">
-                                <div class="service-visual-media">
-                                    <img src="{{ $makeMediaUrl($item->image, $fallbackWide) }}" alt="{{ $item->title }}"
-                                        loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
-                                </div>
-                                <div class="service-visual-overlay"></div>
-                                <div class="service-visual-content">
-                                    <h3>{{ $item->title }}</h3>
-                                    <p>{{ \Illuminate\Support\Str::limit((string) $item->description, 120) }}</p>
-                                </div>
-                            </article>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
     @if(isset($classes) && $classes->count())
         <section class="sch-section sch-classes-section" id="classes">
             @php
@@ -259,55 +232,110 @@
         </section>
     @endif
 
-    @if(isset($news) && $news->count())
-        <section class="sch-section sch-news-section" id="news">
+    @if((isset($service) && $service->count()) || (isset($our_services_feature) && $our_services_feature->count()))
+        @php
+            $whyItems = collect(isset($our_services_feature) ? $our_services_feature : [])->values();
+            if ($whyItems->isEmpty() && isset($service) && $service->count()) {
+                $whyItems = collect($service)->values();
+            }
+            $whyItems = $whyItems->take(6)->values();
+            $whyIntro = $isRtl
+                ? 'مزايا تعليمية متكاملة تدعم نمو الطالب معرفياً وسلوكياً في بيئة آمنة.'
+                : 'Integrated educational advantages that support student growth in a safe environment.';
+
+            $serviceItems = collect(isset($service) ? $service : [])->values();
+            if ($serviceItems->isEmpty() && isset($our_services_feature) && $our_services_feature->count()) {
+                $serviceItems = collect($our_services_feature)->values();
+            }
+            $serviceItems = $serviceItems->take(8)->values();
+            $serviceIntro = $isRtl
+                ? 'حلول مدرسية مصممة لتسهيل رحلة الطالب والأسرة داخل المدرسة.'
+                : 'School services designed to support students and families throughout the school journey.';
+        @endphp
+
+        <section class="sch-section sch-services-rebuild-section" id="services">
             <div class="container">
-                <div class="sch-section-head d-flex justify-content-between align-items-center flex-wrap">
-                    <h2>{{ $txt['news'] }}</h2>
-                    <a href="{{ route('website.news') }}" class="sch-link-more">{{ $txt['more'] }}</a>
-                </div>
-                @php
-                    $featuredNews = $news->first();
-                    $secondaryNews = $news->slice(1, 3);
-                @endphp
-                <div class="row g-4 align-items-stretch news-split-row">
-                    @if($secondaryNews->count())
-                        <div class="col-12 col-lg-5 news-list-col">
-                            <div class="news-list-stack h-100">
-                                @foreach($secondaryNews as $item)
-                                    <article class="news-compact-card">
-                                        <div class="news-compact-media">
-                                            <img src="{{ $makeMediaUrl($item->image1, $fallbackWide) }}" alt="{{ $item->title }}"
+                @if($whyItems->count())
+                    <div class="services-block feature-stack-block feature-stack-block--why">
+                        <div class="sch-section-head feature-stack-head">
+                            <h2>{{ $txt['why_choose_school'] }}</h2>
+                            <p>{{ $whyIntro }}</p>
+                        </div>
+                        <div class="feature-stack-list">
+                            @foreach($whyItems as $item)
+                                @php
+                                    $whyDesc = trim((string) ($item->description ?? ''));
+                                    $whyIconRaw = (string) ($item->icon ?? '');
+                                    $whyHasIconImage = !empty($whyIconRaw) && (
+                                        \Illuminate\Support\Str::contains($whyIconRaw, ['/', '\\']) ||
+                                        preg_match('/\.(png|jpe?g|svg|webp|gif)$/i', $whyIconRaw)
+                                    );
+                                    $whyIconImage = !empty($item->image) ? $item->image : ($whyHasIconImage ? $whyIconRaw : null);
+                                @endphp
+                                <article class="feature-stack-item">
+                                    <span class="feature-stack-icon" aria-hidden="true">
+                                        @if(!empty($whyIconImage))
+                                            <img src="{{ $makeMediaUrl($whyIconImage, $fallbackSquare) }}" alt="{{ $item->title }}"
                                                 loading="lazy"
-                                                onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
-                                        </div>
-                                        <div class="news-compact-body">
-                                            <h3>{{ $item->title }}</h3>
-                                            <p>{{ \Illuminate\Support\Str::limit((string) $item->content, 95) }}</p>
-                                            <a href="{{ route('website.news.single', $item->id) }}" class="sch-link-more">{{ $txt['read_more'] }}</a>
-                                        </div>
-                                    </article>
-                                @endforeach
-                            </div>
+                                                onerror="this.onerror=null;this.src='{{ $fallbackSquare }}';">
+                                        @elseif(!empty($item->icon))
+                                            <i class="{{ $item->icon }}"></i>
+                                        @else
+                                            <i class="pbmit-kidzieo-icon pbmit-kidzieo-icon-circle-check-solid"></i>
+                                        @endif
+                                    </span>
+                                    <div class="feature-stack-content">
+                                        <h3>{{ $item->title }}</h3>
+                                        @if($whyDesc)
+                                            <p>{{ $whyDesc }}</p>
+                                        @endif
+                                    </div>
+                                </article>
+                            @endforeach
                         </div>
-                    @endif
-                    @if($featuredNews)
-                        <div class="col-12 {{ $secondaryNews->count() ? 'col-lg-7' : 'col-lg-12' }} news-featured-col">
-                            <article class="news-featured-card h-100">
-                                <div class="news-featured-media">
-                                    <img src="{{ $makeMediaUrl($featuredNews->image1, $fallbackWide) }}" alt="{{ $featuredNews->title }}"
-                                        loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ $fallbackWide }}';">
-                                </div>
-                                <div class="news-featured-body">
-                                    <h3>{{ $featuredNews->title }}</h3>
-                                    <p>{{ \Illuminate\Support\Str::limit((string) $featuredNews->content, 170) }}</p>
-                                    <a href="{{ route('website.news.single', $featuredNews->id) }}" class="sch-link-more">{{ $txt['read_more'] }}</a>
-                                </div>
-                            </article>
+                    </div>
+                @endif
+
+                @if($serviceItems->count())
+                    <div class="services-block feature-stack-block feature-stack-block--services">
+                        <div class="sch-section-head feature-stack-head">
+                            <h2>{{ $txt['services'] }}</h2>
+                            <p>{{ $serviceIntro }}</p>
                         </div>
-                    @endif
-                </div>
+                        <div class="feature-stack-list">
+                            @foreach($serviceItems as $item)
+                                @php
+                                    $serviceDesc = trim((string) ($item->description ?? ''));
+                                    $serviceIconRaw = (string) ($item->icon ?? '');
+                                    $serviceHasIconImage = !empty($serviceIconRaw) && (
+                                        \Illuminate\Support\Str::contains($serviceIconRaw, ['/', '\\']) ||
+                                        preg_match('/\.(png|jpe?g|svg|webp|gif)$/i', $serviceIconRaw)
+                                    );
+                                    $serviceIconImage = !empty($item->image) ? $item->image : ($serviceHasIconImage ? $serviceIconRaw : null);
+                                @endphp
+                                <article class="feature-stack-item feature-stack-item--service">
+                                    <span class="feature-stack-icon" aria-hidden="true">
+                                        @if(!empty($serviceIconImage))
+                                            <img src="{{ $makeMediaUrl($serviceIconImage, $fallbackSquare) }}" alt="{{ $item->title }}"
+                                                loading="lazy"
+                                                onerror="this.onerror=null;this.src='{{ $fallbackSquare }}';">
+                                        @elseif(!empty($item->icon))
+                                            <i class="{{ $item->icon }}"></i>
+                                        @else
+                                            <i class="pbmit-kidzieo-icon pbmit-kidzieo-icon-book"></i>
+                                        @endif
+                                    </span>
+                                    <div class="feature-stack-content">
+                                        <h3>{{ $item->title }}</h3>
+                                        @if($serviceDesc)
+                                            <p>{{ $serviceDesc }}</p>
+                                        @endif
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
     @endif
