@@ -665,17 +665,260 @@
                 <div class="sch-section-head">
                     <h2>{{ $txt['gallery'] }}</h2>
                 </div>
-                <div class="sch-gallery-masonry">
-                    @foreach($gallery->take(8) as $item)
-                        <a class="sch-gallery-item" href="{{ $makeMediaUrl($item->image, $fallbackSquare) }}" target="_blank" rel="noopener">
-                            <img src="{{ $makeMediaUrl($item->image, $fallbackSquare) }}" alt="gallery"
-                                loading="lazy"
-                                onerror="this.onerror=null;this.src='{{ $fallbackSquare }}';">
-                        </a>
-                    @endforeach
+                @php
+                    $galleryItems = collect($gallery)->take(10)->values();
+                @endphp
+                <div class="sch-gallery-coverflow @if($galleryItems->count() <= 1) is-single @endif" data-gallery-coverflow>
+                    <button type="button" class="sch-gallery-cf-nav is-prev" data-gallery-prev aria-label="{{ $isRtl ? 'السابق' : 'Previous' }}">
+                        <span aria-hidden="true">&#8592;</span>
+                    </button>
+
+                    <div class="sch-gallery-coverflow-stage" data-gallery-stage>
+                        @foreach($galleryItems as $item)
+                            @php
+                                $galleryImage = $makeMediaUrl($item->image, $fallbackSquare);
+                            @endphp
+                            <a
+                                class="sch-gallery-coverflow-slide @if($loop->first) is-active @endif"
+                                data-gallery-slide
+                                data-index="{{ $loop->index }}"
+                                href="{{ $galleryImage }}"
+                                target="_blank"
+                                rel="noopener"
+                                aria-label="{{ $isRtl ? 'عرض صورة المعرض' : 'View gallery image' }}"
+                            >
+                                <img src="{{ $galleryImage }}" alt="gallery"
+                                    loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ $fallbackSquare }}';">
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <button type="button" class="sch-gallery-cf-nav is-next" data-gallery-next aria-label="{{ $isRtl ? 'التالي' : 'Next' }}">
+                        <span aria-hidden="true">&#8594;</span>
+                    </button>
                 </div>
             </div>
         </section>
+        <script>
+            (function() {
+                var root = document.querySelector('[data-gallery-coverflow]');
+                if (!root) return;
+
+                var stage = root.querySelector('[data-gallery-stage]');
+                var prevBtn = root.querySelector('[data-gallery-prev]');
+                var nextBtn = root.querySelector('[data-gallery-next]');
+                var slides = Array.prototype.slice.call(root.querySelectorAll('[data-gallery-slide]'));
+                var mobileQuery = window.matchMedia('(max-width: 767px)');
+                var isRtl = document.body.classList.contains('site-rtl') || document.documentElement.getAttribute('dir') === 'rtl';
+                var activeIndex = 0;
+                var autoTimer = null;
+                var autoDelay = 5200;
+                var lockAuto = false;
+                var scrollTimer = null;
+
+                if (!stage || !slides.length) return;
+
+                var normalizeIndex = function(index) {
+                    var total = slides.length;
+                    if (!total) return 0;
+                    return (index % total + total) % total;
+                };
+
+                var getCircularOffset = function(index, active, total) {
+                    var offset = index - active;
+                    if (offset > total / 2) offset -= total;
+                    if (offset < -total / 2) offset += total;
+                    return offset;
+                };
+
+                var centerMobileSlide = function(behavior) {
+                    var current = slides[activeIndex];
+                    if (!current) return;
+                    var targetLeft = current.offsetLeft - ((stage.clientWidth - current.clientWidth) / 2);
+                    if (targetLeft < 0) targetLeft = 0;
+                    stage.scrollTo({
+                        left: targetLeft,
+                        behavior: behavior || 'smooth'
+                    });
+                };
+
+                var renderDesktop = function() {
+                    var total = slides.length;
+
+                    slides.forEach(function(slide, index) {
+                        var offset = getCircularOffset(index, activeIndex, total);
+                        var pos = 'hidden';
+
+                        if (offset === 0) pos = 'center';
+                        if (offset === -1) pos = 'left1';
+                        if (offset === -2) pos = 'left2';
+                        if (offset === 1) pos = 'right1';
+                        if (offset === 2) pos = 'right2';
+
+                        slide.setAttribute('data-pos', pos);
+                        slide.classList.toggle('is-active', index === activeIndex);
+                    });
+                };
+
+                var renderMobile = function(options) {
+                    options = options || {};
+                    slides.forEach(function(slide, index) {
+                        slide.removeAttribute('data-pos');
+                        slide.classList.toggle('is-active', index === activeIndex);
+                    });
+
+                    if (!options.skipScroll) {
+                        centerMobileSlide(options.instant ? 'auto' : 'smooth');
+                    }
+                };
+
+                var render = function(options) {
+                    if (mobileQuery.matches) {
+                        root.classList.add('is-mobile');
+                        renderMobile(options || {});
+                    } else {
+                        root.classList.remove('is-mobile');
+                        renderDesktop();
+                    }
+                };
+
+                var goTo = function(index, options) {
+                    activeIndex = normalizeIndex(index);
+                    render(options || {});
+                };
+
+                var stopAuto = function() {
+                    if (autoTimer) {
+                        window.clearInterval(autoTimer);
+                        autoTimer = null;
+                    }
+                };
+
+                var startAuto = function() {
+                    if (slides.length < 2 || autoTimer || lockAuto || document.hidden) return;
+                    autoTimer = window.setInterval(function() {
+                        goTo(activeIndex + (isRtl ? -1 : 1));
+                    }, autoDelay);
+                };
+
+                var pauseAutoTemporarily = function() {
+                    lockAuto = true;
+                    stopAuto();
+                };
+
+                var resumeAutoTemporarily = function(delay) {
+                    window.setTimeout(function() {
+                        lockAuto = false;
+                        startAuto();
+                    }, delay || 1300);
+                };
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', function() {
+                        pauseAutoTemporarily();
+                        goTo(activeIndex - 1);
+                        resumeAutoTemporarily(1200);
+                    });
+                }
+
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', function() {
+                        pauseAutoTemporarily();
+                        goTo(activeIndex + 1);
+                        resumeAutoTemporarily(1200);
+                    });
+                }
+
+                slides.forEach(function(slide, index) {
+                    slide.addEventListener('click', function(event) {
+                        if (mobileQuery.matches) return;
+                        if (index !== activeIndex) {
+                            event.preventDefault();
+                            pauseAutoTemporarily();
+                            goTo(index);
+                            resumeAutoTemporarily(1200);
+                        }
+                    });
+                });
+
+                stage.addEventListener('scroll', function() {
+                    if (!mobileQuery.matches) return;
+                    if (scrollTimer) window.clearTimeout(scrollTimer);
+
+                    scrollTimer = window.setTimeout(function() {
+                        var center = stage.scrollLeft + (stage.clientWidth / 2);
+                        var nearestIndex = activeIndex;
+                        var nearestDistance = Number.POSITIVE_INFINITY;
+
+                        slides.forEach(function(slide, index) {
+                            var slideCenter = slide.offsetLeft + (slide.clientWidth / 2);
+                            var distance = Math.abs(slideCenter - center);
+                            if (distance < nearestDistance) {
+                                nearestDistance = distance;
+                                nearestIndex = index;
+                            }
+                        });
+
+                        if (nearestIndex !== activeIndex) {
+                            activeIndex = nearestIndex;
+                            render({
+                                skipScroll: true
+                            });
+                        }
+                    }, 80);
+                }, {
+                    passive: true
+                });
+
+                root.addEventListener('mouseenter', function() {
+                    pauseAutoTemporarily();
+                });
+
+                root.addEventListener('mouseleave', function() {
+                    lockAuto = false;
+                    startAuto();
+                });
+
+                root.addEventListener('focusin', function() {
+                    pauseAutoTemporarily();
+                });
+
+                root.addEventListener('focusout', function() {
+                    if (!root.contains(document.activeElement)) {
+                        lockAuto = false;
+                        startAuto();
+                    }
+                });
+
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        stopAuto();
+                    } else if (!lockAuto) {
+                        startAuto();
+                    }
+                });
+
+                if (mobileQuery.addEventListener) {
+                    mobileQuery.addEventListener('change', function() {
+                        render({
+                            instant: true
+                        });
+                    });
+                } else if (mobileQuery.addListener) {
+                    mobileQuery.addListener(function() {
+                        render({
+                            instant: true
+                        });
+                    });
+                }
+
+                render({
+                    instant: true
+                });
+                startAuto();
+            })();
+        </script>
     @endif
 
     <section class="sch-section sch-cta">

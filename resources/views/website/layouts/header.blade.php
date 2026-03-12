@@ -298,133 +298,122 @@
 
         @yield('content')
 
-
-
         <!-- footer -->
-        <footer class="site-footer">
-            <div class="pbmit-footer-big-area">
+        @php
+            $schoolNameAr = optional($schoolData)->name_ar ?: optional($schoolData)->name_en;
+            $schoolNameEn = optional($schoolData)->name_en ?: 'Aladham Private School';
+            $schoolDisplayName = $isRtl ? ($schoolNameAr ?: $schoolNameEn) : $schoolNameEn;
+            $footerDescription = trim((string) (
+                $isRtl
+                    ? ($footer_web->content_ar ?: ($footer_web->content_en ?? $footer_web->title))
+                    : ($footer_web->content_en ?: ($footer_web->content_ar ?? $footer_web->title))
+            ));
+            $footerAddress = trim((string) (
+                $isRtl
+                    ? ($footer_web->address_ar ?: ($footer_web->address_en ?? $footer_web->address))
+                    : ($footer_web->address_en ?: ($footer_web->address_ar ?? $footer_web->address))
+            ));
+        @endphp
+        <footer class="site-footer sch-footer-v3">
+            <div class="pbmit-footer-widget-area sch-footer-main">
                 <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-md-9 pbmit-footer-left">
-                            <h3> {{ $footer_web->title }}</h3>
-                        </div>
-                        <div class="col-md-3 pbmit-footer-right">
-                            <div class="pbmit-qoute-button">
-                                <a href="{{ Route('website.register') }}">{{ __('site.Signup') }}</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="pbmit-footer-widget-area">
-                <div class="container">
-                    <div class="row">
+                    <div class="row sch-footer-grid g-4">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <aside class="widget sch-footer-col sch-footer-col-info">
+                                <a href="{{ Route('website.index') }}" class="sch-footer-brand-link">
+                                    <img src="{{ $officialLogo }}" alt="{{ $schoolDisplayName }}" class="sch-footer-logo">
+                                </a>
+                                <h3 class="widget-title sch-footer-school-name">{{ $schoolDisplayName }}</h3>
+                                @if($footerDescription)
+                                    <p class="sch-footer-description">{{ \Illuminate\Support\Str::limit($footerDescription, 170) }}</p>
+                                @endif
 
-                        <div class="col-md-6 col-lg-6 pbmit-footer-widget-col-2">
-                            <aside class="widget">
-                                <h2 class="widget-title">{{ __('site.Utility Page') }}</h2>
-                                <ul>
-                                    <li><a href="{{ Route('website.index') }}#about_us">{{ __('site.About Us') }}</a>
-                                    </li>
+                            </aside>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <aside class="widget sch-footer-col">
+                                <h4 class="widget-title">{{ __('site.Utility Page') }}</h4>
+                                <ul class="sch-footer-links">
+                                    <li><a href="{{ Route('website.index') }}#about_us">{{ __('site.About Us') }}</a></li>
                                     <li><a href="{{ Route('website.faq') }}">{{ __('site.Faq') }}</a></li>
-                                    <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a>
-                                    </li>
-                                    <li><a href="{{ Route('website.index') }}#Blog">{{ __('site.Blogs') }}</a>
-                                    </li>
-                                    <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a>
-                                    </li>
+                                    <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
+                                    <li><a href="{{ Route('website.index') }}#Blog">{{ __('site.Blogs') }}</a></li>
+                                    <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
                                 </ul>
                             </aside>
                         </div>
-                        <div class="col-md-6 col-lg-6 pbmit-footer-widget-col-3">
-                            <aside class="widget">
-                                <h2 class="widget-title">{{ __('site.Contact') }}</h2>
-                                <div class="pbmit-contact-widget-lines">
-                                    <div class="pbmit-contact-widget-line">
-                                        {{ $footer_web->address }}
-                                    </div>
-                                    <div class="pbmit-contact-widget-line">
-                                        {{ $footer_web->phone }}
-                                    </div>
-                                    <div class="pbmit-contact-widget-line">
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <aside class="widget sch-footer-col">
+                                <h4 class="widget-title">{{ __('site.Contact') }}</h4>
+                                <ul class="sch-footer-contact-list">
+                                    <li>
+                                        <i class="pbmit-base-icon-location-dot-solid"></i>
+                                        <span>{{ $footerAddress }}</span>
+                                    </li>
+                                    <li>
+                                        <i class="pbmit-base-icon-phone-volume-solid"></i>
+                                        <a href="tel:{{ preg_replace('/[^0-9\+]/', '', (string) $footer_web->phone) }}">{{ $footer_web->phone }}</a>
+                                    </li>
+                                    <li>
+                                        <i class="pbmit-base-icon-envelope-solid"></i>
                                         <a href="mailto:{{ $footer_web->email }}">{{ $footer_web->email }}</a>
-                                    </div>
-                                </div>
+                                    </li>
+                                    @if(!empty($footer_web->whatsApp))
+                                        <li>
+                                            <i class="pbmit-base-icon-whatsapp"></i>
+                                            <a href="https://api.whatsapp.com/send?phone={{ preg_replace('/[^0-9]/', '', (string) $footer_web->whatsApp) }}" target="_blank" rel="noopener">
+                                                {{ $footer_web->whatsApp }}
+                                            </a>
+                                        </li>
+                                    @endif
+                                </ul>
                             </aside>
                         </div>
-                        <div class="col-md-6 col-lg-3 pbmit-footer-widget-col-4">
-                            <aside class="widget">
-                                <div class="textwidget">
-                                    <ul class="pbmit-social-links">
-                                        <li class="pbmit-social-li pbmit-social-facebook">
-                                            <a title="Facebook" href="{{ $footer_web->facebook }}" target="_blank"
-                                                rel="noopener">
-                                                <span><i class="pbmit-base-icon-facebook-f"></i></span>
-                                            </a>
-                                        </li>
-                                        <li class="pbmit-social-li pbmit-social-twitter">
-                                            <a title="Twitter" href="{{ $footer_web->twitter }}" target="_blank"
-                                                rel="noopener">
-                                                <span><i class="pbmit-base-icon-twitter-x"></i></span>
-                                            </a>
-                                        </li>
-                                        <li class="pbmit-social-li pbmit-social-linkedin">
-                                            <a title="LinkedIn" href="{{ $footer_web->linkedin }}" target="_blank"
-                                                rel="noopener">
-                                                <span><i class="pbmit-base-icon-linkedin-in"></i></span>
-                                            </a>
-                                        </li>
-                                        <li class="pbmit-social-li pbmit-social-instagram">
-                                            <a title="Instagram" href="{{ $footer_web->instgram }}" target="_blank"
-                                                rel="noopener">
-                                                <span><i class="pbmit-base-icon-instagram"></i></span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                    <h3
-                                        class="pbmit-newsletter-title"@if (LaravelLocalization::setLocale() == 'ar') style="direction: rtl; text-align: right" @endif>
-                                        {{ __('site.send us') }} <br>
-                                        {{ __('site.message') }}.</h3>
-                                    <form>
-                                        <div class="pbmit-footer-newsletter">
-                                            <input type="email" name="EMAIL" placeholder="Enter your email"
-                                                required="">
-                                            <button class="pbmit-btn" type="submit"
-                                                value="Sign up">{{ __('site.send') }}</button>
-                                        </div>
-                                    </form>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <aside class="widget sch-footer-col">
+                                <h4 class="widget-title">{{ __('site.Contact Us') }}</h4>
+                                <ul class="pbmit-social-links sch-footer-social-links">
+                                    <li class="pbmit-social-li pbmit-social-instagram">
+                                        <a title="Instagram" href="{{ $footer_web->instgram }}" target="_blank" rel="noopener">
+                                            <span><i class="pbmit-base-icon-instagram"></i></span>
+                                        </a>
+                                    </li>
+                                    <li class="pbmit-social-li pbmit-social-facebook">
+                                        <a title="Facebook" href="{{ $footer_web->facebook }}" target="_blank" rel="noopener">
+                                            <span><i class="pbmit-base-icon-facebook-f"></i></span>
+                                        </a>
+                                    </li>
+                                    <li class="pbmit-social-li pbmit-social-linkedin">
+                                        <a title="LinkedIn" href="{{ $footer_web->linkedin }}" target="_blank" rel="noopener">
+                                            <span><i class="pbmit-base-icon-linkedin-in"></i></span>
+                                        </a>
+                                    </li>
+                                    <li class="pbmit-social-li pbmit-social-twitter">
+                                        <a title="X" href="{{ $footer_web->twitter }}" target="_blank" rel="noopener">
+                                            <span><i class="pbmit-base-icon-twitter-x"></i></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="sch-footer-message-box">
+                                    <p class="sch-footer-cta-text">{{ $isRtl ? '��� ���� ����� ��� ������� ��������.' : 'Enroll now and join our learning community.' }}</p>
+                                    <a href="{{ Route('website.register') }}" class="pbmit-btn sch-footer-register-btn sch-footer-register-btn--inline">
+                                        <span>{{ __('site.Signup') }}</span>
+                                    </a>
                                 </div>
                             </aside>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="pbmit-footer-text-area">
+            <div class="pbmit-footer-text-area sch-footer-copybar">
                 <div class="container">
                     <div class="pbmit-footer-text-inner">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="pbmit-footer-copyright-text-area">
-                                    {{ __('site.Copyright') }} © 2024 <a href="#">aladham</a>,
-                                    {{ __('site.All Rights Reserved') }}.
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="pbmit-footer-menu-area">
-                                    <ul class="pbmit-footer-menu">
-
-
-                                        <li><a href="{{ Route('website.faq') }}">{{ __('site.Faq') }}</a></li>
-                                        <li><a
-                                                href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a>
-                                        </li>
-
-                                        <li><a
-                                                href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div class="pbmit-footer-copyright-text-area">
+                            <p>� 2026 Aladham Private School � {{ __('site.All Rights Reserved') }}.</p>
+                            <p>Developed and Maintained by Eng. Adnan Kafri</p>
                         </div>
                     </div>
                 </div>
@@ -556,3 +545,6 @@
 <!-- Mirrored from kidzieo-demo.pbminfotech.com/html-demo/ by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 02 Apr 2024 10:17:39 GMT -->
 
 </html>
+
+
+

@@ -266,21 +266,27 @@
 
 
         <!-- footer -->
-        <footer class="site-footer sch-footer">
-            <div class="container">
-                <div class="sch-footer-top">
-                    <div class="row g-4 align-items-start">
-                        <div class="col-lg-4 col-md-6">
-                            <div class="sch-footer-brand">
+        <footer class="site-footer sch-footer-clean">
+            <div class="container footer-clean-wrap">
+                <div class="row g-4 footer-clean-grid">
+                    <div class="col-xl-3 col-lg-3 col-md-6">
+                        <div class="footer-clean-col footer-clean-brand">
+                            <a href="{{ Route('website.index') }}" class="footer-clean-logo-link">
                                 <img src="{{ $officialLogo }}"
-                                    alt="{{ optional($schoolData)->name_en ?? 'Aladham Private School' }}">
-                                <h3>{{ optional($schoolData)->name ?: 'Aladham Private School' }}</h3>
-                                <p>{{ $footer_web->title }}</p>
-                            </div>
+                                    alt="{{ optional($schoolData)->name_en ?? 'Aladham Private School' }}"
+                                    class="footer-clean-logo">
+                            </a>
+                            <h3 class="footer-clean-title footer-clean-brand-name">
+                                {{ optional($schoolData)->name ?: 'Aladham Private School' }}
+                            </h3>
+                            <p class="footer-clean-text">{{ $footer_web->title }}</p>
                         </div>
-                        <div class="col-lg-2 col-md-6">
-                            <h4 class="sch-footer-title">{{ __('site.Utility Page') }}</h4>
-                            <ul class="sch-footer-links">
+                    </div>
+
+                    <div class="col-xl-3 col-lg-3 col-md-6">
+                        <div class="footer-clean-col">
+                            <h4 class="footer-clean-title">{{ __('site.Utility Page') }}</h4>
+                            <ul class="footer-clean-links">
                                 <li><a href="{{ Route('website.index') }}#about_us">{{ __('site.About Us') }}</a></li>
                                 <li><a href="{{ Route('website.faq') }}">{{ __('site.Faq') }}</a></li>
                                 <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
@@ -288,44 +294,47 @@
                                 <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
                             </ul>
                         </div>
-                        <div class="col-lg-3 col-md-6">
-                            <h4 class="sch-footer-title">{{ __('site.Contact') }}</h4>
-                            <ul class="sch-footer-contact">
-                                <li><i class="pbmit-base-icon-location-dot-solid"></i><span>{{ $footer_web->address }}</span></li>
-                                <li><i class="pbmit-base-icon-phone-volume-solid"></i><a href="tel:{{ $footer_web->phone }}">{{ $footer_web->phone }}</a></li>
-                                <li><i class="pbmit-base-icon-envelope-solid"></i><a href="mailto:{{ $footer_web->email }}">{{ $footer_web->email }}</a></li>
+                    </div>
+
+                    <div class="col-xl-3 col-lg-3 col-md-6">
+                        <div class="footer-clean-col">
+                            <h4 class="footer-clean-title">{{ __('site.Contact') }}</h4>
+                            <ul class="footer-clean-contact">
+                                <li>
+                                    <i class="pbmit-base-icon-location-dot-solid"></i>
+                                    <span>{{ $footer_web->address }}</span>
+                                </li>
+                                <li>
+                                    <i class="pbmit-base-icon-phone-volume-solid"></i>
+                                    <a href="tel:{{ $footer_web->phone }}">{{ $footer_web->phone }}</a>
+                                </li>
+                                <li>
+                                    <i class="pbmit-base-icon-envelope-solid"></i>
+                                    <a href="mailto:{{ $footer_web->email }}">{{ $footer_web->email }}</a>
+                                </li>
                             </ul>
                         </div>
-                        <div class="col-lg-3 col-md-6">
-                            <h4 class="sch-footer-title">{{ __('site.send us') }}</h4>
-                            <p class="sch-footer-sub">{{ __('site.message') }}</p>
-                            <ul class="pbmit-social-links sch-footer-social">
-                                <li class="pbmit-social-li"><a title="Facebook" href="{{ $footer_web->facebook }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-facebook-f"></i></span></a></li>
-                                <li class="pbmit-social-li"><a title="Twitter" href="{{ $footer_web->twitter }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-twitter-x"></i></span></a></li>
-                                <li class="pbmit-social-li"><a title="LinkedIn" href="{{ $footer_web->linkedin }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-linkedin-in"></i></span></a></li>
-                                <li class="pbmit-social-li"><a title="Instagram" href="{{ $footer_web->instgram }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-instagram"></i></span></a></li>
+                    </div>
+
+                    <div class="col-xl-3 col-lg-3 col-md-6">
+                        <div class="footer-clean-col">
+                            <h4 class="footer-clean-title">{{ __('site.Contact Us') }}</h4>
+                            <ul class="footer-clean-social">
+                                <li><a title="Facebook" href="{{ $footer_web->facebook }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-facebook-f"></i></span></a></li>
+                                <li><a title="Twitter" href="{{ $footer_web->twitter }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-twitter-x"></i></span></a></li>
+                                <li><a title="LinkedIn" href="{{ $footer_web->linkedin }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-linkedin-in"></i></span></a></li>
+                                <li><a title="Instagram" href="{{ $footer_web->instgram }}" target="_blank" rel="noopener"><span><i class="pbmit-base-icon-instagram"></i></span></a></li>
                             </ul>
-                            <a href="{{ Route('website.register') }}" class="pbmit-btn sch-footer-cta"><span>{{ __('site.Signup') }}</span></a>
+                            <a href="{{ Route('website.register') }}" class="pbmit-btn footer-clean-cta">
+                                <span>{{ __('site.Signup') }}</span>
+                            </a>
                         </div>
                     </div>
                 </div>
-                <div class="sch-footer-bottom">
-                    <div class="row align-items-center g-3">
-                        <div class="col-md-6">
-                            <div class="pbmit-footer-copyright-text-area">
-                                {{ __('site.Copyright') }} &copy; {{ date('Y') }}
-                                {{ optional($schoolData)->name_en ?? 'Aladham Private School' }},
-                                {{ __('site.All Rights Reserved') }}.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="pbmit-footer-menu sch-footer-menu">
-                                <li><a href="{{ Route('website.faq') }}">{{ __('site.Faq') }}</a></li>
-                                <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
-                                <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
-                            </ul>
-                        </div>
-                    </div>
+
+                <div class="footer-clean-copy">
+                    <p>© 2026 Aladham Private School — All Rights Reserved</p>
+                    <p>Developed and Maintained by Eng. Adnan Kafri</p>
                 </div>
             </div>
         </footer>
