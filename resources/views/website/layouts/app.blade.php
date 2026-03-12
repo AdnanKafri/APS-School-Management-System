@@ -13,6 +13,107 @@
         }
         return asset('storage/' . ltrim($path, '/'));
     };
+    $localMediaExists = function ($relativePath) {
+        $relativePath = ltrim((string) $relativePath, '/');
+        if ($relativePath === '') {
+            return false;
+        }
+
+        $candidates = [
+            public_path($relativePath),
+            public_path('storage/' . $relativePath),
+            storage_path($relativePath),
+            storage_path('app/public/' . $relativePath),
+        ];
+
+        if (\Illuminate\Support\Str::startsWith($relativePath, 'storage/')) {
+            $trimmed = ltrim(substr($relativePath, strlen('storage/')), '/');
+            if ($trimmed !== '') {
+                $candidates[] = storage_path($trimmed);
+                $candidates[] = storage_path('app/public/' . $trimmed);
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) && file_exists($candidate)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+    $normalizeHeroVideo = function ($url) use ($localMediaExists) {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return null;
+        }
+
+        if (stripos($url, '<iframe') !== false && preg_match('/src=[\"\']([^\"\']+)[\"\']/i', $url, $embedMatch)) {
+            $url = trim($embedMatch[1]);
+        }
+
+        if (preg_match('/^[A-Za-z0-9_-]{11}$/', $url)) {
+            return [
+                'type' => 'iframe',
+                'src' => 'https://www.youtube.com/embed/' . $url . '?rel=0&modestbranding=1',
+            ];
+        }
+
+        if (\Illuminate\Support\Str::startsWith($url, ['www.youtube.com', 'youtube.com', 'youtu.be', 'vimeo.com'])) {
+            $url = 'https://' . ltrim($url, '/');
+        }
+
+        if (preg_match('~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{6,})~i', $url, $match)) {
+            return [
+                'type' => 'iframe',
+                'src' => 'https://www.youtube.com/embed/' . $match[1] . '?rel=0&modestbranding=1',
+            ];
+        }
+
+        if (preg_match('~(?:vimeo\.com/)(\d+)~i', $url, $match)) {
+            return [
+                'type' => 'iframe',
+                'src' => 'https://player.vimeo.com/video/' . $match[1],
+            ];
+        }
+
+        if (preg_match('~\.(mp4|webm|ogg)(\?.*)?$~i', $url)) {
+            if (\Illuminate\Support\Str::startsWith($url, ['http://', 'https://'])) {
+                return ['type' => 'video', 'src' => $url];
+            }
+
+            $cleanPath = ltrim($url, '/');
+
+            if (\Illuminate\Support\Str::startsWith($cleanPath, ['storage/', 'assets/', 'uploads/', 'images/'])) {
+                if (!$localMediaExists($cleanPath)) {
+                    return null;
+                }
+                return ['type' => 'video', 'src' => asset($cleanPath)];
+            }
+
+            if (!$localMediaExists($cleanPath)) {
+                return null;
+            }
+            return ['type' => 'video', 'src' => asset('storage/' . $cleanPath)];
+        }
+
+        return null;
+    };
+    $heroVideoMeta = null;
+    if (isset($video) && $video) {
+        if (!empty($video->youtube)) {
+            $heroVideoMeta = $normalizeHeroVideo($video->youtube);
+        }
+        if (empty($heroVideoMeta) && !empty($video->video)) {
+            $heroVideoMeta = $normalizeHeroVideo($video->video);
+        }
+    }
+    if (empty($heroVideoMeta) && !empty(optional($schoolData)->video)) {
+        $heroVideoMeta = $normalizeHeroVideo($schoolData->video);
+    }
+    if (empty($heroVideoMeta) && isset($other) && $other && !empty($other->img3)) {
+        $heroVideoMeta = $normalizeHeroVideo($other->img3);
+    }
 @endphp
 <!doctype html>
 <html class="no-js" lang="{{ $locale ?? 'ar' }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -155,6 +256,11 @@
                                             $secondaryText = !empty($item->button_text_secondary) ? $item->button_text_secondary : ($isRtl ? 'شاهد الفيديو' : 'Watch Video');
                                             $primaryUrl = !empty($item->button_link) ? $item->button_link : Route('website.register');
                                             $secondaryUrl = !empty($item->button_link_secondary) ? $item->button_link_secondary : Route('website.contact_us');
+                                            $slideVideoMeta = !empty($item->button_link_secondary) ? $normalizeHeroVideo($item->button_link_secondary) : null;
+                                            if (empty($slideVideoMeta)) {
+                                                $slideVideoMeta = $heroVideoMeta;
+                                            }
+                                            $useVideoModal = !empty($slideVideoMeta);
                                             $heroBgFrom = !empty($item->background_from) ? $item->background_from : '#ffffff';
                                             $heroBgMid = !empty($item->background_mid) ? $item->background_mid : '#f7f2ff';
                                             $heroBgTo = !empty($item->background_to) ? $item->background_to : '#efe5ff';
@@ -178,11 +284,20 @@
                                                         <div class="home-hero-actions home-hero-actions-v4">
                                                             <a href="{{ $primaryUrl }}"
                                                                 class="home-hero-btn home-hero-btn-primary home-hero-btn-primary-v4">{{ $primaryText }}</a>
-                                                            <a href="{{ $secondaryUrl }}"
-                                                                class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4">
-                                                                <i class="fa fa-play" aria-hidden="true"></i>
-                                                                <span>{{ $secondaryText }}</span>
-                                                            </a>
+                                                            @if ($useVideoModal)
+                                                                <a href="#" class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4 js-hero-video-trigger"
+                                                                    data-video-type="{{ $slideVideoMeta['type'] }}"
+                                                                    data-video-src="{{ $slideVideoMeta['src'] }}">
+                                                                    <i class="fa fa-play" aria-hidden="true"></i>
+                                                                    <span>{{ $secondaryText }}</span>
+                                                                </a>
+                                                            @else
+                                                                <a href="{{ $secondaryUrl }}"
+                                                                    class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4">
+                                                                    <i class="fa fa-play" aria-hidden="true"></i>
+                                                                    <span>{{ $secondaryText }}</span>
+                                                                </a>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                     <div class="home-hero-media home-hero-media-v4">
@@ -217,6 +332,11 @@
                             $secondaryText = !empty(optional($item)->button_text_secondary) ? $item->button_text_secondary : ($isRtl ? 'شاهد الفيديو' : 'Watch Video');
                             $primaryUrl = !empty(optional($item)->button_link) ? $item->button_link : Route('website.register');
                             $secondaryUrl = !empty(optional($item)->button_link_secondary) ? $item->button_link_secondary : Route('website.contact_us');
+                            $slideVideoMeta = !empty(optional($item)->button_link_secondary) ? $normalizeHeroVideo($item->button_link_secondary) : null;
+                            if (empty($slideVideoMeta)) {
+                                $slideVideoMeta = $heroVideoMeta;
+                            }
+                            $useVideoModal = !empty($slideVideoMeta);
                             $heroBgFrom = !empty(optional($item)->background_from) ? $item->background_from : '#ffffff';
                             $heroBgMid = !empty(optional($item)->background_mid) ? $item->background_mid : '#f7f2ff';
                             $heroBgTo = !empty(optional($item)->background_to) ? $item->background_to : '#efe5ff';
@@ -239,11 +359,20 @@
                                     <div class="home-hero-actions home-hero-actions-v4">
                                         <a href="{{ $primaryUrl }}"
                                             class="home-hero-btn home-hero-btn-primary home-hero-btn-primary-v4">{{ $primaryText }}</a>
-                                        <a href="{{ $secondaryUrl }}"
-                                            class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4">
-                                            <i class="fa fa-play" aria-hidden="true"></i>
-                                            <span>{{ $secondaryText }}</span>
-                                        </a>
+                                        @if ($useVideoModal)
+                                            <a href="#" class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4 js-hero-video-trigger"
+                                                data-video-type="{{ $slideVideoMeta['type'] }}"
+                                                data-video-src="{{ $slideVideoMeta['src'] }}">
+                                                <i class="fa fa-play" aria-hidden="true"></i>
+                                                <span>{{ $secondaryText }}</span>
+                                            </a>
+                                        @else
+                                            <a href="{{ $secondaryUrl }}"
+                                                class="home-hero-btn home-hero-btn-ghost home-hero-btn-ghost-v4">
+                                                <i class="fa fa-play" aria-hidden="true"></i>
+                                                <span>{{ $secondaryText }}</span>
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="home-hero-media home-hero-media-v4">
@@ -257,6 +386,17 @@
                     @endif
                 </div>
             </section>
+            <div class="hero-video-modal" id="heroVideoModal" aria-hidden="true">
+                <div class="hero-video-modal__overlay" data-video-close></div>
+                <div class="hero-video-modal__dialog" role="dialog" aria-modal="true" aria-label="{{ $isRtl ? 'مشغل فيديو' : 'Video Player' }}">
+                    <button type="button" class="hero-video-modal__close" aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}" data-video-close>&times;</button>
+                    <div class="hero-video-modal__ratio">
+                        <iframe id="hero-video-iframe" class="hero-video-modal__iframe" title="School Video"
+                            allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen hidden></iframe>
+                        <video id="hero-video-player" class="hero-video-modal__video" controls playsinline preload="metadata" hidden></video>
+                    </div>
+                </div>
+            </div>
         @endif
         </div><!-- /.sch-hero-wrapper -->
         <!-- Header Main Area End Here -->
@@ -501,6 +641,79 @@
                         slidesPerView: 1.6,
                         spaceBetween: 26
                     }
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            var modal = document.getElementById('heroVideoModal');
+            if (!modal) return;
+
+            var iframe = modal.querySelector('.hero-video-modal__iframe');
+            var video = modal.querySelector('.hero-video-modal__video');
+            var closeTargets = modal.querySelectorAll('[data-video-close]');
+            var isClosing = false;
+
+            function stopPlayback() {
+                iframe.setAttribute('hidden', 'hidden');
+                iframe.removeAttribute('src');
+
+                video.pause();
+                video.setAttribute('hidden', 'hidden');
+                video.removeAttribute('src');
+                video.load();
+            }
+
+            function closeModal() {
+                if (isClosing || !modal.classList.contains('is-open')) return;
+                isClosing = true;
+                modal.classList.remove('is-open');
+                modal.classList.add('is-closing');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('hero-video-open');
+                stopPlayback();
+
+                window.setTimeout(function() {
+                    modal.classList.remove('is-closing');
+                    isClosing = false;
+                }, 220);
+            }
+
+            function openModal(source, type) {
+                if (!source) return;
+
+                stopPlayback();
+                if (type === 'video') {
+                    video.removeAttribute('hidden');
+                    video.src = source;
+                    video.load();
+                    video.play().catch(function() {});
+                } else {
+                    iframe.removeAttribute('hidden');
+                    iframe.src = source + (source.indexOf('?') === -1 ? '?autoplay=1' : '&autoplay=1');
+                }
+
+                modal.classList.add('is-open');
+                modal.classList.remove('is-closing');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('hero-video-open');
+            }
+
+            document.addEventListener('click', function(event) {
+                var trigger = event.target.closest('.js-hero-video-trigger');
+                if (!trigger) return;
+                event.preventDefault();
+                openModal(trigger.getAttribute('data-video-src'), trigger.getAttribute('data-video-type'));
+            });
+
+            closeTargets.forEach(function(target) {
+                target.addEventListener('click', closeModal);
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeModal();
                 }
             });
         })();

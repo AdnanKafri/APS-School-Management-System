@@ -46,12 +46,35 @@
 @endphp
 
 <div class="page-content sch-homepage">
-    <section class="sch-section sch-intro-strip">
+    <section class="sch-section sch-about-section" id="about_us">
         <div class="container">
-            <div class="sch-intro-card">
-                <span class="sch-kicker">{{ $txt['welcome'] }}</span>
-                <h1>{{ optional($about)->title ?: (optional($heroSlide)->header ?: __('site.Home')) }}</h1>
-                <p>{{ \Illuminate\Support\Str::limit((string) (optional($about)->description ?: optional($heroSlide)->content), 190) }}</p>
+            <div class="sch-surface sch-about-surface">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-5">
+                        <div class="sch-about-media">
+                            <img src="{{ $makeMediaUrl(optional($about)->image, $fallbackAbout) }}" alt="{{ optional($about)->title }}"
+                                loading="lazy"
+                                onerror="this.onerror=null;this.src='{{ $fallbackAbout }}';">
+                        </div>
+                    </div>
+                    <div class="col-lg-7 sch-about-content" @if($isRtl) dir="rtl" @endif>
+                        <span class="sch-kicker">{{ optional($about)->welcome }}</span>
+                        <h2 class="sch-title">{{ optional($about)->title }}</h2>
+                        <p class="sch-text">{{ optional($about)->description }}</p>
+                        @if(count($aboutPoints))
+                            <div class="row g-2 sch-check-grid">
+                                @foreach($aboutPoints as $point)
+                                    <div class="col-md-6">
+                                        <div class="sch-check-item">
+                                            <i class="pbmit-kidzieo-icon pbmit-kidzieo-icon-circle-check-solid"></i>
+                                            <span>{{ $point }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -95,39 +118,6 @@
             </div>
         </section>
     @endif
-
-    <section class="sch-section sch-about-section" id="about_us">
-        <div class="container">
-            <div class="sch-surface sch-about-surface">
-                <div class="row g-4 align-items-center">
-                    <div class="col-lg-5">
-                        <div class="sch-about-media">
-                            <img src="{{ $makeMediaUrl(optional($about)->image, $fallbackAbout) }}" alt="{{ optional($about)->title }}"
-                                loading="lazy"
-                                onerror="this.onerror=null;this.src='{{ $fallbackAbout }}';">
-                        </div>
-                    </div>
-                    <div class="col-lg-7 sch-about-content" @if($isRtl) dir="rtl" @endif>
-                        <span class="sch-kicker">{{ optional($about)->welcome }}</span>
-                        <h2 class="sch-title">{{ optional($about)->title }}</h2>
-                        <p class="sch-text">{{ optional($about)->description }}</p>
-                        @if(count($aboutPoints))
-                            <div class="row g-2 sch-check-grid">
-                                @foreach($aboutPoints as $point)
-                                    <div class="col-md-6">
-                                        <div class="sch-check-item">
-                                            <i class="pbmit-kidzieo-icon pbmit-kidzieo-icon-circle-check-solid"></i>
-                                            <span>{{ $point }}</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     @if(isset($classes) && $classes->count())
         <section class="sch-section sch-classes-section" id="classes">
