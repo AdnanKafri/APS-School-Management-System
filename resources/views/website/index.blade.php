@@ -452,36 +452,209 @@
                 var root = document.querySelector('.sch-blog-annc');
                 if (!root) return;
 
+                var featured = root.querySelector('[data-blog-featured]');
                 var featuredImage = root.querySelector('[data-blog-featured-image]');
                 var featuredTitle = root.querySelector('[data-blog-featured-title]');
                 var featuredDesc = root.querySelector('[data-blog-featured-desc]');
+                var rail = root.querySelector('[data-blog-rail]');
                 var cards = root.querySelectorAll('.blog-annc-mini');
+                var autoDelay = 5000;
+                var autoTimer = null;
+                var resumeTimer = null;
+                var currentIndex = 0;
+                var hoverLocked = false;
+                var touchStartX = null;
+                var touchStartY = null;
 
                 if (!featuredImage || !featuredTitle || !cards.length) return;
 
-                var activate = function(card) {
+                var indexOfCard = function(card) {
+                    return Array.prototype.indexOf.call(cards, card);
+                };
+
+                var stopAuto = function() {
+                    if (autoTimer) {
+                        window.clearInterval(autoTimer);
+                        autoTimer = null;
+                    }
+                };
+
+                var startAuto = function() {
+                    if (autoTimer || hoverLocked || document.hidden || cards.length < 2) return;
+                    autoTimer = window.setInterval(function() {
+                        goTo(currentIndex + 1);
+                    }, autoDelay);
+                };
+
+                var resumeAutoSoon = function(delay) {
+                    if (resumeTimer) {
+                        window.clearTimeout(resumeTimer);
+                    }
+                    resumeTimer = window.setTimeout(function() {
+                        hoverLocked = false;
+                        startAuto();
+                    }, delay || 1200);
+                };
+
+                var syncActiveCardIntoView = function(card) {
+                    if (!rail || !card) return;
+
+                    var isMobile = window.matchMedia('(max-width: 767px)').matches;
+                    var cardStart = isMobile ? card.offsetLeft : card.offsetTop;
+                    var cardSize = isMobile ? card.offsetWidth : card.offsetHeight;
+                    var viewportSize = isMobile ? rail.clientWidth : rail.clientHeight;
+
+                    var target = cardStart - ((viewportSize - cardSize) / 2);
+                    if (target < 0) target = 0;
+
+                    if (isMobile) {
+                        rail.scrollTo({
+                            left: target,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        rail.scrollTo({
+                            top: target,
+                            behavior: 'smooth'
+                        });
+                    }
+                };
+
+                var activate = function(card, options) {
+                    options = options || {};
+                    if (!card) return;
+
                     cards.forEach(function(item) {
                         item.classList.remove('is-active');
                     });
                     card.classList.add('is-active');
 
+                    var nextIndex = indexOfCard(card);
+                    if (nextIndex >= 0) {
+                        currentIndex = nextIndex;
+                    }
+
                     var nextImage = card.getAttribute('data-news-image') || '';
                     var nextTitle = card.getAttribute('data-news-title') || '';
                     var nextDesc = card.getAttribute('data-news-desc') || '';
 
-                    featuredImage.src = nextImage || featuredImage.src;
-                    featuredImage.alt = nextTitle || featuredImage.alt;
-                    featuredTitle.textContent = nextTitle;
-                    if (featuredDesc) {
-                        featuredDesc.textContent = nextDesc;
+                    var instant = !!options.instant;
+                    var apply = function() {
+                        featuredImage.src = nextImage || featuredImage.src;
+                        featuredImage.alt = nextTitle || featuredImage.alt;
+                        featuredTitle.textContent = nextTitle;
+                        if (featuredDesc) {
+                            featuredDesc.textContent = nextDesc;
+                        }
+                        if (featured) {
+                            featured.classList.remove('is-switching');
+                        }
+                        syncActiveCardIntoView(card);
+                    };
+
+                    if (instant || !featured) {
+                        apply();
+                        return;
                     }
+
+                    featured.classList.add('is-switching');
+                    window.setTimeout(apply, 170);
                 };
+
+                var goTo = function(index) {
+                    if (!cards.length) return;
+                    var nextIndex = index;
+                    if (nextIndex >= cards.length) nextIndex = 0;
+                    if (nextIndex < 0) nextIndex = cards.length - 1;
+                    activate(cards[nextIndex]);
+                };
+
+                var initial = root.querySelector('.blog-annc-mini.is-active');
+                if (initial) {
+                    var initialIndex = indexOfCard(initial);
+                    if (initialIndex >= 0) currentIndex = initialIndex;
+                    activate(initial, {
+                        instant: true
+                    });
+                } else {
+                    activate(cards[0], {
+                        instant: true
+                    });
+                }
 
                 cards.forEach(function(card) {
                     card.addEventListener('click', function() {
+                        stopAuto();
                         activate(card);
+                        startAuto();
                     });
                 });
+
+                root.addEventListener('mouseenter', function() {
+                    hoverLocked = true;
+                    stopAuto();
+                });
+
+                root.addEventListener('mouseleave', function() {
+                    hoverLocked = false;
+                    startAuto();
+                });
+
+                root.addEventListener('focusin', function() {
+                    hoverLocked = true;
+                    stopAuto();
+                });
+
+                root.addEventListener('focusout', function() {
+                    if (!root.contains(document.activeElement)) {
+                        hoverLocked = false;
+                        startAuto();
+                    }
+                });
+
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        stopAuto();
+                    } else if (!hoverLocked) {
+                        startAuto();
+                    }
+                });
+
+                var swipeSurface = featured || root;
+                swipeSurface.addEventListener('touchstart', function(event) {
+                    if (!event.touches || !event.touches.length) return;
+                    touchStartX = event.touches[0].clientX;
+                    touchStartY = event.touches[0].clientY;
+                    hoverLocked = true;
+                    stopAuto();
+                }, {
+                    passive: true
+                });
+
+                swipeSurface.addEventListener('touchend', function(event) {
+                    if (!event.changedTouches || !event.changedTouches.length) {
+                        resumeAutoSoon(1400);
+                        return;
+                    }
+                    var dx = event.changedTouches[0].clientX - (touchStartX || 0);
+                    var dy = event.changedTouches[0].clientY - (touchStartY || 0);
+
+                    if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy)) {
+                        if (dx < 0) {
+                            goTo(currentIndex + 1);
+                        } else {
+                            goTo(currentIndex - 1);
+                        }
+                    }
+
+                    touchStartX = null;
+                    touchStartY = null;
+                    resumeAutoSoon(1500);
+                }, {
+                    passive: true
+                });
+
+                startAuto();
             })();
         </script>
     @endif

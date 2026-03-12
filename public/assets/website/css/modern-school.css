@@ -7109,3 +7109,222 @@ body.site-ltr.is-homepage .sch-blog-annc .blog-annc-mini {
 }
 
 
+
+/* ==========================================================
+   Blog Announcements Interaction Enhancements
+   ========================================================== */
+body.is-homepage .sch-blog-annc .blog-annc-featured {
+  will-change: transform;
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-featured-media img,
+body.is-homepage .sch-blog-annc .blog-annc-featured-body,
+body.is-homepage .sch-blog-annc .blog-annc-featured-body h3,
+body.is-homepage .sch-blog-annc .blog-annc-featured-body p {
+  transition: transform .3s ease, opacity .3s ease, filter .3s ease;
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-featured.is-switching .blog-annc-featured-media img {
+  opacity: .45;
+  transform: scale(.985);
+  filter: saturate(.92);
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-featured.is-switching .blog-annc-featured-body {
+  opacity: .5;
+  transform: translateY(6px);
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-rail {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 92, 180, .45) rgba(182, 130, 216, .12);
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-rail::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-rail::-webkit-scrollbar-track {
+  background: rgba(182, 130, 216, .12);
+  border-radius: 99px;
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-rail::-webkit-scrollbar-thumb {
+  background: rgba(126, 92, 180, .46);
+  border-radius: 99px;
+}
+
+@media (max-width: 767px) {
+  body.is-homepage .sch-blog-annc .blog-annc-rail {
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-inline: .3rem;
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-mini {
+    scroll-snap-stop: always;
+  }
+}
+
+/* ==========================================================
+   Responsive Stability Patch (Blog + Services + Why Choose)
+   ========================================================== */
+body.is-homepage .sch-blog-annc .blog-annc-layout > * {
+  min-width: 0;
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-mini,
+body.is-homepage .sch-blog-annc .blog-annc-mini-content {
+  min-width: 0;
+}
+
+body.is-homepage .sch-blog-annc .blog-annc-mini-content strong,
+body.is-homepage .sch-blog-annc .blog-annc-mini-content small {
+  overflow-wrap: anywhere;
+}
+
+body.is-homepage .sch-services-rebuild-section .feature-stack-list > * {
+  min-width: 0;
+}
+
+/* Desktop (>=1200): keep current visual style, improve grid balance */
+body.is-homepage .sch-services-rebuild-section .feature-stack-block--why .feature-stack-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.is-homepage .sch-services-rebuild-section .feature-stack-block--services .feature-stack-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Laptop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  body.is-homepage .sch-blog-annc .blog-annc-layout {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+    gap: .92rem;
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-featured-media {
+    min-height: clamp(340px, 50vh, 520px);
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-rail {
+    max-height: clamp(440px, 64vh, 620px);
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--why .feature-stack-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--services .feature-stack-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  body.is-homepage .sch-blog-annc .blog-annc-layout {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+    gap: .86rem;
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-featured-media {
+    min-height: clamp(300px, 42vh, 440px);
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-rail {
+    max-height: clamp(320px, 46vh, 420px);
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-mini {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: .56rem;
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: .92rem;
+    row-gap: .92rem;
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-item {
+    min-height: 140px;
+    padding: .96rem .9rem;
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--services .feature-stack-item {
+    min-height: 230px;
+  }
+}
+
+/* Mobile (<=767px) */
+@media (max-width: 767px) {
+  body.is-homepage .sch-services-rebuild-section .feature-stack-list {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: .84rem;
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-item {
+    min-height: 124px;
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--services .feature-stack-item {
+    min-height: 216px;
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-layout {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-featured-media {
+    min-height: clamp(280px, 54vw, 360px);
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-rail {
+    gap: .62rem;
+  }
+
+  body.is-homepage .sch-blog-annc .blog-annc-mini {
+    min-width: 86%;
+    flex: 0 0 86%;
+  }
+}
+
+/* ==========================================================
+   Hotfix: Responsive Text Collapse + Card Width Stability
+   ========================================================== */
+body.is-homepage .sch-services-rebuild-section .feature-stack-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.is-homepage .sch-services-rebuild-section .feature-stack-content h3,
+body.is-homepage .sch-services-rebuild-section .feature-stack-content p {
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: normal;
+  writing-mode: horizontal-tb;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--why .feature-stack-list,
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--services .feature-stack-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: .92rem;
+    row-gap: .92rem;
+  }
+}
+
+@media (max-width: 767px) {
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--why .feature-stack-list,
+  body.is-homepage .sch-services-rebuild-section .feature-stack-block--services .feature-stack-list {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: .84rem;
+  }
+
+  body.is-homepage .sch-services-rebuild-section .feature-stack-item {
+    width: 100%;
+    min-width: 0;
+  }
+}
