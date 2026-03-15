@@ -180,6 +180,105 @@
         <!-- Hero Wrapper: shared bg for floating navbar + hero -->
         <div class="sch-hero-wrapper">
 
+        @php
+            $topEmail = trim((string) optional($footer_web)->email);
+            $topAddress = trim((string) optional($footer_web)->address);
+            $topPhone = trim((string) optional($footer_web)->phone);
+            $topWhatsApp = trim((string) optional($footer_web)->whatsApp);
+            $topFacebook = trim((string) optional($footer_web)->facebook);
+            $topTwitter = trim((string) optional($footer_web)->twitter);
+            $topLinkedin = trim((string) optional($footer_web)->linkedin);
+            $topInstagram = trim((string) optional($footer_web)->instgram);
+
+            $splitContactValues = function ($raw) {
+                $raw = trim((string) $raw);
+                if ($raw === '') {
+                    return [];
+                }
+
+                if (\Illuminate\Support\Str::startsWith($raw, ['http://', 'https://'])) {
+                    return [$raw];
+                }
+
+                $normalized = preg_replace('/[\r\n\t,،;|\/]+/u', ' ', $raw);
+                $parts = preg_split('/\s+/u', (string) $normalized, -1, PREG_SPLIT_NO_EMPTY);
+                $parts = array_values(array_filter($parts, function ($item) {
+                    return preg_match('/[0-9]/', (string) $item);
+                }));
+
+                return array_values(array_unique($parts));
+            };
+
+            $topPhoneItems = $splitContactValues($topPhone);
+            $topWhatsAppItems = $splitContactValues($topWhatsApp);
+
+            $hasTopBar = $topEmail !== '' || $topAddress !== '' || count($topPhoneItems) || count($topWhatsAppItems) || $topFacebook !== '' || $topTwitter !== '' || $topLinkedin !== '' || $topInstagram !== '';
+        @endphp
+
+        @if($hasTopBar)
+        <div class="sch-topbar">
+            <div class="container">
+                <div class="sch-topbar-shell">
+                    <div class="sch-topbar-start">
+                        @if($topEmail !== '')
+                            <a class="sch-topbar-item" href="mailto:{{ $topEmail }}">
+                                <i class="pbmit-base-icon-envelope-solid" aria-hidden="true"></i>
+                                <span>{{ $topEmail }}</span>
+                            </a>
+                        @endif
+                        @if($topAddress !== '')
+                            <div class="sch-topbar-item sch-topbar-item--address">
+                                <i class="pbmit-base-icon-location-dot-solid" aria-hidden="true"></i>
+                                <span>{{ $topAddress }}</span>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="sch-topbar-end">
+                        @if(count($topPhoneItems))
+                            @foreach($topPhoneItems as $phoneItem)
+                                @php $phoneHref = preg_replace('/[^0-9\+]/', '', (string) $phoneItem); @endphp
+                                <a class="sch-topbar-item" href="{{ $phoneHref !== '' ? 'tel:' . $phoneHref : '#' }}">
+                                    <i class="pbmit-base-icon-phone-volume-solid" aria-hidden="true"></i>
+                                    <span>{{ $phoneItem }}</span>
+                                </a>
+                            @endforeach
+                        @endif
+                        @if(count($topWhatsAppItems))
+                            @foreach($topWhatsAppItems as $whatsAppItem)
+                                @php
+                                    $isWhatsAppUrl = \Illuminate\Support\Str::startsWith((string) $whatsAppItem, ['http://', 'https://']);
+                                    $whatsAppHref = $isWhatsAppUrl
+                                        ? (string) $whatsAppItem
+                                        : 'https://wa.me/' . ltrim(preg_replace('/[^0-9\+]/', '', (string) $whatsAppItem), '+');
+                                @endphp
+                                <a class="sch-topbar-item" href="{{ $whatsAppHref }}" target="_blank" rel="noopener">
+                                    <i class="fa fa-whatsapp" aria-hidden="true"></i>
+                                    <span>{{ $whatsAppItem }}</span>
+                                </a>
+                            @endforeach
+                        @endif
+                        @if($topFacebook !== '' || $topTwitter !== '' || $topLinkedin !== '' || $topInstagram !== '')
+                            <ul class="sch-topbar-social">
+                                @if($topFacebook !== '')
+                                    <li><a title="Facebook" href="{{ $topFacebook }}" target="_blank" rel="noopener"><i class="pbmit-base-icon-facebook-f"></i></a></li>
+                                @endif
+                                @if($topTwitter !== '')
+                                    <li><a title="X" href="{{ $topTwitter }}" target="_blank" rel="noopener"><i class="pbmit-base-icon-twitter-x"></i></a></li>
+                                @endif
+                                @if($topLinkedin !== '')
+                                    <li><a title="LinkedIn" href="{{ $topLinkedin }}" target="_blank" rel="noopener"><i class="pbmit-base-icon-linkedin-in"></i></a></li>
+                                @endif
+                                @if($topInstagram !== '')
+                                    <li><a title="Instagram" href="{{ $topInstagram }}" target="_blank" rel="noopener"><i class="pbmit-base-icon-instagram"></i></a></li>
+                                @endif
+                            </ul>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Header Main Area -->
         <header class="sch-site-header">
             <div class="container">
@@ -215,7 +314,7 @@
                         @if (LaravelLocalization::setLocale() == 'en')
                             <a class="sch-lang-switch"
                                 href="{{ LaravelLocalization::getLocalizedURL('ar', null, [], true) }}">
-                                <img src="{{ asset('website/icons8-syria-48.png') }}" alt="AR">
+                                <img src="{{ asset('website/icons8-syria-51.png') }}" alt="AR">
                             </a>
                         @else
                             <a class="sch-lang-switch"
