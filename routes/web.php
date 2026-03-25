@@ -54,8 +54,16 @@ Route::middleware(['auth', 'roleadmin'])->group(function () {
 
 //روات التوجيه الى صفحة انتهاء فترة استقبال طلبات التوظيف
 Route::get('/Recruitment_competition', function () {
-    return view('website.Recruitment-competition');
-})->name('Recruitment_competition');
+    $locale = LaravelLocalization::getCurrentLocale();
+    if (!in_array($locale, ['ar', 'en'], true)) {
+        $locale = app()->getLocale();
+    }
+    if (!in_array($locale, ['ar', 'en'], true)) {
+        $locale = 'ar';
+    }
+
+    return redirect()->to(url($locale . '/Recruitment_competition'));
+});
 
 Route::get('adh-login','websitecontroller@login')->name('website.login');
 
@@ -111,6 +119,10 @@ Route::group([
   Route::get('/news', 'websitecontroller@news')->name('website.news');
 
   Route::get('/employment', 'websitecontroller@employment')->name('website.employment');
+
+  Route::get('/Recruitment_competition', function () {
+    return view('website.Recruitment-competition');
+  })->name('Recruitment_competition');
 
 
   Route::get('/news/single/{news_id}', 'websitecontroller@news_single')->name('website.news.single');
@@ -201,4 +213,3 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::post('contact_website_store', 'websitecontroller@contact_store')->name('contact_store');
 
 require base_path('routes/gradebook.php');
-

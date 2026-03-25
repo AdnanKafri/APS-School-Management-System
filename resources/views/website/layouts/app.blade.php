@@ -1,7 +1,17 @@
 ﻿@php
     $locale = LaravelLocalization::setLocale();
+    if (empty($locale)) {
+        $locale = app()->getLocale();
+    }
+    if (!in_array($locale, ['ar', 'en'], true)) {
+        $locale = 'ar';
+    }
+
     $isRtl = $locale === 'ar';
+    $localeSwitchAr = LaravelLocalization::getLocalizedURL('ar', null, [], true);
+    $localeSwitchEn = LaravelLocalization::getLocalizedURL('en', null, [], true);
     $schoolData = \App\School_data::first();
+    $footer_web = $footer_web ?? \App\Footer_website::first();
     $officialLogo = asset('assets/images/school/adham_black.png');
     $isHomepage = request()->routeIs('website.index');
     $resolveImage = function ($path, $fallback = null) {
@@ -167,6 +177,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/website/css/modern-school.css') }}">
+    @yield('css')
+    @stack('styles')
 
 
 </head>
@@ -302,7 +314,7 @@
                             <li><a href="{{ Route('website.index') }}#Blog">{{ __('site.Blogs') }}</a></li>
                             <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
                             <li><a href="{{ Route('website.register') }}">{{ __('site.Signup') }}</a></li>
-                            @if (LaravelLocalization::setLocale() == 'en')
+                            @if ($locale === 'en')
                                 <li><a href="{{ Route('Recruitment_competition') }}">Recruitment competition</a></li>
                             @else
                                 <li><a href="{{ Route('Recruitment_competition') }}">مسابقة التوظيف</a></li>
@@ -311,14 +323,14 @@
                     </nav>
 
                     <div class="sch-header-actions">
-                        @if (LaravelLocalization::setLocale() == 'en')
+                        @if ($locale === 'en')
                             <a class="sch-lang-switch"
-                                href="{{ LaravelLocalization::getLocalizedURL('ar', null, [], true) }}">
-                                <img src="{{ asset('website/icons8-syria-51.png') }}" alt="AR">
+                                href="{{ $localeSwitchAr }}">
+                                <img src="{{ asset('website/flag-syria-green.svg') }}" alt="AR">
                             </a>
                         @else
                             <a class="sch-lang-switch"
-                                href="{{ LaravelLocalization::getLocalizedURL('en', null, [], true) }}">
+                                href="{{ $localeSwitchEn }}">
                                 <img src="{{ asset('website/icons8-usa-48.png') }}" alt="EN">
                             </a>
                         @endif
@@ -874,3 +886,4 @@
 <!-- Mirrored from kidzieo-demo.pbminfotech.com/html-demo/ by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 02 Apr 2024 10:17:39 GMT -->
 
 </html>
+
