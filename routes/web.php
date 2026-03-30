@@ -65,7 +65,9 @@ Route::get('/Recruitment_competition', function () {
     return redirect()->to(url($locale . '/Recruitment_competition'));
 });
 
-Route::get('adh-login','websitecontroller@login')->name('website.login');
+Route::get('adh-login', function () {
+    return redirect()->to(url('ar/adh-login'));
+});
 
 Route::post('/stu_register2', 'websitecontroller@stu_register')->name('website.stu_register');
 Route::get('redirectTo404', function () {
@@ -123,6 +125,8 @@ Route::group([
   Route::get('/Recruitment_competition', function () {
     return view('website.Recruitment-competition');
   })->name('Recruitment_competition');
+
+  Route::get('/adh-login', 'websitecontroller@login')->name('website.login');
 
 
   Route::get('/news/single/{news_id}', 'websitecontroller@news_single')->name('website.news.single');

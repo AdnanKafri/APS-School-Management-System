@@ -1,193 +1,134 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
+@extends('website.layouts.auth')
 
-    <title>
-    تسجيل الدخول
+@section('content')
+    @php
+        $locale = App::getLocale();
+        $isArabic = $locale === 'ar';
 
-    </title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap-grid.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap-grid.rtl.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap-reboot.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap-reboot.rtl.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap-utilities.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap.min.css"
-    />
-    <!--link for icons-->
-    <link rel="stylesheet" href="{{asset('website/css/login_style.css')}}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-   <link href="{{URL::asset('teachers/notify/css/notifIt.css')}}" rel="stylesheet"/>
-   <link rel="stylesheet" href="{{ asset('student/notify/css/notifIt.css') }}" />
-    <script src="{{ asset('student/notify/js/notifIt.js') }}"></script>
+        $copy = [
+            'hero_title' => $isArabic ? 'تسجيل الدخول' : 'Login',
+            'hero_subtitle' => $isArabic
+                ? 'بوابة آمنة وسهلة للوصول إلى حسابك ومتابعة خدمات المدرسة.'
+                : 'A secure and simple way to access your account and continue with school services.',
+            'home' => $isArabic ? 'الرئيسية' : 'Home',
+            'badge' => $isArabic ? 'بوابة المستخدم' : 'User Access',
+            'title' => $isArabic ? 'مرحباً بعودتك' : 'Welcome back',
+            'intro' => $isArabic
+                ? 'سجّل الدخول باستخدام بريدك الإلكتروني وكلمة المرور للوصول إلى لوحة التحكم والخدمات المرتبطة بحسابك.'
+                : 'Sign in with your email and password to access your dashboard and the services connected to your account.',
+            'email' => $isArabic ? 'البريد الإلكتروني' : 'Email Address',
+            'password' => $isArabic ? 'كلمة المرور' : 'Password',
+            'remember' => $isArabic ? 'تذكرني' : 'Remember me',
+            'forgot' => $isArabic ? 'هل نسيت كلمة المرور؟' : 'Forgot Password?',
+            'submit' => $isArabic ? 'تسجيل الدخول' : 'Log In',
+            'error' => $isArabic
+                ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.'
+                : 'The email address or password is incorrect. Please review your details and try again.',
+            'validation' => $isArabic
+                ? 'يرجى مراجعة الحقول المطلوبة ثم إعادة المحاولة.'
+                : 'Please review the required fields and try again.',
+        ];
+    @endphp
 
+    <main class="auth-page-shell">
+        <div class="auth-page-decoration auth-page-decoration--one" aria-hidden="true"></div>
+        <div class="auth-page-decoration auth-page-decoration--two" aria-hidden="true"></div>
+        <div class="auth-page-decoration auth-page-decoration--three" aria-hidden="true"></div>
 
+        <section class="login-modern-section">
+            <div class="container">
+                <div class="login-modern-shell">
+                    <div class="login-modern-card">
+                        <div class="login-modern-brand">
+                            <a href="{{ route('website.index') }}" class="login-modern-brand__logo" aria-label="{{ $copy['home'] }}">
+                                <img src="{{ asset('assets/images/school/adham_black.png') }}" alt="Al Adham Private School">
+                            </a>
+                            <a href="{{ route('website.index') }}" class="login-modern-home-link">
+                                <i class="fa fa-angle-{{ $isArabic ? 'left' : 'right' }}"></i>
+                                <span>{{ $isArabic ? 'العودة إلى الرئيسية' : 'Back to Home' }}</span>
+                            </a>
+                        </div>
 
-    <!-- plugins:css -->
-    <style>
+                        <div class="login-modern-card__head">
+                            <span class="login-modern-badge">{{ $copy['badge'] }}</span>
+                            <h1>{{ $copy['hero_title'] }}</h1>
+                            <p>{{ $copy['intro'] }}</p>
+                        </div>
 
-    </style>
-  </head>
-  <body>
-      @if (session()->has('error'))
-<script>
-    window.onload = function () {
-        notif({
-            msg: "   البريد الالكتروني وكلمة السر غير متطابقين  ",
-            type: "error"
-        })
-    }
-</script>
-@endif
-    <div class="container">
-      <div class="row">
-        <div class="overlay" style="padding-top: 80px;">
-          <form  class="screen"  action="{{ route('login1') }}" method="post">
-               @csrf
-            <div class="con">
-              <!--header class="head-form">
-                 <img src="./smartlogo.png" alt="" class="logo">
-              </header-->
-              <div class="circle">
-                <img src="{{asset('assets/website/images/school/aladham-logo2.png')}}" alt="" class="logo" style="padding: 14px !important">
+                        @if (session()->has('error'))
+                            <div class="login-modern-alert login-modern-alert--error">
+                                {{ $copy['error'] }}
+                            </div>
+                        @endif
 
-           </div>
-           <div class="container">
-            <div class="row" style="justify-content: center;">
-               <!--email-->
-               <div class="col-md-12" style="padding-top: 50px;">
-                <div class="input-container">
-                  <input type="email" id="email"  name="email"  class="@error('email') is-invalid @enderror login__input" >
-                  <label>
-                      <i class="fa fa-envelope "></i>   &nbsp;
-                      <!--{{ __('site.Email') }}-->
-                      الإيميل
-                      </label>
-              </div>
-               </div>
+                        @if ($errors->any())
+                            <div class="login-modern-alert login-modern-alert--error">
+                                {{ $copy['validation'] }}
+                            </div>
+                        @endif
 
-                <div class="col-md-12" style="padding-top: 70px">
-                <div class="input-container">
-                  <input type="password" id="password"  name="password"  class="@error('password') is-invalid @enderror login__input" >
-                  <label>
-                      <i class="fa fa-lock "></i>   &nbsp;
-                      <!--{{ __('site.Password') }}-->
-                      كلمة السر
-                      </label>
-              </div>
-               </div>
-               <!--end email-->
-               <!--password-->
-               <!--<div class="col-md-12" style="padding-top: 70px;">
-                <div class="input-container">
-                  <input id="password" type="password"   class="@error('password') is-invalid @enderror login__input"  name="password">
-                  <label><i class="fa fa-lock"></i>
-                      <!--{{ __('site.Password') }}>
-                      كلمة السر
-                      </label>
-              </div>
-            </div>-->
-               <!--end password-->
-               <div class="col-md-5" style="padding-top: 40px;">
-                   <button  type="submit" id="login" >
-                             <!--{{ __('site.Login') }}-->
-                             تسجيل الدخول
-                    </button>
+                        <form action="{{ route('login1') }}" method="post" class="login-modern-form" novalidate>
+                            @csrf
 
-               </div>
-            </div>
-           </div>
-          </div>
+                            <div class="login-modern-field">
+                                <label for="login_email">{{ $copy['email'] }}</label>
+                                <div class="login-modern-input-wrap">
+                                    <span class="login-modern-input-icon" aria-hidden="true">
+                                        <i class="fa fa-envelope-o"></i>
+                                    </span>
+                                    <input
+                                        id="login_email"
+                                        type="email"
+                                        name="email"
+                                        value="{{ old('email') }}"
+                                        class="login-modern-input @error('email') is-invalid @enderror"
+                                        autocomplete="username"
+                                        required>
+                                </div>
+                                @error('email')
+                                    <small class="login-modern-error">{{ $message }}</small>
+                                @enderror
+                            </div>
 
-          <!-- End Form -->
-        </form>
-      </div>
-    </div>
-  </div>
+                            <div class="login-modern-field">
+                                <label for="login_password">{{ $copy['password'] }}</label>
+                                <div class="login-modern-input-wrap">
+                                    <span class="login-modern-input-icon" aria-hidden="true">
+                                        <i class="fa fa-lock"></i>
+                                    </span>
+                                    <input
+                                        id="login_password"
+                                        type="password"
+                                        name="password"
+                                        class="login-modern-input @error('password') is-invalid @enderror"
+                                        autocomplete="current-password"
+                                        required>
+                                </div>
+                                @error('password')
+                                    <small class="login-modern-error">{{ $message }}</small>
+                                @enderror
+                            </div>
 
+                            <div class="login-modern-meta">
+                                <label class="login-modern-check">
+                                    <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
+                                    <span>{{ $copy['remember'] }}</span>
+                                </label>
 
+                                @if (Route::has('password.request'))
+                                    <a class="login-modern-forgot" href="{{ route('password.request') }}">
+                                        {{ $copy['forgot'] }}
+                                    </a>
+                                @endif
+                            </div>
 
-
-              <!--div class="field-set" style="width: 80%;">
-
-                <input class="form-control" type="text" placeholder="اسم المستخدم"/>
-                <br />
-
-                <input class="form-control" type="password" placeholder="كلمة المرور"/>
-
-                <button class="log-in">تسجيل الدخول</button>
-              </div-->
-
-              <!--div class="field-set" style="width: 91%;">
-                <!--a href="#">هل فقدت كلمة المرور ؟</a>
-                <br>
-                <hr class="new1">
-              </div-->
-
-              <!--div class="field-set" style="width: 90%;">
-                <div class="row" style="direction: rtl;">
-                  <div class="col-md-7">
-                    <select name="" id="" class="form-control" style="direction: rtl; color:#4382E0 ;">
-                      <option value=""  style="color: #4382E0 !important;">العربية (ar)</option>
-                      <option value="" style="color: #4382E0 !important;">الانكليزية (en)</option>
-                    </select>
-                  </div>
-                  <div class="col-md-5"></div>
-                  <!--div class="col-md-7">
-                    <button style="background-color: gray;padding: 0px 0px ;font-size: 14px;width: 200px;
-                    position: relative;
-                    top: -20px;">ملاحظة ملفات تعريف الارتباط</button>
-                  </div>
-
+                            <button type="submit" class="pbmit-btn login-modern-submit">
+                                <span>{{ $copy['submit'] }}</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
-
-              </div-->
-
-
-
-              <!--   other buttons -->
-
-              <!--   End Conrainer  -->
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ URL::asset('teachers/notify/js/notifIt.js') }}"></script>
-    <script src="{{ URL::asset('teachers/notify/js/notifit-custom.js') }}"></script>
-    <script src="{{ asset('website/js/vendor/jquery-1.11.3.min.js') }}"></script>
-      <script >
-$(document).on('click', '#login', function () {
-  if($('#email').val() ){
-      if( $('#password').val() ){
-          $(this).hide();
-      }
-  }
-});
-</script>
-
-
-  </body>
-</html>
+            </div>
+        </section>
+    </main>
+@endsection

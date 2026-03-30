@@ -267,7 +267,7 @@
                                                                     style="width: 40%;"></a>
                                                         @endif
                                                     </li>
-                                                            <a style="margin-top: 10px" href="adh-login" class="pbmit-btn">
+                                                            <a style="margin-top: 10px" href="{{ route('website.login') }}" class="pbmit-btn">
                                                         <span>{{ __('site.Login') }}</span>
                                                     </a>
                                                 </ul>
@@ -545,5 +545,4 @@
 <!-- Mirrored from kidzieo-demo.pbminfotech.com/html-demo/ by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 02 Apr 2024 10:17:39 GMT -->
 
 </html>
-
 

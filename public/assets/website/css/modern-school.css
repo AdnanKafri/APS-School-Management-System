@@ -7641,6 +7641,14 @@ body.is-homepage .sch-gallery-cf-nav span {
   line-height: 1;
 }
 
+html[dir="ltr"] body.is-homepage .sch-gallery-cf-nav span {
+  transform: none;
+}
+
+html[dir="rtl"] body.is-homepage .sch-gallery-cf-nav span {
+  transform: rotate(180deg);
+}
+
 body.is-homepage .sch-gallery-cf-nav.is-prev {
   left: .4rem;
 }
@@ -10041,5 +10049,395 @@ body.site-ltr .register-modern-field label span {
 
   .recruitment-modern-card h3 {
     font-size: 1.5rem;
+  }
+}
+
+/* ==========================================================
+   Login Page - Modern
+   ========================================================== */
+body.auth-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(182, 130, 216, .2), transparent 30%),
+    radial-gradient(circle at 85% 15%, rgba(255, 174, 205, .2), transparent 28%),
+    radial-gradient(circle at 85% 80%, rgba(255, 204, 152, .16), transparent 26%),
+    linear-gradient(135deg, #f8f4ff 0%, #fdfaff 48%, #fff7f2 100%);
+}
+
+.auth-page-shell {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.auth-page-shell .container {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-page-decoration {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(10px);
+  opacity: .55;
+}
+
+.auth-page-decoration--one {
+  inset-block-start: 9%;
+  inset-inline-start: 7%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(182, 130, 216, .3) 0%, rgba(182, 130, 216, 0) 70%);
+}
+
+.auth-page-decoration--two {
+  inset-block-end: 8%;
+  inset-inline-end: 8%;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(255, 184, 205, .26) 0%, rgba(255, 184, 205, 0) 72%);
+}
+
+.auth-page-decoration--three {
+  inset-block-start: 38%;
+  inset-inline-end: 18%;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(255, 214, 158, .22) 0%, rgba(255, 214, 158, 0) 74%);
+}
+
+.login-modern-section {
+  width: 100%;
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+.login-modern-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 4rem);
+  min-height: calc(100svh - 4rem);
+}
+
+.login-modern-card {
+  width: min(100%, 500px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .82) 0%, rgba(250, 246, 255, .92) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, .52);
+  border-radius: 24px;
+  box-shadow: 0 28px 70px rgba(79, 59, 120, .16);
+  padding: 2rem 2rem 1.85rem;
+}
+
+.login-modern-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.login-modern-brand__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .78);
+  box-shadow: 0 16px 34px rgba(126, 101, 182, .14);
+}
+
+.login-modern-brand__logo img {
+  max-width: 46px;
+  width: 100%;
+  height: auto;
+}
+
+.login-modern-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: #7252aa;
+  font-size: .92rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color .25s ease, transform .25s ease;
+}
+
+.login-modern-home-link:hover {
+  color: #53358f;
+  transform: translateY(-1px);
+}
+
+.login-modern-card__head {
+  margin-bottom: 1.5rem;
+  text-align: start;
+}
+
+.login-modern-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .45rem .95rem;
+  border-radius: 999px;
+  background: rgba(182, 130, 216, .14);
+  color: #7f5ab7;
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.login-modern-card__head h1,
+.login-modern-card__head h3 {
+  margin: 1rem 0 .65rem;
+  color: #241c43;
+  font-size: clamp(1.8rem, 2vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.login-modern-card__head p {
+  margin: 0;
+  color: #665d85;
+  font-size: 1rem;
+  line-height: 1.85;
+  text-align: start;
+}
+
+.login-modern-alert {
+  margin-bottom: 1rem;
+  border-radius: 16px;
+  padding: .95rem 1rem;
+  font-size: .95rem;
+  line-height: 1.75;
+  text-align: start;
+}
+
+.login-modern-alert--error {
+  background: rgba(225, 87, 89, .1);
+  border: 1px solid rgba(225, 87, 89, .18);
+  color: #b13a46;
+}
+
+.login-modern-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.login-modern-field {
+  display: grid;
+  gap: .5rem;
+}
+
+.login-modern-field label {
+  color: #2a2148;
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: start;
+}
+
+.login-modern-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  min-height: 58px;
+  padding: 0 1rem;
+  border: 1px solid rgba(120, 106, 164, .16);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(97, 71, 145, .06);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.login-modern-input-wrap:focus-within {
+  border-color: rgba(154, 109, 241, .42);
+  box-shadow: 0 14px 30px rgba(130, 94, 209, .12), 0 0 0 4px rgba(182, 130, 216, .12);
+  transform: translateY(-1px);
+}
+
+.login-modern-input-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  color: #9a6df1;
+  font-size: 1rem;
+  flex: 0 0 auto;
+}
+
+.login-modern-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #241c43;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: start;
+}
+
+.login-modern-input.is-invalid {
+  color: #9a2f3f;
+}
+
+.login-modern-input:-webkit-autofill,
+.login-modern-input:-webkit-autofill:hover,
+.login-modern-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  -webkit-text-fill-color: #241c43;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.login-modern-error {
+  color: #c0394f;
+  font-size: .86rem;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: start;
+}
+
+.login-modern-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: .15rem;
+  margin-bottom: .5rem;
+}
+
+.login-modern-check {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  color: #5c547a;
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: start;
+}
+
+.login-modern-check input {
+  accent-color: #9a6df1;
+  width: 1rem;
+  height: 1rem;
+}
+
+.login-modern-forgot {
+  color: #7c58b5;
+  font-size: .92rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color .25s ease, opacity .25s ease;
+}
+
+.login-modern-forgot:hover {
+  color: #5d3fa0;
+  opacity: .9;
+}
+
+.login-modern-submit {
+  width: 100%;
+  justify-content: center;
+  min-height: 56px;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #9a6df1, #b682d8) !important;
+  box-shadow: 0 18px 34px rgba(127, 90, 186, .26);
+  transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+}
+
+.login-modern-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 40px rgba(127, 90, 186, .34);
+  filter: brightness(1.03);
+}
+
+body.site-rtl .login-modern-card,
+body.site-rtl .login-modern-card__head,
+body.site-rtl .login-modern-field label,
+body.site-rtl .login-modern-alert,
+body.site-rtl .login-modern-error {
+  text-align: right;
+}
+
+body.site-ltr .login-modern-card,
+body.site-ltr .login-modern-card__head,
+body.site-ltr .login-modern-field label,
+body.site-ltr .login-modern-alert,
+body.site-ltr .login-modern-error {
+  text-align: left;
+}
+
+@media (max-width: 991px) {
+  .login-modern-section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .login-modern-shell {
+    min-height: calc(100vh - 3rem);
+    min-height: calc(100svh - 3rem);
+  }
+}
+
+@media (max-width: 575px) {
+  .login-modern-section {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .login-modern-card {
+    padding: 1.35rem;
+    border-radius: 20px;
+  }
+
+  .login-modern-brand {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .login-modern-brand__logo {
+    width: 68px;
+    height: 68px;
+  }
+
+  .login-modern-card__head h1,
+  .login-modern-card__head h3 {
+    font-size: 1.65rem;
+  }
+
+  .login-modern-meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body.site-rtl .login-modern-meta {
+    align-items: flex-end;
+  }
+
+  body.site-ltr .login-modern-meta {
+    align-items: flex-start;
+  }
+
+  .auth-page-decoration--one {
+    width: 180px;
+    height: 180px;
+  }
+
+  .auth-page-decoration--two {
+    width: 220px;
+    height: 220px;
   }
 }

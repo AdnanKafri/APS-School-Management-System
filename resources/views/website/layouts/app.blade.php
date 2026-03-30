@@ -334,7 +334,7 @@
                                 <img src="{{ asset('website/icons8-usa-48.png') }}" alt="EN">
                             </a>
                         @endif
-                        <a href="adh-login" class="pbmit-btn sch-header-login">
+                        <a href="{{ route('website.login') }}" class="pbmit-btn sch-header-login">
                             <span>{{ __('site.Login') }}</span>
                         </a>
                     </div>
