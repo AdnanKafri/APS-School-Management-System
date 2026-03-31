@@ -7,22 +7,17 @@
 
         $copy = [
             'hero_title' => $isArabic ? 'تسجيل الدخول' : 'Login',
-            'hero_subtitle' => $isArabic
-                ? 'بوابة آمنة وسهلة للوصول إلى حسابك ومتابعة خدمات المدرسة.'
-                : 'A secure and simple way to access your account and continue with school services.',
             'home' => $isArabic ? 'الرئيسية' : 'Home',
-            'badge' => $isArabic ? 'بوابة المستخدم' : 'User Access',
-            'title' => $isArabic ? 'مرحباً بعودتك' : 'Welcome back',
-            'intro' => $isArabic
-                ? 'سجّل الدخول باستخدام بريدك الإلكتروني وكلمة المرور للوصول إلى لوحة التحكم والخدمات المرتبطة بحسابك.'
-                : 'Sign in with your email and password to access your dashboard and the services connected to your account.',
             'email' => $isArabic ? 'البريد الإلكتروني' : 'Email Address',
+            'email_placeholder' => 'example@email.com',
             'password' => $isArabic ? 'كلمة المرور' : 'Password',
-            'remember' => $isArabic ? 'تذكرني' : 'Remember me',
-            'forgot' => $isArabic ? 'هل نسيت كلمة المرور؟' : 'Forgot Password?',
+            'password_placeholder' => $isArabic ? 'أدخل كلمة المرور' : 'Enter your password',
+            'show_password' => $isArabic ? 'إظهار كلمة المرور' : 'Show password',
+            'hide_password' => $isArabic ? 'إخفاء كلمة المرور' : 'Hide password',
             'submit' => $isArabic ? 'تسجيل الدخول' : 'Log In',
+            'back_home' => $isArabic ? 'العودة إلى الرئيسية' : 'Back to Home',
             'error' => $isArabic
-                ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.'
+                ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق من البيانات والمحاولة مرة أخرى.'
                 : 'The email address or password is incorrect. Please review your details and try again.',
             'validation' => $isArabic
                 ? 'يرجى مراجعة الحقول المطلوبة ثم إعادة المحاولة.'
@@ -45,14 +40,12 @@
                             </a>
                             <a href="{{ route('website.index') }}" class="login-modern-home-link">
                                 <i class="fa fa-angle-{{ $isArabic ? 'left' : 'right' }}"></i>
-                                <span>{{ $isArabic ? 'العودة إلى الرئيسية' : 'Back to Home' }}</span>
+                                <span>{{ $copy['back_home'] }}</span>
                             </a>
                         </div>
 
                         <div class="login-modern-card__head">
-                            <span class="login-modern-badge">{{ $copy['badge'] }}</span>
                             <h1>{{ $copy['hero_title'] }}</h1>
-                            <p>{{ $copy['intro'] }}</p>
                         </div>
 
                         @if (session()->has('error'))
@@ -83,6 +76,7 @@
                                         value="{{ old('email') }}"
                                         class="login-modern-input @error('email') is-invalid @enderror"
                                         autocomplete="username"
+                                        placeholder="{{ $copy['email_placeholder'] }}"
                                         required>
                                 </div>
                                 @error('email')
@@ -92,7 +86,7 @@
 
                             <div class="login-modern-field">
                                 <label for="login_password">{{ $copy['password'] }}</label>
-                                <div class="login-modern-input-wrap">
+                                <div class="login-modern-input-wrap login-modern-input-wrap--password">
                                     <span class="login-modern-input-icon" aria-hidden="true">
                                         <i class="fa fa-lock"></i>
                                     </span>
@@ -102,24 +96,22 @@
                                         name="password"
                                         class="login-modern-input @error('password') is-invalid @enderror"
                                         autocomplete="current-password"
+                                        placeholder="{{ $copy['password_placeholder'] }}"
                                         required>
+                                    <button type="button"
+                                        class="login-modern-password-toggle"
+                                        data-password-toggle
+                                        data-show-label="{{ $copy['show_password'] }}"
+                                        data-hide-label="{{ $copy['hide_password'] }}"
+                                        aria-controls="login_password"
+                                        aria-label="{{ $copy['show_password'] }}"
+                                        aria-pressed="false">
+                                        <i class="fa fa-eye" aria-hidden="true"></i>
+                                    </button>
                                 </div>
                                 @error('password')
                                     <small class="login-modern-error">{{ $message }}</small>
                                 @enderror
-                            </div>
-
-                            <div class="login-modern-meta">
-                                <label class="login-modern-check">
-                                    <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
-                                    <span>{{ $copy['remember'] }}</span>
-                                </label>
-
-                                @if (Route::has('password.request'))
-                                    <a class="login-modern-forgot" href="{{ route('password.request') }}">
-                                        {{ $copy['forgot'] }}
-                                    </a>
-                                @endif
                             </div>
 
                             <button type="submit" class="pbmit-btn login-modern-submit">
@@ -132,3 +124,28 @@
         </section>
     </main>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('[data-password-toggle]');
+        if (!toggle) return;
+
+        var inputId = toggle.getAttribute('aria-controls');
+        var input = document.getElementById(inputId);
+        if (!input) return;
+
+        var icon = toggle.querySelector('i');
+        var isVisible = input.type === 'text';
+
+        input.type = isVisible ? 'password' : 'text';
+        toggle.setAttribute('aria-pressed', isVisible ? 'false' : 'true');
+        toggle.setAttribute('aria-label', isVisible ? toggle.dataset.showLabel : toggle.dataset.hideLabel);
+
+        if (icon) {
+            icon.classList.toggle('fa-eye', isVisible);
+            icon.classList.toggle('fa-eye-slash', !isVisible);
+        }
+    });
+</script>
+@endpush

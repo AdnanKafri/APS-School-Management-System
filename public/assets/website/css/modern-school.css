@@ -10192,15 +10192,18 @@ body.auth-page {
   border: 1px solid rgba(255, 255, 255, .52);
   border-radius: 24px;
   box-shadow: 0 28px 70px rgba(79, 59, 120, .16);
-  padding: 2rem 2rem 1.85rem;
+  padding: 2.35rem 2.2rem 2rem;
+  position: relative;
+  overflow: hidden;
 }
 
 .login-modern-brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.4rem;
+  justify-content: center;
+  gap: .85rem;
+  margin-bottom: 1.55rem;
 }
 
 .login-modern-brand__logo {
@@ -10224,16 +10227,17 @@ body.auth-page {
   display: inline-flex;
   align-items: center;
   gap: .45rem;
-  color: #7252aa;
-  font-size: .92rem;
-  font-weight: 700;
+  color: #7d7697;
+  font-size: .88rem;
+  font-weight: 600;
   text-decoration: none;
-  transition: color .25s ease, transform .25s ease;
+  transition: color .25s ease, opacity .25s ease, text-decoration-color .25s ease;
 }
 
 .login-modern-home-link:hover {
-  color: #53358f;
-  transform: translateY(-1px);
+  color: #5c478f;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 
 .login-modern-card__head {
@@ -10256,11 +10260,13 @@ body.auth-page {
 
 .login-modern-card__head h1,
 .login-modern-card__head h3 {
-  margin: 1rem 0 .65rem;
+  margin: 0 0 .7rem;
   color: #241c43;
-  font-size: clamp(1.8rem, 2vw, 2.35rem);
-  font-weight: 800;
-  line-height: 1.15;
+  font-family: "Amiri", "Tajawal", "Cairo", serif;
+  font-size: clamp(2.15rem, 2.5vw, 2.95rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .login-modern-card__head p {
@@ -10317,6 +10323,10 @@ body.auth-page {
   transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
 }
 
+.login-modern-input-wrap--password {
+  gap: .55rem;
+}
+
 .login-modern-input-wrap:focus-within {
   border-color: rgba(154, 109, 241, .42);
   box-shadow: 0 14px 30px rgba(130, 94, 209, .12), 0 0 0 4px rgba(182, 130, 216, .12);
@@ -10346,6 +10356,11 @@ body.auth-page {
   text-align: start;
 }
 
+.login-modern-input::placeholder {
+  color: #9a92b4;
+  opacity: 1;
+}
+
 .login-modern-input.is-invalid {
   color: #9a2f3f;
 }
@@ -10364,6 +10379,33 @@ body.auth-page {
   font-weight: 600;
   line-height: 1.6;
   text-align: start;
+}
+
+.login-modern-password-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(154, 109, 241, .08);
+  color: #8f66d6;
+  cursor: pointer;
+  transition: background-color .25s ease, color .25s ease, transform .25s ease;
+}
+
+.login-modern-password-toggle:hover {
+  background: rgba(154, 109, 241, .14);
+  color: #6f4ab0;
+  transform: scale(1.04);
+}
+
+.login-modern-password-toggle:focus-visible {
+  outline: 2px solid rgba(154, 109, 241, .35);
+  outline-offset: 2px;
 }
 
 .login-modern-meta {
@@ -10421,6 +10463,14 @@ body.auth-page {
   filter: brightness(1.03);
 }
 
+body.site-rtl .login-modern-input-wrap {
+  direction: rtl;
+}
+
+body.site-ltr .login-modern-input-wrap {
+  direction: ltr;
+}
+
 body.site-rtl .login-modern-card,
 body.site-rtl .login-modern-card__head,
 body.site-rtl .login-modern-field label,
@@ -10435,6 +10485,11 @@ body.site-ltr .login-modern-field label,
 body.site-ltr .login-modern-alert,
 body.site-ltr .login-modern-error {
   text-align: left;
+}
+
+body.site-ltr .login-modern-card__head h1,
+body.site-ltr .login-modern-card__head h3 {
+  letter-spacing: -.02em;
 }
 
 @media (max-width: 991px) {
@@ -10456,13 +10511,12 @@ body.site-ltr .login-modern-error {
   }
 
   .login-modern-card {
-    padding: 1.35rem;
+    padding: 1.5rem 1.25rem;
     border-radius: 20px;
   }
 
   .login-modern-brand {
-    flex-direction: column;
-    align-items: stretch;
+    gap: .75rem;
   }
 
   .login-modern-brand__logo {
@@ -10496,5 +10550,68 @@ body.site-ltr .login-modern-error {
   .auth-page-decoration--two {
     width: 220px;
     height: 220px;
+  }
+}
+
+/* ==========================================================
+   Homepage Header Surface Fix
+   - remove body/homepage bleed above topbar
+   - keep one coherent header background
+   - prevent EN address wrap from increasing topbar height
+   ========================================================== */
+body.site-ltr.is-homepage,
+body.site-rtl.is-homepage {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background: #f2eef8 !important;
+}
+
+body.is-homepage .page-wrapper {
+  background: transparent !important;
+}
+
+body.is-homepage .sch-header-zone {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background: linear-gradient(180deg, rgba(242, 238, 248, .98) 0%, rgba(238, 234, 246, .96) 100%) !important;
+}
+
+body.is-homepage .sch-topbar,
+body.is-homepage .sch-site-header {
+  background: transparent !important;
+}
+
+body.is-homepage .sch-topbar .container,
+body.is-homepage .sch-site-header .container {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+body.is-homepage .sch-topbar .sch-topbar-shell {
+  min-height: 38px !important;
+  padding-block: 0 !important;
+}
+
+body.is-homepage .sch-hero-wrapper {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background:
+    radial-gradient(ellipse at 80% 0%, rgba(182, 130, 216, .16) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 100%, rgba(91, 75, 138, .10) 0%, transparent 50%),
+    linear-gradient(180deg, #eeebf5 0%, #ebebf4 140px, #ebebf4 100%) !important;
+}
+
+@media (min-width: 993px) {
+  body.site-ltr.is-homepage .sch-topbar .sch-topbar-item--address {
+    align-items: center !important;
+    max-width: min(56ch, 36vw) !important;
+    white-space: nowrap !important;
+  }
+
+  body.site-ltr.is-homepage .sch-topbar .sch-topbar-item--address span {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25 !important;
   }
 }
