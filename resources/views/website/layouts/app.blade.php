@@ -189,8 +189,7 @@
 
 
 
-        <!-- Hero Wrapper: shared bg for floating navbar + hero -->
-        <div class="sch-hero-wrapper">
+        <div class="sch-header-zone">
 
         @php
             $topEmail = trim((string) optional($footer_web)->email);
@@ -319,6 +318,19 @@
                             @else
                                 <li><a href="{{ Route('Recruitment_competition') }}">مسابقة التوظيف</a></li>
                             @endif
+                            <li class="sch-nav-mobile-lang">
+                                @if ($locale === 'en')
+                                    <a class="sch-nav-mobile-lang-link" href="{{ $localeSwitchAr }}">
+                                        <img src="{{ asset('website/icons8-syria-50.png') }}" alt="AR">
+                                        <span>العربية</span>
+                                    </a>
+                                @else
+                                    <a class="sch-nav-mobile-lang-link" href="{{ $localeSwitchEn }}">
+                                        <img src="{{ asset('website/icons8-usa-48.png') }}" alt="EN">
+                                        <span>English</span>
+                                    </a>
+                                @endif
+                            </li>
                         </ul>
                     </nav>
 
@@ -326,7 +338,7 @@
                         @if ($locale === 'en')
                             <a class="sch-lang-switch"
                                 href="{{ $localeSwitchAr }}">
-                                <img src="{{ asset('website/flag-syria-green.svg') }}" alt="AR">
+                                <img src="{{ asset('website/icons8-syria-50.png') }}" alt="AR">
                             </a>
                         @else
                             <a class="sch-lang-switch"
@@ -341,6 +353,7 @@
                 </div>
             </div>
         </header>
+        </div><!-- /.sch-header-zone -->
 
         @if ($isHomepage)
             @php
@@ -348,6 +361,7 @@
                 $heroFallback = asset('assets/website/images/homepage-1/slider/slider-img-01.jpg');
                 $hasHeroSlider = $heroSlides->count() > 1;
             @endphp
+            <div class="sch-hero-wrapper">
             <section class="home-hero">
                 <div class="container">
                     @if ($hasHeroSlider)
@@ -508,8 +522,8 @@
                     </div>
                 </div>
             </div>
-        @endif
         </div><!-- /.sch-hero-wrapper -->
+        @endif
         <!-- Header Main Area End Here -->
 
         @yield('content')
@@ -886,4 +900,3 @@
 <!-- Mirrored from kidzieo-demo.pbminfotech.com/html-demo/ by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 02 Apr 2024 10:17:39 GMT -->
 
 </html>
-

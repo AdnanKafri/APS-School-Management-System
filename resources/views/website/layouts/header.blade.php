@@ -257,7 +257,7 @@
                                                             <a class="lang1" style="text-align: center !important"
                                                                 href="{{ LaravelLocalization::getLocalizedURL('ar', null, [], true) }}">
                                                                 <img class="religion"
-                                                                    src="{{ asset('website/flag-syria-green.svg') }}"
+                                                                    src="{{ asset('website/icons8-syria-50.png') }}"
                                                                     style="width: 40%;"> </a>
                                                         @else
                                                             <a class="lang1" style="text-align: center !important"
@@ -545,4 +545,3 @@
 <!-- Mirrored from kidzieo-demo.pbminfotech.com/html-demo/ by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 02 Apr 2024 10:17:39 GMT -->
 
 </html>
-
