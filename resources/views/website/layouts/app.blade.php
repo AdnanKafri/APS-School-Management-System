@@ -14,15 +14,6 @@
     $footer_web = $footer_web ?? \App\Footer_website::first();
     $officialLogo = asset('assets/images/school/adham_black.png');
     $isHomepage = request()->routeIs('website.index');
-    $resolveImage = function ($path, $fallback = null) {
-        if (empty($path)) {
-            return $fallback ?: asset('assets/website/images/homepage-1/slider/slider-img-01.jpg');
-        }
-        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
-        }
-        return asset('storage/' . ltrim($path, '/'));
-    };
     $localMediaExists = function ($relativePath) {
         $relativePath = ltrim((string) $relativePath, '/');
         if ($relativePath === '') {
@@ -51,6 +42,69 @@
         }
 
         return false;
+    };
+    $resolveImage = function ($path, $fallback = null) use ($localMediaExists) {
+        $defaultFallback = $fallback ?: asset('assets/website/images/homepage-1/slider/slider-img-01.jpg');
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return $defaultFallback;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $cleanPath = ltrim($path, '/');
+
+        if (\Illuminate\Support\Str::startsWith($cleanPath, ['assets/', 'website/'])) {
+            return $localMediaExists($cleanPath) ? asset($cleanPath) : $defaultFallback;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($cleanPath, 'storage/')) {
+            return $localMediaExists($cleanPath) ? asset($cleanPath) : $defaultFallback;
+        }
+
+        return $localMediaExists($cleanPath) ? asset('storage/' . $cleanPath) : $defaultFallback;
+    };
+    $sliderImagePool = [];
+    foreach (glob(public_path('storage/sliderimages/*')) ?: [] as $candidate) {
+        if (!is_file($candidate)) {
+            continue;
+        }
+
+        $extension = strtolower((string) pathinfo($candidate, PATHINFO_EXTENSION));
+        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true)) {
+            continue;
+        }
+
+        $sliderImagePool[] = [
+            'mtime' => (int) (@filemtime($candidate) ?: 0),
+            'path' => $candidate,
+            'url' => asset('storage/sliderimages/' . basename($candidate)),
+        ];
+    }
+
+    usort($sliderImagePool, function ($a, $b) {
+        return [$b['mtime'], $b['path']] <=> [$a['mtime'], $a['path']];
+    });
+
+    $sliderImagePool = array_values(array_map(function ($item) {
+        return $item['url'];
+    }, $sliderImagePool));
+
+    $resolveHeroImage = function ($path, $index = 0, $fallback = null) use ($localMediaExists, $resolveImage, $sliderImagePool) {
+        $path = trim((string) $path);
+
+        if ($path !== '' && (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://']) || $localMediaExists($path))) {
+            return $resolveImage($path, $fallback);
+        }
+
+        if (array_key_exists((int) $index, $sliderImagePool)) {
+            return $sliderImagePool[(int) $index];
+        }
+
+        return $resolveImage($path, $fallback);
     };
     $normalizeHeroVideo = function ($url) use ($localMediaExists) {
         $url = trim((string) $url);
@@ -427,7 +481,7 @@
                                                     </div>
                                                     <div class="home-hero-media home-hero-media-v4">
                                                         <span class="home-hero-circle-v4" aria-hidden="true"></span>
-                                                        <img src="{{ $resolveImage($item->image, $heroFallback) }}"
+                                                        <img src="{{ $resolveHeroImage($item->image, $loop->index, $heroFallback) }}"
                                                             alt="{{ $heroTitle }}"
                                                             onerror="this.onerror=null;this.src='{{ $heroFallback }}';">
                                                     </div>
@@ -502,7 +556,7 @@
                                 </div>
                                 <div class="home-hero-media home-hero-media-v4">
                                     <span class="home-hero-circle-v4" aria-hidden="true"></span>
-                                    <img src="{{ $resolveImage(optional($item)->image, $heroFallback) }}"
+                                    <img src="{{ $resolveHeroImage(optional($item)->image, 0, $heroFallback) }}"
                                         alt="{{ $heroTitle }}"
                                         onerror="this.onerror=null;this.src='{{ $heroFallback }}';">
                                 </div>

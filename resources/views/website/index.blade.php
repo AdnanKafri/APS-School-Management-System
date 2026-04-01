@@ -172,7 +172,6 @@
             <div class="container">
                 <div class="sch-section-head d-flex justify-content-between align-items-center flex-wrap">
                     <h2>{{ $txt['classes'] }}</h2>
-                    <a href="{{ route('website.classes') }}" class="sch-link-more">{{ $txt['more'] }}</a>
                 </div>
                 <div class="classes-marquee" dir="ltr">
                     <div class="classes-marquee-track">

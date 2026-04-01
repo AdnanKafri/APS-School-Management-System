@@ -1,137 +1,125 @@
-@extends('teachers2.layouts.app')
-@section('css')
+﻿@extends('teachers2.layouts.app')
 
-
-
-
+@section('teacher_page_title')
+{{ app()->getLocale() === 'en' ? 'Dashboard' : 'لوحة التحكم' }}
 @endsection
+
+@section('teacher_page_subtitle')
+{{ app()->getLocale() === 'en' ? 'A quick overview of your classes, rooms, and lessons.' : 'نظرة سريعة على الصفوف والشعب والدروس الخاصة بك.' }}
+@endsection
+
 @section('content')
+@php
+    $isRtl = app()->getLocale() !== 'en';
+    $teacherName = trim(($teacher->first_name ?? '') . ' ' . ($teacher->last_name ?? ''));
+    $teacherName = $teacherName !== '' ? $teacherName : ($isRtl ? 'الأستاذ' : 'Teacher');
+    $teacherRoomIds = $teacher->rooms->pluck('id')->unique();
+    $roomCount = $teacherRoomIds->count();
+    $classCount = collect($classes)->count();
+    $todayText = \Carbon\Carbon::now()->locale($isRtl ? 'ar' : 'en')->translatedFormat($isRtl ? 'l، j F Y' : 'l, j F Y');
+    $labels = [
+        'greeting' => $isRtl ? 'مرحباً' : 'Hello',
+        'banner_intro' => $isRtl ? 'لوحة الأستاذ' : 'Teacher Dashboard',
+        'classes' => $isRtl ? 'الصفوف' : 'Classes',
+        'rooms' => $isRtl ? 'الشعب' : 'Rooms',
+        'section_heading' => $isRtl ? 'الصفوف والشعب الدراسية' : 'Classes & Rooms',
+        'section_text' => $isRtl ? 'اختر الصف من التبويبات ثم افتح الشعبة المطلوبة للوصول إلى الدروس والمحتوى المرتبط بها.' : 'Choose a class from the tabs, then open the room to access its lessons and related content.',
+        'empty_title' => $isRtl ? 'لا توجد شعب مرتبطة بهذا الصف حالياً' : 'No rooms are linked to this class yet',
+        'empty_text' => $isRtl ? 'عند إضافة شعبة مرتبطة بك ستظهر هنا تلقائياً.' : 'Once a room is assigned to you, it will appear here automatically.',
+        'card_button' => $isRtl ? 'عرض الدروس' : 'View Lessons',
+        'card_text' => $isRtl ? 'شعبة تعليمية مرتبطة بهذا الصف، ويمكنك من خلالها الوصول إلى الدروس والمحتوى المخصص.' : 'A teaching room connected to this class. Open it to access lessons and related content.',
+    ];
+    $roomAccents = [
+        ['#4f46e5', '#7c3aed'],
+        ['#2563eb', '#06b6d4'],
+        ['#7c3aed', '#ec4899'],
+        ['#0f766e', '#14b8a6'],
+        ['#9333ea', '#6366f1'],
+        ['#1d4ed8', '#8b5cf6'],
+    ];
+@endphp
 
+<div class="main-panel teacher-dashboard-home">
+    <div class="content-wrapper">
+        <div class="teacher-dashboard-home__canvas">
+            <section class="teacher-dashboard-banner">
+                <div class="teacher-dashboard-banner__copy">
+                    <span class="teacher-dashboard-banner__eyebrow">{{ $labels['banner_intro'] }}</span>
+                    <h2 class="teacher-dashboard-banner__title">{{ $labels['greeting'] }}، {{ $teacherName }} <span aria-hidden="true">👋</span></h2>
+                    <p class="teacher-dashboard-banner__date">{{ $todayText }}</p>
+                </div>
 
+                <div class="teacher-dashboard-banner__stats">
+                    <span class="teacher-dashboard-banner__chip">
+                        <strong>{{ $classCount }}</strong>
+                        <em>{{ $labels['classes'] }}</em>
+                    </span>
+                    <span class="teacher-dashboard-banner__chip">
+                        <strong>{{ $roomCount }}</strong>
+                        <em>{{ $labels['rooms'] }}</em>
+                    </span>
+                </div>
+            </section>
 
-        <div class="main-panel" style="background: #f8f9fb;">
-          <div class="content-wrapper pb-0">
-            <div class="container">
-               <div class="row">
-                 <div class="col-md-12">
-                   <!--tablist-->
-
-                        <div class="card card-nav-tabs" style="direction: rtl;">
-
-                            <!--name classes-->
-                            <div class="card-header card-header-primary">
-                                <div class="nav-tabs-navigation">
-                                    <div class="nav-tabs-wrapper" style="display: flex;justify-content: center;">
-                                        <ul class="nav nav-tabs" data-tabs="tabs" style="justify-content: center;">
-                                        @php
-                                        $i=0;
-                                        @endphp
-                                        @foreach ($classes as $item )
-                                        @php
-                                        $i=$i+1;
-                                        @endphp
-                                        @if($i== 1)
-                                            <li class="nav-item">
-                                                <a  class="nav-link active" href="#tab-{{ $item->id }}"
-                                                    aria-controls="#tab-{{ $item->id }}" role="tab" data-toggle="tab">{{ $item->name }}</a>
-                                            </li>
-                                            @else
-                                            <li class="nav-item">
-                                                <a  class="nav-link" href="#tab-{{ $item->id }}"
-                                                    aria-controls="#tab-{{ $item->id }}" role="tab" data-toggle="tab">{{ $item->name }}</a>
-                                            </li>
-                                            @endif
-                                        @endforeach
-                                    </ul>
-
-                                    </div>
-                                </div>
-                            </div>
-                            <!--end name classes-->
-
-
-                            <div class="card-body ">
-                                <div class="tab-content text-center">
-                                    @php
-                                    $i=0;
-                                    @endphp
-                                    @foreach ($classes as $item )
-                                    @php
-                                    $i=$i+1;
-                                    @endphp
-
-
-                                   {{-- <div class="tab-pane active" id="{{ $item->id }}">--}}
-
-                                        <div role="tabpanel" @if($i == 1) class="tab-pane active"
-                                         @else class="tab-pane" @endif id="tab-{{ $item->id }}">
-
-                                       <div class="container animated bounceInLeft">
-                                        <div class="row" style="justify-content: center;">
-                                            @foreach ( $item->room as $item1 )
-                                            @php
-                                            $i3=0;
-                                            @endphp
-                                              @php
-                                              $i2=0;
-                                              @endphp
-                                            @foreach ( $teacher->rooms as $item2 )
-                                            @php
-                                            $i2=$i2+1;
-                                            @endphp
-                                            @if($item2->id ==$item1->id &&  $item2->id != $i3)
-
-                                            @php
-
-                                            $i3=$item2->id;
-                                            @endphp
-
-                                          <div class="col-md-4" style="padding-bottom: 20px;">
-                                            <a href="{{ route('dashboard.teacher_lessons2',['room_id' =>$item1->id ,'teacher_id'=>$teacher->id])}}">
-                                            <div class="container4">
-                                              <div class="card_box">
-                                                  <span></span>
-                                                  <h4 style="text-align: center; color: #fff;padding-top: 90px;">{{ $item1->name }}</h4>
-                                              </div>
-                                          </div>
-                                          </a>
-                                          </div>
-
-
-                                          @endif
-                                          @endforeach
-                                          @endforeach
-                                        </div>
-
-                                       </div><!--container-->
-                                    </div><!--tab-pane class-->
-                                    @endforeach
-
-
-
-
-
-                                </div><!--tab-content-->
-                            </div><!--end card body-->
-
-                          </div>
-                        <!-- End Tabs with icons on Card -->
-
+            <section class="teacher-dashboard-panel">
+                <div class="teacher-dashboard-panel__head">
+                    <div>
+                        <h3>{{ $labels['section_heading'] }}</h3>
+                        <p>{{ $labels['section_text'] }}</p>
                     </div>
-                   <!--end tablist-->
+                </div>
 
-                 </div>
+                <ul class="nav nav-tabs teacher-dashboard-tabs" data-tabs="tabs">
+                    @foreach ($classes as $index => $item)
+                        <li class="nav-item">
+                            <a class="nav-link {{ $index === 0 ? 'active' : '' }}" href="#tab-{{ $item->id }}" role="tab" data-toggle="tab">
+                                {{ $item->name }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
 
-               </div>
-          </div>
+                <div class="tab-content teacher-dashboard-tabs__content">
+                    @foreach ($classes as $index => $item)
+                        @php
+                            $visibleRooms = $item->room->filter(fn($room) => $teacherRoomIds->contains($room->id));
+                        @endphp
+                        <div role="tabpanel" class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="tab-{{ $item->id }}">
+                            @if($visibleRooms->isEmpty())
+                                <div class="teacher-dashboard-empty">
+                                    <i class="mdi mdi-folder-open-outline"></i>
+                                    <strong>{{ $labels['empty_title'] }}</strong>
+                                    <span>{{ $labels['empty_text'] }}</span>
+                                </div>
+                            @else
+                                <div class="teacher-room-grid">
+                                    @foreach ($visibleRooms as $room)
+                                        @php
+                                            $accent = $roomAccents[$loop->index % count($roomAccents)];
+                                        @endphp
+                                        <a class="teacher-room-card" href="{{ route('dashboard.teacher_lessons2', ['room_id' => $room->id, 'teacher_id' => $teacher->id]) }}" style="--room-accent-start: {{ $accent[0] }}; --room-accent-end: {{ $accent[1] }};">
+                                            <span class="teacher-room-card__accent" aria-hidden="true"></span>
+                                            <div class="teacher-room-card__body">
+                                                <span class="teacher-room-card__class">{{ $item->name }}</span>
+                                                <h4 class="teacher-room-card__title">{{ $room->name }}</h4>
+                                                <p class="teacher-room-card__meta">{{ $labels['card_text'] }}</p>
+                                                <span class="teacher-room-card__action">
+                                                    {{ $labels['card_button'] }}
+                                                    <i class="mdi {{ $isRtl ? 'mdi-arrow-left' : 'mdi-arrow-right' }}"></i>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </section>
         </div>
-
-
-
-
-
     </div>
-    </div>
+</div>
+@endsection
 
-    @endsection
-    @section('js')
+@section('js')
+@endsection
