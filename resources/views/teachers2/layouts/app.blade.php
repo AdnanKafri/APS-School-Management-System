@@ -70,6 +70,8 @@
             min-height: 100vh;
             background: #0f172a !important;
             box-shadow: -18px 0 38px rgba(15, 23, 42, 0.2);
+            overflow-x: hidden;
+            transition: width 0.25s ease, min-width 0.25s ease, box-shadow 0.25s ease;
         }
 
         body.teacher-portal-body.ltr #sidebar.sidebar.sidebar-offcanvas {
@@ -84,6 +86,8 @@
             right: 260px;
             left: 0;
             height: 64px;
+            z-index: 1050;
+            transition: right 0.25s ease, left 0.25s ease;
         }
 
         body.teacher-portal-body.ltr .navbar.default-layout-navbar {
@@ -96,11 +100,40 @@
             margin-left: 0;
             width: calc(100% - 260px) !important;
             padding-top: 64px;
+            transition: margin-right 0.25s ease, margin-left 0.25s ease, width 0.25s ease;
         }
 
         body.teacher-portal-body.ltr .main-panel {
             margin-right: 0;
             margin-left: 260px !important;
+        }
+
+        @media (min-width: 992px) {
+            body.teacher-portal-body.sidebar-icon-only #sidebar.sidebar.sidebar-offcanvas {
+                width: 88px !important;
+                min-width: 88px !important;
+            }
+
+            body.teacher-portal-body.sidebar-icon-only .navbar.default-layout-navbar {
+                right: 88px;
+                left: 0;
+            }
+
+            body.teacher-portal-body.sidebar-icon-only.ltr .navbar.default-layout-navbar {
+                right: 0;
+                left: 88px;
+            }
+
+            body.teacher-portal-body.sidebar-icon-only .main-panel {
+                margin-right: 88px !important;
+                margin-left: 0;
+                width: calc(100% - 88px) !important;
+            }
+
+            body.teacher-portal-body.sidebar-icon-only.ltr .main-panel {
+                margin-right: 0;
+                margin-left: 88px !important;
+            }
         }
 
         @media (max-width: 991.98px) {
@@ -190,14 +223,14 @@
 
                 <li class="nav-item {{ request()->routeIs('teacher.exams_quizes') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('teacher.exams_quizes') }}">
-                        <i class="mdi mdi-clipboard-text-clock-outline menu-icon"></i>
+                        <i class="mdi mdi-clipboard-text menu-icon"></i>
                         <span class="menu-title">{{ $labels['exams'] }}</span>
                     </a>
                 </li>
 
                 <li class="nav-item {{ request()->routeIs('teacher.mark_class', 'teacher.mark_room', 'teacher.teacher_marks_subjects') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('teacher.mark_class') }}">
-                        <i class="mdi mdi-notebook-check-outline menu-icon"></i>
+                        <i class="mdi mdi-notebook menu-icon"></i>
                         <span class="menu-title">{{ $labels['gradebook'] }}</span>
                     </a>
                 </li>

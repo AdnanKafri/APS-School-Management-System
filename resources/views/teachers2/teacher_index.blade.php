@@ -12,7 +12,7 @@
 @php
     $isRtl = app()->getLocale() !== 'en';
     $teacherName = trim(($teacher->first_name ?? '') . ' ' . ($teacher->last_name ?? ''));
-    $teacherName = $teacherName !== '' ? $teacherName : ($isRtl ? 'الأستاذ' : 'Teacher');
+    $teacherName = $teacherName !== '' ? ($isRtl ? 'أ. ' . $teacherName : $teacherName) : ($isRtl ? 'الأستاذ' : 'Teacher');
     $teacherRoomIds = $teacher->rooms->pluck('id')->unique();
     $roomCount = $teacherRoomIds->count();
     $classCount = collect($classes)->count();

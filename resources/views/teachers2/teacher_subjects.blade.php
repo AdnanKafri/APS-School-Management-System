@@ -7,6 +7,7 @@
     @php
         $today = \Carbon\Carbon::now()->locale('ar')->translatedFormat('l، j F Y');
         $teacherName = trim($teacher->first_name . ' ' . $teacher->last_name);
+        $teacherName = $teacherName !== '' ? 'أ. ' . $teacherName : 'الأستاذ';
     @endphp
 
     <div class="main-panel teacher-subjects-page">

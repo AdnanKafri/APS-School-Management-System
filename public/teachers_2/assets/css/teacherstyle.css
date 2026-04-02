@@ -2353,19 +2353,22 @@ body.teacher-portal-body .teacher-sidebar-profile__text {
   display: grid;
   gap: .22rem;
   width: 100%;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
 }
 
 body.teacher-portal-body .teacher-sidebar-profile__text small {
   color: rgba(255,255,255,0.62);
   font-size: .8rem;
   font-weight: 700;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
 }
 
 body.teacher-portal-body .teacher-sidebar-profile__text strong {
   color: #ffffff;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1.45;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
 }
 
 body.teacher-portal-body .sidebar .nav .nav-item .nav-link {
@@ -2411,6 +2414,7 @@ body.teacher-portal-body .sidebar .nav .nav-item .nav-link .menu-title {
   font-weight: 700;
   line-height: 1.5;
   white-space: normal;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
 }
 
 body.teacher-portal-body .navbar.default-layout-navbar {
@@ -2475,28 +2479,28 @@ body.teacher-portal-body .teacher-topbar__heading {
   display: grid;
   gap: .12rem;
   min-width: 0;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
 }
 
 body.teacher-portal-body .teacher-topbar__eyebrow {
   color: #8b5cf6;
   font-size: .74rem;
   font-weight: 800;
+  display: none;
 }
 
 body.teacher-portal-body .teacher-topbar__heading h1 {
   margin: 0;
   color: var(--teacher-text);
-  font-size: 1.08rem;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.16rem;
   font-weight: 800;
   line-height: 1.3;
+  letter-spacing: 0;
 }
 
 body.teacher-portal-body .teacher-topbar__heading p {
-  margin: 0;
-  color: var(--teacher-muted);
-  font-size: .82rem;
-  font-weight: 500;
-  line-height: 1.4;
+  display: none;
 }
 
 body.teacher-portal-body .teacher-topbar__badge {
@@ -2628,15 +2632,14 @@ body.teacher-portal-body .teacher-dashboard-panel__head {
 body.teacher-portal-body .teacher-dashboard-panel__head h3 {
   margin: 0 0 .25rem;
   color: var(--teacher-text);
-  font-size: 1.35rem;
+  font-family: "Tajawal", "Cairo", "Inter", "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.28rem;
   font-weight: 900;
+  letter-spacing: 0;
 }
 
 body.teacher-portal-body .teacher-dashboard-panel__head p {
-  margin: 0;
-  color: var(--teacher-muted);
-  font-size: .92rem;
-  line-height: 1.7;
+  display: none;
 }
 
 body.teacher-portal-body .teacher-dashboard-tabs.nav-tabs {
@@ -2800,11 +2803,41 @@ body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item .nav-link {
 }
 
 body.teacher-portal-body.sidebar-icon-only .teacher-sidebar__brand {
-  padding-inline: .9rem;
+  padding: 1rem .55rem .85rem;
 }
 
 body.teacher-portal-body.sidebar-icon-only .teacher-sidebar__nav {
-  padding-inline: .75rem;
+  padding: .85rem .55rem 1rem;
+  gap: .55rem;
+}
+
+body.teacher-portal-body.sidebar-icon-only .teacher-sidebar__brand-logo-wrap {
+  width: 48px;
+  height: 48px;
+  margin-inline: auto;
+  border-radius: 16px;
+}
+
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item {
+  margin: 0;
+}
+
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item .nav-link {
+  min-height: 52px;
+  padding: .75rem 0;
+  border-radius: 16px;
+  width: 100%;
+}
+
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item .nav-link .menu-icon,
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item .nav-link .menu-icon2,
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item .nav-link i {
+  font-size: 1.28rem;
+}
+
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item.active > .nav-link,
+body.teacher-portal-body.sidebar-icon-only .sidebar .nav .nav-item:not(:nth-child(2)).active > .nav-link {
+  border-radius: 16px;
 }
 
 @media (min-width: 992px) {
@@ -2991,7 +3024,14 @@ body.teacher-portal-body .sidebar .nav .nav-item .nav-link {
 }
 
 body.teacher-portal-body .teacher-sidebar__brand {
+  background: transparent;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+body.teacher-portal-body .teacher-sidebar__brand-logo-wrap,
+body.teacher-portal-body .teacher-sidebar__brand-logo,
+body.teacher-portal-body .teacher-sidebar-profile__avatar img {
+  background: transparent;
 }
 
 body.teacher-portal-body .sidebar .nav .nav-item .nav-link:hover {
@@ -3017,4 +3057,98 @@ body.teacher-portal-body .sidebar .nav .nav-item:not(:nth-child(2)).active > .na
   background: rgba(255,255,255,0.12);
   color: #ffffff;
   border-radius: 8px;
+}
+
+/* Teacher lessons page refinement */
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(240px, 300px);
+  gap: 1.5rem;
+  align-items: stretch;
+  padding: 1.5rem 1.75rem;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content {
+  align-content: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content h2 {
+  font-size: 1.85rem;
+  line-height: 1.25;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content p {
+  max-width: 40rem;
+  color: #6b7280;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta {
+  min-width: 0;
+  align-content: center;
+  gap: 0.85rem;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__date,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__tag {
+  width: 100%;
+  min-height: 54px;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  text-align: start;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08);
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__date span,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__tag span {
+  flex: 1 1 auto;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card {
+  cursor: default;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__visual,
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__body {
+  pointer-events: none;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions,
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions * {
+  pointer-events: auto;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions {
+  gap: 0.75rem;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__link {
+  min-height: 48px;
+}
+
+@media (max-width: 991.98px) {
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner {
+    grid-template-columns: 1fr;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner {
+    padding: 1.25rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content h2 {
+    font-size: 1.55rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta {
+    grid-template-columns: 1fr;
+  }
 }

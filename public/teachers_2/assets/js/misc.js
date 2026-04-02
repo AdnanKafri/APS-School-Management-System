@@ -20,32 +20,39 @@ var lightColor = getComputedStyle(document.body).getPropertyValue('--light');
     //Add active class to nav-link based on url dynamically
     //Active class can be hard coded directly in html file also as required
 
+    function normalizePath(path) {
+      if (!path) {
+        return '';
+      }
+
+      var normalized = path.replace(/^https?:\/\/[^/]+/i, '');
+      normalized = normalized.replace(/[?#].*$/, '');
+      normalized = normalized.replace(/\/+$/, '');
+
+      return normalized || '/';
+    }
+
     function addActiveClass(element) {
-      if (current === "") {
-        //for root url
-        if (element.attr('href').indexOf("index.html") !== -1) {
-          element.parents('.nav-item').last().addClass('active');
-          if (element.parents('.sub-menu').length) {
-            element.closest('.collapse').addClass('show');
-            element.addClass('active');
-          }
+      var href = element.attr('href');
+      if (!href || href === '#') {
+        return;
+      }
+
+      var linkPath = normalizePath(element[0].pathname || href);
+
+      if (linkPath === currentPath) {
+        element.parents('.nav-item').last().addClass('active');
+        if (element.parents('.sub-menu').length) {
+          element.closest('.collapse').addClass('show');
+          element.addClass('active');
         }
-      } else {
-        //for other url
-        if (element.attr('href').indexOf(current) !== -1) {
-          element.parents('.nav-item').last().addClass('active');
-          if (element.parents('.sub-menu').length) {
-            element.closest('.collapse').addClass('show');
-            element.addClass('active');
-          }
-          if (element.parents('.submenu-item').length) {
-            element.addClass('active');
-          }
+        if (element.parents('.submenu-item').length) {
+          element.addClass('active');
         }
       }
     }
 
-    var current = location.pathname.split("/").slice(-1)[0].replace(/^\/|\/$/g, '');
+    var currentPath = normalizePath(location.pathname);
     $('.nav li a', sidebar).each(function() {
       var $this = $(this);
       addActiveClass($this);
