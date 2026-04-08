@@ -626,6 +626,16 @@ $student_mark=Students_mark::where('student_id',$student_id)->where('year_id',$y
     }])->get();
     $country_currency = Country_currency::where('active',1)->get();
 
+    // Backward compatibility for older approved records where the country
+    // value was saved into `address` instead of `country`.
+    if (
+        empty($student->country) &&
+        !empty($student->address) &&
+        $country_currency->contains('key_country', $student->address)
+    ) {
+        $student->country = $student->address;
+    }
+
     // $rooms=
      return view('admin.student_details',compact('student_details_departments','country_currency','student','student_mark','lessons','classes','rooms','student_detail'));
 
@@ -650,10 +660,13 @@ public function student_update(Request $request , $student_id){
     ]);
 
     $student=Student::find($student_id);
+    $student_detail = Student_detail::firstOrNew(['student_id' => $student_id]);
     $student_religion=$student->religion;
 
     $student->first_name=$request->first_name;
     $student->last_name=$request->last_name;
+    $student->first_name_en=$request->first_name_en;
+    $student->last_name_en=$request->last_name_en;
     $student->father_name=$request->father_name;
     $student->mother_name=$request->mother_name;
     $student->email=$request->email;
@@ -664,6 +677,9 @@ public function student_update(Request $request , $student_id){
     $student->box_birth=$request->box_birth;
     $student->army_room=$request->army_room;
     $student->phone=$request->phone;
+    $student->address=$request->address;
+    $student->country=$request->country;
+    $student->public_record_number=$request->public_record_number;
     $student->religion=$request->religion;
 
 
@@ -984,6 +1000,30 @@ $student->image=null;
 
 
 $student->save();
+
+$student_detail->student_id = $student->id;
+$student_detail->father_name = $request->father_name;
+$student_detail->grandfather_name = $request->grandfather_name;
+$student_detail->father_phone = $request->father_phone;
+$student_detail->mother_name = $request->mother_name;
+$student_detail->last_mother_name = $request->last_mother_name;
+$student_detail->mother_phone = $request->mother_phone;
+$student_detail->mother_job = $request->mother_job;
+$student_detail->father_job = $request->father_job;
+$student_detail->phone = $request->phone;
+$student_detail->other_phone = $request->other_phone;
+$student_detail->other_name = $request->other_name;
+$student_detail->city = $request->city;
+$student_detail->city_alt = $request->city_alt;
+$student_detail->the_previous_school = $request->the_previous_school;
+$student_detail->con_sch = $request->con_sch;
+$student_detail->student_brather_and_sister = $request->student_brather_and_sister;
+$student_detail->gender = $request->gender;
+$student_detail->passport_number = $request->passport_number;
+$student_detail->the_ID_number = $request->the_ID_number;
+$student_detail->blood_type = $request->blood_type;
+$student_detail->save();
+
 $user=User::where('student_id',$student->id)->first();
 $user->email=$request->email;
 $user->save();
@@ -1485,16 +1525,19 @@ $class->image=null;
 
     }
 
-    public function lessons(){
+    public function lessons($id = null){
 
+        if (!$id) {
+            return redirect()->route('lessons2');
+        }
 
+        $class = Classe::findOrFail($id);
+        $lessons = Lesson::with('classes')->where('class_id', $id)->paginate(paginate_num);
+        $count = Lesson::where('class_id', $id)->count();
+        $classes = Classe::all();
+        $base_subjects = Base_subjects::all();
 
-
-        $lessons=Lesson::paginate(paginate_num);;
-        $count=Lesson::count();
-        $classes=Classe::all();
-
-        return view('admin.lessons',compact('lessons','count','classes'));
+        return view('admin.lessons', compact('lessons', 'count', 'classes', 'class', 'base_subjects'));
 
 
     }

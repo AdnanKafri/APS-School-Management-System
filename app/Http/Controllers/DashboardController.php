@@ -3141,8 +3141,10 @@ public function startQueueWorker()
                 "Description_en" => $record->Description_en,
                 "type" => $record->type,
                     "lecture_time_count"=>$record->lecture_time_count,
-
-                "user" => $record->user,
+                "user" => $record->user ? [
+                    "email" => $record->user->email,
+                    "view_password" => $record->user->view_password,
+                ] : null,
                 "salary" => $record->salary,
             );
         }
@@ -3489,6 +3491,23 @@ public function startQueueWorker()
         $student_register->save();
     }
 
+    protected function generateOnlinePublicRecordNumber(int $startFrom = 10000): string
+    {
+        $latestNumber = Student::whereNotNull('public_record_number')
+            ->whereRaw("public_record_number REGEXP '^[0-9]+$'")
+            ->whereRaw('CAST(public_record_number AS UNSIGNED) >= ?', [$startFrom])
+            ->selectRaw('MAX(CAST(public_record_number AS UNSIGNED)) as max_number')
+            ->value('max_number');
+
+        $nextNumber = max($startFrom, ((int) $latestNumber) + 1);
+
+        while (Student::where('public_record_number', (string) $nextNumber)->exists()) {
+            $nextNumber++;
+        }
+
+        return (string) $nextNumber;
+    }
+
 
     public function approve_student(Request $request)
     {
@@ -3507,8 +3526,16 @@ public function startQueueWorker()
         $student->last_name_en =  $student_register->last_name_en;
         $student->email =  $student_register->email;
         $student->date_birth =  $student_register->date;
-        $student->address =  $student_register->country;
+        $student->father_name =  $student_register->father_name;
+        $student->mother_name =  $student_register->mather_name;
+        $student->phone =  $student_register->phone;
+        $student->nationality =  $student_register->nationality;
+        $student->place_birth =  $student_register->place_of_birth;
+        $student->country =  $student_register->country;
         $student->religion =  isset($student_register->religion) ? (string)$student_register->religion : '0';
+        if (trim((string) $student->public_record_number) === '') {
+            $student->public_record_number = $this->generateOnlinePublicRecordNumber();
+        }
 
         $student->save();
 
@@ -3524,6 +3551,11 @@ public function startQueueWorker()
             'year_id' => $year->id,
         ]);
 
+        $normalizedGender = null;
+        if ($student_register->gender !== null && $student_register->gender !== '') {
+            $normalizedGender = (string) $student_register->gender === '0' ? '2' : (string) $student_register->gender;
+        }
+
         $student_details = new Student_detail;
         $student_details->student_id = $student->id;
         $student_details->phone = $student_register->phone;
@@ -3538,7 +3570,15 @@ public function startQueueWorker()
         $student_details->mother_job = $student_register->mather_job;
         $student_details->father_job = $student_register->father_job;
         $student_details->other_phone = $student_register->other_phone;
+        $student_details->city = $student_register->city;
+        $student_details->the_previous_school = $student_register->the_previous_school;
+        $student_details->con_sch = $student_register->con_sch;
+        $student_details->passport_number = $student_register->passport_number;
+        $student_details->gender = $normalizedGender;
+        $student_details->last_mother_name = $student_register->last_mother_name;
+        $student_details->the_ID_number = $student_register->the_ID_number;
         $student_details->family_book = $student_register->family_book;
+        $student_details->fourth_image = $student_register->fourth_image;
         $student_details->mather_page = $student_register->mather_page;
         $student_details->father_page = $student_register->father_page;
         $student_details->study_sequence = $student_register->study_sequence;
@@ -5554,7 +5594,18 @@ public function startQueueWorker()
 
         $data_arr = array();
         foreach ($records as $record) {
-            $data_arr[] = $record;
+            $data_arr[] = array(
+                "id" => $record->id,
+                "name" => $record->name,
+                "email" => $record->email,
+                "mobile" => $record->mobile,
+                "role_id" => $record->role_id,
+                "view_password" => $record->view_password,
+                "role" => $record->role ? [
+                    "id" => $record->role->id,
+                    "name" => $record->role->name,
+                ] : null,
+            );
         }
 
         $response = array(
@@ -5625,7 +5676,10 @@ public function startQueueWorker()
                     "room" => $record->room,
                     "id" => $record->id,
                     "lang" => $record->lang,
-                    "user" => $record->user,
+                    "user" => $record->user ? [
+                        "email" => $record->user->email,
+                        "view_password" => $record->user->view_password,
+                    ] : null,
                     "details" => $record->details,
                     "public_record_number" => $record->public_record_number,
                 ];

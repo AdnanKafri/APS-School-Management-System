@@ -341,7 +341,7 @@ var table_test = $('#table_xx').DataTable({
             {
                 data: 'id',
                 render: function (data, type, full) {
-                    return `${full.role.name}`;
+                    return `${full.role && full.role.name ? full.role.name : ""}`;
                 },orderable : false
             },
         
@@ -354,7 +354,7 @@ var table_test = $('#table_xx').DataTable({
                             <i class="fa fa-eye fa-x" style="color: #eff0f1"></i>
                         </a>
                          @endcan
-                        <a class="share_user btn btn-info btn-sm" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.email }" data-name="${ full.name }" data-pass="${ full.view_password }" title = "معلومات الأيميل">
+                        <a class="share_user btn btn-info btn-sm" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.email ? full.email : 'غير متوفر' }" data-name="${ full.name ? full.name : '' }" data-pass="${ full.view_password ? full.view_password : 'غير متوفر' }" title = "معلومات الأيميل">
                              <i class="fa fa-send fa-x" style="color: #eff0f1"></i>
                         </a>
                            @can('delete_user')
@@ -373,9 +373,9 @@ var table_test = $('#table_xx').DataTable({
 
 
 $(document).on("click",".share_user",function () {
-    $('#pass_share').text($(this).data("pass"));
-    $('#username_share').text($(this).data("username"));
-    $('#name_share').text($(this).data("name"));
+    $('#pass_share').text($(this).data("pass") || 'غير متوفر');
+    $('#username_share').text($(this).data("username") || 'غير متوفر');
+    $('#name_share').text($(this).data("name") || '');
 });
 
 $(document).on("click","#screenshot",function () {

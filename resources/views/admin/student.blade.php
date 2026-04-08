@@ -1429,7 +1429,7 @@ if($('#hidden_student_phone').val()==1){
 
                  @endcan
                 @can('Account_Information_student')
-                <a class="share_teacher" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user.email }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user.view_password }" > <i class="fa fa-send fa-2x" style="color: #0083FF;font-size: medium"></i> </a>
+                <a class="share_teacher" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user && full.user.email ? full.user.email : '' }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user && full.user.view_password ? full.user.view_password : 'غير متوفر' }" > <i class="fa fa-send fa-2x" style="color: #0083FF;font-size: medium"></i> </a>
                    @endcan
 
 
@@ -1581,7 +1581,7 @@ else{
 
                  @endcan
                 @can('Account_Information_student')
-                <a class="share_teacher" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user.email }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user.view_password }" > <i class="fa fa-send fa-2x" style="color: #0083FF;font-size: medium"></i> </a>
+                <a class="share_teacher" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user && full.user.email ? full.user.email : '' }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user && full.user.view_password ? full.user.view_password : 'غير متوفر' }" > <i class="fa fa-send fa-2x" style="color: #0083FF;font-size: medium"></i> </a>
                    @endcan
 
                  @can('delete_student')
@@ -1937,8 +1937,8 @@ $.ajax({
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
 <script>
     $(document).on("click", ".share_teacher", function () {
-        $('#pass_share').text($(this).data("pass"));
-        $('#username_share').text($(this).data("username"));
+        $('#pass_share').text($(this).data("pass") || 'غير متوفر');
+        $('#username_share').text($(this).data("username") || 'غير متوفر');
         $('#name_share').text($(this).data("name"));
     });
 

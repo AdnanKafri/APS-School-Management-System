@@ -89,7 +89,7 @@
         $genderOptions = [
             '' => $isArabic ? 'اختر الجنس' : 'Select gender',
             '1' => $isArabic ? 'ذكر' : 'Male',
-            '2' => $isArabic ? 'أنثى' : 'Female',
+            '0' => $isArabic ? 'أنثى' : 'Female',
         ];
 
         $religionOptions = [

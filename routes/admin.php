@@ -84,6 +84,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('certificate_fields', 'DashboardController@certificate_fields')->name('certificate_fields');
     Route::get('app_slider', 'DashboardController@app_slider')->name('app_slider');
     Route::post('export_student1', 'DashboardController@export_student1')->name('export_student1');
+    Route::post('export_register_student', 'DashboardController@export_register_student')->name('export_register_student');
     Route::post('export_teacher', 'DashboardController@export_teacher')->name('export_teacher');
     Route::post('st_import', 'DashboardController@st_import')->name('st_import');
     Route::post('tech_import', 'DashboardController@tech_import')->name('tech_import');
@@ -242,8 +243,8 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
 
 
     Route::get('classes/teacher_lessons/{class_id}', 'admincontroller@teacher_lessons')->name('teacher_lessons');
-    Route::get('lessons', 'admincontroller@lessons')->middleware('can:lessons')->name('lessons');
     Route::get('lessons/class_lessons/{class_id}', 'admincontroller@class_lessons')->name('class_lessons');
+    Route::get('lessons/{id?}', 'admincontroller@lessons')->middleware('can:lessons')->where('id', '[0-9]+')->name('lessons');
 
     Route::post('lessons/store', 'admincontroller@lesson_store')->name('lesson_store');
     Route::post('lessons/update_lesson', 'admincontroller@lesson_update')->name('lesson_update');
@@ -266,7 +267,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
 
 
     Route::post('students/change', 'admincontroller@student_change')->name('student_change');
-    // Route::get('students/archive/{student_id}','admincontroller@student_archive')->name('student_archive');
+    Route::get('students/archive/{student_id}', 'admincontroller@student_archive')->name('student_archive');
     Route::post('students/financial_account', 'admincontroller@financial_account')->name('financial_account');
     Route::get('students/invoices_details/{student_id}', 'admincontroller@invoices_details')->name('invoices_details');
     Route::post('students/invoices_delete/{invoice_id}', 'admincontroller@invoices_delete')->name('invoices_delete');
@@ -566,6 +567,17 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
 
     // النجاح والرسوب / الجلاءات - الصفوف
     Route::get('classes/graduation', 'DashboardController@classes_graduation')->name('classes.graduation');
+    Route::get('classes/graduation/classroom/{id}', 'DashboardController@classroom_graduate')->name('classroom_graduate');
+    Route::post('classes/set_actual_attendance', 'DashboardController@set_actual_attendance')->name('set_actual_attendance');
+    Route::post('classes/all_class_graduate', 'DashboardController@all_class_graduate')->name('all_class_graduate');
+    Route::post('classes/single_class_graduate', 'DashboardController@single_class_graduate')->name('single_class_graduate');
+    Route::post('classes/single_Class_freeze_Marks', 'DashboardController@single_Class_freeze_Marks')->name('single_Class_freeze_Marks');
+    Route::post('classes/all_Classes_freeze_Marks', 'DashboardController@all_Classes_freeze_Marks')->name('all_Classes_freeze_Marks');
+    Route::post('classes/end_school_year', 'DashboardController@end_school_year')->name('end_school_year');
+    Route::get('reports/teacher_sch', 'DashboardController@teacher_sch')->name('teacher_sch');
+    Route::get('reports/student_sch', 'DashboardController@student_sch')->name('student_sch');
+    Route::get('reports/phase_completion_documents', 'DashboardController@phase_completion_documents')->name('phase_completion_documents');
+    Route::get('reports/transfer_documents', 'DashboardController@transfer_documents')->name('transfer_documents');
 
     // الإدارة - الأقسام الرئيسية
     Route::get('adminstration/mainDepartments', 'adminstrationcontroller@mainDepartments')->name('mainDepartments');

@@ -1082,6 +1082,13 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
+                                    <label class="form-control-label" for="input-con_sch">ملاحظات أو مرجع إضافي</label>
+                                    <input id="input-con_sch" class="form-control" name="con_sch" placeholder="ملاحظات أو مرجع إضافي"
+                                        value="{{ $student_detail->con_sch }}" type="text">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
                                     <label class="form-control-label" for="input-student_brather_and_sister">الأخوة والأخوات الطالبة </label>
                                     <input id="input-student_brather_and_sister" class="form-control" name="student_brather_and_sister" placeholder="الأخوة والأخوات الطالبة"
                                         value="{{ $student_detail->student_brather_and_sister }}" type="text">

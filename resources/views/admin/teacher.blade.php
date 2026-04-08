@@ -642,7 +642,7 @@ var table_test = $('#table_xx').DataTable({
                         </a>
                          @endcan
                            @can('Account_Information_teacher')
-                        <a style="font-size:18px !important" class="share_teacher btn btn-info btn-sm" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user.email }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user.view_password }" title = "معلومات الأيميل">
+                        <a style="font-size:18px !important" class="share_teacher btn btn-info btn-sm" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user && full.user.email ? full.user.email : '' }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user && full.user.view_password ? full.user.view_password : 'غير متوفر' }" title = "معلومات الأيميل">
                              <i class="fa fa-send fa-x" style="color: #eff0f1"></i>
                         </a>
                         @endcan
@@ -676,8 +676,8 @@ $(document).on('click', '.delete', function () {
     $('#lesson_id_delete').val(id);
 });
 $(document).on("click",".share_teacher",function () {
-    $('#pass_share').text($(this).data("pass"));
-    $('#username_share').text($(this).data("username"));
+    $('#pass_share').text($(this).data("pass") || 'غير متوفر');
+    $('#username_share').text($(this).data("username") || 'غير متوفر');
     $('#name_share').text($(this).data("name"));
 });
 
