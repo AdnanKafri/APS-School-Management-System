@@ -1,30 +1,219 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'ملف الطالب')
+@section('page_subtitle')
+{{ $student->first_name }} {{ $student->last_name }}
+@endsection
 @section('style')
 <style>
-    * {
+    .student-details-v2,
+    .student-details-v2 * {
         direction: rtl !important;
     }
 
-    .form-group {
+    .student-details-v2 .form-group {
         direction: rtl !important;
         text-align: right;
     }
 
-    .heading-small {
+    .student-details-v2 .heading-small {
         text-align: center !important;
         color: #001586 !important;
         font-size: 20px
     }
 </style>
 <style>
-    .custom-file-label {
+    .student-details-v2 .custom-file-label {
         display: none;
     }
 
-    .pl-lg-4 label {
+    .student-details-v2 .pl-lg-4 label {
         font-size: 20px;
         font-weight: 600;
         color: black !important;
+    }
+</style>
+<style>
+    .v2-shell .v2-sidebar .v2-menu-title,
+    .v2-shell .v2-sidebar .v2-menu-link,
+    .v2-shell .v2-sidebar .v2-menu-link span,
+    .v2-shell .v2-sidebar .v2-sub-link,
+    .v2-shell .v2-sidebar .v2-sidebar-brand div,
+    .v2-shell .v2-navbar .v2-navbar-brand-ar,
+    .v2-shell .v2-navbar .v2-navbar-brand-en,
+    .v2-shell .v2-navbar .v2-navbar-page span,
+    .v2-shell .v2-navbar .v2-user-btn,
+    .v2-shell .v2-navbar .v2-user-name,
+    .v2-shell .v2-navbar .dropdown-item,
+    .v2-shell .v2-navbar .v2-nav-icon-btn,
+    .v2-shell .v2-navbar .v2-dropdown-item {
+        color: inherit !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type > div {
+        padding: 1rem 1.25rem !important;
+        gap: 1rem;
+        align-items: flex-start !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type h5 {
+        margin-bottom: .35rem !important;
+        font-size: 1.35rem;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type small {
+        display: inline-block;
+        max-width: 40rem;
+        color: #7b768f !important;
+        line-height: 1.7;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type .breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: .45rem;
+    }
+
+    .student-details-v2 {
+        direction: rtl;
+        text-align: right;
+    }
+
+    body .modal-backdrop {
+        z-index: 2000 !important;
+    }
+
+    body .modal {
+        z-index: 2010 !important;
+    }
+
+    body .modal-dialog {
+        margin: 1.75rem auto;
+    }
+
+    .v2-main,
+    .v2-content-wrap,
+    .student-details-v2 {
+        overflow: visible !important;
+    }
+
+    .student-details-v2 .alert {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 12px 26px rgba(22, 129, 90, 0.12);
+        font-size: 1.1rem !important;
+    }
+
+    .student-details-v2 .student-details-shell {
+        margin: 0;
+        border-radius: 24px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        box-shadow: 0 20px 42px rgba(36, 30, 62, 0.08);
+        overflow: hidden;
+    }
+
+    .student-details-v2 .student-details-shell .card-header {
+        padding: 1.3rem 1.6rem;
+        border-bottom: 1px solid rgba(91, 75, 138, 0.12);
+        background: linear-gradient(135deg, rgba(91, 75, 138, 0.08), rgba(59, 130, 246, 0.05));
+    }
+
+    .student-details-v2 .student-details-shell .card-body {
+        padding: 1.75rem;
+        text-align: right !important;
+        background: #fff;
+    }
+
+    .student-details-v2 .row {
+        row-gap: 1rem;
+    }
+
+    .student-details-v2 .student-details-shell .card-body > .btn-danger {
+        margin-bottom: 1rem;
+    }
+
+    .student-details-v2 .btn {
+        border-radius: 12px;
+        font-weight: 700;
+        padding: .72rem 1.15rem;
+    }
+
+    .student-details-v2 .btn-danger,
+    .student-details-v2 .btn-primary,
+    .student-details-v2 .btn-success {
+        background: #5B4B8A;
+        border-color: #5B4B8A;
+        color: #fff !important;
+        box-shadow: 0 10px 22px rgba(91, 75, 138, 0.16);
+    }
+
+    .student-details-v2 .btn-danger:hover,
+    .student-details-v2 .btn-primary:hover,
+    .student-details-v2 .btn-success:hover {
+        background: #4d3f77;
+        border-color: #4d3f77;
+    }
+
+    .student-details-v2 .btn-default,
+    .student-details-v2 .btn-secondary {
+        color: #2f2b3a !important;
+    }
+
+    .student-details-v2 .form-control,
+    .student-details-v2 .custom-select {
+        min-height: 44px;
+        border-radius: 12px;
+        border-color: rgba(91, 75, 138, 0.18);
+        box-shadow: none;
+    }
+
+    .student-details-v2 .form-control:focus,
+    .student-details-v2 .custom-select:focus {
+        border-color: #5B4B8A;
+        box-shadow: 0 0 0 .2rem rgba(91, 75, 138, 0.14);
+    }
+
+    .student-details-v2 .heading-small {
+        margin-bottom: 1.25rem !important;
+        font-size: 1.45rem !important;
+        color: #2f2b3a !important;
+        font-weight: 800;
+    }
+
+    .student-details-v2 .pl-lg-4 label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2f2b3a !important;
+    }
+
+    .student-details-v2 .modal-content {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 24px 60px rgba(36, 30, 62, 0.16);
+    }
+
+    .student-details-v2 .modal-header,
+    .student-details-v2 .modal-footer {
+        border-color: rgba(91, 75, 138, 0.12);
+    }
+
+    @media (max-width: 991.98px) {
+        .v2-content-wrap > .v2-card:first-of-type > div {
+            padding: .95rem 1rem !important;
+        }
+
+        .student-details-v2 .student-details-shell .card-body {
+            padding: 1rem;
+        }
+
+        .student-details-v2 .heading-small {
+            font-size: 1.2rem !important;
+        }
     }
 </style>
 @endsection
@@ -33,14 +222,15 @@
 @section('breadcrumbs')
 
 <nav class="breadcrumbs">
-    <a class="breadcrumbs__item is-active "> تعديل طالب </a>
-    <a href="{{ route('students') }}" class="breadcrumbs__item "> شؤون الطلاب الطلاب</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">لوحة التحكم</a>
+    <a href="{{ route('students') }}" class="breadcrumbs__item">الطلاب</a>
+    <span class="breadcrumbs__item is-active">ملف الطالب</span>
 </nav>
 
 @endsection
 
 @section('content')
+<div class="student-details-v2">
 
 @if(session()->has('success'))
 
@@ -90,7 +280,7 @@
 
     <div class="col-xl-1 col-lg-1 col-12"></div>
     <div class="col-xl-10 col-lg-10 col-12">
-        <div class="card" style="margin: 30px">
+        <div class="card student-details-shell">
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col-7">
@@ -1955,4 +2145,8 @@
 
 
 
+</div>
 @endsection
+
+
+

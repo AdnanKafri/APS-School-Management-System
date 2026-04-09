@@ -1,70 +1,79 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'الطلاب')
+@section('page_subtitle', 'إدارة سجلات الطلاب')
 
 @section('style')
-<link href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css">
-<link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
 
 <style>
-    * {
-        direction: rtl !important;
-        /* text-align: center; */
-    }
-
-    button,
-    a {
-        color: white !important;
-    }
-
-    .form-group {
+    .student-index-v2 {
+        direction: rtl;
         text-align: right;
     }
 
-    label {
+    html[dir="ltr"] .student-index-v2 {
+        direction: ltr;
+        text-align: left;
+    }
+
+    .student-index-v2 .btn,
+    .student-index-v2 .btn:hover,
+    .student-index-v2 .btn:focus {
+        color: white !important;
+    }
+
+    .student-index-v2 .form-group {
+        text-align: right;
+    }
+
+    .student-index-v2 label {
         font-size: 20px;
         color: black;
     }
 
-    input {
+    .student-index-v2 input {
         font-size: 17px !important;
     }
 
-    th {
+    .student-index-v2 th {
         font-size: 20px;
     }
 
-    td {
+    .student-index-v2 td {
         font-size: 17px;
     }
 
-    a.page-link {
+    .student-index-v2 a.page-link {
         color: #7571f9 !important;
     }
 
-    .pagination {
+    .student-index-v2 .pagination {
         justify-content: center;
     }
 
-    .dropdown-item {
+    .student-index-v2 .dropdown-item {
         color: black !important;
         width: auto !important;
     }
 
-    .fa-folder {
+    .student-index-v2 .fa-folder {
         margin: 2px;
     }
 
-    .dorat {
+    .student-index-v2 .dorat {
         color: blue !important;
     }
 
-    img {
+    .student-index-v2 img {
         border-radius: 50%;
     }
 
     /* ///////////////////////////////////// */
 
 
-    .wrapper {
+    .student-index-v2 .wrapper {
         display: inline-flex;
         background: #fff;
         height: 100px;
@@ -77,7 +86,7 @@
         box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
     }
 
-    .wrapper .option {
+    .student-index-v2 .wrapper .option {
         background: #fff;
         height: 100%;
         width: 100%;
@@ -92,7 +101,7 @@
         transition: all 0.3s ease;
     }
 
-    .wrapper .option .dot {
+    .student-index-v2 .wrapper .option .dot {
         height: 20px;
         width: 20px;
         background: #d9d9d9;
@@ -100,7 +109,7 @@
         position: relative;
     }
 
-    .wrapper .option .dot::before {
+    .student-index-v2 .wrapper .option .dot::before {
         position: absolute;
         content: "";
         top: 4px;
@@ -114,7 +123,7 @@
         transition: all 0.3s ease;
     }
 
-    .wrapper input[type="radio"] {
+    .student-index-v2 .wrapper input[type="radio"] {
         display: none;
     }
 
@@ -135,7 +144,7 @@
         transform: scale(1);
     }
 
-    .wrapper .option span {
+    .student-index-v2 .wrapper .option span {
         font-size: 20px;
         color: #808080;
     }
@@ -145,7 +154,7 @@
         color: #fff;
     }
 
-    .wrapper_lang {
+    .student-index-v2 .wrapper_lang {
         display: inline-flex;
         background: #fff;
         height: 100px;
@@ -158,7 +167,7 @@
         box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
     }
 
-    .wrapper_lang .option {
+    .student-index-v2 .wrapper_lang .option {
         background: #fff;
         height: 100%;
         width: 100%;
@@ -173,7 +182,7 @@
         transition: all 0.3s ease;
     }
 
-    .wrapper_lang .option .dot {
+    .student-index-v2 .wrapper_lang .option .dot {
         height: 20px;
         width: 20px;
         background: #d9d9d9;
@@ -181,7 +190,7 @@
         position: relative;
     }
 
-    .wrapper_lang .option .dot::before {
+    .student-index-v2 .wrapper_lang .option .dot::before {
         position: absolute;
         content: "";
         top: 4px;
@@ -195,7 +204,7 @@
         transition: all 0.3s ease;
     }
 
-    .wrapper_lang input[type="radio"] {
+    .student-index-v2 .wrapper_lang input[type="radio"] {
         display: none;
     }
 
@@ -216,7 +225,7 @@
         transform: scale(1);
     }
 
-    .wrapper_lang .option span {
+    .student-index-v2 .wrapper_lang .option span {
         font-size: 20px;
         color: #808080;
     }
@@ -226,23 +235,425 @@
         color: #fff;
     }
 
-    th {
+    .student-index-v2 th {
         font-size: 20px;
         border-bottom: 1px solid #008991 !important;
         text-align: center !important;
     }
 
-    td {
+    .student-index-v2 td {
         font-size: 17px;
         border-bottom: 1px solid #008991 !important;
         color: black;
         text-align: center;
     }
-    .table .thead-light th {
+    .student-index-v2 .table .thead-light th {
     color: #495057;
     background-color: white;
     /* border-color: #dee2e6; */
 }
+</style>
+<style>
+    .v2-shell .v2-sidebar .v2-menu-title,
+    .v2-shell .v2-sidebar .v2-menu-link,
+    .v2-shell .v2-sidebar .v2-menu-link span,
+    .v2-shell .v2-sidebar .v2-sub-link,
+    .v2-shell .v2-sidebar .v2-sidebar-brand div,
+    .v2-shell .v2-navbar .v2-navbar-brand-ar,
+    .v2-shell .v2-navbar .v2-navbar-brand-en,
+    .v2-shell .v2-navbar .v2-navbar-page span,
+    .v2-shell .v2-navbar .v2-user-btn,
+    .v2-shell .v2-navbar .v2-user-name,
+    .v2-shell .v2-navbar .dropdown-item,
+    .v2-shell .v2-navbar .v2-nav-icon-btn,
+    .v2-shell .v2-navbar .v2-dropdown-item {
+        color: inherit !important;
+    }
+
+    .v2-content-wrap > .v2-card .breadcrumbs__item,
+    .v2-content-wrap > .v2-card .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type > div {
+        padding: 1rem 1.25rem !important;
+        gap: 1rem;
+        align-items: flex-start !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type h5 {
+        margin-bottom: .35rem !important;
+        font-size: 1.35rem;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type small {
+        display: inline-block;
+        max-width: 40rem;
+        color: #7b768f !important;
+        line-height: 1.7;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type .breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: .45rem;
+    }
+
+    .student-breadcrumbs {
+        font-size: .9rem;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    .student-breadcrumbs .breadcrumbs__item {
+        font-weight: 700;
+    }
+
+    .student-breadcrumbs a.breadcrumbs__item {
+        color: #8a869a !important;
+    }
+
+    .student-breadcrumbs .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
+
+    .student-breadcrumbs__sep {
+        color: #b2aec0;
+        font-weight: 700;
+    }
+
+    .student-index-v2 {
+        direction: rtl;
+        text-align: right;
+    }
+
+    .v2-navbar #v2-sidebar-toggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body .modal-backdrop {
+        z-index: 2000 !important;
+    }
+
+    body .modal {
+        z-index: 2010 !important;
+    }
+
+    body .modal-dialog {
+        margin: 1.75rem auto;
+    }
+
+    .v2-main,
+    .v2-content-wrap,
+    .student-index-v2 {
+        overflow: visible !important;
+    }
+
+    .student-index-v2 .student-panel {
+        margin: 0;
+        border-radius: 22px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        box-shadow: 0 18px 40px rgba(36, 30, 62, 0.08);
+        overflow: hidden;
+    }
+
+    .student-index-v2 .student-panel .card-body {
+        padding: 1.5rem;
+        text-align: right !important;
+        background: linear-gradient(180deg, rgba(91, 75, 138, 0.04), rgba(91, 75, 138, 0));
+    }
+
+    .student-index-v2 .student-panel__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: .75rem;
+    }
+
+    .student-index-v2 .student-panel__controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1 1 720px;
+        flex-wrap: wrap;
+        min-width: 0;
+        justify-content: flex-start;
+    }
+
+    .student-index-v2 .student-panel__filters {
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1 1 420px;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    .student-index-v2 .student-panel__filters .form-control {
+        flex: 0 1 190px;
+    }
+
+    .student-index-v2 .student-panel__actions {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex: 0 0 auto;
+        justify-content: flex-start;
+    }
+
+    .student-index-v2 .student-panel__search {
+        flex: 1 1 260px;
+        min-width: 200px;
+        max-width: 340px;
+    }
+
+    .student-index-v2 .student-panel__search .dataTables_filter {
+        margin: 0;
+    }
+
+    .student-index-v2 .student-panel__search .dataTables_filter label {
+        display: block;
+        margin: 0;
+        font-size: 0;
+    }
+
+    .student-index-v2 .student-panel__search .dataTables_filter input {
+        width: min(320px, 100%);
+        min-height: 44px;
+        margin: 0;
+    }
+
+    .student-index-v2 .student-panel__actions .btn {
+        min-height: 44px;
+        white-space: nowrap;
+    }
+
+    .student-index-v2 .btn {
+        border-radius: 12px;
+        font-weight: 700;
+        padding: .72rem 1.15rem;
+    }
+
+    .student-index-v2 .btn-success,
+    .student-index-v2 .btn-primary {
+        background: #5B4B8A;
+        border-color: #5B4B8A;
+        color: #fff !important;
+        box-shadow: 0 10px 22px rgba(91, 75, 138, 0.16);
+    }
+
+    .student-index-v2 .btn-success:hover,
+    .student-index-v2 .btn-primary:hover {
+        background: #4d3f77;
+        border-color: #4d3f77;
+    }
+
+    .student-index-v2 .row {
+        row-gap: .75rem;
+    }
+
+    .student-index-v2 .form-control {
+        min-height: 44px;
+        border-radius: 12px;
+        border-color: rgba(91, 75, 138, 0.18);
+        box-shadow: none;
+    }
+
+    .student-index-v2 .form-control:focus {
+        border-color: #5B4B8A;
+        box-shadow: 0 0 0 .2rem rgba(91, 75, 138, 0.14);
+    }
+
+    .student-index-v2 .table-responsive {
+        margin-top: 1.25rem;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        border-radius: 18px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        background: #fff;
+    }
+
+    .student-index-v2 .table {
+        width: 100% !important;
+        margin-bottom: 0;
+    }
+
+    .student-index-v2 .table .thead-light th {
+        background: #f9f7fe;
+        color: #2f2b3a;
+        font-size: 1rem;
+        font-weight: 800;
+        border-bottom: 1px solid rgba(91, 75, 138, 0.14) !important;
+        padding: 1rem .75rem !important;
+    }
+
+    .student-index-v2 .table td {
+        font-size: 16px;
+        color: #3f3a52;
+        border-bottom: 1px solid rgba(91, 75, 138, 0.1) !important;
+        vertical-align: middle;
+        padding: 1rem .75rem !important;
+    }
+
+    .student-index-v2 .dataTables_wrapper {
+        padding: .5rem 1rem .5rem;
+    }
+
+    .student-index-v2 .dataTables_wrapper .dataTables_length,
+    .student-index-v2 .dataTables_wrapper .dataTables_filter,
+    .student-index-v2 .dataTables_wrapper .dataTables_info,
+    .student-index-v2 .dataTables_wrapper .dataTables_paginate {
+        margin-bottom: .75rem;
+    }
+
+    .student-index-v2 .dataTables_wrapper .dataTables_paginate {
+        padding-top: .5rem;
+    }
+
+    .student-index-v2 .dataTables_wrapper .dataTables_filter {
+        display: none;
+    }
+
+    .student-index-v2 .table img {
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .student-index-v2 .dropdown-item {
+        color: #2f2b3a !important;
+        width: auto !important;
+        border-radius: 10px;
+        padding: .55rem .75rem;
+    }
+
+    .student-index-v2 .dropdown-item:hover {
+        background: rgba(91, 75, 138, 0.08);
+    }
+
+    .student-index-v2 .dataTables_wrapper .dataTables_filter input {
+        min-height: auto;
+        border-radius: 10px;
+        border: 1px solid rgba(91, 75, 138, 0.16);
+        padding: .35rem .65rem;
+    }
+
+    .student-index-v2 .dataTables_wrapper .dataTables_length select {
+        min-height: auto;
+    }
+
+    .student-index-v2 .modal-content {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 24px 60px rgba(36, 30, 62, 0.16);
+    }
+
+    .student-index-v2 .modal-header,
+    .student-index-v2 .modal-footer {
+        border-color: rgba(91, 75, 138, 0.12);
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-sidebar {
+        width: 88px;
+    }
+
+    html[dir="ltr"] #v2-shell.student-sidebar-collapsed .v2-main {
+        margin-left: 88px;
+    }
+
+    html[dir="rtl"] #v2-shell.student-sidebar-collapsed .v2-main {
+        margin-right: 88px;
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-sidebar-brand {
+        justify-content: center !important;
+        padding-inline: .75rem;
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-sidebar-brand .d-flex.align-items-center > div:last-child,
+    #v2-shell.student-sidebar-collapsed .v2-menu-title,
+    #v2-shell.student-sidebar-collapsed .v2-menu-link span,
+    #v2-shell.student-sidebar-collapsed .v2-submenu,
+    #v2-shell.student-sidebar-collapsed .v2-menu-toggle .fa-chevron-down {
+        display: none !important;
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-sidebar-menu {
+        padding-inline: .4rem;
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-menu-link {
+        justify-content: center;
+        padding-inline: .5rem;
+        min-height: 48px;
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-menu-link i:first-child {
+        margin-inline: 0;
+    }
+
+    #v2-shell.student-sidebar-collapsed .v2-menu-link.active {
+        border-inline-start: 0;
+        box-shadow: inset 0 0 0 1px rgba(59,130,246,0.15);
+    }
+
+    @media (max-width: 991.98px) {
+        .v2-content-wrap > .v2-card:first-of-type > div {
+            padding: .95rem 1rem !important;
+        }
+
+        .student-index-v2 .student-panel .card-body {
+            padding: 1rem;
+        }
+
+        .student-index-v2 .student-panel__toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .student-index-v2 .student-panel__controls,
+        .student-index-v2 .student-panel__filters {
+            flex: 1 1 auto;
+            width: 100%;
+        }
+
+        .student-index-v2 .student-panel__actions {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+        .student-index-v2 .student-panel__actions .btn {
+            width: 100%;
+        }
+
+        .student-index-v2 .student-panel__search {
+            width: 100%;
+            max-width: none;
+        }
+
+        .student-index-v2 .student-panel__search .dataTables_filter input {
+            width: 100%;
+        }
+
+        .student-index-v2 .student-panel__filters .form-control {
+            flex: 1 1 100%;
+        }
+
+        .student-index-v2 .wrapper,
+        .student-index-v2 .wrapper_lang {
+            width: 100%;
+            margin-left: 0;
+        }
+    }
 </style>
 <link href="{{ asset('assets/admin/plugins/toastr/css/toastr.min.css')  }}" rel="stylesheet">
 
@@ -250,14 +661,16 @@
 
 @section('breadcrumbs')
 
-<nav class="breadcrumbs">
-    <a class="breadcrumbs__item ">قسم شؤون الطلاب</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item is-active">الصفحة الرئيسية</a>
+<nav class="breadcrumbs student-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">لوحة التحكم</a>
+    <span class="student-breadcrumbs__sep" aria-hidden="true">/</span>
+    <span class="breadcrumbs__item is-active">الطلاب</span>
 </nav>
 
 @endsection
 
 @section('content')
+<div class="student-index-v2">
 
 <!------------------------------------------------>
 
@@ -1152,38 +1565,19 @@ $about = \App\Other::find(1);
     </div>
 </div>
 
-<div class="card" style="margin: 30px">
-    <div class="card-body" style="text-align: right;">
-        <div class="card-title">
-            <h1 style="text-align: center;color: #001586">جدول الطلاب</h1>
-        </div>
-         @can('create_student')
-        <a  class="btn  btn-success" data-toggle="modal" data-target=".createStudentModal"
-            >إنشاء طالب</a>
-            {{-- <a   target="_blank" href="{{ route('st_import') }}" class="btn  btn-success"
-            > إدخال الطلاب </a> --}}
-           @endcan
-
-             {{-- @can('export_student')
-            <a class="btn btn-success" data-target="#selectexport" data-toggle="modal"> تصدير الطلاب
-            </a>
-             @endcan --}}
-               {{-- @can('student_details_department')
-             <a class="btn btn-success"   href="{{ route('student_details_department') }}"    >   اضافة قسم للادخال
-             </a>
-              @endcan --}}
-            <br>
-        <br>
-        <br>
-        <div class="row">
+<div class="card v2-card student-panel">
+    <div class="card-body student-panel__body" style="text-align: right;">
+        <div class="student-panel__toolbar">
+        <div class="student-panel__controls">
+        <div class="student-panel__filters">
 
             {{-- <select class="form-control col-12 col-lg-3" id="stage_id_filter">
-                <option value="0">اختر المرحلة </option>
+                <option value="0">???? ??????? </option>
                 @foreach ($stages as $stage)
                 <option value="{{ $stage->id }}">{{ $stage->name }}</option>
                 @endforeach
             </select> --}}
-            <select class="form-control col-12 col-lg-3" id="class_id_filter">
+            <select class="form-control" id="class_id_filter">
                 <option value="">اختر صف</option>
 
                 @foreach ($classes as $class)
@@ -1191,14 +1585,35 @@ $about = \App\Other::find(1);
                 @endforeach
             </select>
 
-            <select class="form-control col-12 col-lg-3" id="room_id_filter">
+            <select class="form-control" id="room_id_filter">
                 <option value="">اختر شعبة</option>
             </select>
         </div>
-               @can('student_phone')
+        <div class="student-panel__search"></div>
+        </div>
+        <div class="student-panel__actions">
+         @can('create_student')
+        <a  class="btn  btn-success" data-toggle="modal" data-target=".createStudentModal"
+            >إضافة طالب</a>
+            {{-- <a   target="_blank" href="{{ route('st_import') }}" class="btn  btn-success"
+            > ????? ?????? </a> --}}
+           @endcan
+
+             {{-- @can('export_student')
+            <a class="btn btn-success" data-target="#selectexport" data-toggle="modal"> ????? ??????
+            </a>
+             @endcan --}}
+               {{-- @can('student_details_department')
+             <a class="btn btn-success"   href="{{ route('student_details_department') }}"    >   ????? ??? ???????
+             </a>
+              @endcan --}}
+        </div>
+        </div>
+               
+@can('student_phone')
                     <input type="hidden"  id="hidden_student_phone" value="1">
                         @endcan
-         <div class="table-responsive" style="overflow-x: scroll;">
+         <div class="table-responsive">
             <table class="table align-items-center" id="table_xx">
                 <thead class="thead-light">
                     <tr>
@@ -1270,6 +1685,7 @@ $about = \App\Other::find(1);
     </form>
     </div>
   </div>
+</div>
 @endsection
 
 @section('js')
@@ -1601,6 +2017,69 @@ else{
 
     });
 }
+
+    function mountStudentToolbar() {
+        var wrapper = $('#table_xx_wrapper');
+        var search = wrapper.find('.dataTables_filter');
+        var searchHost = $('.student-panel__search');
+
+        if (search.length && searchHost.length) {
+            search.appendTo(searchHost.empty()).css('display', 'block');
+            search.find('label').contents().filter(function () {
+                return this.nodeType === 3;
+            }).remove();
+            search.find('input').attr('placeholder', 'بحث سريع في السجلات');
+        }
+    }
+
+    function enableStudentSidebarToggle() {
+        var shell = document.getElementById('v2-shell');
+        var toggle = document.getElementById('v2-sidebar-toggle');
+        if (!shell || !toggle) {
+            return;
+        }
+
+        toggle.classList.remove('d-lg-none');
+        toggle.classList.add('v2-student-toggle');
+
+        var media = window.matchMedia('(min-width: 993px)');
+        var storageKey = 'studentsSidebarCollapsed';
+
+        function syncSidebarState() {
+            if (media.matches) {
+                if (window.localStorage.getItem(storageKey) === '1') {
+                    shell.classList.add('student-sidebar-collapsed');
+                } else {
+                    shell.classList.remove('student-sidebar-collapsed');
+                }
+                shell.classList.remove('sidebar-open');
+            } else {
+                shell.classList.remove('student-sidebar-collapsed');
+            }
+        }
+
+        toggle.addEventListener('click', function (e) {
+            if (!media.matches) {
+                return;
+            }
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            shell.classList.toggle('student-sidebar-collapsed');
+            window.localStorage.setItem(storageKey, shell.classList.contains('student-sidebar-collapsed') ? '1' : '0');
+        }, true);
+
+        if (media.addEventListener) {
+            media.addEventListener('change', syncSidebarState);
+        } else if (media.addListener) {
+            media.addListener(syncSidebarState);
+        }
+
+        syncSidebarState();
+    }
+
+    mountStudentToolbar();
+    enableStudentSidebarToggle();
 
 
 
@@ -2043,3 +2522,5 @@ $(document).on('click', '.financial_account', function () {
 
 
 @endsection
+
+
