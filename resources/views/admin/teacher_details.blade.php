@@ -1,47 +1,307 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'تفاصيل المدرس')
+@section('page_subtitle', 'تعديل البيانات والملفات المرتبطة بالمدرس')
+
 @section('style')
 <style>
-    * {
-        direction: rtl !important;
+    .v2-shell .v2-sidebar .v2-menu-title,
+    .v2-shell .v2-sidebar .v2-menu-link,
+    .v2-shell .v2-sidebar .v2-menu-link span,
+    .v2-shell .v2-sidebar .v2-sub-link,
+    .v2-shell .v2-sidebar .v2-sidebar-brand div,
+    .v2-shell .v2-navbar .v2-navbar-brand-ar,
+    .v2-shell .v2-navbar .v2-navbar-brand-en,
+    .v2-shell .v2-navbar .v2-navbar-page span,
+    .v2-shell .v2-navbar .v2-user-btn,
+    .v2-shell .v2-navbar .v2-user-name,
+    .v2-shell .v2-navbar .dropdown-item,
+    .v2-shell .v2-navbar .v2-nav-icon-btn,
+    .v2-shell .v2-navbar .v2-dropdown-item {
+        color: inherit !important;
     }
 
-    .form-group {
-        direction: rtl !important;
+    .v2-content-wrap > .v2-card .breadcrumbs__item,
+    .v2-content-wrap > .v2-card .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type > div {
+        padding: 1rem 1.25rem !important;
+        gap: 1rem;
+        align-items: flex-start !important;
+    }
+
+    .v2-content-wrap > .v2-card:first-of-type .breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: .45rem;
+    }
+
+    .teacher-details-breadcrumbs {
+        font-size: .9rem;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    .teacher-details-breadcrumbs .breadcrumbs__item {
+        font-weight: 700;
+    }
+
+    .teacher-details-breadcrumbs a.breadcrumbs__item {
+        color: #8a869a !important;
+    }
+
+    .teacher-details-breadcrumbs .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
+
+    .teacher-details-breadcrumbs__sep {
+        color: #b2aec0;
+        font-weight: 700;
+    }
+
+    .v2-navbar #v2-sidebar-toggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .teacher-details-v2,
+    .teacher-details-v2 * {
+        direction: rtl;
+    }
+
+    .teacher-details-v2 {
         text-align: right;
     }
 
-    .heading-small {
-        text-align: center !important;
-        color: #001586 !important;
-        font-size: 20px
+    html[dir="ltr"] .teacher-details-v2,
+    html[dir="ltr"] .teacher-details-v2 * {
+        direction: ltr;
+        text-align: left;
     }
-</style>
-<style>
-    .custom-file-label {
+
+    .teacher-details-v2 .alert {
+        border-radius: 18px;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .teacher-details-v2 > .row {
+        margin: 0;
+    }
+
+    .teacher-details-v2 > .row > .col-xl-1,
+    .teacher-details-v2 > .row > .col-lg-1 {
         display: none;
     }
 
-    .pl-lg-4 label {
-        font-size: 20px;
-        font-weight: 600;
-        color: black !important;
+    .teacher-details-v2 > .row > .col-xl-10,
+    .teacher-details-v2 > .row > .col-lg-10 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .teacher-details-v2 .card {
+        margin: 0;
+        border-radius: 22px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        box-shadow: 0 18px 40px rgba(36, 30, 62, 0.08);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .teacher-details-v2 .card-header {
+        display: none;
+    }
+
+    .teacher-details-v2 .card-body {
+        padding: 0 !important;
+        text-align: inherit !important;
+        background: linear-gradient(180deg, rgba(91, 75, 138, 0.04), rgba(91, 75, 138, 0));
+    }
+
+    .teacher-details-v2 .modal-header {
+        border: 0;
+        padding: 1.5rem 1.5rem .5rem;
+        align-items: center;
+    }
+
+    .teacher-details-v2 .modal-title {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #2f2b3a;
+    }
+
+    .teacher-details-v2 .modal-body {
+        padding: 1rem 1.5rem 1.5rem;
+        text-align: inherit;
+    }
+
+    .teacher-details-v2 .modal-footer {
+        border: 0;
+        padding: 1rem 1.5rem 1.5rem;
+        display: flex;
+        justify-content: flex-start;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+    .teacher-details-v2 .form-group {
+        direction: inherit !important;
+        text-align: inherit !important;
+        margin-bottom: 1rem;
+    }
+
+    .teacher-details-v2 label,
+    .teacher-details-v2 .pl-lg-4 label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2f2b3a !important;
+    }
+
+    .teacher-details-v2 .form-control,
+    .teacher-details-v2 .input-group-text {
+        min-height: 44px;
+        border-radius: 12px;
+    }
+
+    .teacher-details-v2 .form-control {
+        border-color: rgba(91, 75, 138, 0.18);
+        box-shadow: none;
+    }
+
+    .teacher-details-v2 .form-control:focus {
+        border-color: #5B4B8A;
+        box-shadow: 0 0 0 .2rem rgba(91, 75, 138, 0.14);
+    }
+
+    .teacher-details-v2 .input-group-text {
+        background: #f7f5fc;
+        border-color: rgba(91, 75, 138, 0.18);
+    }
+
+    .teacher-details-v2 .heading-small {
+        text-align: right !important;
+        color: #5B4B8A !important;
+        font-size: 1rem;
+        font-weight: 800;
+        margin-bottom: 1rem !important;
+    }
+
+    html[dir="ltr"] .teacher-details-v2 .heading-small {
+        text-align: left !important;
+    }
+
+    .teacher-details-v2 .pl-lg-4 {
+        padding-inline-start: 0 !important;
+    }
+
+    .teacher-details-v2 .del_edit_img {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border: 4px solid rgba(91, 75, 138, 0.12);
+        margin-bottom: .75rem;
+    }
+
+    .teacher-details-v2 .btn {
+        border-radius: 12px;
+        min-width: 124px;
+        font-weight: 700;
+    }
+
+    .teacher-details-v2 .btn-primary {
+        background: #5B4B8A;
+        border-color: #5B4B8A;
+    }
+
+    .teacher-details-v2 .btn-primary:hover {
+        background: #4d3f77;
+        border-color: #4d3f77;
+    }
+
+    .teacher-details-v2 .custom-file-label {
+        display: none;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar {
+        width: 88px;
+    }
+
+    html[dir="ltr"] #v2-shell.teacher-sidebar-collapsed .v2-main {
+        margin-left: 88px;
+    }
+
+    html[dir="rtl"] #v2-shell.teacher-sidebar-collapsed .v2-main {
+        margin-right: 88px;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-brand {
+        justify-content: center !important;
+        padding-inline: .75rem;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-brand .d-flex.align-items-center > div:last-child,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-title,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link span,
+    #v2-shell.teacher-sidebar-collapsed .v2-submenu,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-toggle .fa-chevron-down {
+        display: none !important;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-menu {
+        padding-inline: .4rem;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link {
+        justify-content: center;
+        padding-inline: .5rem;
+        min-height: 48px;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link i:first-child {
+        margin-inline: 0;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link.active {
+        border-inline-start: 0;
+        box-shadow: inset 0 0 0 1px rgba(59,130,246,0.15);
+    }
+
+    @media (max-width: 991.98px) {
+        .teacher-details-v2 .modal-body,
+        .teacher-details-v2 .modal-footer,
+        .teacher-details-v2 .modal-header {
+            padding-inline: 1rem;
+        }
+
+        .teacher-details-v2 .btn {
+            width: 100%;
+        }
     }
 </style>
 @endsection
 
-
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a class="breadcrumbs__item is-active "> تعديل مدرس  </a>
-    <a href="{{ route('teachers') }}" class="breadcrumbs__item ">    المدرسين    </a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="breadcrumbs teacher-details-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">لوحة التحكم</a>
+    <span class="teacher-details-breadcrumbs__sep" aria-hidden="true">/</span>
+    <a href="{{ route('teachers') }}" class="breadcrumbs__item">المدرسين</a>
+    <span class="teacher-details-breadcrumbs__sep" aria-hidden="true">/</span>
+    <span class="breadcrumbs__item is-active">تفاصيل المدرس</span>
 </nav>
-
 @endsection
 
 @section('content')
-
+<div class="teacher-details-v2">
 @if(session()->has('success'))
 
 <div class="alert alert-success alert-dismissible" role="alert" style="text-align: right; font-size: 30px">
@@ -303,4 +563,49 @@
 
 
 
+</div>
+@endsection
+
+@section('js')
+<script>
+(function() {
+    var shell = document.getElementById('v2-shell');
+    var toggle = document.getElementById('v2-sidebar-toggle');
+    if (!shell || !toggle) return;
+
+    toggle.classList.remove('d-lg-none');
+
+    var media = window.matchMedia('(min-width: 993px)');
+    var storageKey = 'teachersSidebarCollapsed';
+
+    function syncSidebarState() {
+        if (media.matches) {
+            if (window.localStorage.getItem(storageKey) === '1') {
+                shell.classList.add('teacher-sidebar-collapsed');
+            } else {
+                shell.classList.remove('teacher-sidebar-collapsed');
+            }
+            shell.classList.remove('sidebar-open');
+        } else {
+            shell.classList.remove('teacher-sidebar-collapsed');
+        }
+    }
+
+    toggle.addEventListener('click', function(e) {
+        if (!media.matches) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        shell.classList.toggle('teacher-sidebar-collapsed');
+        window.localStorage.setItem(storageKey, shell.classList.contains('teacher-sidebar-collapsed') ? '1' : '0');
+    }, true);
+
+    if (media.addEventListener) {
+        media.addEventListener('change', syncSidebarState);
+    } else if (media.addListener) {
+        media.addListener(syncSidebarState);
+    }
+
+    syncSidebarState();
+})();
+</script>
 @endsection

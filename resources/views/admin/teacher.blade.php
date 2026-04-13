@@ -1,70 +1,431 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'المدرسين')
+@section('page_subtitle', 'إدارة بيانات المدرسين والجداول')
 
 @section('style')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+
 <style>
-    *{
-        direction: rtl !important;
-        /* text-align: center; */
+    .v2-shell .v2-sidebar .v2-menu-title,
+    .v2-shell .v2-sidebar .v2-menu-link,
+    .v2-shell .v2-sidebar .v2-menu-link span,
+    .v2-shell .v2-sidebar .v2-sub-link,
+    .v2-shell .v2-sidebar .v2-sidebar-brand div,
+    .v2-shell .v2-navbar .v2-navbar-brand-ar,
+    .v2-shell .v2-navbar .v2-navbar-brand-en,
+    .v2-shell .v2-navbar .v2-navbar-page span,
+    .v2-shell .v2-navbar .v2-user-btn,
+    .v2-shell .v2-navbar .v2-user-name,
+    .v2-shell .v2-navbar .dropdown-item,
+    .v2-shell .v2-navbar .v2-nav-icon-btn,
+    .v2-shell .v2-navbar .v2-dropdown-item {
+        color: inherit !important;
     }
-    button,a{
-        color: white !important;
+
+    .v2-content-wrap > .v2-card .breadcrumbs__item,
+    .v2-content-wrap > .v2-card .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
     }
-    .form-group{
-        text-align: right;
+
+    .v2-content-wrap > .v2-card:first-of-type {
+        margin-bottom: 1.5rem !important;
     }
-    label{
-        font-size: 20px;
-        color: black;
+
+    .v2-content-wrap > .v2-card:first-of-type > div {
+        padding: 1rem 1.25rem !important;
+        gap: 1rem;
+        align-items: flex-start !important;
     }
-    input{
-        font-size: 17px !important;
+
+    .v2-content-wrap > .v2-card:first-of-type h5 {
+        margin-bottom: .35rem !important;
+        font-size: 1.35rem;
     }
-    th{
-        font-size: 20px;
-        border: 0px  !important;
-        text-align: center !important;
+
+    .v2-content-wrap > .v2-card:first-of-type small {
+        display: inline-block;
+        max-width: 40rem;
+        color: #7b768f !important;
+        line-height: 1.7;
     }
-    td{
-        font-size: 17px;
-        color: black;
-        border: 0px !important;
-        text-align: center;
+
+    .v2-content-wrap > .v2-card:first-of-type .breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: .45rem;
     }
-    tr{
-        border-bottom: 1px solid #008991 !important;
-        border-top: 1px solid #008991 !important;
+
+    .teacher-breadcrumbs {
+        font-size: .9rem;
+        align-items: center;
+        gap: .35rem;
     }
-    a.page-link{
-        color: #7571f9 !important;
+
+    .teacher-breadcrumbs .breadcrumbs__item {
+        font-weight: 700;
     }
-    .pagination{
+
+    .teacher-breadcrumbs a.breadcrumbs__item {
+        color: #8a869a !important;
+    }
+
+    .teacher-breadcrumbs .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
+
+    .teacher-breadcrumbs__sep {
+        color: #b2aec0;
+        font-weight: 700;
+    }
+
+    .v2-navbar #v2-sidebar-toggle {
+        display: inline-flex !important;
+        align-items: center;
         justify-content: center;
     }
-    .form-group{
-        margin: 0px !important;
+
+    body .modal-backdrop {
+        z-index: 2000 !important;
     }
-    #table_xx_wrapper{
-    overflow: auto;
-}
+
+    body .modal {
+        z-index: 2010 !important;
+    }
+
+    body .modal-dialog {
+        margin: 1.75rem auto;
+    }
+
+    .v2-main,
+    .v2-content-wrap,
+    .teacher-index-v2 {
+        overflow: visible !important;
+    }
+
+    .teacher-index-v2 {
+        direction: rtl;
+        text-align: right;
+    }
+
+    html[dir="ltr"] .teacher-index-v2 {
+        direction: ltr;
+        text-align: left;
+    }
+
+    .teacher-index-v2 .btn,
+    .teacher-index-v2 .btn:hover,
+    .teacher-index-v2 .btn:focus {
+        color: #fff !important;
+    }
+
+    .teacher-index-v2 .form-group {
+        text-align: right;
+        margin: 0 !important;
+    }
+
+    .teacher-index-v2 label {
+        font-size: 18px;
+        color: #2f2b3a;
+    }
+
+    .teacher-index-v2 input {
+        font-size: 16px !important;
+    }
+
+    .teacher-index-v2 a.page-link {
+        color: #7571f9 !important;
+    }
+
+    .teacher-index-v2 .pagination {
+        justify-content: center;
+    }
+
+    .teacher-index-v2 .dropdown-item {
+        color: #2f2b3a !important;
+        width: auto !important;
+        border-radius: 10px;
+        padding: .55rem .75rem;
+    }
+
+    .teacher-index-v2 .dropdown-item:hover {
+        background: rgba(91, 75, 138, 0.08);
+    }
+
+    .teacher-index-v2 img {
+        border-radius: 50%;
+    }
+
+    .teacher-index-v2 .teacher-panel {
+        margin: 0;
+        border-radius: 22px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        box-shadow: 0 18px 40px rgba(36, 30, 62, 0.08);
+        overflow: hidden;
+    }
+
+    .teacher-index-v2 .teacher-panel .card-body {
+        padding: 1.5rem;
+        text-align: right !important;
+        background: linear-gradient(180deg, rgba(91, 75, 138, 0.04), rgba(91, 75, 138, 0));
+    }
+
+    .teacher-index-v2 .teacher-panel__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: .75rem;
+    }
+
+    .teacher-index-v2 .teacher-panel__controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1 1 720px;
+        flex-wrap: wrap;
+        min-width: 0;
+        justify-content: flex-start;
+    }
+
+    .teacher-index-v2 .teacher-panel__filters {
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1 1 420px;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    .teacher-index-v2 .teacher-panel__filters .form-control {
+        flex: 0 1 220px;
+    }
+
+    .teacher-index-v2 .teacher-panel__actions {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex: 0 0 auto;
+        justify-content: flex-start;
+    }
+
+    .teacher-index-v2 .teacher-panel__actions .btn {
+        min-height: 44px;
+        white-space: nowrap;
+        border-radius: 12px;
+        font-weight: 700;
+        padding: .72rem 1.15rem;
+    }
+
+    .teacher-index-v2 .teacher-panel__search {
+        flex: 1 1 260px;
+        min-width: 220px;
+        max-width: 360px;
+    }
+
+    .teacher-index-v2 .teacher-panel__search .dataTables_filter {
+        margin: 0;
+    }
+
+    .teacher-index-v2 .teacher-panel__search .dataTables_filter label {
+        display: block;
+        margin: 0;
+        font-size: 0;
+    }
+
+    .teacher-index-v2 .teacher-panel__search .dataTables_filter input {
+        width: min(340px, 100%);
+        min-height: 44px;
+        margin: 0;
+        border-radius: 10px;
+        border: 1px solid rgba(91, 75, 138, 0.16);
+        padding: .35rem .65rem;
+    }
+
+    .teacher-index-v2 .form-control {
+        min-height: 44px;
+        border-radius: 12px;
+        border-color: rgba(91, 75, 138, 0.18);
+        box-shadow: none;
+    }
+
+    .teacher-index-v2 .form-control:focus {
+        border-color: #5B4B8A;
+        box-shadow: 0 0 0 .2rem rgba(91, 75, 138, 0.14);
+    }
+
+    .teacher-index-v2 .table-responsive {
+        margin-top: 1rem;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        border-radius: 18px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        background: #fff;
+    }
+
+    .teacher-index-v2 .table {
+        width: 100% !important;
+        margin-bottom: 0;
+    }
+
+    .teacher-index-v2 th {
+        font-size: 1rem;
+        font-weight: 800;
+        text-align: center !important;
+        border-bottom: 1px solid rgba(91, 75, 138, 0.14) !important;
+        padding: 1rem .75rem !important;
+        color: #2f2b3a;
+        background: #f9f7fe;
+    }
+
+    .teacher-index-v2 td {
+        font-size: 16px;
+        color: #3f3a52;
+        text-align: center;
+        border-bottom: 1px solid rgba(91, 75, 138, 0.1) !important;
+        padding: 1rem .75rem !important;
+        vertical-align: middle;
+    }
+
+    .teacher-index-v2 #table_xx_wrapper {
+        overflow: visible;
+    }
+
+    .teacher-index-v2 .dataTables_wrapper {
+        padding: .5rem 1rem .75rem;
+    }
+
+    .teacher-index-v2 .dataTables_wrapper .dataTables_length,
+    .teacher-index-v2 .dataTables_wrapper .dataTables_filter,
+    .teacher-index-v2 .dataTables_wrapper .dataTables_info,
+    .teacher-index-v2 .dataTables_wrapper .dataTables_paginate {
+        margin-bottom: .75rem;
+    }
+
+    .teacher-index-v2 .dataTables_wrapper .dataTables_filter {
+        display: none;
+    }
+
+    .teacher-index-v2 .dataTables_wrapper .dataTables_paginate {
+        padding-top: .5rem;
+    }
+
+    .teacher-index-v2 .modal-content {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 24px 60px rgba(36, 30, 62, 0.16);
+    }
+
+    .teacher-index-v2 .modal-header,
+    .teacher-index-v2 .modal-footer {
+        border-color: rgba(91, 75, 138, 0.12);
+    }
+
+    .teacher-index-v2 .class_table th,
+    .teacher-index-v2 .class_table td {
+        padding: .9rem .75rem !important;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar {
+        width: 88px;
+    }
+
+    html[dir="ltr"] #v2-shell.teacher-sidebar-collapsed .v2-main {
+        margin-left: 88px;
+    }
+
+    html[dir="rtl"] #v2-shell.teacher-sidebar-collapsed .v2-main {
+        margin-right: 88px;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-brand {
+        justify-content: center !important;
+        padding-inline: .75rem;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-brand .d-flex.align-items-center > div:last-child,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-title,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link span,
+    #v2-shell.teacher-sidebar-collapsed .v2-submenu,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-toggle .fa-chevron-down {
+        display: none !important;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-menu {
+        padding-inline: .4rem;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link {
+        justify-content: center;
+        padding-inline: .5rem;
+        min-height: 48px;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link i:first-child {
+        margin-inline: 0;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link.active {
+        border-inline-start: 0;
+        box-shadow: inset 0 0 0 1px rgba(59,130,246,0.15);
+    }
+
+    @media (max-width: 991.98px) {
+        .v2-content-wrap > .v2-card:first-of-type > div {
+            padding: .95rem 1rem !important;
+        }
+
+        .teacher-index-v2 .teacher-panel .card-body {
+            padding: 1rem;
+        }
+
+        .teacher-index-v2 .teacher-panel__toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .teacher-index-v2 .teacher-panel__controls,
+        .teacher-index-v2 .teacher-panel__filters {
+            flex: 1 1 auto;
+            width: 100%;
+        }
+
+        .teacher-index-v2 .teacher-panel__actions {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+        .teacher-index-v2 .teacher-panel__actions .btn {
+            width: 100%;
+        }
+
+        .teacher-index-v2 .teacher-panel__search {
+            width: 100%;
+            max-width: none;
+        }
+
+        .teacher-index-v2 .teacher-panel__search .dataTables_filter input,
+        .teacher-index-v2 .teacher-panel__filters .form-control {
+            width: 100%;
+            flex: 1 1 100%;
+        }
+    }
 </style>
-<link href="{{ asset('assets/admin/plugins/toastr/css/toastr.min.css')  }}" rel="stylesheet">
-
 @endsection
-
 
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">قسم المدرسين</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="breadcrumbs teacher-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">لوحة التحكم</a>
+    <span class="teacher-breadcrumbs__sep" aria-hidden="true">/</span>
+    <span class="breadcrumbs__item is-active">المدرسين</span>
 </nav>
-
 @endsection
 
-
 @section('content')
-
-
+<div class="teacher-index-v2">
 @php
 $about = \App\Other::find(1);
 @endphp
@@ -415,81 +776,45 @@ $about = \App\Other::find(1);
 
 
 
-<div class="card" style="margin: 30px">
-    <div class="card-body">
-        <div class="card-title">
-            <h1 style="text-align: center;color: #001586">جدول المدرسين</h1>
-        </div>
 
-        <div class="row" >
-             @can('create_teacher')
-            {{-- <a   target="_blank" href="{{ route('tech_import') }}" class="btn  btn-success"
-                > ادخال مدرسين </a>
-                &nbsp; --}}
-            <button type="button" class="btn  btn-success" data-toggle="modal" data-target="#create_teacher" >إنشاء مدرس</button>
-            @endcan
-             @can('teacher_details_department')
-            {{-- <a class="btn btn-success" style="margin-right: 4px;"   href="{{ route('teacher_details_departments') }}"    >   اضافة قسم للادخال
-            </a> --}}
-             @endcan
-               @can('export_teachers')
-               {{-- <form action="{{ route('export_teacher') }}" method="post">
-               @csrf
-               <div id="disabled">
-                    <button type="submit" class="btn btn-success "  style="margin-right: 4px;"    id="disabled1" >تصدير مدرسين</button>
-               </div>
-
-              </form> --}}
-             @endcan
+<div class="card v2-card teacher-panel">
+    <div class="card-body teacher-panel__body" style="text-align: right;">
+        <div class="teacher-panel__toolbar">
+            <div class="teacher-panel__controls">
+                <div class="teacher-panel__filters">
+                    <select name="classes" id="classes_select" class="form-control">
+                        <option value="">جميع الصفوف</option>
+                        @foreach ($classes as $item)
+                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="teacher-panel__search"></div>
             </div>
 
-            <br>
-        <div class="row" >
-           <div class="col-12 col-lg-6">
-               <select name="classes" id="classes_select" class="form-control">
-                   <option value=""> جميع الصفوف </option>
-                   @foreach ($classes as $item)
-                       <option value="{{ $item->id }}"> {{ $item->name }} </option>
-                   @endforeach
-                </select>
+            <div class="teacher-panel__actions">
+                @can('create_teacher')
+                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#create_teacher">إضافة مدرس</button>
+                @endcan
             </div>
-           {{-- <div class="col-12 col-lg-6">
-                <select name="rooms" id="rooms_classes" class="form-control">
-                  <option value=""> جميع الشعب </option>
-                </select>
-            </div> --}}
         </div>
 
-
-
-        <div class="">
-            <table class="table align-items-center " id="table_xx">
+        <div class="table-responsive">
+            <table class="table align-items-center" id="table_xx">
                 <thead style="color: black">
-                  <tr>
-                    <!--<th scope="col" class="sort" data-sort="name">الرقم</th>-->
-                    <th scope="col" class="sort" data-sort="budget">الاسم الأول</th>
-                    <th scope="col" class="sort" data-sort="status">الكنية</th>
-                    <th scope="col" class="sort" data-sort="status">تاريخ الميلاد</th>
-                    <th scope="col" class="sort" data-sort="completion">العنوان</th>
-                    <th scope="col" class="sort" data-sort="completion">الهاتف</th>
-                    <th scope="col" class="sort" data-sort="completion">الراتب</th>
-
-
-
-                    <th scope="col" class="sort" data-sort="completion">الصورة </th>
-
-                    <th scope="col" class="sort" data-sort="completion">العمليات</th>
-
-                  </tr>
+                    <tr>
+                        <th scope="col" class="sort" data-sort="budget">الاسم الأول</th>
+                        <th scope="col" class="sort" data-sort="status">الكنية</th>
+                        <th scope="col" class="sort" data-sort="status">تاريخ الميلاد</th>
+                        <th scope="col" class="sort" data-sort="completion">العنوان</th>
+                        <th scope="col" class="sort" data-sort="completion">الهاتف</th>
+                        <th scope="col" class="sort" data-sort="completion">الراتب</th>
+                        <th scope="col" class="sort" data-sort="completion">الصورة</th>
+                        <th scope="col" class="sort" data-sort="completion">العمليات</th>
+                    </tr>
                 </thead>
-                <tbody class="list" id="mydiv">
-
-
-                </tbody>
-              </table>
-
-
-
+                <tbody class="list" id="mydiv"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -499,14 +824,76 @@ $about = \App\Other::find(1);
 @endphp
 <input type="hidden" name="year_id" id="years" value={{$year2->id}}>
 
+</div>
 @endsection
 
 @section('js')
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
 <script >
+function mountTeacherToolbar() {
+    var wrapper = $('#table_xx_wrapper');
+    var search = wrapper.find('.dataTables_filter');
+    var searchHost = $('.teacher-panel__search');
+
+    if (search.length && searchHost.length) {
+        search.appendTo(searchHost.empty()).css('display', 'block');
+        search.find('label').contents().filter(function () {
+            return this.nodeType === 3;
+        }).remove();
+        search.find('input').attr('placeholder', 'بحث سريع في السجلات');
+    }
+}
+
+function enableTeacherSidebarToggle() {
+    var shell = document.getElementById('v2-shell');
+    var toggle = document.getElementById('v2-sidebar-toggle');
+    if (!shell || !toggle) {
+        return;
+    }
+
+    toggle.classList.remove('d-lg-none');
+    toggle.classList.add('v2-teacher-toggle');
+
+    var media = window.matchMedia('(min-width: 993px)');
+    var storageKey = 'teachersSidebarCollapsed';
+
+    function syncSidebarState() {
+        if (media.matches) {
+            if (window.localStorage.getItem(storageKey) === '1') {
+                shell.classList.add('teacher-sidebar-collapsed');
+            } else {
+                shell.classList.remove('teacher-sidebar-collapsed');
+            }
+            shell.classList.remove('sidebar-open');
+        } else {
+            shell.classList.remove('teacher-sidebar-collapsed');
+        }
+    }
+
+    toggle.addEventListener('click', function (e) {
+        if (!media.matches) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        shell.classList.toggle('teacher-sidebar-collapsed');
+        window.localStorage.setItem(storageKey, shell.classList.contains('teacher-sidebar-collapsed') ? '1' : '0');
+    }, true);
+
+    if (media.addEventListener) {
+        media.addEventListener('change', syncSidebarState);
+    } else if (media.addListener) {
+        media.addListener(syncSidebarState);
+    }
+
+    syncSidebarState();
+}
+
 
 
 
@@ -660,6 +1047,9 @@ var table_test = $('#table_xx').DataTable({
 
         ]
     });
+
+mountTeacherToolbar();
+enableTeacherSidebarToggle();
 
  $(document).on('click', '.archive', function () {
     var id = $(this).data('id');
