@@ -289,6 +289,51 @@
         padding: 1rem .75rem !important;
         vertical-align: middle;
     }
+    .teacher-index-v2 #table_xx td:last-child,
+    .teacher-index-v2 #table_xx th:last-child {
+        min-width: 132px;
+    }
+
+    .teacher-index-v2 .teacher-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(48px, 1fr));
+        gap: 6px;
+        min-width: 108px;
+        max-width: 132px;
+        margin-inline: auto;
+    }
+
+    .teacher-index-v2 .teacher-action-btn {
+        min-height: 42px;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        padding: .5rem;
+        font-size: 16px !important;
+        text-decoration: none !important;
+        transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    .teacher-index-v2 .teacher-action-btn.btn {
+        color: #fff !important;
+    }
+
+    .teacher-index-v2 .teacher-action-btn.delete {
+        background: rgba(175, 104, 110, 0.12);
+        border: 1px solid rgba(175, 104, 110, 0.18);
+    }
+
+    .teacher-index-v2 .teacher-action-btn.delete i {
+        color: #af686e !important;
+        font-size: 18px;
+    }
+
+    .teacher-index-v2 .teacher-action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 18px rgba(36, 30, 62, 0.12);
+    }
 
     .teacher-index-v2 #table_xx_wrapper {
         overflow: visible;
@@ -411,6 +456,11 @@
         .teacher-index-v2 .teacher-panel__filters .form-control {
             width: 100%;
             flex: 1 1 100%;
+        }
+
+        .teacher-index-v2 .teacher-actions-grid {
+            grid-template-columns: repeat(2, minmax(44px, 1fr));
+            max-width: 112px;
         }
     }
 </style>
@@ -1019,28 +1069,29 @@ var table_test = $('#table_xx').DataTable({
                 data: 'id',
                 render: function (data, type, full) {
                     return `
-                        <a style="font-size:18px !important" href="{{ url('SMT/admin/teacher_schedule') }}/${full.id}" class="btn btn-info btn-sm" title="جدول الحصص"  style="font-size:18px !important">
-                            <i class="fa fa-table fa-x" style="color: #eff0f1"></i>
-                        </a>
+                        <div class="teacher-actions-grid">
+                            <a href="{{ url('SMT/admin/teacher_schedule') }}/${full.id}" class="teacher-action-btn btn btn-info btn-sm" title="جدول الحصص">
+                                <i class="fa fa-table fa-x"></i>
+                            </a>
 
-                        @can('update_teacher')
-                        <a style="font-size:18px !important" data-id="${ full.id }" data-data='${ JSON.stringify(full) }' class="edit_teacher btn btn-info btn-sm"   href="{{ url('SMT/admin/teacher_details') }}/${full.id}" title="تعديل معلومات المدرس" >
-                            <i class="fa fa-eye fa-x" style="color: #eff0f1"></i>
-                        </a>
-                         @endcan
-                           @can('Account_Information_teacher')
-                        <a style="font-size:18px !important" class="share_teacher btn btn-info btn-sm" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user && full.user.email ? full.user.email : '' }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user && full.user.view_password ? full.user.view_password : 'غير متوفر' }" title = "معلومات الأيميل">
-                             <i class="fa fa-send fa-x" style="color: #eff0f1"></i>
-                        </a>
-                        @endcan
+                            @can('update_teacher')
+                            <a data-id="${ full.id }" data-data='${ JSON.stringify(full) }' class="edit_teacher teacher-action-btn btn btn-info btn-sm" href="{{ url('SMT/admin/teacher_details') }}/${full.id}" title="تعديل معلومات المدرس">
+                                <i class="fa fa-eye fa-x"></i>
+                            </a>
+                            @endcan
 
-                        @can('delete_teacher')
-                         <a href=".deletelessonModal" class="delete"  data-id="${ full.id }"  data-toggle="modal" >
-                            <i class="fa fa-trash" style="font-size: 19px;color: #af686e"></i>
-                        </a>
-                        @endcan
+                            @can('Account_Information_teacher')
+                            <a class="share_teacher teacher-action-btn btn btn-info btn-sm" data-toggle="modal" data-target="#user_name_modal" data-username="${ full.user && full.user.email ? full.user.email : '' }" data-name="${ full.first_name+" "+full.last_name }" data-pass="${ full.user && full.user.view_password ? full.user.view_password : 'غير متوفر' }" title="معلومات الأيميل">
+                                <i class="fa fa-send fa-x"></i>
+                            </a>
+                            @endcan
 
-
+                            @can('delete_teacher')
+                            <a href=".deletelessonModal" class="delete teacher-action-btn" data-id="${ full.id }" data-toggle="modal" title="حذف">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                            @endcan
+                        </div>
                     `;
                 }, orderable : false
             },

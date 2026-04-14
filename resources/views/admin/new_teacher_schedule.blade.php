@@ -149,53 +149,117 @@
         background: #fff;
     }
 
-    .teacher-schedule-v2 .table-responsive {
-        overflow: auto !important;
+    .teacher-schedule-v2 .teacher-schedule-card {
+        overflow: visible;
+    }
+
+    .teacher-schedule-v2 .teacher-schedule-card .card-body {
+        padding: 1.25rem;
+        overflow: visible;
+    }
+
+    .teacher-schedule-v2 #schedule-capture {
+        width: 100%;
+    }
+
+    .teacher-schedule-v2 .teacher-schedule-days {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .teacher-schedule-v2 .teacher-day-card {
+        display: flex;
+        flex-direction: column;
+        gap: .9rem;
+        min-width: 0;
         border-radius: 18px;
         border: 1px solid rgba(91, 75, 138, 0.12);
-        background: #fff;
+        background: linear-gradient(180deg, rgba(91, 75, 138, 0.05), rgba(91, 75, 138, 0.01));
+        padding: 1rem;
+        box-shadow: 0 12px 28px rgba(36, 30, 62, 0.06);
     }
 
-    .teacher-schedule-v2 #table-container {
-        width: 100% !important;
+    .teacher-schedule-v2 .teacher-day-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding-bottom: .75rem;
+        border-bottom: 1px solid rgba(91, 75, 138, 0.12);
     }
 
-    .teacher-schedule-v2 #simple_table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin-bottom: 0;
-    }
-
-    .teacher-schedule-v2 #simple_table th {
-        background: #f7f5fc;
-        color: #2f2b3a;
-        font-size: 1rem;
+    .teacher-schedule-v2 .teacher-day-card__title {
+        margin: 0;
+        font-size: 1.05rem;
         font-weight: 800;
-        padding: 1rem .75rem !important;
-        border-color: rgba(91, 75, 138, 0.12) !important;
-        text-align: center !important;
-        white-space: nowrap;
+        color: #2f2b3a;
     }
 
-    .teacher-schedule-v2 #simple_table td {
-        padding: 1rem .75rem !important;
-        border-color: rgba(91, 75, 138, 0.1) !important;
-        vertical-align: middle;
-        text-align: center;
-        min-width: 220px;
+    .teacher-schedule-v2 .teacher-day-card__count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: rgba(91, 75, 138, 0.12);
+        color: #5B4B8A;
+        font-size: .82rem;
+        font-weight: 800;
+        padding-inline: .7rem;
     }
 
-    .teacher-schedule-v2 #simple_table .btn {
-        min-width: 190px;
+    .teacher-schedule-v2 .teacher-day-card__slots {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .teacher-schedule-v2 .teacher-day-card__slot {
+        width: 100%;
+    }
+
+    .teacher-schedule-v2 .teacher-day-card__slot .btn {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .2rem;
         border-radius: 16px;
         padding: .9rem 1rem;
         white-space: normal;
+        text-align: right;
         box-shadow: none;
     }
 
-    .teacher-schedule-v2 #simple_table p {
+    html[dir="ltr"] .teacher-schedule-v2 .teacher-day-card__slot .btn {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .teacher-schedule-v2 .teacher-day-card__slot p {
+        margin: 0 !important;
         color: inherit;
+    }
+
+    .teacher-schedule-v2 .teacher-day-card__empty {
+        min-height: 108px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        border: 1px dashed rgba(91, 75, 138, 0.18);
+        background: rgba(91, 75, 138, 0.04);
+        color: #7b768f;
+        font-weight: 700;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .teacher-schedule-v2 .teacher-day-card__meta {
+        font-size: .84rem;
+        opacity: .92;
     }
 
     .teacher-schedule-v2 .uuu1,
@@ -328,52 +392,39 @@
 
     <div class="card v2-card teacher-schedule-card">
         <div class="card-body">
-            <div class="table-responsive">
-                <div id="table-container" style="width: 100%">
-                    <table class="table table-bordered" id="simple_table" style="direction: rtl !important; text-align: center !important;">
-            @if($schedule->count() > 0)
-            
-            <tbody>
-                <?php $i = 1; ?>
+            <div id="schedule-capture" class="teacher-schedule-days">
                 @foreach($days as $key => $day)
-                <tr>
-                    <th scope="row">{{ $day->name }}</th>
-                    @foreach($schedule as $key3 => $lesson_time)
-                    @if($day->id == $lesson_time->day_id)
                     @php
-                    $background = '';
-                    if($today == $day->id - 1 && $lesson_time->attendance == false) $background = 'btn-success';
-                    else if($today == $day->id - 1 && $lesson_time->attendance == true) $background = 'btn-danger';
-                    else $background = 'btn-info';
+                        $dayLessons = $schedule->where('day_id', $day->id);
                     @endphp
-                    <td>
-                        <a class="btn {{ $background }} btn-sm add_time" title="الدخول إلى الحصة">
-                            <p class="lesson_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }}" style="margin:0;font-weight:bold"> {{ $lesson_time->lesson->name }}</p>
-                            <p class="teacher_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }}" style="margin:0;font-size:14px"> {{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }} </p>
-                            <p style="margin:0;font-size:14px"> {{ $lesson_time->lecture_time->start_time." - ".$lesson_time->lecture_time->end_time }} </p>
-                            <p style="margin:0;font-size:14px"> {{ $lesson_time->lecture_time->name }} </p>
-                        </a>
-                    </td>
-                    @endif
-                    @endforeach
-                </tr>
+                    <section class="teacher-day-card">
+                        <div class="teacher-day-card__header">
+                            <h3 class="teacher-day-card__title">{{ $day->name }}</h3>
+                            <span class="teacher-day-card__count">{{ $dayLessons->count() }}</span>
+                        </div>
+
+                        <div class="teacher-day-card__slots">
+                            @forelse($dayLessons as $lesson_time)
+                                @php
+                                    $background = '';
+                                    if($today == $day->id - 1 && $lesson_time->attendance == false) $background = 'btn-success';
+                                    else if($today == $day->id - 1 && $lesson_time->attendance == true) $background = 'btn-danger';
+                                    else $background = 'btn-info';
+                                @endphp
+                                <div class="teacher-day-card__slot">
+                                    <a class="btn {{ $background }} btn-sm add_time" title="الدخول إلى الحصة">
+                                        <p class="lesson_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }}" style="font-weight:bold">{{ $lesson_time->lesson->name }}</p>
+                                        <p class="teacher_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }} teacher-day-card__meta">{{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }}</p>
+                                        <p class="teacher-day-card__meta">{{ $lesson_time->lecture_time->start_time." - ".$lesson_time->lecture_time->end_time }}</p>
+                                        <p class="teacher-day-card__meta">{{ $lesson_time->lecture_time->name }}</p>
+                                    </a>
+                                </div>
+                            @empty
+                                <div class="teacher-day-card__empty">لايوجد حصص</div>
+                            @endforelse
+                        </div>
+                    </section>
                 @endforeach
-            </tbody>
-            @else
-            <tbody>
-                <?php $i = 1; ?>
-                @foreach($days as $key => $day)
-                <tr>
-                    <th scope="row">{{ $day->name }}</th>
-                    <td style="color: gray; font-size: smaller;">
-                        لايوجد حصص
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-            @endif
-        </table>
-                </div>
             </div>
         </div>
     </div>
@@ -436,7 +487,7 @@
         $('.btn-primary3').removeClass('btn-primary3').addClass('uuu5');
         $('.btn-danger').removeClass('btn-danger').addClass('uuu6');
 
-        var tableContainer = document.querySelector("#simple_table");
+        var tableContainer = document.querySelector("#schedule-capture");
         var tableWidth = tableContainer.scrollWidth;
         var tableHeight = tableContainer.offsetHeight;
         var windowWidth = window.innerWidth;
