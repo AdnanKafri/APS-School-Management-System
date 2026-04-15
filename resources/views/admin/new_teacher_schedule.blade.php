@@ -162,104 +162,131 @@
         width: 100%;
     }
 
-    .teacher-schedule-v2 .teacher-schedule-days {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1rem;
+    .teacher-schedule-v2 .teacher-timetable-wrap {
+        width: 100%;
+        overflow: visible;
     }
 
-    .teacher-schedule-v2 .teacher-day-card {
+    .teacher-schedule-v2 .teacher-timetable {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin-bottom: 0;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable th,
+    .teacher-schedule-v2 .teacher-timetable td {
+        border: 1px solid #d6edf1 !important;
+        background: #fff;
+        vertical-align: middle;
+        padding: 0 !important;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable thead th {
+        color: #121826;
+        font-size: 1rem;
+        font-weight: 800;
+        text-align: center !important;
+        padding: 1rem .35rem !important;
+        background: #fff;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__day-head {
+        width: 104px;
+        min-width: 104px;
+        text-align: center !important;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #121826;
+        background: #fff !important;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__slot-head {
+        padding: .9rem .3rem !important;
+        text-align: center !important;
+        background: #fff !important;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__slot-name {
+        display: block;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #121826;
+        line-height: 1.45;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__slot-time {
+        display: block;
+        margin-top: .35rem;
+        font-size: .8rem;
+        color: #121826;
+        line-height: 1.5;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__cell {
+        height: 146px;
+        padding: .5rem .35rem !important;
+        text-align: center !important;
+        background: #fff !important;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+    .teacher-schedule-v2 .teacher-timetable__empty {
+        border-radius: 12px;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6 {
+        width: min(132px, calc(100% - 8px));
+        min-height: 76px;
+        margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: .9rem;
-        min-width: 0;
-        border-radius: 18px;
-        border: 1px solid rgba(91, 75, 138, 0.12);
-        background: linear-gradient(180deg, rgba(91, 75, 138, 0.05), rgba(91, 75, 138, 0.01));
-        padding: 1rem;
-        box-shadow: 0 12px 28px rgba(36, 30, 62, 0.06);
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .75rem;
-        padding-bottom: .75rem;
-        border-bottom: 1px solid rgba(91, 75, 138, 0.12);
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__title {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: #2f2b3a;
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__count {
-        display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 34px;
-        height: 34px;
-        border-radius: 999px;
-        background: rgba(91, 75, 138, 0.12);
-        color: #5B4B8A;
-        font-size: .82rem;
-        font-weight: 800;
-        padding-inline: .7rem;
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__slots {
-        display: grid;
-        gap: .75rem;
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__slot {
-        width: 100%;
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__slot .btn {
-        width: 100%;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: .2rem;
-        border-radius: 16px;
-        padding: .9rem 1rem;
+        gap: .22rem;
+        padding: .75rem .5rem;
+        text-align: center;
         white-space: normal;
-        text-align: right;
+        overflow-wrap: anywhere;
+        border: 0;
         box-shadow: none;
+        background: linear-gradient(180deg, #5d7ef4, #4f6df5) !important;
+        color: #fff !important;
     }
 
-    html[dir="ltr"] .teacher-schedule-v2 .teacher-day-card__slot .btn {
-        align-items: flex-start;
-        text-align: left;
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__slot p {
+    .teacher-schedule-v2 .teacher-timetable__lesson-box p {
         margin: 0 !important;
-        color: inherit;
+        color: inherit !important;
+        line-height: 1.35;
     }
 
-    .teacher-schedule-v2 .teacher-day-card__empty {
-        min-height: 108px;
+    .teacher-schedule-v2 .teacher-timetable__lesson-title {
+        font-size: .92rem;
+        font-weight: 800;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__meta {
+        font-size: .72rem;
+        opacity: .96;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__empty {
+        width: min(132px, calc(100% - 8px));
+        min-height: 76px;
+        margin: 0 auto;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 16px;
-        border: 1px dashed rgba(91, 75, 138, 0.18);
-        background: rgba(91, 75, 138, 0.04);
-        color: #7b768f;
+        padding: .5rem;
+        color: #8c96ab;
+        font-size: .78rem;
         font-weight: 700;
         text-align: center;
-        padding: 1rem;
-    }
-
-    .teacher-schedule-v2 .teacher-day-card__meta {
-        font-size: .84rem;
-        opacity: .92;
+        background: transparent;
+        border: 1px dashed rgba(140, 150, 171, 0.35);
     }
 
     .teacher-schedule-v2 .uuu1,
@@ -336,6 +363,55 @@
         .teacher-schedule-card .card-body {
             padding: 1rem;
         }
+
+        .teacher-schedule-v2 .teacher-timetable {
+            font-size: .88rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable thead th {
+            font-size: .78rem;
+            padding: .7rem .2rem !important;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__day-head {
+            width: 86px;
+            min-width: 86px;
+            font-size: .82rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__slot-name {
+            font-size: .8rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__slot-time,
+        .teacher-schedule-v2 .teacher-timetable__meta {
+            font-size: .64rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__cell {
+            height: 118px;
+            padding: .35rem .2rem !important;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6,
+        .teacher-schedule-v2 .teacher-timetable__empty {
+            width: min(104px, calc(100% - 4px));
+            min-height: 64px;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6 {
+            padding: .55rem .3rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__lesson-title {
+            font-size: .74rem;
+        }
     }
 </style>
 @endsection
@@ -390,45 +466,90 @@
         </div>
     </div>
 
+    @php
+        $scheduleLookup = [];
+        foreach ($schedule as $scheduleItem) {
+            $scheduleLookup[$scheduleItem->lecture_time_id][$scheduleItem->day_id] = $scheduleItem;
+        }
+    @endphp
+
     <div class="card v2-card teacher-schedule-card">
         <div class="card-body">
-            <div id="schedule-capture" class="teacher-schedule-days">
-                @foreach($days as $key => $day)
-                    @php
-                        $dayLessons = $schedule->where('day_id', $day->id);
-                    @endphp
-                    <section class="teacher-day-card">
-                        <div class="teacher-day-card__header">
-                            <h3 class="teacher-day-card__title">{{ $day->name }}</h3>
-                            <span class="teacher-day-card__count">{{ $dayLessons->count() }}</span>
-                        </div>
+            <div id="schedule-capture" class="teacher-timetable-wrap">
+                @php
+                    $primaryRoomId = $schedule
+                        ->groupBy('room_id')
+                        ->sortByDesc(function ($roomSchedule) {
+                            return $roomSchedule->count();
+                        })
+                        ->keys()
+                        ->first();
 
-                        <div class="teacher-day-card__slots">
-                            @forelse($dayLessons as $lesson_time)
-                                @php
-                                    $background = '';
-                                    if($today == $day->id - 1 && $lesson_time->attendance == false) $background = 'btn-success';
-                                    else if($today == $day->id - 1 && $lesson_time->attendance == true) $background = 'btn-danger';
-                                    else $background = 'btn-info';
-                                @endphp
-                                <div class="teacher-day-card__slot">
-                                    <a class="btn {{ $background }} btn-sm add_time" title="الدخول إلى الحصة">
-                                        <p class="lesson_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }}" style="font-weight:bold">{{ $lesson_time->lesson->name }}</p>
-                                        <p class="teacher_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }} teacher-day-card__meta">{{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }}</p>
-                                        <p class="teacher-day-card__meta">{{ $lesson_time->lecture_time->start_time." - ".$lesson_time->lecture_time->end_time }}</p>
-                                        <p class="teacher-day-card__meta">{{ $lesson_time->lecture_time->name }}</p>
-                                    </a>
-                                </div>
-                            @empty
-                                <div class="teacher-day-card__empty">لايوجد حصص</div>
-                            @endforelse
-                        </div>
-                    </section>
-                @endforeach
+                    $instructionLectureTimes = $lecture_times
+                        ->when($primaryRoomId, function ($collection) use ($primaryRoomId) {
+                            return $collection->where('room_id', $primaryRoomId);
+                        })
+                        ->where('type', 1)
+                        ->sortBy(function ($lectureTime) {
+                            return sprintf('%s|%s|%06d', $lectureTime->start_time, $lectureTime->end_time, $lectureTime->id);
+                        })
+                        ->values();
+
+                    $lessonLabels = [
+                        'الحصة الأولى',
+                        'الحصة الثانية',
+                        'الحصة الثالثة',
+                        'الحصة الرابعة',
+                        'الحصة الخامسة',
+                        'الحصة السادسة',
+                        'الحصة السابعة',
+                    ];
+                @endphp
+                <table class="table teacher-timetable" style="direction: rtl !important; text-align: center !important;">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="teacher-timetable__day-head">اليوم</th>
+                            @foreach($instructionLectureTimes as $index => $lecture_time)
+                                <th scope="col" class="teacher-timetable__slot-head">
+                                    <span class="teacher-timetable__slot-name">{{ $lessonLabels[$index] ?? $lecture_time->name }}</span>
+                                    <span class="teacher-timetable__slot-time">{{ $lecture_time->start_time." - ".$lecture_time->end_time }}</span>
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($days->take(7) as $day)
+                            <tr>
+                                <th scope="row" class="teacher-timetable__day-head">{{ $day->name }}</th>
+                                @foreach($instructionLectureTimes as $lecture_time)
+                                    @php
+                                        $lesson_time = $scheduleLookup[$lecture_time->id][$day->id] ?? null;
+                                    @endphp
+                                    <td class="teacher-timetable__cell">
+                                        @if($lesson_time)
+                                            @php
+                                                $background = '';
+                                                if($today == $day->id - 1 && $lesson_time->attendance == false) $background = 'btn-success';
+                                                else if($today == $day->id - 1 && $lesson_time->attendance == true) $background = 'btn-danger';
+                                                else $background = 'btn-info';
+                                            @endphp
+                                            <a class="btn {{ $background }} btn-sm add_time teacher-timetable__lesson-box" title="الدخول إلى الحصة">
+                                                <p class="lesson_name-schedule{{  $day->id .''. $lecture_time->id }} teacher-timetable__lesson-title">{{ $lesson_time->lesson->name }}</p>
+                                                <p class="teacher_name-schedule{{  $day->id .''. $lecture_time->id }} teacher-timetable__meta">{{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }}</p>
+                                                <p class="teacher-timetable__meta">{{ $lesson_time->lecture_time->start_time." - ".$lesson_time->lecture_time->end_time }}</p>
+                                            </a>
+                                        @else
+                                            <div class="teacher-timetable__empty">لا يوجد حصة</div>
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-</div>
 </div>
 @endsection
 
