@@ -1,660 +1,450 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'برنامج الدوام')
+@section('page_subtitle', 'عرض برنامج الدوام الأسبوعي للشعبة بنفس بنية البرنامج الأسبوعي')
 
 @section('style')
-     <style>
+<style>
+    .v2-shell .v2-sidebar .v2-menu-title,
+    .v2-shell .v2-sidebar .v2-menu-link,
+    .v2-shell .v2-sidebar .v2-menu-link span,
+    .v2-shell .v2-sidebar .v2-sub-link,
+    .v2-shell .v2-sidebar .v2-sidebar-brand div,
+    .v2-shell .v2-navbar .v2-navbar-brand-ar,
+    .v2-shell .v2-navbar .v2-navbar-brand-en,
+    .v2-shell .v2-navbar .v2-navbar-page span,
+    .v2-shell .v2-navbar .v2-user-btn,
+    .v2-shell .v2-navbar .v2-user-name,
+    .v2-shell .v2-navbar .dropdown-item,
+    .v2-shell .v2-navbar .v2-nav-icon-btn,
+    .v2-shell .v2-navbar .v2-dropdown-item {
+        color: inherit !important;
+    }
 
-.card {
-    background-color: #fff;
-    border-radius: 10px;
-    border: none;
-	top: 50px;
-	margin: 0 auto;
-	text-align: center;
-	width: 300px;
-	min-height: 120px;
+    .v2-content-wrap > .v2-card .breadcrumbs__item,
+    .v2-content-wrap > .v2-card .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
 
-    /*position: relative;*/
+    .v2-content-wrap > .v2-card:first-of-type {
+        margin-bottom: 1.5rem !important;
+    }
 
-    margin-bottom: 30px;
-    box-shadow: 0 0.46875rem 2.1875rem rgba(90,97,105,0.1), 0 0.9375rem 1.40625rem rgba(90,97,105,0.1), 0 0.25rem 0.53125rem rgba(90,97,105,0.12), 0 0.125rem 0.1875rem rgba(90,97,105,0.1);
-}
-.l-bg-cherry {
-    background: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196)) !important;
-    color: #fff;
+    .v2-content-wrap > .v2-card:first-of-type > div {
+        padding: 1rem 1.25rem !important;
+        gap: 1rem;
+        align-items: flex-start !important;
+    }
 
-}
+    .v2-content-wrap > .v2-card:first-of-type .breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: .45rem;
+    }
 
-.l-bg-blue-dark {
-	background: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196)) !important;
-    color: #fff;
-	text-align: center;
-}
+    .teacher-schedule-breadcrumbs {
+        font-size: .9rem;
+        align-items: center;
+        gap: .35rem;
+    }
 
-.l-bg-green-dark {
-    background: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196)) !important;
-    color: #fff;
-	text-align: center;
-}
+    .teacher-schedule-breadcrumbs .breadcrumbs__item {
+        font-weight: 700;
+    }
 
-.l-bg-orange-dark {
-    background: linear-gradient(to right, #a86008, #ffba56) !important;
-    color: #fff;
-}
+    .teacher-schedule-breadcrumbs a.breadcrumbs__item {
+        color: #8a869a !important;
+    }
 
-.card .card-statistic-3 .card-icon-large .fas, .card .card-statistic-3 .card-icon-large .far, .card .card-statistic-3 .card-icon-large .fab, .card .card-statistic-3 .card-icon-large .fal {
-    font-size: 80px;
+    .teacher-schedule-breadcrumbs .breadcrumbs__item.is-active {
+        color: #2f2b3a !important;
+    }
 
-}
+    .teacher-schedule-breadcrumbs__sep {
+        color: #b2aec0;
+        font-weight: 700;
+    }
 
-.card .card-statistic-3 .card-icon {
+    .v2-navbar #v2-sidebar-toggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
 
-    line-height: 50px;
-    margin-right: 195px;
-    color: #000;
-    position: absolute;
-    right: -5px;
-    top: 20px;
-    opacity: 0.1;
-	color: white;
+    .teacher-schedule-v2 {
+        direction: rtl;
+        text-align: right;
+    }
 
-}
+    html[dir="ltr"] .teacher-schedule-v2 {
+        direction: ltr;
+        text-align: left;
+    }
 
-.l-bg-cyan {
-    background: linear-gradient(135deg, #289cf5, #84c0ec) !important;
-    color: #fff;
-	text-align: center;
-}
+    .teacher-schedule-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
 
-.l-bg-green {
-    background: linear-gradient(135deg, #23bdb8 0%, #43e794 100%) !important;
-    color: #fff;
-	text-align: center;
-}
+    .teacher-schedule-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 1.5rem;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #5B4B8A, #7B67B2);
+        color: #fff;
+        box-shadow: 0 18px 40px rgba(36, 30, 62, 0.10);
+    }
 
-.l-bg-orange {
-    background: linear-gradient(to right, #f9900e, #ffba56) !important;
-    color: #fff;
-	text-align: center;
-}
+    .teacher-schedule-summary__eyebrow {
+        display: inline-block;
+        font-size: .82rem;
+        font-weight: 700;
+        opacity: .76;
+        margin-bottom: .45rem;
+    }
 
-.l-bg-cyan {
-    background: linear-gradient(135deg, #289cf5, #84c0ec) !important;
-    color: #fff;
-	text-align: center;
-}
-/*style tablist*/
-/* section add content */
-@import "bourbon";
- @import 'https://fonts.googleapis.com/css?family=Montserrat:400,700|Raleway:300,400';
+    .teacher-schedule-summary__title {
+        margin: 0;
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #fff;
+    }
 
- .tabs {
-	 left: 50%;
-	 transform: translateX(-50%);
-	 position: relative;
-	 background: white;
-	 padding: 20px;
-	 padding-bottom: 80px;
-	 width: 90%;
-	 height: auto;
-	 box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-	 border-radius: 5px;
-	 min-width: 240px;
-}
- .tabs input[name="tab-control"] {
-	 display: none;
-}
- .tabs .content section h2, .tabs ul li label {
-	 font-family: "Montserrat";
-	 font-weight: bold;
-	 font-size: 18px;
-	 color: #094e89;
-}
- .tabs ul {
-	list-style-type: none;
-	 padding-left: 0;
+    .teacher-schedule-summary__subtitle {
+        margin: .45rem 0 0;
+        color: rgba(255,255,255,.84);
+        max-width: 42rem;
+        line-height: 1.7;
+    }
 
-	 flex-direction: row;
-	 margin-bottom: 10px;
-   display: flex;
-  justify-content: center;
-	 /*justify-content: space-between;*/
-	 align-items: center;
-	 flex-wrap: wrap;
+    .teacher-schedule-summary__actions {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
 
-}
- .tabs ul li {
-	 box-sizing: border-box;
-	 /*flex: 1;
-	 width: 25%;
-	 padding: 0 10px;*/
-	 text-align: center;
-}
- .tabs ul li label {
-	 transition: all 0.3s ease-in-out;
-	 color: #929daf;
-	 padding: 5px auto;
-	 overflow: hidden;
-	 text-overflow: ellipsis;
-	 display: block;
-	 cursor: pointer;
-	 transition: all 0.2s ease-in-out;
-	 white-space: nowrap;
-	 -webkit-touch-callout: none;
-}
- .tabs ul li label br {
-	 display: none;
-}
- .tabs ul li label svg {
-	 fill: #929daf;
-	 height: 1.2em;
-	 vertical-align: bottom;
-	 margin-right: 0.2em;
-	 transition: all 0.2s ease-in-out;
-}
- .tabs ul li label:hover, .tabs ul li label:focus, .tabs ul li label:active {
-	 outline: 0;
-	 color: #bec5cf;
-}
- .tabs ul li label:hover svg, .tabs ul li label:focus svg, .tabs ul li label:active svg {
-	 fill: #bec5cf;
-}
- .tabs .slider {
-	 position: relative;
-	 width: 25%;
-	 transition: all 0.33s cubic-bezier(0.38, 0.8, 0.32, 1.07);
-}
- .tabs .slider .indicator {
-	 position: relative;
-	 width: 50px;
-	 max-width: 100%;
-	 margin: 0 auto;
-	 height: 4px;
-	 background: #cc151525;
-	 border-radius: 1px;
-}
- .tabs .content {
-	 margin-top: 30px;
-}
- .tabs .content section {
-	 display: none;
-	 animation-name: content;
-	 animation-direction: normal;
-	 animation-duration: 0.3s;
-	 animation-timing-function: ease-in-out;
-	 animation-iteration-count: 1;
-	 line-height: 1.4;
-}
- .tabs .content section h2 {
-	 color: #1068b4;
-	 display: none;
-}
- .tabs .content section h2::after {
-	 content: "";
-	 position: relative;
-	 display: block;
-	 width: 30px;
-	 height: 3px;
-	 background: #1068b4;
-	 margin-top: 5px;
-	 left: 1px;
-}
- .tabs input[name="tab-control"]:nth-of-type(1):checked ~ ul > li:nth-child(1) > label {
-	 cursor: default;
-	 color: #f38639;
-}
- .tabs input[name="tab-control"]:nth-of-type(1):checked ~ ul > li:nth-child(1) > label svg {
-	 fill: #f38639;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(1):checked ~ ul > li:nth-child(1) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(1):checked ~ .slider {
-	 transform: translateX(0%);
-}
- .tabs input[name="tab-control"]:nth-of-type(1):checked ~ .content > section:nth-child(1) {
-	 display: block;
-}
- .tabs input[name="tab-control"]:nth-of-type(2):checked ~ ul > li:nth-child(2) > label {
-	 cursor: default;
-	 color: #f38639;
-}
- .tabs input[name="tab-control"]:nth-of-type(2):checked ~ ul > li:nth-child(2) > label svg {
-	 fill: #f38639;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(2):checked ~ ul > li:nth-child(2) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(2):checked ~ .slider {
-	 transform: translateX(100%);
-}
- .tabs input[name="tab-control"]:nth-of-type(2):checked ~ .content > section:nth-child(2) {
-	 display: block;
-}
- .tabs input[name="tab-control"]:nth-of-type(3):checked ~ ul > li:nth-child(3) > label {
-	 cursor: default;
-	 color: #f38639;
-}
- .tabs input[name="tab-control"]:nth-of-type(3):checked ~ ul > li:nth-child(3) > label svg {
-	 fill: #f38639;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(3):checked ~ ul > li:nth-child(3) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(3):checked ~ .slider {
-	 transform: translateX(200%);
-}
- .tabs input[name="tab-control"]:nth-of-type(3):checked ~ .content > section:nth-child(3) {
-	 display: block;
-}
-/*tab 4*/
-.tabs input[name="tab-control"]:nth-of-type(4):checked ~ ul > li:nth-child(4) > label {
-	 cursor: default;
-	 color: #1068b4;
-}
- .tabs input[name="tab-control"]:nth-of-type(4):checked ~ ul > li:nth-child(4) > label svg {
-	 fill: #1068b4;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(4):checked ~ ul > li:nth-child(4) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(4):checked ~ .slider {
-	 transform: translateX(0%);
-}
- .tabs input[name="tab-control"]:nth-of-type(4):checked ~ .content > section:nth-child(4) {
-	 display: block;
-}
- .tabs input[name="tab-control"]:nth-of-type(5):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(5):checked ~ .content > section:nth-child(5) {
-	 display: block;
-}
-/*tab 5*/
-.tabs input[name="tab-control"]:nth-of-type(5):checked ~ ul > li:nth-child(5) > label {
-	 cursor: default;
-	 color: #1068b4;
-}
- .tabs input[name="tab-control"]:nth-of-type(5):checked ~ ul > li:nth-child(5) > label svg {
-	 fill: #1068b4;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(5):checked ~ ul > li:nth-child(5) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(5):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(5):checked ~ .content > section:nth-child(5) {
-	 display: block;
-}
-/*tab 6*/
-.tabs input[name="tab-control"]:nth-of-type(6):checked ~ ul > li:nth-child(6) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(6):checked ~ ul > li:nth-child(6) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(6):checked ~ ul > li:nth-child(6) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(6):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(6):checked ~ .content > section:nth-child(6) {
-	 display: block;
-}
-/*tab 7*/
-.tabs input[name="tab-control"]:nth-of-type(7):checked ~ ul > li:nth-child(7) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(7):checked ~ ul > li:nth-child(7) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(7):checked ~ ul > li:nth-child(7) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(7):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(7):checked ~ .content > section:nth-child(7) {
-	 display: block;
-}
-/*tab 8*/
-.tabs input[name="tab-control"]:nth-of-type(8):checked ~ ul > li:nth-child(8) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(8):checked ~ ul > li:nth-child(8) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(8):checked ~ ul > li:nth-child(8) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(8):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(8):checked ~ .content > section:nth-child(8) {
-	 display: block;
-}
-/*tab 9*/
-.tabs input[name="tab-control"]:nth-of-type(9):checked ~ ul > li:nth-child(9) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(9):checked ~ ul > li:nth-child(9) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(9):checked ~ ul > li:nth-child(9) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(9):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(9):checked ~ .content > section:nth-child(9) {
-	 display: block;
-}
-/*tab 10*/
-.tabs input[name="tab-control"]:nth-of-type(10):checked ~ ul > li:nth-child(10) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(10):checked ~ ul > li:nth-child(10) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(10):checked ~ ul > li:nth-child(10) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(10):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(10):checked ~ .content > section:nth-child(10) {
-	 display: block;
-}
-/*tab 11*/
-.tabs input[name="tab-control"]:nth-of-type(11):checked ~ ul > li:nth-child(11) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(11):checked ~ ul > li:nth-child(11) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(11):checked ~ ul > li:nth-child(11) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(11):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(11):checked ~ .content > section:nth-child(11) {
-	 display: block;
-}
-/*tab 12*/
-.tabs input[name="tab-control"]:nth-of-type(12):checked ~ ul > li:nth-child(12) > label {
-	 cursor: default;
-	 color: #428bff;
-}
- .tabs input[name="tab-control"]:nth-of-type(12):checked ~ ul > li:nth-child(12) > label svg {
-	 fill: #428bff;
-}
- @media (max-width: 600px) {
-	 .tabs input[name="tab-control"]:nth-of-type(12):checked ~ ul > li:nth-child(12) > label {
-		 background: rgba(0, 0, 0, 0.08);
-	}
-}
- .tabs input[name="tab-control"]:nth-of-type(12):checked ~ .slider {
-	 transform: translateX(300%);
-}
- .tabs input[name="tab-control"]:nth-of-type(12):checked ~ .content > section:nth-child(12) {
-	 display: block;
-}
- @keyframes content {
-	 from {
-		 opacity: 0;
-		 transform: translateY(5%);
-	}
-	 to {
-		 opacity: 1;
-		 transform: translateY(0%);
-	}
-}
- @media (max-width: 1000px) {
-	 .tabs ul li label {
-		 white-space: initial;
-	}
-	 .tabs ul li label br {
-		 display: initial;
-	}
-	 .tabs ul li label svg {
-		 height: 1.5em;
-	}
-}
- @media (max-width: 600px) {
-	 .tabs ul li label {
-		 padding: 5px;
-		 border-radius: 5px;
-	}
-	 .tabs ul li label span {
-		 display: none;
-	}
-	 .tabs .slider {
-		 display: none;
-	}
-	 .tabs .content {
-		 margin-top: 20px;
-	}
-	 .tabs .content section h2 {
-		 display: block;
-	}
-}
+    .teacher-schedule-summary__actions .btn {
+        min-height: 44px;
+        border-radius: 12px;
+        font-weight: 700;
+        padding: .72rem 1.15rem;
+        color: #fff !important;
+    }
 
+    .teacher-schedule-card {
+        border-radius: 22px;
+        border: 1px solid rgba(91, 75, 138, 0.12);
+        box-shadow: 0 18px 40px rgba(36, 30, 62, 0.08);
+        overflow: hidden;
+    }
 
-/*end style tablist*/
-/* cards of marks */
-.cards-list {
-  z-index: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-}
+    .teacher-schedule-card .card-body {
+        padding: 1.25rem;
+        background: #fff;
+    }
 
-.card2 {
-  margin: 30px auto;
-  width: 170px;
-  height: 170px;
-  border-radius: 40px;
-  border-color: 5px solid #094e89;
-  /*box-shadow: 1px 1px 9px 2px rgba(0,0,0,0.22), -1px -1px 9px 2px rgba(0,0,0,0.20);*/
-  cursor: pointer;
-  transition: 0.4s;
-}
+    .teacher-schedule-v2 .teacher-schedule-card {
+        overflow: visible;
+    }
 
-.card2 .card_image {
- border-color: 5px solid #094e89;
-  width: inherit;
-  height: inherit;
-  border-radius: 40px;
-}
+    .teacher-schedule-v2 .teacher-schedule-card .card-body {
+        padding: 1.25rem;
+        overflow: visible;
+    }
 
-.card2 .card_image img {
-  width: inherit;
-  height: inherit;
-  border-radius: 40px;
-  object-fit: cover;
-}
+    .teacher-schedule-v2 #schedule-capture {
+        width: 100%;
+    }
 
-.card2 .card_title {
-  text-align: center;
-  border-radius: 0px 0px 40px 40px;
-  font-family: sans-serif;
-  font-weight: bold;
-  font-size: 30px;
-  margin-top: -20px;
-  height: 40px;
-}
+    .teacher-schedule-v2 .teacher-timetable-wrap {
+        width: 100%;
+        overflow: visible;
+    }
 
-.card2:hover {
-  transform: scale(0.9, 0.9);
-  box-shadow: 1px 1px 10px 2px rgba(0,0,0,0.22), -1px -1px 10px 2px rgba(0,0,0,0.20);
-}
+    .teacher-schedule-v2 .teacher-timetable {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin-bottom: 0;
+    }
 
-.title-white {
-  color: white;
-}
+    .teacher-schedule-v2 .teacher-timetable th,
+    .teacher-schedule-v2 .teacher-timetable td {
+        border: 1px solid #d6edf1 !important;
+        background: #fff;
+        vertical-align: middle;
+        padding: 0 !important;
+    }
 
-.title-black {
-  color: black;
-}
+    .teacher-schedule-v2 .teacher-timetable thead th {
+        color: #121826;
+        font-size: 1rem;
+        font-weight: 800;
+        text-align: center !important;
+        padding: 1rem .35rem !important;
+        background: #fff;
+    }
 
-@media all and (max-width: 500px) {
-  .card-list {
-    /* On small screens, we are no longer using row direction but column */
-    flex-direction: column;
-  }
-}
-a{
-    color:#fff !important;
-    font-size: 16px !important;
-}
-table{
-    background: white !important;
-    color: black;
-    font-size: 20px;
-    font-weight:400;
-    width: 100%;
-}
-.table-bordered,th,td{
-    border: 1px solid #dee2e6 !important;
-    padding: 10px;
-}
+    .teacher-schedule-v2 .teacher-timetable__day-head {
+        width: 104px;
+        min-width: 104px;
+        text-align: center !important;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #121826;
+        background: #fff !important;
+    }
 
-div::-webkit-scrollbar {
-  display: none;
-}
+    .teacher-schedule-v2 .teacher-timetable__slot-head {
+        padding: .9rem .3rem !important;
+        text-align: center !important;
+        background: #fff !important;
+    }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-div {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-th,td{
-    border: 1px solid #c1e3e5 !important;
-}
-/*new style for table*/
+    .teacher-schedule-v2 .teacher-timetable__slot-name {
+        display: block;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #121826;
+        line-height: 1.45;
+    }
 
-.table-scroll {
-	position:relative;
-	max-width:600px;
-	margin:auto;
-	/*overflow:hidden;*/
-	border:1px solid #000;
-}
-.table-wrap {
-	width:100%;
-	overflow:auto;
-}
-.table-scroll table {
-	width:100%;
-	margin:auto;
-	border-collapse:separate;
-	border-spacing:0;
-}
-.table-scroll th, .table-scroll td {
-	padding:5px 10px;
-	border:1px solid #000;
-	background:#fff;
-	white-space:nowrap;
-	vertical-align:top;
-}
-.table-scroll thead, .table-scroll tfoot {
-	background:#f9f9f9;
-}
-.clone {
-	position:absolute;
-	top:0;
-	left:0;
-	pointer-events:none;
-}
-.clone th, .clone td {
-	visibility:hidden
-}
-.clone td, .clone th {
-	border-color:transparent
-}
-.clone tbody th {
-	visibility:visible;
-	color:red;
-}
-.clone .fixed-side {
-	border:1px solid #000;
-	background:#eee;
-	visibility:visible;
-}
-.clone thead, .clone tfoot{background:transparent;}
+    .teacher-schedule-v2 .teacher-timetable__slot-time {
+        display: block;
+        margin-top: .35rem;
+        font-size: .8rem;
+        color: #121826;
+        line-height: 1.5;
+    }
 
-.btn {
-    display: inline-block;
-    font-weight: 400;
-    text-align: center;
-    white-space: revert !important;
-    vertical-align: middle;
-    user-select: none;
+    .teacher-schedule-v2 .teacher-timetable__cell {
+        height: 146px;
+        padding: .5rem .35rem !important;
+        text-align: center !important;
+        background: #fff !important;
+    }
 
-    border: 1px solid transparent;
-    /*padding: 0.375rem 0.75rem;*/
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin: 5px !important;
-    border-radius: 0.25rem;
-    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-.uuu1,.uuu2,.uuu3,.uuu4,.uuu5,.uuu6,.uuu7{
-    color: black !important;
-}
-.modal-header .close {
-    padding: 1rem;
-    margin: -1rem 20rem -1rem auto;
-}
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+    .teacher-schedule-v2 .teacher-timetable__empty {
+        border-radius: 12px;
+    }
 
-	 </style>
-     @endsection
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
+    .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6 {
+        width: min(132px, calc(100% - 8px));
+        min-height: 76px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .22rem;
+        padding: .75rem .5rem;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        border: 0;
+        box-shadow: none;
+        background: linear-gradient(180deg, #5d7ef4, #4f6df5) !important;
+        color: #fff !important;
+    }
 
+    .teacher-schedule-v2 .teacher-timetable__lesson-box p {
+        margin: 0 !important;
+        color: inherit !important;
+        line-height: 1.35;
+    }
 
-    @section('breadcrumbs')
+    .teacher-schedule-v2 .teacher-timetable__lesson-title {
+        font-size: .92rem;
+        font-weight: 800;
+    }
 
-<nav class="breadcrumbs">
-     <a  class="breadcrumbs__item ">قسم  برنامج الدوام  </a>
-    <a href="{{  route('workschedule_room',$room->class_id)}}"  class="breadcrumbs__item ">قسم الشعب </a>
-    <a href="{{ route('workschedule_class') }}" class="breadcrumbs__item ">قسم جدول الدوام </a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
-</nav>
+    .teacher-schedule-v2 .teacher-timetable__meta {
+        font-size: .72rem;
+        opacity: .96;
+    }
 
+    .teacher-schedule-v2 .teacher-timetable__empty {
+        width: min(132px, calc(100% - 8px));
+        min-height: 76px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .5rem;
+        color: #8c96ab;
+        font-size: .78rem;
+        font-weight: 700;
+        text-align: center;
+        background: transparent;
+        border: 1px dashed rgba(140, 150, 171, 0.35);
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__aux-action {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #f59e0b;
+        color: #fff !important;
+        box-shadow: 0 10px 22px rgba(245, 158, 11, 0.22);
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__aux-action i {
+        font-size: 0.8rem;
+    }
+
+    .teacher-schedule-v2 .uuu1,
+    .teacher-schedule-v2 .uuu2,
+    .teacher-schedule-v2 .uuu3,
+    .teacher-schedule-v2 .uuu4,
+    .teacher-schedule-v2 .uuu5,
+    .teacher-schedule-v2 .uuu6,
+    .teacher-schedule-v2 .uuu7 {
+        color: #2f2b3a !important;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar {
+        width: 88px;
+    }
+
+    html[dir="ltr"] #v2-shell.teacher-sidebar-collapsed .v2-main {
+        margin-left: 88px;
+    }
+
+    html[dir="rtl"] #v2-shell.teacher-sidebar-collapsed .v2-main {
+        margin-right: 88px;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-brand {
+        justify-content: center !important;
+        padding-inline: .75rem;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-brand .d-flex.align-items-center > div:last-child,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-title,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link span,
+    #v2-shell.teacher-sidebar-collapsed .v2-submenu,
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-toggle .fa-chevron-down {
+        display: none !important;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-sidebar-menu {
+        padding-inline: .4rem;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link {
+        justify-content: center;
+        padding-inline: .5rem;
+        min-height: 48px;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link i:first-child {
+        margin-inline: 0;
+    }
+
+    #v2-shell.teacher-sidebar-collapsed .v2-menu-link.active {
+        border-inline-start: 0;
+        box-shadow: inset 0 0 0 1px rgba(59,130,246,0.15);
+    }
+
+    @media (max-width: 991.98px) {
+        .teacher-schedule-summary {
+            padding: 1.1rem;
+        }
+
+        .teacher-schedule-summary__title {
+            font-size: 1.35rem;
+        }
+
+        .teacher-schedule-summary__actions {
+            width: 100%;
+        }
+
+        .teacher-schedule-summary__actions .btn {
+            width: 100%;
+        }
+
+        .teacher-schedule-card .card-body {
+            padding: 1rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable {
+            font-size: .88rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable thead th {
+            font-size: .78rem;
+            padding: .7rem .2rem !important;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__day-head {
+            width: 86px;
+            min-width: 86px;
+            font-size: .82rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__slot-name {
+            font-size: .8rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__slot-time,
+        .teacher-schedule-v2 .teacher-timetable__meta {
+            font-size: .64rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__cell {
+            height: 118px;
+            padding: .35rem .2rem !important;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6,
+        .teacher-schedule-v2 .teacher-timetable__empty {
+            width: min(104px, calc(100% - 4px));
+            min-height: 64px;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
+        .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6 {
+            padding: .55rem .3rem;
+        }
+
+        .teacher-schedule-v2 .teacher-timetable__lesson-title {
+            font-size: .74rem;
+        }
+    }
+</style>
 @endsection
 
+@section('breadcrumbs')
+<nav class="breadcrumbs teacher-schedule-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">لوحة التحكم</a>
+    <span class="teacher-schedule-breadcrumbs__sep" aria-hidden="true">/</span>
+    <a href="{{ route('workschedule_class') }}" class="breadcrumbs__item">برنامج الدوام</a>
+    <span class="teacher-schedule-breadcrumbs__sep" aria-hidden="true">/</span>
+    <a href="{{ route('workschedule_room',$room->class_id) }}" class="breadcrumbs__item">الشعب</a>
+    <span class="teacher-schedule-breadcrumbs__sep" aria-hidden="true">/</span>
+    <span class="breadcrumbs__item is-active">البرنامج الأسبوعي</span>
+</nav>
+@endsection
 
-     @section('content')
+@section('content')
 
 	{{-- <section class="hero-wrap hero-wrap-2" style="background-image: url('{{ asset('student-UI/img/school_bulding.jpg') }}'); border-bottom-right-radius: 70px 50px;">
 		<div class="overlay"></div>
@@ -728,7 +518,7 @@ th,td{
                     </div>
                 </div>
             </div>
-<div class="col-md-10 " style="margin: auto; direction: rtl; text-align:center">
+<div class="col-md-10 teacher-schedule-v2" style="margin: auto; direction: rtl; text-align:center">
     <div class="modal fade" id="add_schedule1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content" style="direction: rtl; text-align:right">
@@ -797,138 +587,119 @@ th,td{
         </div>
     </div>
 
-    <br><br><br>
-    <div class="row"  >
-        <h1  class="title text-center w-100 m-5" style="text-align: center;direction: rtl">  برنامج الدوام للصف <span>{{ $class_name }} <span>{{ $room_name }}</span></span> </h1>
-        <br><br><br><br>
-         <div class="mb-3">
-              @can('Deletion of a class in the work schedule section')
-            <a class="btn  btn-danger btn-block delete_lecture_time" data-toggle="modal" data-target="#delete_lesson_time"  >حذف الحصة </a>
-             @endcan
+    
+
+    <div class="teacher-schedule-shell">
+        <div class="teacher-schedule-summary">
+            <div>
+                <span class="teacher-schedule-summary__eyebrow">الجدول الأسبوعي</span>
+                <h2 class="teacher-schedule-summary__title">برنامج الدوام للصف {{ $class_name }} / {{ $room_name }}</h2>
+                <p class="teacher-schedule-summary__subtitle">نفس بنية جدول المدرس تماماً مع الاحتفاظ بأدوات إدارة الحصص والربط داخل نفس الصفحة.</p>
+            </div>
+            <div class="teacher-schedule-summary__actions">
+                @can('Deletion of a class in the work schedule section')
+                    <a class="btn btn-danger delete_lecture_time" data-toggle="modal" data-target="#delete_lesson_time">حذف الحصة</a>
+                @endcan
+                <input type="button" id="button" class="btn btn-success" value="تنزيل الجدول">
+            </div>
         </div>
-        <!--<div class="mb-3">-->
-        <!--      @can('Deletion of a class in the work schedule section')-->
-        <!--    <a class="btn  btn-info btn-block d" href="{{ route('session_class',$room->class_id) }}"  >تعديل الحصة </a>-->
-        <!--     @endcan-->
-        <!--</div>-->
 
+        @php
+            $scheduleLookup = [];
+            foreach ($schedule as $scheduleItem) {
+                $scheduleLookup[$scheduleItem->lecture_time_id][$scheduleItem->day_id] = $scheduleItem;
+            }
 
-      </div>
-      <div>
-        <div class="row" style="width: 100%;">
-            <div class="col-lg-12">
-        <div class="table-responsive">
-        <table class="table-striped" id="simple_table"
-            style="direction: rtl !important;text-align: center !important;display: inline-table; font-size:15px;">
-                <thead>
-                <tr>
-                    <th scope="col">اليوم </th>
-                    @foreach ($lecture_times as $key => $value)
-                    {{-- @dd($value['name']) --}}
-                        <th scope="col"> {{ $value['name'] }} <br>
-                        <span style="font-size: 13px"> {{ $value['start_time'] }} <br> {{ $value['end_time'] }} </span>
-                        </th>
-                    @endforeach
+            $instructionLectureTimes = $lecture_times
+                ->where('type', 1)
+                ->sortBy(function ($lectureTime) {
+                    return sprintf('%s|%s|%06d', $lectureTime->start_time, $lectureTime->end_time, $lectureTime->id);
+                })
+                ->values();
 
+            $lessonLabels = [
+                'الحصة الأولى',
+                'الحصة الثانية',
+                'الحصة الثالثة',
+                'الحصة الرابعة',
+                'الحصة الخامسة',
+                'الحصة السادسة',
+                'الحصة السابعة',
+            ];
+        @endphp
 
-                    {{-- <th scope="col"> محتوى الدرس</th>  --}}
-                </tr>
-                </thead>
-                <tbody>
-                    <?php $i = 1 ?>
-                    @foreach ($days as $key => $day)
-                    <tr>
-                        <th scope="row">{{ $day->name }}</th>
-                        @foreach ($lecture_times as $key2 => $lecture_time)
-                            @php
-                                $lesson_name2 = '';
-                                $teacher_name2 = '';
-                                $counter = 0;
-                                $target = 'add_schedule';
-                            @endphp
-                            <td>
-                                @foreach ($schedule as $lesson_time)
-                                    @php
-                                        $lesson_time_id = $lesson_time->id;
-                                        $meeting_link = $lesson_time->meeting_link;
-                                    @endphp
-                                    @if($lesson_time->day_id == $day->id && $lecture_time->id == $lesson_time->lecture_time_id)
-                                        @php
-                                            ++$counter;
-                                            $lesson_name2 = $lesson_time->lesson->name;
-                                            $x = $lesson_time->teacher->first_name;
-                                            $y = $lesson_time->teacher->last_name;
-                                            $teacher_name2 = "($x $y)";
-                                        @endphp
-
-                                        <a class="btn @if($lecture_time->type == 1) btn-info @else btn-success @endif btn-sm add_time"
-                                           data-toggle="modal"
-                                           data-target="#add_schedule"
-                                           data-day_id="{{ $day->id }}"
-                                           data-day="{{ $day->name }}"
-                                           data-time_id="{{ $lecture_time->id }}"
-                                           data-time="{{ $lecture_time->name }}"
-                                           data-lesson_id="{{ $lesson_time->lesson->id }}"
-                                           data-teacher_id="{{ $lesson_time->teacher->id }}"
-                                           title="تحديد الحصة">
-                                            <p class="lesson_name-schedule{{ $day->id . $lecture_time->id }}" style="margin:0;font-weight:bold">{{ $lesson_name2 }}</p>
-                                            <p class="teacher_name-schedule{{ $day->id . $lecture_time->id }}" style="margin:0;font-size:10px">{{ $teacher_name2 }}</p>
-                                        </a>
-                                        <br>
-                                        <a class="btn btn-warning btn-sm add_time"
-                                           data-toggle="modal"
-                                           data-target="#add_schedule1"
-                                           data-day_id="{{ $day->id }}"
-                                           data-day="{{ $day->name }}"
-                                           data-time_name="{{ $lecture_time->name }}"
-                                           data-time_id="{{ $lecture_time->id }}"
-                                           data-lesson_id="{{$lesson_time->lesson->id }}"
-                                           data-lesson_name="{{ $lesson_name2 }}"
-                                           data-lesson_time_id="{{ $lesson_time_id }}"
-                                           data-meeting_link="{{ $meeting_link }}"
-                                           title="إضافة رابط">
-                                        </a>
-                                    @endif
+        <div class="card v2-card teacher-schedule-card">
+            <div class="card-body">
+                <div id="simple_table" class="teacher-timetable-wrap">
+                    <table class="table teacher-timetable" style="direction: rtl !important; text-align: center !important;">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="teacher-timetable__day-head">اليوم</th>
+                                @foreach($instructionLectureTimes as $index => $lecture_time)
+                                    <th scope="col" class="teacher-timetable__slot-head">
+                                        <span class="teacher-timetable__slot-name">{{ $lessonLabels[$index] ?? $lecture_time->name }}</span>
+                                        <span class="teacher-timetable__slot-time">{{ $lecture_time->start_time." - ".$lecture_time->end_time }}</span>
+                                    </th>
                                 @endforeach
-                                @if($counter == 0)
-                                    <a class="btn @if($lecture_time->type == 1) btn-info @else btn-success @endif btn-sm add_time"
-                                       data-toggle="modal"
-                                       data-target="#add_schedule"
-                                       data-day_id="{{ $day->id }}"
-                                       data-day="{{ $day->name }}"
-                                       data-time_id="{{ $lecture_time->id }}"
-                                       data-time="{{ $lecture_time->name }}"
-                                       data-lesson_id=""
-                                       data-teacher_id=""
-                                       title="تحديد الحصة">
-                                        <p class="lesson_name-schedule{{ $day->id . $lecture_time->id }}" style="margin:0;font-weight:bold">{{ $lesson_name2 }}</p>
-                                        <p class="teacher_name-schedule{{ $day->id . $lecture_time->id }}" style="margin:0;font-size:10px">{{ $teacher_name2 }}</p>
-                                    </a>
-                                @endif
-                            </td>
-                        @endforeach
-                    </tr>
-                @endforeach
-
-            </tbody>
-        </table>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($days->take(7) as $day)
+                                <tr>
+                                    <th scope="row" class="teacher-timetable__day-head">{{ $day->name }}</th>
+                                    @foreach($instructionLectureTimes as $lecture_time)
+                                        @php $lesson_time = $scheduleLookup[$lecture_time->id][$day->id] ?? null; @endphp
+                                        <td class="teacher-timetable__cell">
+                                            @if($lesson_time)
+                                                <a class="btn btn-info btn-sm add_time teacher-timetable__lesson-box"
+                                                   data-toggle="modal"
+                                                   data-target="#add_schedule"
+                                                   data-day_id="{{ $day->id }}"
+                                                   data-day="{{ $day->name }}"
+                                                   data-time_id="{{ $lecture_time->id }}"
+                                                   data-time="{{ $lecture_time->name }}"
+                                                   data-lesson_id="{{ $lesson_time->lesson->id }}"
+                                                   data-teacher_id="{{ $lesson_time->teacher->id }}"
+                                                   title="تحديد الحصة">
+                                                    <p class="lesson_name-schedule{{ $day->id . $lecture_time->id }} teacher-timetable__lesson-title">{{ $lesson_time->lesson->name }}</p>
+                                                    <p class="teacher_name-schedule{{ $day->id . $lecture_time->id }} teacher-timetable__meta">{{ $lesson_time->teacher->first_name }} {{ $lesson_time->teacher->last_name }}</p>
+                                                    <p class="teacher-timetable__meta">{{ $lecture_time->start_time." - ".$lecture_time->end_time }}</p>
+                                                </a>
+                                                <a class="teacher-timetable__aux-action"
+                                                   data-toggle="modal"
+                                                   data-target="#add_schedule1"
+                                                   data-day_id="{{ $day->id }}"
+                                                   data-day="{{ $day->name }}"
+                                                   data-time_name="{{ $lecture_time->name }}"
+                                                   data-time_id="{{ $lecture_time->id }}"
+                                                   data-lesson_id="{{ $lesson_time->lesson->id }}"
+                                                   data-lesson_name="{{ $lesson_time->lesson->name }}"
+                                                   data-lesson_time_id="{{ $lesson_time->id }}"
+                                                   data-meeting_link="{{ $lesson_time->meeting_link }}"
+                                                   title="إضافة رابط"><i class="fas fa-link"></i></a>
+                                            @else
+                                                <a class="teacher-timetable__empty add_time"
+                                                   data-toggle="modal"
+                                                   data-target="#add_schedule"
+                                                   data-day_id="{{ $day->id }}"
+                                                   data-day="{{ $day->name }}"
+                                                   data-time_id="{{ $lecture_time->id }}"
+                                                   data-time="{{ $lecture_time->name }}"
+                                                   data-lesson_id=""
+                                                   data-teacher_id=""
+                                                   title="تحديد الحصة">لا يوجد حصة</a>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
- </div>
-    <br>
-    <br>
-
     </div>
-      </div>
-      <input type="button" id="button" class="btn btn-success" value="تنزيل">
 
-</div>
-<!-- end new-->
-
-  <br>
-  <br>
-  <br>
-  <br>
 
 {{-- add lesson time --}}
 
@@ -1065,6 +836,32 @@ th,td{
 
 	@endsection
     @section('js')
+<script>
+(function() {
+    var shell = document.getElementById('v2-shell');
+    var toggle = document.getElementById('v2-sidebar-toggle');
+    if (!shell || !toggle) return;
+    toggle.classList.remove('d-lg-none');
+    var media = window.matchMedia('(min-width: 993px)');
+    var storageKey = 'teachersSidebarCollapsed';
+    function syncSidebarState() {
+        if (media.matches) {
+            if (window.localStorage.getItem(storageKey) === '1') shell.classList.add('teacher-sidebar-collapsed');
+            else shell.classList.remove('teacher-sidebar-collapsed');
+            shell.classList.remove('sidebar-open');
+        } else shell.classList.remove('teacher-sidebar-collapsed');
+    }
+    toggle.addEventListener('click', function(e) {
+        if (!media.matches) return;
+        e.preventDefault(); e.stopImmediatePropagation();
+        shell.classList.toggle('teacher-sidebar-collapsed');
+        window.localStorage.setItem(storageKey, shell.classList.contains('teacher-sidebar-collapsed') ? '1' : '0');
+    }, true);
+    if (media.addEventListener) media.addEventListener('change', syncSidebarState);
+    else if (media.addListener) media.addListener(syncSidebarState);
+    syncSidebarState();
+})();
+</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.js"></script>-->
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.min.js"></script>-->
