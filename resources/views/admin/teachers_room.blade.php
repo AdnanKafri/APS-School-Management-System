@@ -2,52 +2,107 @@
 
 @section('style')
 <style>
-    th{
-    font-size: 20px;
-    border-bottom: 1px solid #008991 !important;
-    text-align: center !important;
-    color: black
-    }
-    td{
-        font-size: 17px;
-        border-bottom: 1px solid #008991 !important;
-        color: black;
-        text-align: center !important;
-    }
-    button.close{
-    margin: 0px !important;
-    padding: 0px !important;
-    float: left !important;
-}
-.pagination{
-    justify-content: center;
-}
-</style>
+    /* ── Breadcrumbs ── */
+    .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
+    .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
+    .v2-bc a:hover { color:#5B4B8A; }
+    .v2-bc .sep { color:#b2aec0; font-weight:700; }
+    .v2-bc .active { color:#2f2b3a; font-weight:700; }
 
+    /* ── Card ── */
+    .v2-section-card {
+        border-radius: 18px;
+        border: 1px solid rgba(91,75,138,0.12);
+        box-shadow: 0 12px 32px rgba(36,30,62,0.08);
+        background: #fff;
+        overflow: hidden;
+    }
+    .v2-section-card .card-header {
+        padding: 1.25rem 1.5rem !important;
+        border-bottom: 1px solid rgba(91,75,138,0.1) !important;
+        background: #fff !important;
+    }
+    .v2-section-card .card-header h3,
+    .v2-section-card .card-header h2 {
+        margin: 0 !important;
+        font-weight: 800 !important;
+        color: #2f2b3a !important;
+        font-size: 1.1rem !important;
+        text-align: right !important;
+    }
+
+    /* ── Table ── */
+    .v2-table th {
+        background: #f8f7fc !important;
+        color: #2f2b3a !important;
+        font-weight: 800 !important;
+        font-size: .88rem !important;
+        border-bottom: 2px solid rgba(91,75,138,0.1) !important;
+        padding: .85rem !important;
+        text-align: right !important;
+        white-space: nowrap;
+    }
+    .v2-table td {
+        vertical-align: middle !important;
+        color: #3a3550 !important;
+        font-size: .9rem !important;
+        padding: .85rem !important;
+        border-bottom: 1px solid rgba(91,75,138,0.06) !important;
+        text-align: right !important;
+    }
+    .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
+
+    /* ── Action buttons ── */
+    .v2-section-card .btn { border-radius: 12px !important; font-weight: 700 !important; font-size: .85rem !important; }
+
+    /* ── Modals ── */
+    .modal .modal-content { border-radius:16px; overflow:hidden; direction:rtl; text-align:right; box-shadow:0 20px 60px rgba(0,0,0,.18); }
+    .modal .modal-header { padding:1rem 1.5rem; border-bottom:1px solid #e9ecef; align-items:center; }
+    .modal .modal-header h4, .modal .modal-title { font-size:1rem; font-weight:700; color:#2f2b3a; margin:0; }
+    .modal .modal-body { padding:1.5rem; }
+    .modal .form-group { margin-bottom:1rem; }
+    .modal .form-group label { font-weight:600; color:#3a3550; margin-bottom:.4rem; display:block; }
+    .modal .form-control { border-radius:8px; border-color:#d0d5dd; padding:.45rem .75rem; font-size:.9rem; }
+    .modal .form-control:focus { border-color:#7B67B2; box-shadow:0 0 0 3px rgba(91,75,138,.15); }
+    .modal .modal-footer {
+        padding:1rem 1.5rem;
+        border-top:1px solid #e9ecef;
+        gap:.6rem;
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        justify-content:flex-start;
+    }
+    .modal .modal-footer .btn { min-height:40px; min-width:100px; font-weight:600; border-radius:10px; padding:.45rem 1.1rem; }
+
+    /* ── Misc ── */
+    .pagination { justify-content:center !important; }
+    button.close { margin:0 !important; padding:0 !important; }
+</style>
 @endsection
 
 
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">جدول مدرسين الشعبة</a>
-    <a href="{{ route('classroom',$room->class_id) }}" class="breadcrumbs__item ">الشعب</a>
-    <a href="{{ route('classes') }}" class="breadcrumbs__item ">قسم الصفوف</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="v2-bc" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}">لوحة التحكم</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classes') }}">قسم الصفوف</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classroom',$room->class_id) }}">الشعب</a>
+    <span class="sep">/</span>
+    <span class="active">جدول مدرسي الشعبة</span>
 </nav>
-
 @endsection
 
 @section('content')
 
-<div class="col" style="direction:rtl;text-align:right">
-    <div class="card">
-            <!-- Card header -->
+<div style="direction:rtl;text-align:right">
+    <div class="v2-section-card" style="margin: 1.25rem;">
             <div class="card-header border-0">
-              <h2 class="mb-0" style="color: #001586;text-align: center" >جدول مدرسي الشعبة</h2>
+              <h2 class="mb-0">جدول مدرسي الشعبة</h2>
             </div>
 <div class="table-responsive">
-              <table class="table align-items-center table-flush">
+              <table class="table v2-table">
                 <thead class="">
                 <tr>
 
@@ -143,36 +198,31 @@
 
 
 
-               <div class="modal fade deleteEmployeeModal">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form id="form_delete" method="POST">
-                                        @csrf
-                                        @method('delete')
-                                        <div class="modal-header">
-                                            <h4 class="modal-title">Delete element</h4>
-                                            <button type="button" class="close" data-dismiss="modal"
-                                                aria-hidden="true">&times;</button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>Are you sure you want to delete these Records?</p>
-                                            <p class="text-warning"><small>This action cannot be undone.</small></p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <input type="button" class="btn btn-default" data-dismiss="modal"
-                                                value="Cancel">
-
-                                            <button class="btn btn-danger">Delete</button>
-
-
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
                 </tbody>
               </table>
+
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="form_delete" method="POST">
+                @csrf
+                @method('delete')
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد الحذف</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من حذف هذا العنصر؟</p>
+                    <p class="text-warning"><small>لا يمكن التراجع عن هذا الإجراء.</small></p>
+                </div>
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-light text-dark" data-dismiss="modal" value="إلغاء">
+                    <button class="btn btn-danger">حذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
             </div>
 

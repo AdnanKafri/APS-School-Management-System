@@ -192,8 +192,9 @@
     }
 
     .teacher-schedule-v2 .teacher-timetable__day-head {
-        width: 104px;
-        min-width: 104px;
+        width: 8%;
+        min-width: 68px;
+        max-width: 110px;
         text-align: center !important;
         font-size: 1rem;
         font-weight: 800;
@@ -224,10 +225,11 @@
     }
 
     .teacher-schedule-v2 .teacher-timetable__cell {
-        height: 146px;
-        padding: .5rem .35rem !important;
+        height: 140px;
+        padding: .4rem .25rem !important;
         text-align: center !important;
         background: #fff !important;
+        vertical-align: middle;
     }
 
     .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
@@ -239,18 +241,19 @@
     .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu1,
     .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
     .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6 {
-        width: min(132px, calc(100% - 8px));
-        min-height: 76px;
+        width: calc(100% - 8px);
+        height: 100px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: .22rem;
-        padding: .75rem .5rem;
+        padding: .65rem .5rem;
         text-align: center;
         white-space: normal;
         overflow-wrap: anywhere;
+        overflow: hidden;
         border: 0;
         box-shadow: none;
         background: linear-gradient(180deg, #5d7ef4, #4f6df5) !important;
@@ -274,8 +277,8 @@
     }
 
     .teacher-schedule-v2 .teacher-timetable__empty {
-        width: min(132px, calc(100% - 8px));
-        min-height: 76px;
+        width: calc(100% - 8px);
+        height: 100px;
         margin: 0 auto;
         display: flex;
         align-items: center;
@@ -287,6 +290,7 @@
         text-align: center;
         background: transparent;
         border: 1px dashed rgba(140, 150, 171, 0.35);
+        border-radius: 12px;
     }
 
     .teacher-schedule-v2 .teacher-timetable__aux-action {
@@ -390,8 +394,9 @@
         }
 
         .teacher-schedule-v2 .teacher-timetable__day-head {
-            width: 86px;
-            min-width: 86px;
+            width: 8%;
+            min-width: 56px;
+            max-width: 90px;
             font-size: .82rem;
         }
 
@@ -405,8 +410,8 @@
         }
 
         .teacher-schedule-v2 .teacher-timetable__cell {
-            height: 118px;
-            padding: .35rem .2rem !important;
+            height: 114px;
+            padding: .3rem .2rem !important;
         }
 
         .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
@@ -414,8 +419,8 @@
         .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu2,
         .teacher-schedule-v2 .teacher-timetable__lesson-box.uuu6,
         .teacher-schedule-v2 .teacher-timetable__empty {
-            width: min(104px, calc(100% - 4px));
-            min-height: 64px;
+            width: calc(100% - 4px);
+            height: 78px;
         }
 
         .teacher-schedule-v2 .teacher-timetable__lesson-box.btn,
@@ -428,6 +433,97 @@
         .teacher-schedule-v2 .teacher-timetable__lesson-title {
             font-size: .74rem;
         }
+    }
+
+    /* ── Table responsive wrapper ── */
+    .teacher-schedule-v2 .teacher-timetable-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 575.98px) {
+        .teacher-schedule-v2 .teacher-timetable {
+            min-width: 560px;
+        }
+    }
+
+    /* ── Modal polish ── */
+    .modal .modal-content {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    }
+
+    .modal .modal-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        align-items: center;
+    }
+
+    .modal .modal-header .modal-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .modal .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .modal .form-group label {
+        font-weight: 600;
+        color: #3a3550;
+    }
+
+    .modal .form-group.row label.col-form-label {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+    }
+
+    .modal .form-control {
+        border-radius: 8px;
+        border-color: #d0d5dd;
+        padding: .45rem .75rem;
+        font-size: .95rem;
+    }
+
+    .modal .form-control:focus {
+        border-color: #5d7ef4;
+        box-shadow: 0 0 0 3px rgba(93,126,244,.15);
+    }
+
+    .modal .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e9ecef;
+        gap: .6rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .modal .modal-footer .btn {
+        min-height: 40px;
+        min-width: 110px;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: .45rem 1.1rem;
+    }
+
+    /* ── form-group modal-footer (inline footer inside body) ── */
+    .modal .form-group.modal-footer {
+        margin-top: 1.25rem;
+        justify-content: center !important;
+        gap: .75rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .modal .form-group.modal-footer .btn {
+        min-width: 130px;
     }
 </style>
 @endsection
@@ -458,7 +554,7 @@
 	</section> --}}
   <!-- start new-->
      <div class="modal fade" id="store_session">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <form id="form_update" method="POST" action="{{ route('session_store') }}" enctype="multipart/form-data">
                             @csrf
@@ -518,9 +614,9 @@
                     </div>
                 </div>
             </div>
-<div class="col-md-10 teacher-schedule-v2" style="margin: auto; direction: rtl; text-align:center">
+<div class="col-12 teacher-schedule-v2" style="direction: rtl; text-align:center">
     <div class="modal fade" id="add_schedule1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" style="direction: rtl; text-align:right">
                 <div class="modal-header ">
                     <h5 class="modal-title" id="exampleModalLongTitle">  إضافة رابط غوغل   </h5>
@@ -704,7 +800,7 @@
 {{-- add lesson time --}}
 
 <div class="modal fade" id="add_schedule">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="direction: rtl; text-align:right">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLongTitle">تحديد الحصة</h5>
@@ -778,10 +874,10 @@
 {{-- delete lesson time --}}
 
 <div class="modal fade" id="delete_lesson_time">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="direction: rtl; text-align:right">
-            <div class="modal-header ">
-                <h5 class="modal-title" id="exampleModalLongTitle"> حذف الحصة   </h5>
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">حذف الحصة</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>

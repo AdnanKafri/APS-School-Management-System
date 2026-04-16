@@ -85,14 +85,60 @@
     }
 
     .schedule-selector-v2 .selector-icon {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
+        border-radius: 10px;
         background: #f3f4f6;
         color: #4b5563 !important;
+        transition: background .18s, color .18s;
+        cursor: pointer;
+    }
+
+    .schedule-selector-v2 .selector-icon:hover {
+        background: #e2e8f0;
+        color: #1e293b !important;
+    }
+
+    /* editroomModal polish */
+    #editroomModal .modal-content {
+        border-radius: 16px;
+        overflow: hidden;
+        direction: rtl;
+        text-align: right;
+    }
+
+    #editroomModal .modal-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        align-items: center;
+    }
+
+    #editroomModal .modal-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2f2b3a;
+    }
+
+    #editroomModal .modal-body {
+        padding: 1.5rem;
+    }
+
+    #editroomModal .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e9ecef;
+        gap: .6rem;
+        justify-content: flex-end;
+    }
+
+    #editroomModal .modal-footer .btn {
+        min-height: 40px;
+        min-width: 100px;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: .45rem 1.1rem;
     }
 </style>
 @endsection
@@ -129,7 +175,7 @@
                                 <td>{{ $item->year->name }}</td>
                                 <td>
                                     <div class="selector-actions">
-                                        <a href=".editroomModal" class="edit selector-icon" data-class1="{{ $item->classes->id }}" data-name="{{ $item->name }}" data-id="{{ $item->id }}" data-toggle="modal">
+                                        <!-- <a href="#editroomModal" class="edit selector-icon" data-class1="{{ $item->classes->id }}" data-name="{{ $item->name }}" data-id="{{ $item->id }}" data-toggle="modal" data-target="#editroomModal" title="تعديل الشعبة"> -->
                                             <i class="ni ni-settings"></i>
                                         </a>
                                         @can('workschedule')
@@ -151,6 +197,34 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- Edit Room Modal --}}
+<div class="modal fade" id="editroomModal" tabindex="-1" role="dialog" aria-labelledby="editroomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="form_update" action="{{ route('room_update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="room_id" id="room_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editroomModalLabel">تعديل الشعبة</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin:0;padding:0;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="room_name_edit" style="font-weight:600;color:#3a3550;">اسم الشعبة</label>
+                        <input type="text" id="name" name="name" class="form-control" style="direction:rtl;border-radius:8px;" placeholder="اسم الشعبة" maxlength="30" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-light text-dark" data-dismiss="modal">إلغاء</a>
+                    <button class="btn btn-primary" type="submit">حفظ</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

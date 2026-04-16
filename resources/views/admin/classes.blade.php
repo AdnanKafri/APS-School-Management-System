@@ -1,43 +1,100 @@
 @extends('admin.master')
 @section('style')
-    <style>
-        .custom-file-label {
-            display: none !important;
-        }
+<style>
+    /* ── Breadcrumbs ── */
+    .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
+    .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
+    .v2-bc a:hover { color:#5B4B8A; }
+    .v2-bc .sep { color:#b2aec0; font-weight:700; }
+    .v2-bc .active { color:#2f2b3a; font-weight:700; }
 
-        .custom-file-label {
-            display: none;
-        }
+    /* ── Card ── */
+    .v2-section-card {
+        border-radius: 18px;
+        border: 1px solid rgba(91,75,138,0.12);
+        box-shadow: 0 12px 32px rgba(36,30,62,0.08);
+        background: #fff;
+        overflow: hidden;
+    }
+    .v2-section-card .card-header {
+        padding: 1.25rem 1.5rem !important;
+        border-bottom: 1px solid rgba(91,75,138,0.1) !important;
+        background: #fff !important;
+    }
+    .v2-section-card .card-header h3,
+    .v2-section-card .card-header h2 {
+        margin: 0 !important;
+        font-weight: 800 !important;
+        color: #2f2b3a !important;
+        font-size: 1.1rem !important;
+        text-align: right !important;
+    }
 
-        .pagination {
-            justify-content: center !important;
-        }
+    /* ── Table ── */
+    .v2-table th {
+        background: #f8f7fc !important;
+        color: #2f2b3a !important;
+        font-weight: 800 !important;
+        font-size: .88rem !important;
+        border-bottom: 2px solid rgba(91,75,138,0.1) !important;
+        padding: .85rem !important;
+        text-align: right !important;
+        white-space: nowrap;
+    }
+    .v2-table td {
+        vertical-align: middle !important;
+        color: #3a3550 !important;
+        font-size: .9rem !important;
+        padding: .85rem !important;
+        border-bottom: 1px solid rgba(91,75,138,0.06) !important;
+        text-align: right !important;
+    }
+    .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
 
-        button.close {
-            margin: 0px !important;
-            padding: 0px !important;
-            float: left !important;
-        }
+    /* ── Action buttons ── */
+    .v2-section-card .btn { border-radius: 12px !important; font-weight: 700 !important; font-size: .85rem !important; }
 
-        .modal-header {
-            direction: rtl;
-        }
-    </style>
+    /* ── Modals ── */
+    .modal .modal-content { border-radius:16px; overflow:hidden; direction:rtl; text-align:right; box-shadow:0 20px 60px rgba(0,0,0,.18); }
+    .modal .modal-header { padding:1rem 1.5rem; border-bottom:1px solid #e9ecef; align-items:center; }
+    .modal .modal-header h4, .modal .modal-title { font-size:1rem; font-weight:700; color:#2f2b3a; margin:0; }
+    .modal .modal-body { padding:1.5rem; }
+    .modal .form-group { margin-bottom:1rem; }
+    .modal .form-group label { font-weight:600; color:#3a3550; margin-bottom:.4rem; display:block; }
+    .modal .form-control { border-radius:8px; border-color:#d0d5dd; padding:.45rem .75rem; font-size:.9rem; }
+    .modal .form-control:focus { border-color:#7B67B2; box-shadow:0 0 0 3px rgba(91,75,138,.15); }
+    .modal .modal-footer {
+        padding:1rem 1.5rem;
+        border-top:1px solid #e9ecef;
+        gap:.6rem;
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        justify-content:flex-start;
+    }
+    .modal .modal-footer .btn { min-height:40px; min-width:100px; font-weight:600; border-radius:10px; padding:.45rem 1.1rem; }
+
+    /* ── Misc ── */
+    .pagination { justify-content:center !important; }
+    button.close { margin:0 !important; padding:0 !important; }
+    .custom-file-label { display:none !important; }
+</style>
 @endsection
 
 
 @section('breadcrumbs')
-    <nav class="breadcrumbs">
-        <a class="breadcrumbs__item is-active">قسم الصفوف</a>
-        <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
-    </nav>
+<nav class="v2-bc" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}">لوحة التحكم</a>
+    <span class="sep">/</span>
+    <span class="active">قسم الصفوف</span>
+</nav>
 @endsection
 
 @section('content')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     {{-- <div class="col" > --}}
-    <div class="card" style="direction:rtl; text-align:right;margin: 20px;">
+    <div class="v2-section-card" style="direction:rtl; text-align:right; margin: 1.25rem;">
 
         <!--@if (session()->has('success'))
     -->
@@ -62,7 +119,7 @@
                 <a href=".createClassModal" class=" btn btn-success" data-toggle="modal" data-id=""><i
                         class="material-icons" data-toggle="tooltip">إنشاء صف جديد</i></a>
             @endcan
-            <table class="table align-items-center table-flush">
+            <table class="table v2-table">
                 <thead class="thead-light">
                     <tr>
                         <!--<th scope="col" class="sort" data-sort="name">Id</th>-->
@@ -190,7 +247,7 @@
 
 
     <div class="modal fade createClassModal">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="" action="{{ route('class_store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -440,7 +497,7 @@
 
 
     <div class="modal fade editClassModal">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="form_update" method="POST" action="{{ route('class_update') }}"
                     enctype="multipart/form-data">
@@ -609,7 +666,7 @@
 
 
     <div class="modal fade deleteEmployeeModal">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="form_delete" method="POST">
                     @csrf
@@ -637,7 +694,7 @@
     {{-- delete class  --}}
 
     <div class="modal fade deleteClassModal">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="form_delete" action="{{ route('class_delete') }}" method="POST" autocomplete="off">
 

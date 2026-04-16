@@ -826,7 +826,11 @@ th{
                           </div>
 
                           <div class="modal-footer">
+                              @if(Route::has('students.result_active'))
                               <a href="{{ route('students.result_active') }}" class="btn btn-white delete">نعم , موافق</a>
+                              @else
+                              <a href="#" class="btn btn-white delete" onclick="alert('الخاصية غير متاحة حالياً');return false;">نعم , موافق</a>
+                              @endif
                               <a class="btn btn-link text-white ml-auto" data-dismiss="modal">اغلاق</a>
                           </div>
                       </div>
@@ -863,7 +867,11 @@ th{
                           </div>
 
                           <div class="modal-footer">
+                              @if(Route::has('students.result_disable'))
                               <a href="{{ route('students.result_disable') }}" class="btn btn-white delete">نعم , موافق</a>
+                              @else
+                              <a href="#" class="btn btn-white delete" onclick="alert('الخاصية غير متاحة حالياً');return false;">نعم , موافق</a>
+                              @endif
                               <a class="btn btn-link text-white ml-auto" data-dismiss="modal">اغلاق</a>
                           </div>
                       </div>

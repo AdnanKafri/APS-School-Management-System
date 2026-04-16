@@ -1,509 +1,143 @@
 @extends('admin.master')
 @section('style')
-
 <style>
+    /* ── Breadcrumbs ── */
+    .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
+    .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
+    .v2-bc a:hover { color:#5B4B8A; }
+    .v2-bc .sep { color:#b2aec0; font-weight:700; }
+    .v2-bc .active { color:#2f2b3a; font-weight:700; }
+
+    /* ── Outer card wrapper ── */
+    .v2-section-card {
+        border-radius: 18px;
+        border: 1px solid rgba(91,75,138,0.12);
+        box-shadow: 0 12px 32px rgba(36,30,62,0.08);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    /* ── Grade table (kept as-is, only cosmetic override) ── */
     table {
         width: 100%;
         border-collapse: collapse;
         direction: rtl;
         text-align: right;
     }
-
-    /* Zebra striping */
-    tr:nth-of-type(odd) {
-        background: #eee;
-    }
-
+    tr:nth-of-type(odd) { background: #f8f7fc; }
     th {
-        background: #2c71ad;
-        color: white;
-        font-weight: bold;
+        background: #5B4B8A !important;
+        color: #fff !important;
+        font-weight: 700;
+        font-size: .88rem;
     }
-
-    td,
-    th {
-        padding: 6px;
-        border: 1px solid #ccc;
-        text-align: right;
-    }
+    td, th { padding: 8px; border: 1px solid rgba(91,75,138,0.15); text-align: right; }
 
     @media only screen and (max-width: 760px),
     (min-device-width: 768px) and (max-device-width: 1024px) {
-
-        /* Force table to not be like tables anymore */
-        table,
-        thead,
-        tbody,
-        th,
-        td,
-        tr {
-            display: block;
-        }
-
-        /* Hide table headers (but not display: none;, for accessibility) */
-        thead tr {
-            position: absolute;
-            top: -9999px;
-            left: -9999px;
-        }
-
-        tr {
-            border: 1px solid #ccc;
-        }
-
-        td {
-            /* Behave  like a "row" */
-            border: none;
-            border-bottom: 1px solid #eee;
-            position: relative;
-            padding-left: 50%;
-        }
-
-        td:before {
-            /* Now like a table header */
-            position: absolute;
-            /* Top/left values mimic padding */
-            top: 6px;
-            left: 6px;
-            width: 45%;
-            padding-right: 10px;
-            white-space: nowrap;
-        }
-
-        /*
-	Label the data
-	*/
-        td:nth-of-type(1):before {
-            content: "المواد الدراسية ";
-        }
-
-        td:nth-of-type(2):before {
-            content: "الدرجة العظمى ";
-        }
-
-        td:nth-of-type(3):before {
-            content: "درجات اعمال الفصل الأول ";
-        }
-
-        td:nth-of-type(4):before {
-            content: "شفوية ";
-        }
-
-        td:nth-of-type(5):before {
-            content: "وظائف اوراق العمل ";
-        }
-
-        td:nth-of-type(6):before {
-            content: "نشاطات ومبادرات ";
-        }
-
-        td:nth-of-type(7):before {
-            content: "المذاكرات ";
-        }
-
-        td:nth-of-type(8):before {
-            content: "درجة اختبار الفصل الأول ";
-        }
-
-        td:nth-of-type(9):before {
-            content: "مجموع درجات الفصل الأول ";
-        }
-
-        td:nth-of-type(10):before {
-            content: "تقدير الفصل الأول ";
-        }
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { position: absolute; top: -9999px; left: -9999px; }
+        tr { border: 1px solid #ccc; }
+        td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; }
+        td:before { position: absolute; top: 6px; left: 6px; width: 45%; padding-right: 10px; white-space: nowrap; }
+        td:nth-of-type(1):before { content: "المواد الدراسية "; }
+        td:nth-of-type(2):before { content: "الدرجة العظمى "; }
+        td:nth-of-type(3):before { content: "درجات اعمال الفصل الأول "; }
+        td:nth-of-type(4):before { content: "شفوية "; }
+        td:nth-of-type(5):before { content: "وظائف اوراق العمل "; }
+        td:nth-of-type(6):before { content: "نشاطات ومبادرات "; }
+        td:nth-of-type(7):before { content: "المذاكرات "; }
+        td:nth-of-type(8):before { content: "درجة اختبار الفصل الأول "; }
+        td:nth-of-type(9):before { content: "مجموع درجات الفصل الأول "; }
+        td:nth-of-type(10):before { content: "تقدير الفصل الأول "; }
     }
 
-    /*end style table */
-
-
-
-    /* style tablist*/
-    /*style tablist*/
-
-    /* section my classes*/
-
-
+    /* ── Tab system (unchanged) ── */
     .tabs {
-        left: 50%;
-        transform: translateX(-50%);
-        position: relative;
-        background: white;
-        padding: 20px;
-        padding-bottom: 80px;
-        width: 99%;
-        height: auto;
-        /*box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);*/
-        border-radius: 5px;
-        min-width: 240px;
-        direction: rtl;
-
+        left: 50%; transform: translateX(-50%); position: relative;
+        background: white; padding: 20px; padding-bottom: 80px;
+        width: 99%; height: auto; border-radius: 5px; min-width: 240px; direction: rtl;
     }
-
-    .tabs input[name="tab-control"] {
-        display: none;
-    }
-
-    .tabs .content section h2,
-    .tabs ul li label {
-        font-family: "Montserrat";
-        font-weight: bold;
-        font-size: 18px;
-        color: #428bff;
-    }
-
-    .tabs ul {
-        list-style-type: none;
-        padding-left: 0;
-
-        flex-direction: row;
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: center;
-        /*justify-content: space-between;*/
-        align-items: center;
-        flex-wrap: wrap;
-
-    }
-
-    .tabs ul li {
-        box-sizing: border-box;
-        /*flex: 1;*/
-        /*width: 25%;*/
-        /*padding: 0 0px;*/
-        text-align: center;
-    }
-
-    .tabs ul li label {
-        transition: all 0.3s ease-in-out;
-        color: #929daf;
-        padding: 5px auto;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        white-space: nowrap;
-        -webkit-touch-callout: none;
-    }
-
-    .tabs ul li label br {
-        display: none;
-    }
-
-    .tabs ul li label svg {
-        fill: #929daf;
-        height: 1.2em;
-        vertical-align: bottom;
-        margin-right: 0.2em;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .tabs ul li label:hover,
-    .tabs ul li label:focus,
-    .tabs ul li label:active {
-        outline: 0;
-        color: #bec5cf;
-    }
-
-    .tabs ul li label:hover svg,
-    .tabs ul li label:focus svg,
-    .tabs ul li label:active svg {
-        fill: #bec5cf;
-    }
-
-    .tabs .slider {
-        position: relative;
-        width: 25%;
-        transition: all 0.33s cubic-bezier(0.38, 0.8, 0.32, 1.07);
-    }
-
-    .tabs .slider .indicator {
-        position: relative;
-        width: 50px;
-        max-width: 100%;
-        margin: 0 auto;
-        height: 4px;
-        background: #cc151525;
-        border-radius: 1px;
-    }
-
-    .tabs .content {
-        margin-top: 30px;
-    }
-
-    .tabs .content section {
-        display: none;
-        animation-name: content;
-        animation-direction: normal;
-        animation-duration: 0.3s;
-        animation-timing-function: ease-in-out;
-        animation-iteration-count: 1;
-        line-height: 1.4;
-    }
-
-    .tabs .content section h2 {
-        color: #428bff;
-        display: none;
-    }
-
-    .tabs .content section h2::after {
-        content: "";
-        position: relative;
-        display: block;
-        width: 30px;
-        height: 3px;
-        background: #f38639;
-        margin-top: 5px;
-        left: 1px;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label {
-        cursor: default;
-        color: #f38639;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label svg {
-        fill: #f38639;
-    }
-
+    .tabs input[name="tab-control"] { display: none; }
+    .tabs .content section h2, .tabs ul li label { font-family: "Montserrat"; font-weight: bold; font-size: 18px; color: #428bff; }
+    .tabs ul { list-style-type: none; padding-left: 0; flex-direction: row; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .tabs ul li { box-sizing: border-box; text-align: center; }
+    .tabs ul li label { transition: all .3s ease-in-out; color: #929daf; padding: 5px auto; overflow: hidden; text-overflow: ellipsis; display: block; cursor: pointer; white-space: nowrap; -webkit-touch-callout: none; }
+    .tabs ul li label br { display: none; }
+    .tabs ul li label svg { fill: #929daf; height: 1.2em; vertical-align: bottom; margin-right: .2em; transition: all .2s ease-in-out; }
+    .tabs ul li label:hover, .tabs ul li label:focus, .tabs ul li label:active { outline: 0; color: #bec5cf; }
+    .tabs ul li label:hover svg, .tabs ul li label:focus svg, .tabs ul li label:active svg { fill: #bec5cf; }
+    .tabs .slider { position: relative; width: 25%; transition: all .33s cubic-bezier(.38,.8,.32,1.07); }
+    .tabs .slider .indicator { position: relative; width: 50px; max-width: 100%; margin: 0 auto; height: 4px; background: #cc151525; border-radius: 1px; }
+    .tabs .content { margin-top: 30px; }
+    .tabs .content section { display: none; animation-name: content; animation-direction: normal; animation-duration: .3s; animation-timing-function: ease-in-out; animation-iteration-count: 1; line-height: 1.4; }
+    .tabs .content section h2 { color: #428bff; display: none; }
+    .tabs .content section h2::after { content: ""; position: relative; display: block; width: 30px; height: 3px; background: #f38639; margin-top: 5px; left: 1px; }
+    .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label { cursor: default; color: #f38639; }
+    .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label svg { fill: #f38639; }
+    .tabs input[name="tab-control"]:nth-of-type(1):checked~.slider { transform: translateX(0%); }
+    .tabs input[name="tab-control"]:nth-of-type(1):checked~.content>section:nth-child(1) { display: block; }
+    .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label { cursor: default; color: #f38639; }
+    .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label svg { fill: #f38639; }
+    .tabs input[name="tab-control"]:nth-of-type(2):checked~.slider { transform: translateX(100%); }
+    .tabs input[name="tab-control"]:nth-of-type(2):checked~.content>section:nth-child(2) { display: block; }
+    .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label { cursor: default; color: #f38639; }
+    .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label svg { fill: #f38639; }
+    .tabs input[name="tab-control"]:nth-of-type(3):checked~.slider { transform: translateX(200%); }
+    .tabs input[name="tab-control"]:nth-of-type(3):checked~.content>section:nth-child(3) { display: block; }
+    .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label { cursor: default; color: #428bff; }
+    .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label svg { fill: #428bff; }
+    .tabs input[name="tab-control"]:nth-of-type(4):checked~.slider { transform: translateX(0%); }
+    .tabs input[name="tab-control"]:nth-of-type(4):checked~.content>section:nth-child(4) { display: block; }
+    .tabs input[name="tab-control"]:nth-of-type(5):checked~.slider { transform: translateX(300%); }
+    .tabs input[name="tab-control"]:nth-of-type(5):checked~.content>section:nth-child(5) { display: block; }
+    @keyframes content { from { opacity: 0; transform: translateY(5%); } to { opacity: 1; transform: translateY(0%); } }
     @media (max-width: 600px) {
-        .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label {
-            background: rgba(0, 0, 0, 0.08);
-        }
+        .tabs ul li label { padding: 5px; border-radius: 5px; }
+        .tabs ul li label span { display: none; }
+        .tabs .slider { display: none; }
+        .tabs .content { margin-top: 20px; }
+        .tabs .content section h2 { display: block; }
     }
 
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~.slider {
-        transform: translateX(0%);
-    }
+    /* ── Floating mark input ── */
+    .form__group { direction: rtl; position: relative; padding: 15px 0 0; margin-top: 10px; width: 20%; }
+    .form__field { font-family: inherit; width: 150px; border: 0; border-bottom: 2px solid #9b9b9b; outline: 0; font-size: 1.3rem; color: #2c71ad; padding: 7px 0; background: transparent; transition: border-color .2s; }
+    .form__field::placeholder { color: transparent; }
+    .form__field:placeholder-shown~.form__label { font-size: 1.3rem; cursor: text; top: 20px; padding-right: 32px; }
+    .form__label { text-align: right; position: absolute; top: 0; display: block; transition: .2s; font-size: 1rem; color: #9b9b9b; padding-right: 39px; }
+    .form__field:focus { padding-bottom: 6px; font-weight: 700; border-width: 3px; }
+    .form__field:focus~.form__label { position: absolute; top: 0; display: block; transition: .2s; font-size: 1rem; color: #11998e; font-weight: 700; }
+    .form__field:required, .form__field:invalid { box-shadow: none; }
 
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~.content>section:nth-child(1) {
-        display: block;
-    }
+    /* ── Modal ── */
+    .modal .modal-content { border-radius:16px; overflow:hidden; direction:rtl; text-align:right; box-shadow:0 20px 60px rgba(0,0,0,.18); }
+    .modal .modal-header { padding:1rem 1.5rem; border-bottom:1px solid #e9ecef; align-items:center; }
+    .modal .modal-header h4, .modal .modal-title { font-size:1rem; font-weight:700; color:#2f2b3a; margin:0; }
+    .modal .modal-body { padding:1.5rem; }
+    .modal .form-control { border-radius:8px; border-color:#d0d5dd; }
+    .modal .modal-footer { padding:1rem 1.5rem; border-top:1px solid #e9ecef; display:flex; flex-wrap:wrap; gap:.5rem; justify-content:flex-start; }
+    .modal .modal-footer .btn { min-height:40px; min-width:100px; font-weight:600; border-radius:10px; }
 
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label {
-        cursor: default;
-        color: #f38639;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label svg {
-        fill: #f38639;
-    }
-
-    @media (max-width: 600px) {
-        .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label {
-            background: rgba(0, 0, 0, 0.08);
-        }
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~.slider {
-        transform: translateX(100%);
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~.content>section:nth-child(2) {
-        display: block;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label {
-        cursor: default;
-        color: #f38639;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label svg {
-        fill: #f38639;
-    }
-
-    @media (max-width: 600px) {
-        .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label {
-            background: rgba(0, 0, 0, 0.08);
-        }
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~.slider {
-        transform: translateX(200%);
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~.content>section:nth-child(3) {
-        display: block;
-    }
-
-    /*tab 4*/
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label {
-        cursor: default;
-        color: #428bff;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label svg {
-        fill: #428bff;
-    }
-
-    @media (max-width: 600px) {
-        .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label {
-            background: rgba(0, 0, 0, 0.08);
-        }
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~.slider {
-        transform: translateX(0%);
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~.content>section:nth-child(4) {
-        display: block;
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(5):checked~.slider {
-        transform: translateX(300%);
-    }
-
-    .tabs input[name="tab-control"]:nth-of-type(5):checked~.content>section:nth-child(5) {
-        display: block;
-    }
-
-    @keyframes content {
-        from {
-            opacity: 0;
-            transform: translateY(5%);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0%);
-        }
-    }
-
-    @media (max-width: auto) {
-        .tabs ul li label {
-            white-space: initial;
-        }
-
-        .tabs ul li label br {
-            display: initial;
-        }
-
-        .tabs ul li label svg {
-            height: 1.5em;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .tabs ul li label {
-            padding: 5px;
-            border-radius: 5px;
-        }
-
-        .tabs ul li label span {
-            display: none;
-        }
-
-        .tabs .slider {
-            display: none;
-        }
-
-        .tabs .content {
-            margin-top: 20px;
-        }
-
-        .tabs .content section h2 {
-            display: block;
-        }
-    }
-
-    /*end section my classes*/
-    /*style for input*/
-    .form__group {
-        direction: rtl;
-        position: relative;
-        padding: 15px 0 0;
-        margin-top: 10px;
-        width: 20%;
-
-    }
-
-    .form__field {
-        font-family: inherit;
-
-        width: 150px;
-        border: 0;
-        border-bottom: 2px solid #9b9b9b;
-        outline: 0;
-        font-size: 1.3rem;
-        color: #2c71ad;
-        padding: 7px 0;
-        background: transparent;
-        transition: border-color 0.2s;
-    }
-
-    .form__field::placeholder {
-        color: transparent;
-    }
-
-    .form__field:placeholder-shown~.form__label {
-        font-size: 1.3rem;
-        cursor: text;
-        top: 20px;
-        padding-right: 32px;
-    }
-
-    .form__label {
-        text-align: right;
-        position: absolute;
-        top: 0;
-        display: block;
-        transition: 0.2s;
-        font-size: 1rem;
-        color: #9b9b9b;
-        padding-right: 39px;
-    }
-
-    .form__field:focus {
-
-        padding-bottom: 6px;
-        font-weight: 700;
-        border-width: 3px;
-        /*border-image: linear-gradient(to right, #11998e, #38ef7d);
-    border-image-slice: 1;*/
-    }
-
-    .form__field:focus~.form__label {
-
-        position: absolute;
-        top: 0;
-        display: block;
-        transition: 0.2s;
-        font-size: 1rem;
-        color: #11998e;
-        font-weight: 700;
-    }
-
-    /* reset input */
-    .form__field:required,
-    .form__field:invalid {
-        box-shadow: none;
-    }
-
-
-.modal-header .close {
-    padding: 1rem;
-    margin: -1rem 20rem -1rem auto;
-}
-
-
-    /* demo */
+    /* ── Misc ── */
+    button.close { margin:0 !important; padding:0 !important; }
 </style>
 @endsection
 
 
 
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a class="breadcrumbs__item is-active">طلاب الشعبة</a>
-    <a href="{{ route('roomlessons',[$room->class_id,$room->id]) }}" class="breadcrumbs__item ">جدول مواد الشعبة</a>
-    <a href="{{ route('classroom',$room->class_id) }}" class="breadcrumbs__item ">الشعب</a>
-    <a href="{{ route('classes') }}" class="breadcrumbs__item ">قسم الصفوف</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="v2-bc" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}">لوحة التحكم</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classes') }}">قسم الصفوف</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classroom',$room->class_id) }}">الشعب</a>
+    <span class="sep">/</span>
+    <a href="{{ route('roomlessons',[$room->class_id,$room->id]) }}">جدول مواد الشعبة</a>
+    <span class="sep">/</span>
+    <span class="active">طلاب الشعبة</span>
 </nav>
-
 @endsection
 
 
