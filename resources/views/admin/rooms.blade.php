@@ -1,14 +1,18 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'الشعب')
+@section('page_subtitle', 'إدارة الشعب التابعة للصف الدراسي')
 @section('style')
 <style>
-    /* ── Breadcrumbs ── */
+    .class-rooms-v2 {
+        direction: rtl;
+        text-align: right;
+    }
     .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
     .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
     .v2-bc a:hover { color:#5B4B8A; }
     .v2-bc .sep { color:#b2aec0; font-weight:700; }
     .v2-bc .active { color:#2f2b3a; font-weight:700; }
-
-    /* ── Card ── */
     .v2-section-card {
         border-radius: 18px;
         border: 1px solid rgba(91,75,138,0.12);
@@ -29,8 +33,19 @@
         font-size: 1.1rem !important;
         text-align: right !important;
     }
-
-    /* ── Table ── */
+    .v2-card-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0 1.5rem 1rem;
+    }
+    .v2-card-toolbar__summary {
+        color: #7b768f;
+        font-size: .92rem;
+        font-weight: 700;
+    }
     .v2-table th {
         background: #f8f7fc !important;
         color: #2f2b3a !important;
@@ -50,11 +65,23 @@
         text-align: right !important;
     }
     .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
-
-    /* ── Action buttons ── */
+    .v2-table td.room-actions-cell { text-align: center !important; }
     .v2-section-card .btn { border-radius: 12px !important; font-weight: 700 !important; font-size: .85rem !important; margin-bottom: .2rem; }
-
-    /* ── Modals ── */
+    .room-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(110px, 1fr));
+        gap: .5rem;
+        min-width: 240px;
+    }
+    .room-actions .btn {
+        width: 100%;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 !important;
+        padding: .55rem .75rem;
+    }
     .modal .modal-content { border-radius:16px; overflow:hidden; direction:rtl; text-align:right; box-shadow:0 20px 60px rgba(0,0,0,.18); }
     .modal .modal-header { padding:1rem 1.5rem; border-bottom:1px solid #e9ecef; align-items:center; }
     .modal .modal-header h4, .modal .modal-title { font-size:1rem; font-weight:700; color:#2f2b3a; margin:0; }
@@ -73,11 +100,13 @@
         justify-content:flex-start;
     }
     .modal .modal-footer .btn { min-height:40px; min-width:100px; font-weight:600; border-radius:10px; padding:.45rem 1.1rem; }
-
-    /* ── Misc ── */
     .pagination { justify-content:center !important; }
     button.close { margin:0 !important; padding:0 !important; }
     .custom-file-label { display:none !important; }
+    @media (max-width: 991px) {
+        .v2-card-toolbar { align-items: stretch; }
+        .room-actions { grid-template-columns: 1fr; min-width: 0; }
+    }
 </style>
 @endsection
 
@@ -94,16 +123,18 @@
 
 
 @section('content')
-<div style="direction:rtl;text-align:right">
+<div class="class-rooms-v2">
     <div class="v2-section-card" style="margin: 1.25rem;">
         <div class="card-header border-0">
           <h3 class="mb-0">جدول الشعب</h3>
         </div>
+        <div class="v2-card-toolbar">
+            <div class="v2-card-toolbar__summary">Showing {{ $rooms->count() }} rooms</div>
+            @can('create_room')
+            <a href=".createRoomModal" class="btn btn-success" data-toggle="modal" data-id=""><i class="material-icons" data-toggle="tooltip">انشاء شعبة جديدة</i></a>
+            @endcan
+        </div>
     <div class="table-responsive">
-         @can('create_room')
-        <a href=".createRoomModal" class=" btn btn-success" data-toggle="modal"
-        data-id=""><i class="material-icons" data-toggle="tooltip">انشاء شعبة جديدة</i></a>
-  @endcan
               <table class="table v2-table">
                 <thead class="">
                   <tr>
@@ -155,7 +186,7 @@
 
 
 
-                    <td class="">
+                    <td class="room-actions-cell">
                       <!--<div class="dropdown">-->
                       <!--  <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">-->
                       <!--    <i class="fas fa-ellipsis-v"></i>-->
@@ -170,9 +201,10 @@
                       <!--</div>-->
 
 
-                      <a class="btn btn-primary" href="roomlessons/{{$id}}/{{$item->id}}">المواد</a>
-                      <a class="btn btn-success" href="roomstudent/{{$item->id}}/{{$id}}">الطلاب</a>
-                      <a class="btn btn-warning" href="roomteachers/{{$id}}/{{$item->id}}" style="color: white;background: #0083FF;border-color: #0083FF">المدرسين</a>
+                      <div class="room-actions">
+                      <a class="btn btn-primary" href="{{ route('roomlessons', [$id, $item->id]) }}">المواد</a>
+                      <a class="btn btn-success" href="{{ route('roomstudent', [$item->id, $id]) }}">الطلاب</a>
+                      <a class="btn btn-warning" href="{{ route('roomteachers', [$id, $item->id]) }}" style="color: white;background: #0083FF;border-color: #0083FF">المدرسين</a>
                       @can('workschedule')
                       <a class="btn btn-success" href="{{ route('workschedule',$item->id) }}" style="color: white;background: #008CC4 !important;border-color: #008CC4 !important">البرنامج</a>
                       @endcan
@@ -191,6 +223,7 @@
                         حذف
                     </a>
                     @endcan
+                    </div>
                     </td>
 
 
@@ -408,3 +441,8 @@ $(document).on('click', '.delete', function () {
 
 
 @endsection
+
+
+
+
+

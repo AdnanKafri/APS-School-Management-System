@@ -1,6 +1,10 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'الصفوف')
+@section('page_subtitle', 'إدارة الصفوف والشعب الدراسية')
 @section('style')
 <style>
+    .classes-index-v2 { direction: rtl; text-align: right; }
     /* ── Breadcrumbs ── */
     .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
     .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
@@ -29,6 +33,19 @@
         font-size: 1.1rem !important;
         text-align: right !important;
     }
+    .classes-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.5rem 0;
+        flex-wrap: wrap;
+    }
+    .classes-toolbar__meta {
+        color: #7a748f;
+        font-size: .92rem;
+        font-weight: 700;
+    }
 
     /* ── Table ── */
     .v2-table th {
@@ -50,6 +67,38 @@
         text-align: right !important;
     }
     .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
+    .classes-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(96px, 1fr));
+        gap: .55rem;
+        min-width: 220px;
+    }
+    .classes-actions .btn {
+        width: 100%;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .55rem .8rem;
+        margin: 0 !important;
+    }
+    .class-thumb {
+        width: 54px;
+        height: 54px;
+        object-fit: cover;
+        border-radius: 14px;
+        border: 1px solid rgba(91,75,138,0.12);
+        box-shadow: 0 10px 20px rgba(36,30,62,0.08);
+    }
+    .classes-pagination {
+        padding: 1rem 1.5rem 1.4rem;
+        text-align: center;
+    }
+    .classes-pagination .hint-text {
+        color: #7a748f;
+        font-size: .9rem;
+        margin-bottom: .65rem;
+    }
 
     /* ── Action buttons ── */
     .v2-section-card .btn { border-radius: 12px !important; font-weight: 700 !important; font-size: .85rem !important; }
@@ -73,6 +122,89 @@
         justify-content:flex-start;
     }
     .modal .modal-footer .btn { min-height:40px; min-width:100px; font-weight:600; border-radius:10px; padding:.45rem 1.1rem; }
+    .class-modal .modal-dialog {
+        max-width: 760px;
+        width: calc(100% - 2rem);
+        margin: 1.75rem auto;
+        display: flex;
+        align-items: center;
+        min-height: calc(100vh - 3.5rem);
+    }
+    .class-modal .modal-content {
+        width: 100%;
+        border-radius: 22px;
+        border: 1px solid rgba(91,75,138,0.14);
+        box-shadow: 0 28px 80px rgba(36,30,62,0.2);
+    }
+    .class-modal .modal-header {
+        padding: 1.2rem 1.5rem;
+        background: linear-gradient(180deg, rgba(91,75,138,0.05), rgba(91,75,138,0.01));
+    }
+    .class-modal .modal-title {
+        font-size: 1.08rem;
+        font-weight: 800;
+    }
+    .class-modal .modal-body {
+        padding: 1.5rem;
+        display: grid;
+        gap: 1rem;
+    }
+    .class-modal .form-group {
+        margin-bottom: 0;
+    }
+    .class-modal .form-group label {
+        margin-bottom: .45rem;
+        color: #2f2b3a;
+        font-weight: 700;
+    }
+    .class-modal .form-control,
+    .class-modal select.form-control {
+        min-height: 46px;
+        border-radius: 12px;
+        padding: .7rem .9rem;
+        border-color: rgba(123,103,178,0.22);
+        background: #fcfbff;
+    }
+    .class-modal .form-control:focus,
+    .class-modal select.form-control:focus {
+        border-color: #7B67B2;
+        box-shadow: 0 0 0 4px rgba(123,103,178,.12);
+    }
+    .class-modal .modal-footer {
+        justify-content: flex-start !important;
+        padding: 1rem 1.5rem 1.35rem;
+    }
+    .class-modal .modal-footer .btn,
+    .class-modal .modal-footer a.btn {
+        min-width: 120px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .class-modal .close-btn {
+        cursor: pointer;
+    }
+    .class-modal--compact .modal-dialog {
+        max-width: 520px;
+    }
+    @media (max-width: 767px) {
+        .class-modal .modal-dialog {
+            width: calc(100% - 1rem);
+            margin: .75rem auto;
+            min-height: calc(100vh - 1.5rem);
+        }
+        .class-modal .modal-body {
+            padding: 1rem;
+        }
+        .class-modal .modal-footer {
+            justify-content: stretch !important;
+        }
+        .class-modal .modal-footer .btn,
+        .class-modal .modal-footer a.btn {
+            width: 100%;
+        }
+    }
 
     /* ── Misc ── */
     .pagination { justify-content:center !important; }
@@ -93,8 +225,8 @@
 @section('content')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    {{-- <div class="col" > --}}
-    <div class="v2-section-card" style="direction:rtl; text-align:right; margin: 1.25rem;">
+    <div class="classes-index-v2">
+    <div class="v2-section-card" style="margin: 1.25rem;">
 
         <!--@if (session()->has('success'))
     -->
@@ -114,11 +246,14 @@
             <h3 class="mb-0">جدول الصفوف</h3>
         </div>
 
-        <div class="table-responsive">
+        <div class="classes-toolbar">
+            <div class="classes-toolbar__meta">إدارة الصفوف الأساسية وربطها بالشعب الدراسية.</div>
             @can('create_class')
-                <a href=".createClassModal" class=" btn btn-success" data-toggle="modal" data-id=""><i
-                        class="material-icons" data-toggle="tooltip">إنشاء صف جديد</i></a>
+                <a href=".createClassModal" class="btn btn-success" data-toggle="modal" data-id="">إضافة صف</a>
             @endcan
+        </div>
+
+        <div class="table-responsive">
             <table class="table v2-table">
                 <thead class="thead-light">
                     <tr>
@@ -149,14 +284,14 @@
 
 
                                 @if ($item->image != null)
-                                    <img src="{{ asset('storage/' . $item->image) }}" width="50px" height="50px"
+                                    <img src="{{ asset('storage/' . $item->image) }}" class="class-thumb"
                                         alt="">
                                 @endif
                             </td>
 
                             <td class="text-right">
-                                <a href="{{ route('classroom', $item->id) }}" class="btn btn-success"
-                                    style="margin-left: 10px">الشعب</a>
+                                <div class="classes-actions">
+                                <a href="{{ route('classroom', $item->id) }}" class="btn btn-success">الشعب</a>
                                 @can('update_class')
                                 @if(count($item->stages)>0)
                                  <a href=".editClassModal" class="btn btn-secondary edit"
@@ -176,7 +311,7 @@
                                          data-id="{{ $item->id }}"
                                            data-classcost="{{ $item->classCost }}"
                                             data-is_scientific="{{ $item->is_scientific }}"
-                                        data-next_class="{{ $item->next_class }}" data-toggle="modal" style="color: white">
+                                        data-next_class="{{ $item->next_class }}" data-toggle="modal">
                                         تعديل </a>
                                         @else
                                          <a href=".editClassModal" class="btn btn-secondary edit"
@@ -196,20 +331,18 @@
                                          data-id="{{ $item->id }}"
                                             data-is_scientific="{{ $item->is_scientific }}"
                                            data-classcost="{{ $item->classCost }}"
-                                        data-next_class="{{ $item->next_class }}" data-toggle="modal" style="color: white">
+                                        data-next_class="{{ $item->next_class }}" data-toggle="modal">
                                         تعديل </a>
                                 @endif
 
                                 @endcan
                                 @can('delete_class')
                                     <a href=".deleteClassModal" class="delete2 btn btn-warning text-light "
-                                        style="color: white !important;background: #4e90aa  !important;border-color: #008CC4 !important;
-                      margin-right: 10px"
                                         data-name="{{ $item->name }}" data-id="{{ $item->id }}" data-toggle="modal">
-                                        {{-- <i class="fa fa-trash" style="font-size: 30px;color: #af686e"></i> --}}
                                         حذف
                                     </a>
                                 @endcan
+                                </div>
 
                             </td>
 
@@ -222,10 +355,10 @@
 
         </div>
 
-        <div class="clearfix" style="padding-left:10px;text-align: center">
-            <div class="hint-text">Showing
+        <div class="clearfix classes-pagination">
+            <div class="hint-text">عرض الصفحة
                 <b>{{ !request('page') ? '1' : request('page') }}</b>
-                out of <b>{{ ceil($count / paginate_num) }}</b> entries
+                من أصل <b>{{ ceil($count / paginate_num) }}</b>
             </div>
             <div class="row">
                 <div class="col-md-12">
@@ -236,7 +369,7 @@
 
 
     </div>
-    {{-- </div> --}}
+    </div>
 
 
 
@@ -246,7 +379,7 @@
 
 
 
-    <div class="modal fade createClassModal">
+    <div class="modal fade createClassModal class-modal">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="" action="{{ route('class_store') }}" method="POST" enctype="multipart/form-data">
@@ -414,7 +547,7 @@
                                 alt="">
                         </div>
                     </div>
-                    <div class="modal-footer" style="justify-content: right;">
+                    <div class="modal-footer">
                         <a class="btn btn-default" data-dismiss="modal">الغاء</a>
                         <button class="btn btn-primary">حفظ</button>
                     </div>
@@ -496,7 +629,7 @@
 
 
 
-    <div class="modal fade editClassModal">
+    <div class="modal fade editClassModal class-modal">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="form_update" method="POST" action="{{ route('class_update') }}"
@@ -654,7 +787,7 @@
                                 alt="">
                         </div>
                     </div>
-                    <div class="modal-footer" style="justify-content: right;">
+                    <div class="modal-footer">
                         <a class="btn btn-default" data-dismiss="modal">الغاء</a>
                         <button class="btn btn-primary">حفظ</button>
                     </div>
@@ -693,7 +826,7 @@
 
     {{-- delete class  --}}
 
-    <div class="modal fade deleteClassModal">
+    <div class="modal fade deleteClassModal class-modal class-modal--compact">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="form_delete" action="{{ route('class_delete') }}" method="POST" autocomplete="off">
@@ -717,7 +850,7 @@
                         </div>
 
                     </div>
-                    <div class="modal-footer" style="justify-content: right;">
+                    <div class="modal-footer">
                         <a class="btn btn-dark" data-dismiss="modal">الغاء </a>
                         <button class="btn btn-danger">حفظ</button>
                     </div>
@@ -898,3 +1031,4 @@
         });
     </script>
 @endsection
+

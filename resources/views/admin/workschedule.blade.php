@@ -1,9 +1,12 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'برنامج الدوام')
+@section('page_subtitle', 'إدارة جدول الحصص الأسبوعي للشعبة وربط المواد والمدرسين')
 
 @section('style')
      <style>
 
-.card {
+.workschedule-v2 .card {
     background-color: #fff;
     border-radius: 10px;
     border: none;
@@ -18,35 +21,35 @@
     margin-bottom: 30px;
     box-shadow: 0 0.46875rem 2.1875rem rgba(90,97,105,0.1), 0 0.9375rem 1.40625rem rgba(90,97,105,0.1), 0 0.25rem 0.53125rem rgba(90,97,105,0.12), 0 0.125rem 0.1875rem rgba(90,97,105,0.1);
 }
-.l-bg-cherry {
+.workschedule-v2 .l-bg-cherry {
     background: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196)) !important;
     color: #fff;
 
 }
 
-.l-bg-blue-dark {
+.workschedule-v2 .l-bg-blue-dark {
 	background: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196)) !important;
     color: #fff;
 	text-align: center;
 }
 
-.l-bg-green-dark {
+.workschedule-v2 .l-bg-green-dark {
     background: linear-gradient(to right top, #094e89 20%, rgb(132, 167, 196)) !important;
     color: #fff;
 	text-align: center;
 }
 
-.l-bg-orange-dark {
+.workschedule-v2 .l-bg-orange-dark {
     background: linear-gradient(to right, #a86008, #ffba56) !important;
     color: #fff;
 }
 
-.card .card-statistic-3 .card-icon-large .fas, .card .card-statistic-3 .card-icon-large .far, .card .card-statistic-3 .card-icon-large .fab, .card .card-statistic-3 .card-icon-large .fal {
+.workschedule-v2 .card .card-statistic-3 .card-icon-large .fas, .workschedule-v2 .card .card-statistic-3 .card-icon-large .far, .workschedule-v2 .card .card-statistic-3 .card-icon-large .fab, .workschedule-v2 .card .card-statistic-3 .card-icon-large .fal {
     font-size: 80px;
 
 }
 
-.card .card-statistic-3 .card-icon {
+.workschedule-v2 .card .card-statistic-3 .card-icon {
 
     line-height: 50px;
     margin-right: 195px;
@@ -59,25 +62,25 @@
 
 }
 
-.l-bg-cyan {
+.workschedule-v2 .l-bg-cyan {
     background: linear-gradient(135deg, #289cf5, #84c0ec) !important;
     color: #fff;
 	text-align: center;
 }
 
-.l-bg-green {
+.workschedule-v2 .l-bg-green {
     background: linear-gradient(135deg, #23bdb8 0%, #43e794 100%) !important;
     color: #fff;
 	text-align: center;
 }
 
-.l-bg-orange {
+.workschedule-v2 .l-bg-orange {
     background: linear-gradient(to right, #f9900e, #ffba56) !important;
     color: #fff;
 	text-align: center;
 }
 
-.l-bg-cyan {
+.workschedule-v2 .l-bg-cyan {
     background: linear-gradient(135deg, #289cf5, #84c0ec) !important;
     color: #fff;
 	text-align: center;
@@ -87,7 +90,7 @@
 @import "bourbon";
  @import 'https://fonts.googleapis.com/css?family=Montserrat:400,700|Raleway:300,400';
 
- .tabs {
+ .workschedule-v2 .tabs {
 	 left: 50%;
 	 transform: translateX(-50%);
 	 position: relative;
@@ -100,16 +103,16 @@
 	 border-radius: 5px;
 	 min-width: 240px;
 }
- .tabs input[name="tab-control"] {
+ .workschedule-v2 .tabs input[name="tab-control"] {
 	 display: none;
 }
- .tabs .content section h2, .tabs ul li label {
+ .workschedule-v2 .tabs .content section h2, .workschedule-v2 .workschedule-v2 .tabs ul li label {
 	 font-family: "Montserrat";
 	 font-weight: bold;
 	 font-size: 18px;
 	 color: #094e89;
 }
- .tabs ul {
+ .workschedule-v2 .tabs ul {
 	list-style-type: none;
 	 padding-left: 0;
 
@@ -122,14 +125,14 @@
 	 flex-wrap: wrap;
 
 }
- .tabs ul li {
+ .workschedule-v2 .tabs ul li {
 	 box-sizing: border-box;
 	 /*flex: 1;
 	 width: 25%;
 	 padding: 0 10px;*/
 	 text-align: center;
 }
- .tabs ul li label {
+ .workschedule-v2 .tabs ul li label {
 	 transition: all 0.3s ease-in-out;
 	 color: #929daf;
 	 padding: 5px auto;
@@ -141,10 +144,10 @@
 	 white-space: nowrap;
 	 -webkit-touch-callout: none;
 }
- .tabs ul li label br {
+ .workschedule-v2 .tabs ul li label br {
 	 display: none;
 }
- .tabs ul li label svg {
+ .workschedule-v2 .tabs ul li label svg {
 	 fill: #929daf;
 	 height: 1.2em;
 	 vertical-align: bottom;
@@ -158,12 +161,12 @@
  .tabs ul li label:hover svg, .tabs ul li label:focus svg, .tabs ul li label:active svg {
 	 fill: #bec5cf;
 }
- .tabs .slider {
+ .workschedule-v2 .tabs .slider {
 	 position: relative;
 	 width: 25%;
 	 transition: all 0.33s cubic-bezier(0.38, 0.8, 0.32, 1.07);
 }
- .tabs .slider .indicator {
+ .workschedule-v2 .tabs .slider .indicator {
 	 position: relative;
 	 width: 50px;
 	 max-width: 100%;
@@ -172,10 +175,10 @@
 	 background: #cc151525;
 	 border-radius: 1px;
 }
- .tabs .content {
+ .workschedule-v2 .tabs .content {
 	 margin-top: 30px;
 }
- .tabs .content section {
+ .workschedule-v2 .tabs .content section {
 	 display: none;
 	 animation-name: content;
 	 animation-direction: normal;
@@ -184,11 +187,11 @@
 	 animation-iteration-count: 1;
 	 line-height: 1.4;
 }
- .tabs .content section h2 {
+ .workschedule-v2 .tabs .content section h2 {
 	 color: #1068b4;
 	 display: none;
 }
- .tabs .content section h2::after {
+ .workschedule-v2 .tabs .content section h2::after {
 	 content: "";
 	 position: relative;
 	 display: block;
@@ -440,31 +443,31 @@
 	}
 }
  @media (max-width: 1000px) {
-	 .tabs ul li label {
+	 .workschedule-v2 .tabs ul li label {
 		 white-space: initial;
 	}
-	 .tabs ul li label br {
+	 .workschedule-v2 .tabs ul li label br {
 		 display: initial;
 	}
-	 .tabs ul li label svg {
+	 .workschedule-v2 .tabs ul li label svg {
 		 height: 1.5em;
 	}
 }
  @media (max-width: 600px) {
-	 .tabs ul li label {
+	 .workschedule-v2 .tabs ul li label {
 		 padding: 5px;
 		 border-radius: 5px;
 	}
 	 .tabs ul li label span {
 		 display: none;
 	}
-	 .tabs .slider {
+	 .workschedule-v2 .tabs .slider {
 		 display: none;
 	}
-	 .tabs .content {
+	 .workschedule-v2 .tabs .content {
 		 margin-top: 20px;
 	}
-	 .tabs .content section h2 {
+	 .workschedule-v2 .tabs .content section h2 {
 		 display: block;
 	}
 }
@@ -472,7 +475,7 @@
 
 /*end style tablist*/
 /* cards of marks */
-.cards-list {
+.workschedule-v2 .cards-list {
   z-index: 0;
   width: 100%;
   display: flex;
@@ -480,7 +483,7 @@
   flex-wrap: wrap;
 }
 
-.card2 {
+.workschedule-v2 .card2 {
   margin: 30px auto;
   width: 170px;
   height: 170px;
@@ -491,21 +494,21 @@
   transition: 0.4s;
 }
 
-.card2 .card_image {
+.workschedule-v2 .card2 .card_image {
  border-color: 5px solid #094e89;
   width: inherit;
   height: inherit;
   border-radius: 40px;
 }
 
-.card2 .card_image img {
+.workschedule-v2 .card2 .card_image img {
   width: inherit;
   height: inherit;
   border-radius: 40px;
   object-fit: cover;
 }
 
-.card2 .card_title {
+.workschedule-v2 .card2 .card_title {
   text-align: center;
   border-radius: 0px 0px 40px 40px;
   font-family: sans-serif;
@@ -515,16 +518,16 @@
   height: 40px;
 }
 
-.card2:hover {
+.workschedule-v2 .card2:hover {
   transform: scale(0.9, 0.9);
   box-shadow: 1px 1px 10px 2px rgba(0,0,0,0.22), -1px -1px 10px 2px rgba(0,0,0,0.20);
 }
 
-.title-white {
+.workschedule-v2 .title-white {
   color: white;
 }
 
-.title-black {
+.workschedule-v2 .title-black {
   color: black;
 }
 
@@ -534,86 +537,86 @@
     flex-direction: column;
   }
 }
-a{
+.workschedule-v2 a{
     color:#fff !important;
     font-size: 16px !important;
 }
-table{
+.workschedule-v2 table{
     background: white !important;
     color: black;
     font-size: 20px;
     font-weight:400;
 }
-.table-bordered,th,td{
+.workschedule-v2 .table-bordered,.workschedule-v2 th,.workschedule-v2 td{
     border: 1px solid #dee2e6 !important;
     padding: 10px;
 }
 
-div::-webkit-scrollbar {
+.workschedule-v2 div::-webkit-scrollbar {
   display: none;
 }
 
 /* Hide scrollbar for IE, Edge and Firefox */
-div {
+.workschedule-v2 div {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-th,td{
+.workschedule-v2 th,.workschedule-v2 td{
     border: 1px solid #c1e3e5 !important;
 }
 /*new style for table*/
 
-.table-scroll {
+.workschedule-v2 .table-scroll {
 	position:relative;
 	max-width:600px;
 	margin:auto;
 	/*overflow:hidden;*/
 	border:1px solid #000;
 }
-.table-wrap {
+.workschedule-v2 .table-wrap {
 	width:100%;
 	overflow:auto;
 }
-.table-scroll table {
+.workschedule-v2 .table-scroll table {
 	width:100%;
 	margin:auto;
 	border-collapse:separate;
 	border-spacing:0;
 }
-.table-scroll th, .table-scroll td {
+.workschedule-v2 .table-scroll th, .workschedule-v2 .table-scroll td {
 	padding:5px 10px;
 	border:1px solid #000;
 	background:#fff;
 	white-space:nowrap;
 	vertical-align:top;
 }
-.table-scroll thead, .table-scroll tfoot {
+.workschedule-v2 .table-scroll thead, .workschedule-v2 .table-scroll tfoot {
 	background:#f9f9f9;
 }
-.clone {
+.workschedule-v2 .clone {
 	position:absolute;
 	top:0;
 	left:0;
 	pointer-events:none;
 }
-.clone th, .clone td {
+.workschedule-v2 .clone th, .workschedule-v2 .clone td {
 	visibility:hidden
 }
-.clone td, .clone th {
+.workschedule-v2 .clone td, .workschedule-v2 .clone th {
 	border-color:transparent
 }
-.clone tbody th {
+.workschedule-v2 .clone tbody th {
 	visibility:visible;
 	color:red;
 }
-.clone .fixed-side {
+.workschedule-v2 .clone .fixed-side {
 	border:1px solid #000;
 	background:#eee;
 	visibility:visible;
 }
-.clone thead, .clone tfoot{background:transparent;}
+.workschedule-v2 .clone thead, .workschedule-v2 .clone tfoot{background:transparent;}
 
-.btn {
+.workschedule-v2 .btn {
     display: inline-block;
     font-weight: 400;
     text-align: center;
@@ -629,9 +632,206 @@ th,td{
     border-radius: 0.25rem;
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
-.modal-header .close {
+.workschedule-v2 .modal-header .close {
     padding: 1rem;
     margin: -1rem 20rem -1rem auto;
+}
+.v2-bc {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .9rem;
+    flex-wrap: wrap;
+    direction: rtl;
+}
+.v2-bc a {
+    color: #8a869a;
+    font-weight: 700;
+    text-decoration: none;
+}
+.v2-bc a:hover { color: #5B4B8A; }
+.v2-bc .sep { color: #b2aec0; font-weight: 700; }
+.v2-bc .active { color: #2f2b3a; font-weight: 800; }
+.workschedule-v2 {
+    direction: rtl;
+    text-align: right;
+    padding: 0 1.25rem 1.5rem;
+}
+.workschedule-shell {
+    background: #fff;
+    border-radius: 22px;
+    border: 1px solid rgba(91,75,138,0.12);
+    box-shadow: 0 14px 36px rgba(36,30,62,0.08);
+    padding: 1.5rem;
+}
+.workschedule-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.workschedule-page-header__title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2f2b3a;
+    font-weight: 800;
+}
+.workschedule-page-header__title p {
+    margin: .35rem 0 0;
+    color: #7a748f;
+    font-size: .92rem;
+    font-weight: 700;
+}
+.workschedule-page-actions {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+.workschedule-page-actions .btn {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .65rem 1rem;
+    border-radius: 12px;
+    margin: 0 !important;
+    font-weight: 700;
+}
+.workschedule-v2 .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 18px;
+    border: 1px solid rgba(91,75,138,0.1);
+}
+.workschedule-v2 .workschedule-table {
+    width: 100%;
+    margin: 0;
+    background: #fff !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+.workschedule-v2 .workschedule-table thead th {
+    background: #f5f3fb;
+    color: #2f2b3a;
+    font-size: .88rem;
+    font-weight: 800;
+    text-align: center !important;
+    padding: 1rem .45rem;
+}
+.workschedule-v2 .workschedule-table tbody th {
+    background: #fbfaff;
+    color: #2f2b3a;
+    font-weight: 800;
+    text-align: center !important;
+    vertical-align: middle;
+}
+.workschedule-v2 .workschedule-table td {
+    padding: .9rem .5rem;
+    text-align: center !important;
+    vertical-align: middle;
+    background: #fff;
+}
+.workschedule-v2 .workschedule-table .btn.add_time {
+    min-height: 86px;
+    width: min(140px, 100%);
+    margin: 0 auto !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    white-space: normal !important;
+    font-weight: 700;
+    gap: .2rem;
+    padding: .65rem .55rem;
+    box-shadow: none;
+}
+.workschedule-v2 .workschedule-table .btn.add_time p {
+    margin: 0 !important;
+}
+.workschedule-modal .modal-dialog {
+    max-width: 760px;
+    width: calc(100% - 2rem);
+    margin: 1.75rem auto;
+    min-height: calc(100vh - 3.5rem);
+    display: flex;
+    align-items: center;
+}
+.workschedule-modal .modal-content {
+    width: 100%;
+    border-radius: 22px;
+    border: 1px solid rgba(91,75,138,0.14);
+    box-shadow: 0 28px 80px rgba(36,30,62,0.2);
+}
+.workschedule-modal .modal-header {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid rgba(91,75,138,0.1);
+    background: linear-gradient(180deg, rgba(91,75,138,0.05), rgba(91,75,138,0.01));
+}
+.workschedule-modal .modal-title {
+    font-size: 1.08rem;
+    font-weight: 800;
+    color: #2f2b3a;
+}
+.workschedule-modal .modal-body {
+    padding: 1.5rem;
+}
+.workschedule-modal .form-group {
+    margin-bottom: 1rem;
+}
+.workschedule-modal .form-control {
+    min-height: 46px;
+    border-radius: 12px;
+    padding: .7rem .9rem;
+    border-color: rgba(123,103,178,0.22);
+    background: #fcfbff;
+}
+.workschedule-modal .modal-footer {
+    padding: 1rem 1.5rem 1.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: .75rem;
+}
+.workschedule-modal .modal-footer .btn {
+    min-width: 120px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 !important;
+}
+@media (max-width: 991px) {
+    .workschedule-v2 {
+        padding: 0 .75rem 1rem;
+    }
+    .workschedule-shell {
+        padding: 1rem;
+    }
+}
+@media (max-width: 767px) {
+    .workschedule-page-header {
+        align-items: flex-start;
+    }
+    .workschedule-page-actions {
+        width: 100%;
+    }
+    .workschedule-page-actions .btn {
+        flex: 1 1 100%;
+    }
+    .workschedule-modal .modal-dialog {
+        width: calc(100% - 1rem);
+        margin: .75rem auto;
+        min-height: calc(100vh - 1.5rem);
+    }
+    .workschedule-v2 .workschedule-table .btn.add_time {
+        width: 100%;
+        min-height: 74px;
+    }
 }
 
 	 </style>
@@ -716,7 +916,7 @@ th,td{
                                 </div>
 
                             </div>
-                            <<div class="modal-footer" style="justify-content: right;">
+                            <div class="modal-footer" style="justify-content: right;">
                                 <a class="btn btn-default" data-dismiss="modal" style="color: black !important;">الغاء</a>
                                 <button class="btn btn-primary">حفظ</button>
                             </div>

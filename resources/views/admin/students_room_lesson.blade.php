@@ -1,6 +1,10 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'علامات طلاب الشعبة')
+@section('page_subtitle', 'إدارة العلامات والتقييمات الخاصة بالمادة')
 @section('style')
 <style>
+    .students-room-lesson-v2 { direction: rtl; text-align: right; }
     /* ── Breadcrumbs ── */
     .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
     .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
@@ -16,99 +20,197 @@
         background: #fff;
         overflow: hidden;
     }
+    .students-room-lesson-card {
+        margin: 1.25rem;
+        padding: 1.5rem;
+    }
+    .lesson-page-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+    .lesson-page-toolbar__title h2 {
+        margin: 0;
+        color: #2f2b3a;
+        font-size: 1.35rem;
+        font-weight: 800;
+    }
+    .lesson-page-toolbar__title p {
+        margin: .35rem 0 0;
+        color: #7a748f;
+        font-size: .92rem;
+        font-weight: 700;
+    }
+    .lesson-page-toolbar__actions {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+    .lesson-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: .65rem 1rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2c71ad, #84a7c4);
+        color: #fff !important;
+        font-weight: 700;
+        font-size: .88rem;
+        text-decoration: none !important;
+        box-shadow: 0 10px 20px rgba(44,113,173,.15);
+    }
 
     /* ── Grade table (kept as-is, only cosmetic override) ── */
-    table {
+    .students-room-lesson-v2 table {
         width: 100%;
         border-collapse: collapse;
         direction: rtl;
         text-align: right;
+        background: #fff;
     }
-    tr:nth-of-type(odd) { background: #f8f7fc; }
-    th {
-        background: #5B4B8A !important;
-        color: #fff !important;
+    .students-room-lesson-v2 tr:nth-of-type(odd) { background: #fbfaff; }
+    .students-room-lesson-v2 th {
+        background: #f5f3fb !important;
+        color: #2f2b3a !important;
         font-weight: 700;
         font-size: .88rem;
     }
-    td, th { padding: 8px; border: 1px solid rgba(91,75,138,0.15); text-align: right; }
+    .students-room-lesson-v2 td, .students-room-lesson-v2 th { padding: 10px 8px; border: 1px solid rgba(91,75,138,0.12); text-align: right; vertical-align: middle; }
 
     @media only screen and (max-width: 760px),
     (min-device-width: 768px) and (max-device-width: 1024px) {
-        table, thead, tbody, th, td, tr { display: block; }
-        thead tr { position: absolute; top: -9999px; left: -9999px; }
-        tr { border: 1px solid #ccc; }
-        td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; }
-        td:before { position: absolute; top: 6px; left: 6px; width: 45%; padding-right: 10px; white-space: nowrap; }
-        td:nth-of-type(1):before { content: "المواد الدراسية "; }
-        td:nth-of-type(2):before { content: "الدرجة العظمى "; }
-        td:nth-of-type(3):before { content: "درجات اعمال الفصل الأول "; }
-        td:nth-of-type(4):before { content: "شفوية "; }
-        td:nth-of-type(5):before { content: "وظائف اوراق العمل "; }
-        td:nth-of-type(6):before { content: "نشاطات ومبادرات "; }
-        td:nth-of-type(7):before { content: "المذاكرات "; }
-        td:nth-of-type(8):before { content: "درجة اختبار الفصل الأول "; }
-        td:nth-of-type(9):before { content: "مجموع درجات الفصل الأول "; }
-        td:nth-of-type(10):before { content: "تقدير الفصل الأول "; }
+        .students-room-lesson-v2 table, .students-room-lesson-v2 thead, .students-room-lesson-v2 tbody, .students-room-lesson-v2 th, .students-room-lesson-v2 td, .students-room-lesson-v2 tr { display: block; }
+        .students-room-lesson-v2 thead tr { position: absolute; top: -9999px; left: -9999px; }
+        .students-room-lesson-v2 tr { border: 1px solid rgba(91,75,138,0.12); }
+        .students-room-lesson-v2 td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; }
+        .students-room-lesson-v2 td:before { position: absolute; top: 6px; left: 6px; width: 45%; padding-right: 10px; white-space: nowrap; }
+        .students-room-lesson-v2 td:nth-of-type(1):before { content: "المواد الدراسية "; }
+        .students-room-lesson-v2 td:nth-of-type(2):before { content: "الدرجة العظمى "; }
+        .students-room-lesson-v2 td:nth-of-type(3):before { content: "درجات أعمال الفصل الأول "; }
+        .students-room-lesson-v2 td:nth-of-type(4):before { content: "شفوية "; }
+        .students-room-lesson-v2 td:nth-of-type(5):before { content: "وظائف وأوراق عمل "; }
+        .students-room-lesson-v2 td:nth-of-type(6):before { content: "نشاطات ومبادرات "; }
+        .students-room-lesson-v2 td:nth-of-type(7):before { content: "المذاكرات "; }
+        .students-room-lesson-v2 td:nth-of-type(8):before { content: "درجة اختبار الفصل الأول "; }
+        .students-room-lesson-v2 td:nth-of-type(9):before { content: "مجموع درجات الفصل الأول "; }
+        .students-room-lesson-v2 td:nth-of-type(10):before { content: "تقدير الفصل الأول "; }
     }
 
     /* ── Tab system (unchanged) ── */
-    .tabs {
-        left: 50%; transform: translateX(-50%); position: relative;
-        background: white; padding: 20px; padding-bottom: 80px;
-        width: 99%; height: auto; border-radius: 5px; min-width: 240px; direction: rtl;
+    .students-room-lesson-v2 .tabs {
+        position: relative;
+        background: transparent;
+        padding: 0;
+        width: 100%;
+        border-radius: 0;
+        min-width: 240px;
+        direction: rtl;
+        left: auto;
+        transform: none;
     }
-    .tabs input[name="tab-control"] { display: none; }
-    .tabs .content section h2, .tabs ul li label { font-family: "Montserrat"; font-weight: bold; font-size: 18px; color: #428bff; }
-    .tabs ul { list-style-type: none; padding-left: 0; flex-direction: row; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; }
-    .tabs ul li { box-sizing: border-box; text-align: center; }
-    .tabs ul li label { transition: all .3s ease-in-out; color: #929daf; padding: 5px auto; overflow: hidden; text-overflow: ellipsis; display: block; cursor: pointer; white-space: nowrap; -webkit-touch-callout: none; }
-    .tabs ul li label br { display: none; }
-    .tabs ul li label svg { fill: #929daf; height: 1.2em; vertical-align: bottom; margin-right: .2em; transition: all .2s ease-in-out; }
-    .tabs ul li label:hover, .tabs ul li label:focus, .tabs ul li label:active { outline: 0; color: #bec5cf; }
-    .tabs ul li label:hover svg, .tabs ul li label:focus svg, .tabs ul li label:active svg { fill: #bec5cf; }
-    .tabs .slider { position: relative; width: 25%; transition: all .33s cubic-bezier(.38,.8,.32,1.07); }
-    .tabs .slider .indicator { position: relative; width: 50px; max-width: 100%; margin: 0 auto; height: 4px; background: #cc151525; border-radius: 1px; }
-    .tabs .content { margin-top: 30px; }
-    .tabs .content section { display: none; animation-name: content; animation-direction: normal; animation-duration: .3s; animation-timing-function: ease-in-out; animation-iteration-count: 1; line-height: 1.4; }
-    .tabs .content section h2 { color: #428bff; display: none; }
-    .tabs .content section h2::after { content: ""; position: relative; display: block; width: 30px; height: 3px; background: #f38639; margin-top: 5px; left: 1px; }
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label { cursor: default; color: #f38639; }
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label svg { fill: #f38639; }
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~.slider { transform: translateX(0%); }
-    .tabs input[name="tab-control"]:nth-of-type(1):checked~.content>section:nth-child(1) { display: block; }
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label { cursor: default; color: #f38639; }
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label svg { fill: #f38639; }
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~.slider { transform: translateX(100%); }
-    .tabs input[name="tab-control"]:nth-of-type(2):checked~.content>section:nth-child(2) { display: block; }
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label { cursor: default; color: #f38639; }
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label svg { fill: #f38639; }
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~.slider { transform: translateX(200%); }
-    .tabs input[name="tab-control"]:nth-of-type(3):checked~.content>section:nth-child(3) { display: block; }
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label { cursor: default; color: #428bff; }
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~ul>li:nth-child(4)>label svg { fill: #428bff; }
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~.slider { transform: translateX(0%); }
-    .tabs input[name="tab-control"]:nth-of-type(4):checked~.content>section:nth-child(4) { display: block; }
-    .tabs input[name="tab-control"]:nth-of-type(5):checked~.slider { transform: translateX(300%); }
-    .tabs input[name="tab-control"]:nth-of-type(5):checked~.content>section:nth-child(5) { display: block; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"] { display: none; }
+    .students-room-lesson-v2 .tabs .content section h2,
+    .students-room-lesson-v2 .tabs ul li label {
+        font-family: inherit;
+        font-weight: 800;
+        font-size: 1rem;
+        color: #5B4B8A;
+    }
+    .students-room-lesson-v2 .tabs ul {
+        list-style-type: none;
+        padding-left: 0;
+        flex-direction: row;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+    .students-room-lesson-v2 .tabs ul li { box-sizing: border-box; text-align: center; }
+    .students-room-lesson-v2 .tabs ul li label {
+        transition: all .3s ease-in-out;
+        color: #7a748f;
+        padding: .8rem 1.2rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        cursor: pointer;
+        white-space: nowrap;
+        border-radius: 999px;
+        background: #f7f5fc;
+        -webkit-touch-callout: none;
+    }
+    .students-room-lesson-v2 .tabs ul li label br { display: none; }
+    .students-room-lesson-v2 .tabs ul li label svg { fill: #7a748f; height: 1.05em; vertical-align: bottom; margin-right: 0; transition: all .2s ease-in-out; }
+    .students-room-lesson-v2 .tabs ul li label:hover,
+    .students-room-lesson-v2 .tabs ul li label:focus,
+    .students-room-lesson-v2 .tabs ul li label:active { outline: 0; color: #5B4B8A; }
+    .students-room-lesson-v2 .tabs ul li label:hover svg,
+    .students-room-lesson-v2 .tabs ul li label:focus svg,
+    .students-room-lesson-v2 .tabs ul li label:active svg { fill: #5B4B8A; }
+    .students-room-lesson-v2 .tabs .slider { display: none; }
+    .students-room-lesson-v2 .tabs .content { margin-top: 1rem; }
+    .students-room-lesson-v2 .tabs .content section {
+        display: none;
+        animation-name: content;
+        animation-direction: normal;
+        animation-duration: .3s;
+        animation-timing-function: ease-in-out;
+        animation-iteration-count: 1;
+        line-height: 1.4;
+        background: #fff;
+        border: 1px solid rgba(91,75,138,0.12);
+        border-radius: 18px;
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    .students-room-lesson-v2 .tabs .content section h2 { color: #5B4B8A; display: none; }
+    .students-room-lesson-v2 .tabs .content section h2::after { content: ""; position: relative; display: block; width: 30px; height: 3px; background: #f38639; margin-top: 5px; left: 1px; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label { cursor: default; color: #fff; background: linear-gradient(135deg, #5B4B8A, #7B67B2); }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(1):checked~ul>li:nth-child(1)>label svg { fill: #fff; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(1):checked~.content>section:nth-child(1) { display: block; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label { cursor: default; color: #fff; background: linear-gradient(135deg, #5B4B8A, #7B67B2); }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(2):checked~ul>li:nth-child(2)>label svg { fill: #fff; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(2):checked~.content>section:nth-child(2) { display: block; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label { cursor: default; color: #fff; background: linear-gradient(135deg, #5B4B8A, #7B67B2); }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(3):checked~ul>li:nth-child(3)>label svg { fill: #fff; }
+    .students-room-lesson-v2 .tabs input[name="tab-control"]:nth-of-type(3):checked~.content>section:nth-child(3) { display: block; }
     @keyframes content { from { opacity: 0; transform: translateY(5%); } to { opacity: 1; transform: translateY(0%); } }
     @media (max-width: 600px) {
-        .tabs ul li label { padding: 5px; border-radius: 5px; }
-        .tabs ul li label span { display: none; }
-        .tabs .slider { display: none; }
-        .tabs .content { margin-top: 20px; }
-        .tabs .content section h2 { display: block; }
+        .students-room-lesson-v2 .tabs ul li label { padding: .7rem .9rem; border-radius: 999px; }
+        .students-room-lesson-v2 .tabs ul li label span { display: inline; }
+        .students-room-lesson-v2 .tabs .content { margin-top: 20px; }
+        .students-room-lesson-v2 .tabs .content section h2 { display: block; }
+        .lesson-page-toolbar { align-items: flex-start; }
     }
 
     /* ── Floating mark input ── */
-    .form__group { direction: rtl; position: relative; padding: 15px 0 0; margin-top: 10px; width: 20%; }
-    .form__field { font-family: inherit; width: 150px; border: 0; border-bottom: 2px solid #9b9b9b; outline: 0; font-size: 1.3rem; color: #2c71ad; padding: 7px 0; background: transparent; transition: border-color .2s; }
-    .form__field::placeholder { color: transparent; }
-    .form__field:placeholder-shown~.form__label { font-size: 1.3rem; cursor: text; top: 20px; padding-right: 32px; }
-    .form__label { text-align: right; position: absolute; top: 0; display: block; transition: .2s; font-size: 1rem; color: #9b9b9b; padding-right: 39px; }
-    .form__field:focus { padding-bottom: 6px; font-weight: 700; border-width: 3px; }
-    .form__field:focus~.form__label { position: absolute; top: 0; display: block; transition: .2s; font-size: 1rem; color: #11998e; font-weight: 700; }
-    .form__field:required, .form__field:invalid { box-shadow: none; }
+    .students-room-lesson-v2 .form__group { direction: rtl; position: relative; padding: 15px 0 0; margin-top: 10px; width: 20%; }
+    .students-room-lesson-v2 .form__field { font-family: inherit; width: 150px; border: 0; border-bottom: 2px solid #9b9b9b; outline: 0; font-size: 1.3rem; color: #2c71ad; padding: 7px 0; background: transparent; transition: border-color .2s; }
+    .students-room-lesson-v2 .form__field::placeholder { color: transparent; }
+    .students-room-lesson-v2 .form__field:placeholder-shown~.form__label { font-size: 1.3rem; cursor: text; top: 20px; padding-right: 32px; }
+    .students-room-lesson-v2 .form__label { text-align: right; position: absolute; top: 0; display: block; transition: .2s; font-size: 1rem; color: #9b9b9b; padding-right: 39px; }
+    .students-room-lesson-v2 .form__field:focus { padding-bottom: 6px; font-weight: 700; border-width: 3px; }
+    .students-room-lesson-v2 .form__field:focus~.form__label { position: absolute; top: 0; display: block; transition: .2s; font-size: 1rem; color: #11998e; font-weight: 700; }
+    .students-room-lesson-v2 .form__field:required, .students-room-lesson-v2 .form__field:invalid { box-shadow: none; }
+    .students-room-lesson-v2 input.number {
+        width: 72px !important;
+        height: 44px !important;
+        border-radius: 10px;
+        padding: .35rem !important;
+        text-align: center;
+        margin: 0 auto;
+        display: block;
+        font-weight: 700;
+    }
 
     /* ── Modal ── */
     .modal .modal-content { border-radius:16px; overflow:hidden; direction:rtl; text-align:right; box-shadow:0 20px 60px rgba(0,0,0,.18); }
@@ -143,8 +245,8 @@
 
 @section('content')
 
-<div class="col" style="direction:rtl;text-align:right">
-    <div class="card">
+<div class="students-room-lesson-v2">
+    <div class="v2-section-card students-room-lesson-card">
 
         <input type="hidden" name="count" id="count" value="{{ $count }}">
         <!-- Card header -->
@@ -169,27 +271,30 @@
 
         @endphp
         
+        <div class="lesson-page-toolbar">
+            <div class="lesson-page-toolbar__title">
+                <h2>{{ $lesson->name }}</h2>
+                <p>إدارة علامات الطلاب والتقييمات الخاصة بهذه المادة داخل الشعبة الحالية.</p>
+            </div>
+            <div class="lesson-page-toolbar__actions">
+                @can('edit_student_marks')
+                <a href=".deleteEmployeeModal11" class="lesson-action-btn" data-toggle="modal">
+                    إضافة علامة للكل
+                </a>
+                <a href=".add_mark" class="lesson-action-btn" data-toggle="modal">
+                    إضافة علامة تفصيلية للكل
+                </a>
+                @endcan
+                @can('Download_excel_for_tags')
+                <a href="{{ route('StudentsRoomLesson_excel',[$room->id,$lesson_id]) }}" target="_blank"
+                    class="lesson-action-btn">
+                    تنزيل إكسل
+                </a>
+                @endcan
+            </div>
+        </div>
+
         <div class="tabs">
-            <h2 style="text-align: center;">{{$lesson->name}}</h2>
-              @can('edit_student_marks')
-            <a href=".deleteEmployeeModal11" class="dropdown-item" data-toggle="modal" class="btn"
-                style="      display: inline;  width: 10%; background: linear-gradient(to right top, #2c71ad 20%, #84a7c4);color :white;">
-                اضافة علامة للكل</a>
-                
-                  <a href=".add_mark" class="dropdown-item" data-toggle="modal" class="btn"
-                style="      display: inline;  width: 10%; background: linear-gradient(to right top, #2c71ad 20%, #84a7c4);color :white;">
-                اضافة علامة تفصيلية  للكل</a>
-                
-                
-                @endcan
-            &nbsp; &nbsp; &nbsp;
-            <!--<a href="{{ route('StudentsRoomLesson_pdf',[$room->id,$lesson_id]) }}" target="_blank" class="dropdown-item"  class="btn" style="     display: inline;   width: 10%; background: linear-gradient(to right top, #2c71ad 20%, #84a7c4);color :white;"> تنزيل pdf  </a>    -->
-            @can('Download_excel_for_tags')
-            <a href="{{ route('StudentsRoomLesson_excel',[$room->id,$lesson_id]) }}" target="_blank"
-                class="dropdown-item" class="btn"
-                style="     display: inline;   width: 10%; background: linear-gradient(to right top, #2c71ad 20%, #84a7c4);color :white;">
-                تنزيل اكسل </a>
-                @endcan
 
             <input type="radio" id="tab1" name="tab-control" checked>
             <input type="radio" id="tab2" name="tab-control">
@@ -2126,3 +2231,4 @@
 
 
 @endsection
+

@@ -1,7 +1,11 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'مواد الشعبة')
+@section('page_subtitle', 'إدارة مواد الشعبة وروابط علامات الطلاب')
 
 @section('style')
 <style>
+    .lesson-room-v2 { direction: rtl; text-align: right; }
     /* ── Breadcrumbs ── */
     .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
     .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
@@ -30,6 +34,19 @@
         font-size: 1.1rem !important;
         text-align: right !important;
     }
+    .lesson-room-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.5rem 0;
+        flex-wrap: wrap;
+    }
+    .lesson-room-toolbar__meta {
+        color: #7a748f;
+        font-size: .92rem;
+        font-weight: 700;
+    }
 
     /* ── Table ── */
     .v2-table th {
@@ -51,6 +68,21 @@
         text-align: right !important;
     }
     .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
+    .lesson-room-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 110px;
+        min-height: 42px;
+    }
+    .lesson-room-pagination {
+        padding: 1rem 1.5rem 1.4rem;
+    }
+    .lesson-room-pagination .hint-text {
+        color: #7a748f;
+        font-size: .9rem;
+        margin-bottom: .65rem;
+    }
 
     /* ── Action buttons ── */
     .v2-section-card .btn { border-radius: 12px !important; font-weight: 700 !important; font-size: .85rem !important; }
@@ -96,10 +128,13 @@
 
 
 @section('content')
-<div style="direction:rtl;text-align:right">
+<div class="lesson-room-v2">
     <div class="v2-section-card" style="margin: 1.25rem;">
         <div class="card-header border-0">
           <h3 class="mb-0">جدول مواد الشعبة</h3>
+        </div>
+        <div class="lesson-room-toolbar">
+            <div class="lesson-room-toolbar__meta">اختر المادة المطلوبة للانتقال مباشرة إلى علامات الطلاب داخل هذه الشعبة.</div>
         </div>
 <div class="table-responsive">
               <table class="table v2-table">
@@ -120,7 +155,7 @@
 
                     <td>
                         @can('student_marks')
-                        <a class="btn btn-success btn-sm"
+                        <a class="btn btn-success btn-sm lesson-room-actions"
                            href="{{ url('SMT/admin/classroom/StudentsRoomLesson', ['room_id' =>$room_id ,'lesson_id' => $lesson->id]) }}">
                            العلامات
                         </a>
@@ -136,10 +171,10 @@
 </div>
 
 
-            <div class="clearfix" style="padding: 1rem 1.5rem;">
-                    <div class="hint-text">عرض
+            <div class="clearfix lesson-room-pagination">
+                    <div class="hint-text">عرض الصفحة
                         <b>{{ !request('page')? "1" : request('page') }}</b>
-                        من <b>{{ ceil($count/paginate_num) }}</b>
+                        من أصل <b>{{ ceil($count/paginate_num) }}</b>
                     </div>
                     <div class="row">
                         <div class="col-md-10">
@@ -185,3 +220,4 @@ $(document).ready(function () {
 </script>
 
 @endsection
+

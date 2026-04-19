@@ -1,194 +1,171 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'طلاب الشعبة')
+@section('page_subtitle', 'عرض طلاب الشعبة وبياناتهم الأساسية')
 
 
 @section('style')
     <style>
-@import url('https://fonts.googleapis.com/css?family=Lato:400,500,600,700&display=swap');
+        @import url('https://fonts.googleapis.com/css?family=Lato:400,500,600,700&display=swap');
 
-.wrapper{
-  display: inline-flex;
-  background: #fff;
-  height: 100px;
-  width: 400px;
-  align-items: center;
-  justify-content: space-evenly;
-  border-radius: 5px;
-  padding: 20px 15px;
-  margin-left: 25px;
-  box-shadow: 5px 5px 30px rgba(0,0,0,0.2);
-}
-.wrapper .option{
-  background: #fff;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  margin: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 0 10px;
-  border: 2px solid lightgrey;
-  transition: all 0.3s ease;
-}
-.wrapper .option .dot{
-  height: 20px;
-  width: 20px;
-  background: #d9d9d9;
-  border-radius: 50%;
-  position: relative;
-}
-.wrapper .option .dot::before{
-  position: absolute;
-  content: "";
-  top: 4px;
-  left: 4px;
-  width: 12px;
-  height: 12px;
-  background: #0069d9;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(1.5);
-  transition: all 0.3s ease;
-}
-.wrapper input[type="radio"]{
-  display: none;
-}
-#option-1:checked:checked ~ .option-1,
-#option-2:checked:checked ~ .option-2{
-  border-color: #0069d9;
-  background: #0069d9;
-}
-#option-1:checked:checked ~ .option-1 .dot,
-#option-2:checked:checked ~ .option-2 .dot{
-  background: #fff;
-}
-#option-1:checked:checked ~ .option-1 .dot::before,
-#option-2:checked:checked ~ .option-2 .dot::before{
-  opacity: 1;
-  transform: scale(1);
-}
-.wrapper .option span{
-  font-size: 20px;
-  color: #808080;
-}
-#option-1:checked:checked ~ .option-1 span,
-#option-2:checked:checked ~ .option-2 span{
-  color: #fff;
-}
-
-
-
-
-
-
-.wrapper_lang{
-  display: inline-flex;
-  background: #fff;
-  height: 100px;
-  width: 400px;
-  align-items: center;
-  justify-content: space-evenly;
-  border-radius: 5px;
-  padding: 20px 15px;
-  margin-left: 25px;
-  box-shadow: 5px 5px 30px rgba(0,0,0,0.2);
-}
-.wrapper_lang .option{
-  background: #fff;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  margin: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 0 10px;
-  border: 2px solid lightgrey;
-  transition: all 0.3s ease;
-}
-.wrapper_lang .option .dot{
-  height: 20px;
-  width: 20px;
-  background: #d9d9d9;
-  border-radius: 50%;
-  position: relative;
-}
-.wrapper_lang .option .dot::before{
-  position: absolute;
-  content: "";
-  top: 4px;
-  left: 4px;
-  width: 12px;
-  height: 12px;
-  background: #0069d9;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(1.5);
-  transition: all 0.3s ease;
-}
-.wrapper_lang input[type="radio"]{
-  display: none;
-}
-#option-lang1:checked:checked ~ .option-lang1,
-#option-lang2:checked:checked ~ .option-lang2{
-  border-color: #0069d9;
-  background: #0069d9;
-}
-#option-lang1:checked:checked ~ .option-lang1 .dot,
-#option-lang2:checked:checked ~ .option-lang2 .dot{
-  background: #fff;
-}
-#option-lang1:checked:checked ~ .option-lang1 .dot::before,
-#option-lang2:checked:checked ~ .option-lang2 .dot::before{
-  opacity: 1;
-  transform: scale(1);
-}
-.wrapper_lang .option span{
-  font-size: 20px;
-  color: #808080;
-}
-#option-lang1:checked:checked ~ .option-lang1 span,
-#option-lang2:checked:checked ~ .option-lang2 span{
-  color: #fff;
-}
-
-
-@media only screen and (max-width: 750px) {
-    .wrapper{
-
-        width: 220px !important;
-    }
-}
-th{
-    font-size: 20px;
-    border-bottom: 1px solid #008991 !important;
-    text-align: center !important;
-    color: black
-    }
-    td{
-        font-size: 17px;
-        border-bottom: 1px solid #008991 !important;
-        color: black;
-        text-align: center !important;
-    }
-    button.close{
-    margin: 0px !important;
-    padding: 0px !important;
-    float: left !important;
-}
-.modal-header{
-    direction: rtl;
-}
-.pagination{
-    justify-content: center;
-}
-.dropdown{
-    display: inline-block;
-}
-
-
+        .wrapper,
+        .wrapper_lang {
+            display: inline-flex;
+            background: #fff;
+            height: 100px;
+            width: 400px;
+            align-items: center;
+            justify-content: space-evenly;
+            border-radius: 16px;
+            padding: 20px 15px;
+            margin-left: 25px;
+            box-shadow: 0 16px 36px rgba(36,30,62,0.12);
+        }
+        .wrapper .option,
+        .wrapper_lang .option {
+            background: #fff;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            margin: 0 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            padding: 0 10px;
+            border: 2px solid #d9d7e7;
+            transition: all 0.3s ease;
+        }
+        .wrapper .option .dot,
+        .wrapper_lang .option .dot {
+            height: 20px;
+            width: 20px;
+            background: #d9d9d9;
+            border-radius: 50%;
+            position: relative;
+        }
+        .wrapper .option .dot::before,
+        .wrapper_lang .option .dot::before {
+            position: absolute;
+            content: '';
+            top: 4px;
+            left: 4px;
+            width: 12px;
+            height: 12px;
+            background: #5B4B8A;
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(1.5);
+            transition: all 0.3s ease;
+        }
+        .wrapper input[type="radio"],
+        .wrapper_lang input[type="radio"] {
+            display: none;
+        }
+        #option-1:checked:checked ~ .option-1,
+        #option-2:checked:checked ~ .option-2,
+        #option-lang1:checked:checked ~ .option-lang1,
+        #option-lang2:checked:checked ~ .option-lang2 {
+            border-color: #5B4B8A;
+            background: #5B4B8A;
+        }
+        #option-1:checked:checked ~ .option-1 .dot,
+        #option-2:checked:checked ~ .option-2 .dot,
+        #option-lang1:checked:checked ~ .option-lang1 .dot,
+        #option-lang2:checked:checked ~ .option-lang2 .dot {
+            background: #fff;
+        }
+        #option-1:checked:checked ~ .option-1 .dot::before,
+        #option-2:checked:checked ~ .option-2 .dot::before,
+        #option-lang1:checked:checked ~ .option-lang1 .dot::before,
+        #option-lang2:checked:checked ~ .option-lang2 .dot::before {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .wrapper .option span,
+        .wrapper_lang .option span {
+            font-size: 20px;
+            color: #808080;
+        }
+        #option-1:checked:checked ~ .option-1 span,
+        #option-2:checked:checked ~ .option-2 span,
+        #option-lang1:checked:checked ~ .option-lang1 span,
+        #option-lang2:checked:checked ~ .option-lang2 span {
+            color: #fff;
+        }
+        .student-room-v2 {
+            direction: rtl;
+            text-align: right;
+        }
+        .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
+        .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
+        .v2-bc a:hover { color:#5B4B8A; }
+        .v2-bc .sep { color:#b2aec0; font-weight:700; }
+        .v2-bc .active { color:#2f2b3a; font-weight:700; }
+        .v2-section-card {
+            margin: 1.25rem;
+            border-radius: 18px;
+            border: 1px solid rgba(91,75,138,0.12);
+            box-shadow: 0 12px 32px rgba(36,30,62,0.08);
+            background: #fff;
+            overflow: hidden;
+        }
+        .v2-section-card .card-header {
+            padding: 1.25rem 1.5rem !important;
+            border-bottom: 1px solid rgba(91,75,138,0.1) !important;
+            background: #fff !important;
+        }
+        .v2-section-card .card-header h2 {
+            margin: 0 !important;
+            color: #2f2b3a !important;
+            text-align: right !important;
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+        }
+        .v2-table th {
+            background: #f8f7fc !important;
+            color: #2f2b3a !important;
+            font-weight: 800 !important;
+            font-size: .88rem !important;
+            border-bottom: 2px solid rgba(91,75,138,0.1) !important;
+            padding: .85rem !important;
+            text-align: right !important;
+            white-space: nowrap;
+        }
+        .v2-table td {
+            vertical-align: middle !important;
+            color: #3a3550 !important;
+            font-size: .9rem !important;
+            padding: .85rem !important;
+            border-bottom: 1px solid rgba(91,75,138,0.06) !important;
+            text-align: right !important;
+        }
+        .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
+        .student-room-v2 .avatar-group img {
+            width: 100px !important;
+            height: 140px !important;
+            object-fit: cover;
+            border-radius: 14px;
+            box-shadow: 0 10px 24px rgba(36,30,62,0.12);
+        }
+        button.close {
+            margin: 0 !important;
+            padding: 0 !important;
+            float: left !important;
+        }
+        .modal .modal-content { border-radius:16px; overflow:hidden; direction:rtl; text-align:right; box-shadow:0 20px 60px rgba(0,0,0,.18); }
+        .modal .modal-header { direction: rtl; }
+        .pagination { justify-content: center; }
+        .dropdown { display: inline-block; }
+        @media only screen and (max-width: 750px) {
+            .wrapper,
+            .wrapper_lang {
+                width: 220px !important;
+            }
+            .v2-section-card {
+                margin: .85rem;
+            }
+        }
     </style>
 @endsection
 
@@ -196,11 +173,14 @@ th{
 
 @section('breadcrumbs')
 
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">جدول طلاب الشعبة</a>
-    <a href="{{ route('classroom',$room->class_id) }}" class="breadcrumbs__item ">الشعب</a>
-    <a href="{{ route('classes') }}" class="breadcrumbs__item ">قسم الصفوف</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="v2-bc" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}">الصفحة الرئيسية</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classes') }}">قسم الصفوف</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classroom',$room->class_id) }}">الشعب</a>
+    <span class="sep">/</span>
+    <span class="active">جدول طلاب الشعبة</span>
 </nav>
 
 @endsection
@@ -224,7 +204,7 @@ th{
       </div>
     </div>
     <button type="button" class="close" data-action="search-close" data-target="#navbar-search-main" aria-label="Close">
-      <span aria-hidden="true">×</span>
+      <span aria-hidden="true">أ—</span>
     </button>
   </form>
 @endsection
@@ -235,11 +215,11 @@ th{
   Updated Successfully !
     </div>
 
-<div class="col" style="direction:rtl;text-align:right">
-    <div class="card" style="margin: 30px">
+<div class="student-room-v2">
+    <div class="v2-section-card">
   <!-- Card header -->
   <div class="card-header border-0">
-    <h2 class="mb-0" style="color: #001586;text-align: center">جدول طلاب الشعبة</h2>
+    <h2 class="mb-0">جدول طلاب الشعبة</h2>
     {{-- <input type="text" name="search_student" placeholder="&#xF002; Search" class="form-control"
     style="color: #000;display: inline; font-family:Arial, FontAwesome;" id="search_student1"> --}}
   </div>
@@ -249,7 +229,7 @@ th{
 
 
 
-        <table class="table align-items-center table-flush" style="direction:rtl;text-align:right">
+        <table class="table v2-table">
                 <thead class="">
                   <tr>
                     <!--<th scope="col" class="sort" data-sort="name">Id</th>-->
@@ -488,7 +468,7 @@ th{
                           <div class="modal-header">
                               <h6 class="modal-title" id="modal-title-notification">Your attention is required</h6>
                               <a type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true">×</span>
+                                  <span aria-hidden="true">أ—</span>
                               </a>
                           </div>
 
@@ -811,7 +791,7 @@ th{
                           <div class="modal-header">
                               <h6 class="modal-title" id="modal-title-notification">انتباهك مطلوب</h6>
                               <a type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true">×</span>
+                                  <span aria-hidden="true">أ—</span>
                               </a>
                           </div>
 
@@ -852,7 +832,7 @@ th{
                           <div class="modal-header">
                               <h6 class="modal-title" id="modal-title-notification">انتباهك مطلوب</h6>
                               <a type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true">×</span>
+                                  <span aria-hidden="true">أ—</span>
                               </a>
                           </div>
 
@@ -1973,3 +1953,7 @@ function password_show_hide2() {
 }
 </script>
 @endsection
+
+
+
+

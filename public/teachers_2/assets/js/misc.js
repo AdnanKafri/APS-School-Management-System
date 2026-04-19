@@ -100,3 +100,4 @@ var lightColor = getComputedStyle(document.body).getPropertyValue('--light');
     $(".form-check label, .form-radio label").append('<i class="input-helper"></i>');
   });
 })(jQuery);
+ 

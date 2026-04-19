@@ -1,7 +1,11 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'مدرسو الشعبة')
+@section('page_subtitle', 'عرض المدرسين المكلّفين بهذه الشعبة')
 
 @section('style')
 <style>
+    .teachers-room-v2 { direction: rtl; text-align: right; }
     /* ── Breadcrumbs ── */
     .v2-bc { display:flex; align-items:center; gap:.4rem; font-size:.9rem; flex-wrap:wrap; direction:rtl; }
     .v2-bc a { color:#8a869a; font-weight:700; text-decoration:none; }
@@ -30,6 +34,19 @@
         font-size: 1.1rem !important;
         text-align: right !important;
     }
+    .teachers-room-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.5rem 0;
+        flex-wrap: wrap;
+    }
+    .teachers-room-toolbar__meta {
+        color: #7a748f;
+        font-size: .92rem;
+        font-weight: 700;
+    }
 
     /* ── Table ── */
     .v2-table th {
@@ -51,6 +68,19 @@
         text-align: right !important;
     }
     .v2-table > tbody > tr:last-child > td { border-bottom: 0 !important; }
+    .teachers-room-table td:first-child {
+        font-weight: 800 !important;
+        color: #2f2b3a !important;
+    }
+    .teachers-room-pagination {
+        padding: 1rem 1.5rem 1.4rem;
+        text-align: center;
+    }
+    .teachers-room-pagination .hint-text {
+        color: #7a748f;
+        font-size: .9rem;
+        margin-bottom: .65rem;
+    }
 
     /* ── Action buttons ── */
     .v2-section-card .btn { border-radius: 12px !important; font-weight: 700 !important; font-size: .85rem !important; }
@@ -96,13 +126,16 @@
 
 @section('content')
 
-<div style="direction:rtl;text-align:right">
+<div class="teachers-room-v2">
     <div class="v2-section-card" style="margin: 1.25rem;">
             <div class="card-header border-0">
               <h2 class="mb-0">جدول مدرسي الشعبة</h2>
             </div>
+            <div class="teachers-room-toolbar">
+                <div class="teachers-room-toolbar__meta">المدرسون المكلّفون بهذه الشعبة مع المادة المرتبطة بكل مدرس.</div>
+            </div>
 <div class="table-responsive">
-              <table class="table v2-table">
+              <table class="table v2-table teachers-room-table">
                 <thead class="">
                 <tr>
 
@@ -230,10 +263,10 @@
 
 
 
-            <div class="clearfix" style="padding-left:10px">
-                    <div class="hint-text" style="text-align: center">Showing
+            <div class="clearfix teachers-room-pagination">
+                    <div class="hint-text">عرض الصفحة
                         <b>{{ !request('page')? "1" : request('page') }}</b>
-                        out of <b>{{ ceil($count/paginate_num) }}</b> entries</div>
+                        من أصل <b>{{ ceil($count/paginate_num) }}</b></div>
                     <div class="row">
                         <div class="col-md-12">
                             {{ $teachers->links() }}
@@ -260,3 +293,4 @@ $('.delete').on('click', function () {
 </script>
 
 @endsection
+
