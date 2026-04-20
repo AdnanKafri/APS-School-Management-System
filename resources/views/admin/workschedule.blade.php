@@ -840,11 +840,14 @@
 
     @section('breadcrumbs')
 
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">جدول البرنامج</a>
-    <a href="{{ route('classroom',$room->class_id) }}" class="breadcrumbs__item ">الشعب</a>
-    <a href="{{ route('classes') }}" class="breadcrumbs__item ">قسم الصفوف</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="v2-bc" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}">لوحة التحكم</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classes') }}">قسم الصفوف</a>
+    <span class="sep">/</span>
+    <a href="{{ route('classroom',$room->class_id) }}">الشعب</a>
+    <span class="sep">/</span>
+    <span class="active">برنامج الدوام</span>
 </nav>
 
 @endsection
@@ -863,7 +866,8 @@
 		</div>
 	</section> --}}
   <!-- start new-->
-     <div class="modal fade" id="store_session">
+     <div class="workschedule-v2">
+     <div class="modal fade workschedule-modal" id="store_session">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <form id="form_update" method="POST" action="{{ route('session_store') }}" enctype="multipart/form-data">
@@ -924,93 +928,26 @@
                     </div>
                 </div>
             </div>
-<div class="col-md-10 " style="margin: auto; direction: rtl; text-align:center">
-    <div class="modal fade" id="add_schedule1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="direction: rtl; text-align:right">
-                <div class="modal-header ">
-                    <h5 class="modal-title" id="exampleModalLongTitle">  إضافة رابط غوغل   </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="display: inline-block;margin: 0px;padding: 0px;">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                <form  action="{{ route('admin.google_meet_add') }}" method="post" class="w-100">
-                    @csrf
-                    {{-- <input type="hidden" name="room_id" id="room_id" value=" {{ $room_id }}" class="room_id"> --}}
-                    <input type="hidden" name="lesson_time_id" id="lesson_time_id"  class="lesson_time_id">
-
-
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label"> اليوم : </label>
-                        <div class="col-sm-10">
-                            <input type="text" readonly class="form-control day">
-                            <input type="hidden" name="day_id"  class="form-control day_id">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label"> الحصة : </label>
-                        <div class="col-sm-10">
-                            <input type="text" readonly class="form-control time">
-                            <input type="hidden" name="time_id"  class="form-control time_id">
-
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label"> المادة : </label>
-                        <div class="col-sm-10">
-                            <input type="text" readonly class="form-control lesson">
-                            <input type="hidden" name="lesson_id"  class="form-control time_id">
-
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label"> الرابط : </label>
-                        <div class="col-sm-10">
-                            <input type="text"  class="form-control meeting_link" name="meeting_link">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label">  تحديد الرابط لجميع الحصص</label>
-                        <div class="col-sm-10">
-                            <input type="checkbox"  class=" " name="all">
-                        </div>
-                    </div>
-
-                    <div class="form-group modal-footer row justify-content-around px-3">
-                          <button class="btn btn-success " type="submit" style="width: 35%">تأكيد </button>
-                        <button  class="btn btn-light btn-info" data-dismiss="modal" style="width: 35%">خروج</button>
-                    </div>
-
-                    <!-- end submit-->
-
-
-                </form>
-                </div>
-            </div>
+<div class="workschedule-shell">
+    <div class="workschedule-page-header">
+        <div class="workschedule-page-header__title">
+            <h1>برنامج الدوام للصف {{ $class_name }} / {{ $room_name }}</h1>
+            <p>إدارة الجدول الأسبوعي للشعبة وتوزيع الحصص مع الربط بين المواد والمدرسين وروابط الاجتماعات.</p>
+        </div>
+        <div class="workschedule-page-actions">
+            @can('Deletion of a class in the work schedule section')
+            <a class="btn btn-danger delete_lecture_time" data-toggle="modal" data-target="#delete_lesson_time">حذف الحصة</a>
+            @endcan
+            @can('create_workschedule')
+            <a class="btn btn-success" data-toggle="modal" data-target="#store_session" data-id="">إنشاء حصة جديدة</a>
+            @endcan
         </div>
     </div>
-
-    <br><br><br>
-    <div class="row"  >
-        <h1  class="title text-center w-100 m-5" style="text-align: center;direction: rtl">  برنامج الدوام للصف <span>{{ $class_name }} <span>{{ $room_name }}</span></span> </h1>
-        <br><br><br><br>
-        <div class="mb-3">
-         @can('Deletion of a class in the work schedule section')
-            <a class="btn  btn-danger btn-block delete_lecture_time" data-toggle="modal" data-target="#delete_lesson_time"  >حذف الحصة </a>
-               @endcan 
-        </div>
-       <div class="mb-3" style="margin-right: 2px;">
-             @can('create_workschedule')
-         <a  class=" btn btn-success" data-toggle="modal" data-target="#store_session" style="color: white;margin: 5px;background: #6ABAA3;border-color: #6ABAA3;"
-                         data-id=""><i class="material-icons" data-toggle="tooltip">إنشاء حصة جديد</i></a>
-                          @endcan
-                             </div>
-        <div class="row" style="width: 100%;">
+        <div class="row" style="width: 100%; margin: 0;">
             <div class="col-lg-12">
         <div class="table-responsive">
-        <table class="table-striped" id=""
-            style="direction: rtl !important;text-align: center !important;display: inline-table; font-size:15px;">
+        <table class="table table-striped workschedule-table" id=""
+            style="direction: rtl !important;text-align: center !important;display: table; font-size:15px;">
                 <thead>
                 <tr>
                     <th scope="col">اليوم </th>
@@ -1140,7 +1077,7 @@
 
 {{-- add lesson time --}}
 
-<div class="modal fade" id="add_schedule">
+<div class="modal fade workschedule-modal" id="add_schedule">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="direction: rtl; text-align:right">
             <div class="modal-header ">
@@ -1214,7 +1151,7 @@
 
 {{-- delete lesson time --}}
 
-<div class="modal fade" id="delete_lesson_time">
+<div class="modal fade workschedule-modal" id="delete_lesson_time">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="direction: rtl; text-align:right">
             <div class="modal-header ">
@@ -1268,6 +1205,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
         {{-- end delete lesson time --}}
 
