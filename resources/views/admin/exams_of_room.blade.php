@@ -1,51 +1,143 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'امتحانات الشعبة')
+@section('page_subtitle', 'إدارة الامتحانات الخاصة بالشعبة مع الحفاظ على منطق الصفحة الحالي بالكامل')
+
 @section('style')
-
 <style>
-.custom-file-label{
-display:none !important;
-}
-    .custom-file-label{
-        display:none;
+    .assessment-room-v2 { direction: rtl; }
+    .assessment-breadcrumbs { display:inline-flex; align-items:center; gap:.45rem; font-size:.88rem; }
+    .assessment-breadcrumbs__link { color:#8a869a; text-decoration:none; font-weight:700; }
+    .assessment-breadcrumbs__link:hover { color:#5b4b8a; text-decoration:none; }
+    .assessment-breadcrumbs__sep { color:#b8b2c6; font-weight:700; }
+    .assessment-breadcrumbs__current { color:#2f2b3a; font-weight:800; }
+    .assessment-room-v2 .col, .assessment-room-v2 .container { padding:0; max-width:100%; }
+    .assessment-room-v2 .card { margin:0 !important; border:1px solid #e9e5f2; border-radius:18px; box-shadow:0 8px 20px rgba(36,30,62,.05); overflow:hidden; }
+    .assessment-room-v2 .card-header { padding:1.1rem 1.25rem 0 !important; border:0 !important; background:#fff; }
+    .assessment-room-v2 .assessment-room-body { padding:1rem 1.25rem 1.25rem; }
+    .assessment-room-v2 .card-header h3 { margin:0 !important; text-align:right !important; color:#2f2b3a !important; font-size:1.05rem; font-weight:800; }
+    .assessment-room-v2 .card-header h3::after { content:'إدارة قائمة الامتحانات والعمليات المرتبطة بها'; display:block; margin-top:.3rem; color:#8a869a; font-size:.88rem; font-weight:600; }
+    .assessment-room-v2 .table-responsive { border:1px solid #ece9f4; border-radius:18px; overflow:hidden; background:#fff; width:100%; }
+    .assessment-room-v2 .assessment-room-toolbar {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:1rem;
+        flex-wrap:wrap;
+        margin-bottom:1rem;
     }
-    .pagination{
-        justify-content: center !important;
+    .assessment-room-v2 .assessment-room-toolbar__actions,
+    .assessment-room-v2 .assessment-room-toolbar__filters {
+        display:flex;
+        align-items:center;
+        gap:.75rem;
+        flex-wrap:wrap;
     }
-    th{
-    font-size: 20px;
-    border-bottom: 1px solid #008991 !important;
-    text-align: center !important;
-    color: black
+    .assessment-room-v2 .assessment-room-toolbar__actions {
+        margin-inline-start:auto;
+        order:2;
+        padding-inline-start:.35rem;
     }
-    td{
-        font-size: 17px;
-        border-bottom: 1px solid #008991 !important;
-        color: black;
-        text-align: center !important;
+    .assessment-room-v2 .assessment-room-toolbar__filters {
+        margin-inline-end:auto;
+        order:1;
+        padding-inline-end:.35rem;
     }
-    button.close{
-    margin: 0px !important;
-    padding: 0px !important;
-    float: left !important;
-}
-.modal-header{
-    direction: rtl;
-}
-
+    .assessment-room-v2 .assessment-room-toolbar__filters .form-control {
+        min-width:220px;
+    }
+    .assessment-room-v2 .table { margin:0; }
+    .assessment-room-v2 .table thead th { background:#f8f7fc; color:#5e5873; font-size:.85rem; font-weight:800; padding:1rem .8rem; border:0 !important; text-align:center !important; white-space:nowrap; }
+    .assessment-room-v2 .table tbody td { color:#2f2b3a; font-size:.92rem; font-weight:700; padding:1rem .8rem; border:0 !important; border-top:1px solid #f0edf6 !important; text-align:center !important; vertical-align:middle; }
+    .assessment-room-v2 .table tbody tr:hover { background:#fbfaff; }
+    .assessment-room-v2 .row { margin:0 0 1rem !important; align-items:center; }
+    .assessment-room-v2 .form-control { min-height:44px; border-radius:12px; border:1px solid #dcd6eb; box-shadow:none; }
+    .assessment-room-v2 .btn { min-height:42px; border-radius:12px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; gap:.35rem; }
+    .assessment-room-v2 .btn.m-3, .assessment-room-v2 .btn.m-2 { margin:.25rem !important; }
+    .assessment-room-v2 .assessment-action-btn {
+        min-width:84px;
+    }
+    .assessment-room-v2 .assessment-action-btn--edit {
+        background:#3b82f6 !important;
+        border-color:#3b82f6 !important;
+        color:#fff !important;
+    }
+    .assessment-room-v2 .assessment-action-btn--edit:hover,
+    .assessment-room-v2 .assessment-action-btn--edit:focus {
+        background:#2563eb !important;
+        border-color:#2563eb !important;
+        color:#fff !important;
+    }
+    .assessment-room-v2 .assessment-action-btn--delete {
+        background:#f97316 !important;
+        border-color:#f97316 !important;
+        color:#fff !important;
+    }
+    .assessment-room-v2 .assessment-action-btn--delete:hover,
+    .assessment-room-v2 .assessment-action-btn--delete:focus {
+        background:#ea580c !important;
+        border-color:#ea580c !important;
+        color:#fff !important;
+    }
+    .assessment-room-v2 #table_xx td:last-child { min-width:170px; }
+    .assessment-room-v2 #table_xx td:last-child a { min-width:74px; padding:.55rem .75rem; }
+    .assessment-room-v2 .dataTables_wrapper { padding:1rem 0 0; }
+    .assessment-room-v2 .dataTables_filter, .assessment-room-v2 .dataTables_length { margin-bottom:1rem; }
+    .assessment-room-v2 .pagination { justify-content:center !important; }
+    body .modal-backdrop { z-index: 2000 !important; }
+    body .modal { z-index: 2010 !important; }
+    body .modal-dialog { margin: 1.75rem auto; }
+    .assessment-room-v2 .modal-dialog,
+    .assessment-room-v2 .exam-modal__dialog,
+    .assessment-room-v2 .modal-dialog.modal-md { max-width: 640px; }
+    .assessment-room-v2 .modal-content { border:0; border-radius:20px; overflow:hidden; box-shadow:0 28px 60px rgba(31,24,55,.22); }
+    .assessment-room-v2 .modal-header { padding:1.1rem 1.25rem; border-bottom:1px solid #efeaf8; align-items:center; background:linear-gradient(180deg,#fcfbff 0%,#f6f3fc 100%); }
+    .assessment-room-v2 .modal-title { margin:0; font-size:1.02rem; font-weight:800; color:#2f2b3a !important; }
+    .assessment-room-v2 .modal-body { padding:1.25rem 1.35rem; display:grid; gap:1rem; }
+    .assessment-room-v2 .modal-body .form-group { margin:0; text-align:right !important; }
+    .assessment-room-v2 .modal-body label { display:block; margin-bottom:.45rem; font-size:.9rem; font-weight:800; color:#4d4762; }
+    .assessment-room-v2 .modal-body .form-control,
+    .assessment-room-v2 .modal-body .select2-container--default .select2-selection--multiple,
+    .assessment-room-v2 .modal-body .select2-container--default .select2-selection--single { width:100% !important; min-height:46px; }
+    .assessment-room-v2 .modal-body textarea.form-control { min-height:110px; }
+    .assessment-room-v2 .modal-footer { padding:1rem 1.35rem 1.25rem; border-top:1px solid #efeaf8; display:flex; align-items:center; justify-content:flex-start; gap:.75rem; direction:rtl; }
+    .assessment-room-v2 .modal-footer .btn { min-width:112px; min-height:44px; }
+    .assessment-room-v2 button.close { margin:0 !important; padding:0 !important; color:#8a869a; opacity:1; }
+    .assessment-room-v2 .select2-container { width:100% !important; }
+    .assessment-room-v2 .select2-container--default .select2-selection--multiple,
+    .assessment-room-v2 .select2-container--default .select2-selection--single { min-height:46px; border-radius:12px; border:1px solid #dcd6eb; }
+    @media (max-width: 767px) {
+        .assessment-room-v2 .assessment-room-toolbar {
+            align-items:stretch;
+        }
+        .assessment-room-v2 .assessment-room-toolbar__actions,
+        .assessment-room-v2 .assessment-room-toolbar__filters {
+            width:100%;
+            justify-content:stretch;
+        }
+        .assessment-room-v2 .assessment-room-toolbar__filters .form-control,
+        .assessment-room-v2 .assessment-room-toolbar__actions .btn {
+            width:100%;
+        }
+        .assessment-room-v2 .assessment-room-body { padding:.9rem; }
+        .assessment-room-v2 .modal-dialog,
+        .assessment-room-v2 .exam-modal__dialog,
+        .assessment-room-v2 .modal-dialog.modal-md { max-width:calc(100vw - 1.25rem); }
+    }
 </style>
-
 @endsection
 
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item ">قسم امتحانات الشعبة </a>
-    <a href="{{  route('classroom_exams',$class_id)}}"  class="breadcrumbs__item ">قسم الشعب </a>
-    <a href="{{ route('classes.view.exams') }}" class="breadcrumbs__item ">قسم جدول الدوام والاختبارات</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="assessment-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="assessment-breadcrumbs__link">لوحة التحكم</a>
+    <span class="assessment-breadcrumbs__sep">/</span>
+    <a href="{{ route('classes.view.exams') }}" class="assessment-breadcrumbs__link">قسم الاختبارات</a>
+    <span class="assessment-breadcrumbs__sep">/</span>
+    <a href="{{ route('classroom_exams', $class_id) }}" class="assessment-breadcrumbs__link">الشعب</a>
+    <span class="assessment-breadcrumbs__sep">/</span>
+    <span class="assessment-breadcrumbs__current">امتحانات الشعبة</span>
 </nav>
 @endsection
-
 @section('content')
 @if (session()->has('success'))
 
@@ -75,31 +167,33 @@ display:none !important;
     @endforeach
 
 @endif
-<div class="col" style="direction:rtl;text-align:right">
-    <div class="card" style="margin: 30px">
+<div class="assessment-room-v2">
+    <div class="v2-card">
             <!-- Card header -->
             <div class="card-header border-0" style="">
-              <h3 class="mb-0" style="text-align: center;color: #001586">جدول الامتحانات</h3>
+              <h3 class="mb-0" style="text-align: center;color: #001586">الامتحانات</h3>
               <br>
 
             </div>
-            <div class="container">
+            <div class="assessment-room-body">
+    <div class="assessment-room-toolbar">
+        <div class="assessment-room-toolbar__filters">
+            <select name="rooms" id="lesson_id_filter" class="form-control">
+                <option value="0">جميع المواد</option>
+                @foreach ($lessons as $lesson)
+                    <option value="{{ $lesson->id }}">{{ $lesson->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="assessment-room-toolbar__actions">
+            @can('create_exam')
+                <a href=".createRoomModal" class="btn btn-success" data-toggle="modal" data-id="">
+                    <i class="material-icons" data-toggle="tooltip">إضافة امتحان</i>
+                </a>
+            @endcan
+        </div>
+    </div>
     <div class="table-responsive">
-        @can('create_exam')
-        <a href=".createRoomModal" class=" btn btn-success m-3" data-toggle="modal"
-        data-id=""><i class="material-icons" data-toggle="tooltip">إنشاء امتحان جديد</i></a>
-        @endcan
-          <div class="row" style="margin-right:0px" >
-
-                    <div class="col-12 col-lg-4">
-                        <select  name="rooms" id="lesson_id_filter" class="form-control" >
-                            <option value="0"> جميع   المواد  </option>
-                              @foreach ($lessons as $lesson)
-                                <option value="{{ $lesson->id }}"> {{ $lesson->name }} </option>
-                            @endforeach
-                        </select>
-                    </div>
-              </div>
 
               <table class="table align-items-center table-flush" id="table_xx">
                 <thead class="">
@@ -168,18 +262,18 @@ display:none !important;
 
                     </a> --}}
                       @can('update_exam')
-                    <a href=".updateContentModal" class=" btn btn-success m-2 updateContent"
-                    data-toggle="modal" style="background: #001586 !important"
+                    <a href=".updateContentModal" class="btn assessment-action-btn assessment-action-btn--edit updateContent"
+                    data-toggle="modal"
                     data-id="{{ $content->id }}" data-name="{{ $content->name }}" data-lesson_id="{{ $content->lesson_id }}"
                     data-room_id="{{ $content->room_id }}" data-start_date="{{ $content->start_date }}"
                     data-end_date="{{ $content->end_date }}" data-required_lectures="{{ $content->required }}"
                     data-mark="{{ $content->mark }}"   data-period="{{ $content->period }}"
                     data-notes="{{ $content->notes }}"  data-is_file="{{ $content->is_file }}"
                     data-question_picker="{{ $content->question_picker }}"
-                    ><i class="material-icons" data-toggle="tooltip">تعديل  </i></a>
+                    ><i class="material-icons" data-toggle="tooltip">تعديل</i></a>
                       @endcan
                     @can('delete_exam')
-                    <a href=".deleteContentModal"  class="btn btn-warning deleteContent" style="color: white;background:  #0280b3;border-color: #0083FF"
+                    <a href=".deleteContentModal" class="btn assessment-action-btn assessment-action-btn--delete deleteContent"
                     data-toggle="modal"
                     data-id="{{ $content->id }}"
                     data-name="{{ $content->name }}" data-lesson_id="{{ $content->lesson_id }}"
@@ -206,7 +300,7 @@ display:none !important;
 
 
                 <div class="modal fade editroomModal">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-md modal-dialog-centered">
                         <div class="modal-content">
                             <form id="form_update" action="{{ route('room_update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
@@ -235,7 +329,7 @@ display:none !important;
                 </div>
  <input type="hidden" id="room_id1" value="{{ $room_id }}">
                 <div class="modal fade createRoomModal">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-md modal-dialog-centered">
                         <div class="modal-content">
                             <form method="POST" action="{{ route('exam.store') }}"  enctype="multipart/form-data">
                                 @csrf
@@ -354,7 +448,7 @@ display:none !important;
 
                                 </div>
                                 <div class="modal-footer">
-                                    <a class="btn btn-dark text-light" data-dismiss="modal">الغاء</a>
+                                    <a class="btn btn-light" data-dismiss="modal">إلغاء</a>
                                     <button class="btn btn-primary">حفظ</button>
                                 </div>
                             </form>
@@ -363,7 +457,7 @@ display:none !important;
                 </div>
 
                 <div class="modal fade updateContentModal">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-md modal-dialog-centered">
                         <div class="modal-content">
                             <form method="POST" action="{{ route('exam.update') }}"  enctype="multipart/form-data">
                                 @csrf
@@ -453,7 +547,7 @@ display:none !important;
 
                                 </div>
                                 <div class="modal-footer">
-                                    <a class="btn btn-dark text-light" data-dismiss="modal">الغاء</a>
+                                    <a class="btn btn-light" data-dismiss="modal">إلغاء</a>
                                     <button class="btn btn-primary">حفظ</button>
                                 </div>
                             </form>
@@ -466,7 +560,7 @@ display:none !important;
                 {{-- delete exam  --}}
 
                 <div class="modal fade deleteContentModal">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-md modal-dialog-centered">
                         <div class="modal-content">
                             <form method="POST" action="{{ route('exam_quize.delete') }}"  enctype="multipart/form-data">
                                 @csrf
@@ -502,7 +596,7 @@ display:none !important;
 
                                 </div>
                                 <div class="modal-footer">
-                                    <a class="btn btn-dark text-light" data-dismiss="modal">الغاء</a>
+                                    <a class="btn btn-light" data-dismiss="modal">إلغاء</a>
                                     <button class="btn btn-danger">تأكيد</button>
                                 </div>
                             </form>
@@ -612,8 +706,8 @@ $.ajax({
                 </td>
                    <td>
                       @can('update_exam')
-                    <a href=".updateContentModal" class=" btn btn-success m-2 updateContent"
-                    data-toggle="modal" style="background: #001586 !important"
+                    <a href=".updateContentModal" class="btn assessment-action-btn assessment-action-btn--edit updateContent"
+                    data-toggle="modal"
                     data-id="${value.id}" data-name="${value.name}" data-lesson_id="${value.lesson_id}"
                     data-room_id="${value.room_id}"
                     data-start_date="${value.start_date}"
@@ -621,10 +715,10 @@ $.ajax({
                     data-mark="${value.mark}" data-period="${value.period}"
                     data-notes=" ${value.note}"  data-is_file="${value.is_file}"
                     data-question_picker="${value.question_picker}"
-                    ><i class="material-icons" data-toggle="tooltip">تعديل  </i></a>
+                    ><i class="material-icons" data-toggle="tooltip">تعديل</i></a>
                       @endcan
                     @can('delete_exam')
-                    <a href=".deleteContentModal"  class="btn btn-warning deleteContent" style="color: white;background:  #0280b3;border-color: #0083FF"
+                    <a href=".deleteContentModal" class="btn assessment-action-btn assessment-action-btn--delete deleteContent"
                     data-toggle="modal"
                     data-id="${value.id}"
                     data-name="${value.name}" data-lesson_id="${value.lesson_id}"
@@ -661,3 +755,6 @@ $('.room_choosing').select2();
 
 </script>
 @endsection
+
+
+
