@@ -270,6 +270,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('students/archive/{student_id}', 'admincontroller@student_archive')->name('student_archive');
     Route::post('students/financial_account', 'admincontroller@financial_account')->name('financial_account');
     Route::get('students/invoices_details/{student_id}', 'admincontroller@invoices_details')->name('invoices_details');
+    Route::get('students/invoices_print/{invoices_id}', 'DashboardController@invoices_print')->name('invoices_print');
     Route::post('students/invoices_delete/{invoice_id}', 'admincontroller@invoices_delete')->name('invoices_delete');
 
     Route::get('students/remain_account/{student_id}/{class_id}', 'admincontroller@remain_account')->name('remain_account');

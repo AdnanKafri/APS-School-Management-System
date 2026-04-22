@@ -1,259 +1,289 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'تفاصيل الفواتير')
+@section('page_subtitle', 'عرض جميع الفواتير المرتبطة بالطالب مع إمكانية فتح نسخة الطباعة لكل فاتورة')
 
 @section('style')
 <style>
-    *{
-        direction: rtl !important;
-        /* text-align: center; */
+    .invoice-details-v2,
+    .invoice-details-v2 * { box-sizing:border-box; }
+    .invoice-details-v2 { direction: rtl; }
+    .invoice-breadcrumbs { display:inline-flex; align-items:center; gap:.45rem; font-size:.88rem; }
+    .invoice-breadcrumbs__link { color:#8a869a; text-decoration:none; font-weight:700; }
+    .invoice-breadcrumbs__link:hover { color:#5b4b8a; text-decoration:none; }
+    .invoice-breadcrumbs__sep { color:#b8b2c6; font-weight:700; }
+    .invoice-breadcrumbs__current { color:#2f2b3a; font-weight:800; }
+    .invoice-shell { display:grid; gap:1rem; }
+    .invoice-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:1rem; }
+    .invoice-card { overflow:hidden; }
+    .invoice-card__header { padding:1.1rem 1.25rem 0; }
+    .invoice-card__title { margin:0; font-size:1.05rem; font-weight:800; color:#2f2b3a; }
+    .invoice-card__subtitle { margin:.25rem 0 0; color:#8a869a; font-size:.88rem; }
+    .invoice-card__body { padding:1rem 1.25rem 1.25rem; }
+    .invoice-stat { border-radius:16px; padding:1rem; background:#f8f7fc; border:1px solid #ece9f4; }
+    .invoice-stat__label { color:#8a869a; font-size:.82rem; font-weight:700; margin-bottom:.35rem; display:block; }
+    .invoice-stat__value { color:#2f2b3a; font-size:1.05rem; font-weight:800; }
+    .invoice-toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .invoice-toolbar .btn { min-height:44px; border-radius:12px; font-weight:800; }
+    .invoice-print-button { padding:.7rem 1rem; }
+    .invoice-table-wrap { border:1px solid #ece9f4; border-radius:18px; overflow:hidden; background:#fff; }
+    .invoice-table { width:100%; margin:0; }
+    .invoice-table thead th { background:#f8f7fc; color:#5e5873; font-size:.85rem; font-weight:800; padding:1rem .8rem; border:0 !important; text-align:center !important; white-space:nowrap; }
+    .invoice-table tbody td, .invoice-table tbody th { color:#2f2b3a; font-size:.92rem; font-weight:700; padding:1rem .8rem; border:0 !important; border-top:1px solid #f0edf6 !important; text-align:center !important; vertical-align:middle; }
+    .invoice-table tbody tr:hover { background:#fbfaff; }
+    .invoice-action { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid rgba(59,130,246,.18); background:rgba(59,130,246,.08); color:#3b82f6 !important; text-decoration:none; }
+    .invoice-action:hover { background:rgba(59,130,246,.15); color:#2563eb !important; text-decoration:none; }
+    .invoice-print-head { display:none; }
+    @page {
+        size: A4;
+        margin: 10mm;
     }
-    button,a{
-        color: white !important;
+    @media print {
+        * {
+            box-sizing:border-box !important;
+        }
+        html, body {
+            width:100% !important;
+            background:#fff !important;
+            margin:0 !important;
+            padding:0 !important;
+            height:auto !important;
+            overflow:visible !important;
+        }
+        body {
+            direction:rtl !important;
+            text-align:right !important;
+        }
+        .v2-sidebar,
+        .v2-navbar,
+        .v2-page-header,
+        .invoice-grid,
+        .invoice-toolbar,
+        .invoice-breadcrumbs,
+        .invoice-card__header {
+            display:none !important;
+        }
+        .v2-main,
+        .v2-content-wrap,
+        .invoice-details-v2,
+        .invoice-shell,
+        .invoice-card,
+        .invoice-card__body {
+            width:auto !important;
+            max-width:none !important;
+            margin:0 !important;
+            padding:0 !important;
+            background:#fff !important;
+            box-shadow:none !important;
+            border:0 !important;
+            overflow:visible !important;
+        }
+        .v2-main {
+            margin-right:0 !important;
+            margin-left:0 !important;
+            min-height:auto !important;
+        }
+        .v2-content-wrap {
+            padding:0 !important;
+        }
+        .print-sheet {
+            display:block !important;
+            width:190mm !important;
+            max-width:190mm !important;
+            margin-left:auto !important;
+            margin-right:auto !important;
+            padding:10mm !important;
+            background:#fff !important;
+            box-shadow:none !important;
+            border:0 !important;
+            overflow:visible !important;
+            page-break-after:avoid !important;
+            break-after:avoid-page !important;
+        }
+        .invoice-print-head {
+            display:block !important;
+            width:100% !important;
+            margin:0 0 6mm !important;
+            text-align:right;
+        }
+        .invoice-print-head__title {
+            margin:0 0 4mm;
+            font-size:18pt;
+            font-weight:800;
+            color:#111827;
+        }
+        .invoice-print-head__meta {
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:4mm;
+        }
+        .invoice-print-head__box {
+            border:1px solid #dbe2ea;
+            border-radius:12px;
+            padding:4mm;
+        }
+        .invoice-print-head__label {
+            display:block;
+            font-size:9pt;
+            font-weight:700;
+            color:#6b7280;
+            margin-bottom:2mm;
+        }
+        .invoice-print-head__value {
+            display:block;
+            font-size:11pt;
+            font-weight:800;
+            color:#111827;
+        }
+        .invoice-table-wrap {
+            border:0 !important;
+            border-radius:0 !important;
+            overflow:visible !important;
+            background:#fff !important;
+            width:100% !important;
+            max-width:100% !important;
+        }
+        .invoice-table {
+            width:100% !important;
+            border-collapse:collapse !important;
+            table-layout:fixed !important;
+        }
+        .invoice-table thead th:last-child,
+        .invoice-table tbody td:last-child {
+            display:none !important;
+        }
+        .invoice-table thead th,
+        .invoice-table tbody td,
+        .invoice-table tbody th {
+            border:1px solid #dbe2ea !important;
+            background:#fff !important;
+            color:#111827 !important;
+            padding:3mm 2.5mm !important;
+            font-size:9pt !important;
+            line-height:1.35 !important;
+            white-space:normal !important;
+            word-break:break-word !important;
+        }
+        .invoice-action {
+            display:none !important;
+        }
+        tr, td, th, .invoice-print-head__box {
+            page-break-inside:avoid !important;
+            break-inside:avoid !important;
+        }
     }
-    .form-group{
-        text-align: right;
-    }
-    label{
-        font-size: 20px;
-        color: black;
-    }
-    input{
-        font-size: 17px !important;
-    }
-    th{
-        font-size: 20px;
-        border: 0px  !important;
-        text-align: center !important;
-    }
-    td{
-        font-size: 17px;
-        color: black;
-        border: 0px !important;
-        text-align: center;
-    }
-    tr{
-        border-bottom: 1px solid #008991 !important;
-        border-top: 1px solid #008991 !important;
-    }
-    a.page-link{
-        color: #7571f9 !important;
-    }
-    .pagination{
-        justify-content: center;
-    }
-    .form-group{
-        margin: 0px !important;
+    @media (max-width: 991px) {
+        .invoice-grid { grid-template-columns: 1fr; }
     }
 </style>
-<link href="{{ asset('assets/admin/plugins/toastr/css/toastr.min.css')  }}" rel="stylesheet">
-
 @endsection
-
 
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">قسم   تفاصيل الفاتورة</a>
-    <a href="{{ route('students_financial') }}" class="breadcrumbs__item ">قسم  الاقساط المالية   </a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="invoice-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="invoice-breadcrumbs__link">لوحة التحكم</a>
+    <span class="invoice-breadcrumbs__sep">/</span>
+    <a href="{{ route('students_financial') }}" class="invoice-breadcrumbs__link">الأقساط المالية</a>
+    <span class="invoice-breadcrumbs__sep">/</span>
+    <span class="invoice-breadcrumbs__current">تفاصيل الفواتير</span>
 </nav>
-
 @endsection
 
-
 @section('content')
+<div class="invoice-details-v2">
+    <div class="invoice-shell">
+        <div class="invoice-grid">
+            <div class="invoice-stat">
+                <span class="invoice-stat__label">اسم الطالب</span>
+                <span class="invoice-stat__value">{{ $student->first_name }} {{ $student->last_name }}</span>
+            </div>
+            <div class="invoice-stat">
+                <span class="invoice-stat__label">عدد الفواتير</span>
+                <span class="invoice-stat__value">{{ $invoices_details->count() }}</span>
+            </div>
+            <div class="invoice-stat">
+                <span class="invoice-stat__label">إجمالي المدفوع</span>
+                <span class="invoice-stat__value">{{ $invoices_details->sum('invoice_amount') }}</span>
+            </div>
+        </div>
 
+        <div class="v2-card invoice-card">
+            <div class="invoice-card__header">
+                <h3 class="invoice-card__title">سجل الفواتير</h3>
+                <p class="invoice-card__subtitle">يمكنك من هنا مراجعة جميع الفواتير أو فتح نسخة الطباعة لكل فاتورة على حدة.</p>
+            </div>
+            <div class="invoice-card__body">
+                <div class="invoice-toolbar">
+                    <button class="btn btn-primary invoice-print-button" id="screenshot" type="button">طباعة الفاتورة</button>
+                </div>
 
-@php
-$about = \App\About_us::find(1);
-@endphp
-<br>
-<br>
+                <div class="invoice-print-scope print-sheet" id="dvContainer">
+                    <div class="invoice-print-head">
+                        <h2 class="invoice-print-head__title">كشف فواتير الطالب</h2>
+                        <div class="invoice-print-head__meta">
+                            <div class="invoice-print-head__box">
+                                <span class="invoice-print-head__label">اسم الطالب</span>
+                                <span class="invoice-print-head__value">{{ $student->first_name }} {{ $student->last_name }}</span>
+                            </div>
+                            <div class="invoice-print-head__box">
+                                <span class="invoice-print-head__label">عدد الفواتير</span>
+                                <span class="invoice-print-head__value">{{ $invoices_details->count() }}</span>
+                            </div>
+                            <div class="invoice-print-head__box">
+                                <span class="invoice-print-head__label">إجمالي المدفوع</span>
+                                <span class="invoice-print-head__value">{{ $invoices_details->sum('invoice_amount') }}</span>
+                            </div>
+                        </div>
+                    </div>
 
-<div class="col">
-  <div class="" style="justify-content: center">
-    <button  class="btn btn-primary"  id="screenshot" style="justify-content: center">طباعة </button>
-
-  </div>
-    <div class="card" id="dvContainer">
-
-
-     
-      <div class="card-header border-0" style="text-align: center;">
-        <h3 class="mb-0" style="display:inline-block">  جدول تفاصيل الفواتير للطالب</h3>
-        <input id="name_student" hidden value="{{$student->first_name}} ">
-        <h3 style=" text-align:center; color:green">{{$student->first_name}} {{$student->last_name}}</h3>
-      </div>
-<div class="table-responsive">
-
-
-
-        <table class="table align-items-center table-flush">
-          <thead class="thead-light">
-            <tr>
-              <th scope="col" class="sort" data-sort="name">Id</th>
-              <th scope="col" class="sort" data-sort="budget">Invoice Number</th>
-              <th scope="col" class="sort" data-sort="status">Invoice Amount</th>
-              <th scope="col" class="sort" data-sort="budget">Payment Type </th>
-              <th scope="col" class="sort" data-sort="status">Bank Name </th>
-              <th scope="col" class="sort" data-sort="completion">Date</th>
-              <th scope="col" class="sort" data-sort="completion"></th>
-
-            </tr>
-          </thead>
-          <tbody class="list" id="mydiv">
-          @foreach ($invoices_details as $item)
-
-         <tr>
-              <th scope="row">
-              {{$item->id}}
-              </th>
-              <td class="budget">
-              {{$item->invoice_number}}
-
-            </td>
-
-            <td class="budget">
-              {{$item->invoice_amount}}
-
-            </td>
-            <td class="budget">
-              {{$item->payment_type}}
-
-            </td>
-            <td class="budget">
-              {{$item->bank_name}}
-
-            </td>
-
-            <td class="budget">
-              {{$item->created_at}}
-
-            </td>
-
-
-
-
-              <td class="text-right">
-                <a  class="details dropdown-item" title="printe"
-                data-id="{{$item->id}}"><i class="fa fa-eye fa-2x" style="color: #008CC4"></i></a>
-                {{-- <div class="dropdown"> --}}
-                  {{-- <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </a> --}}
-                  {{-- <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow"> --}}
-                  {{-- <a href=".deleteEmployeeModal" class="delete dropdown-item" data-toggle="modal"
-                    data-id="{{$item->id}}"><i class="material-iconsni ni ni-fat-remove" data-toggle="tooltip"
-                        title="Delete" style="color: black !important;">&#xE872; حذف</i></a> --}}
-                  {{-- <a  class="details dropdown-item"
-                    data-id="{{$item->id}}"><i class="material-iconsni ni ni-fat-remove" data-toggle="tooltip"
-                        title="printe" style="color: black !important;">&#xE872; طباعة</i></a> --}}
-                  {{-- </div> --}}
-{{--
-                </div> --}}
-              </td>
-
-
-            </tr>
-
-
-         @endforeach
-
-
-
-          </tbody>
-        </table>
-
-      </div>
-
-
+                    <div class="invoice-table-wrap table-responsive">
+                        <table class="table invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>المعرف</th>
+                                    <th>رقم الفاتورة</th>
+                                    <th>قيمة الفاتورة</th>
+                                    <th>نوع الدفع</th>
+                                    <th>اسم البنك</th>
+                                    <th>التاريخ</th>
+                                    <th>الطباعة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mydiv">
+                                @foreach ($invoices_details as $item)
+                                    <tr>
+                                        <th scope="row">{{ $item->id }}</th>
+                                        <td>{{ $item->invoice_number }}</td>
+                                        <td>{{ $item->invoice_amount }}</td>
+                                        <td>{{ $item->payment_type }}</td>
+                                        <td>{{ $item->bank_name }}</td>
+                                        <td>{{ $item->created_at }}</td>
+                                        <td>
+                                            <a class="details invoice-action" title="طباعة" data-id="{{ $item->id }}" target="_blank" href="{{ route('invoices_print', $item->id) }}">
+                                                <i class="fa fa-print"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    </div>
-
-    <div class="modal fade deleteEmployeeModal">
-      <div class="modal-dialog">
-          <div class="modal-content">
-              <form id="form_delete" method="POST">
-                  @csrf
-                  <div class="modal-header">
-                      <h4 class="modal-title">Delete element</h4>
-                      <button type="button" class="close" data-dismiss="modal"
-                          aria-hidden="true">&times;</button>
-                  </div>
-                  <div class="modal-body">
-                      <p>Are you sure you want to delete these Records?</p>
-                      <p class="text-warning"><small>This action cannot be undone.</small></p>
-                  </div>
-                  <div class="modal-footer">
-                      <input type="button" class="btn btn-default" data-dismiss="modal"
-                          value="Cancel">
-
-                      <button class="btn btn-danger">Delete</button>
-
-
-                  </div>
-              </form>
-          </div>
-      </div>
-  </div>
-
-
-                <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
-                <script>
-
-$(document).ready(function () {
-
-$('.delete').on('click', function () {
-    var id = $(this).data('id');
-    var url = "{{URL::to('SMARMANger/admin/students/invoices_delete')}}/"+id;
-    $('#form_delete').attr("action", url);
-
-
-});
-
-});
-$(document).on('click', '.details', function () {
-
-var invoices_id = $(this).data('id');
-var student_name = $(this).data('name');
-
-$('#invoices_id').val($(this).data('id'));
-
-
-var url = "{{ URL::to('SMT/admin/students/invoices_print')}}/" + invoices_id;
-$('.details').attr('href',url);
-
-
-});
-
-$(document).on("click", "#screenshot", function () {
-  // window.print();
-  var DocumentContainer = document.getElementById('dvContainer');
-    var WindowObject = window.open('', "PrintWindow", "width=750,height=650,top=50,left=50,toolbars=no,scrollbars=yes,status=no,resizable=yes");
-    WindowObject.document.writeln(DocumentContainer.innerHTML);
-    WindowObject.document.close();
-    WindowObject.focus();
-    WindowObject.print();
-    WindowObject.close();
-  // $("#dvContainer").print();
-//   var divToPrint=document.getElementById('dvContainer');
-
-// var newWin=window.open('','Print-Window');
-
-// newWin.document.open();
-
-// newWin.document.write('<html><body onload="window.print()">'+divToPrint.innerHTML+'</body></html>');
-
-// newWin.document.close();
-
-
-    });
-</script>
-
+</div>
 @endsection
 
 @section('js')
+<script>
+$(document).on('click', '.details', function () {
+    var invoices_id = $(this).data('id');
+    var url = "{{ URL::to('SMT/admin/students/invoices_print') }}/" + invoices_id;
+    $(this).attr('href', url);
+});
 
-
+$(document).on("click", "#screenshot", function () {
+    window.print();
+});
+</script>
 @endsection

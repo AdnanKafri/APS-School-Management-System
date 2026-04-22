@@ -1,543 +1,271 @@
-@extends('admin.master')
+﻿@extends('admin.layouts.v2')
+
+@section('page_title', 'الأقساط المالية')
+@section('page_subtitle', 'متابعة الحسابات المالية للطلاب وإضافة الفواتير من واجهة منظمة ومتسقة مع نظام الإدارة')
 
 @section('style')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
 <style>
-    *{
-        direction: rtl !important;
-        /* text-align: center; */
+    .financial-v2 { direction: rtl; }
+    .financial-breadcrumbs { display:inline-flex; align-items:center; gap:.45rem; font-size:.88rem; }
+    .financial-breadcrumbs__link { color:#8a869a; text-decoration:none; font-weight:700; }
+    .financial-breadcrumbs__link:hover { color:#5b4b8a; text-decoration:none; }
+    .financial-breadcrumbs__sep { color:#b8b2c6; font-weight:700; }
+    .financial-breadcrumbs__current { color:#2f2b3a; font-weight:800; }
+    .financial-shell { display:grid; gap:1rem; }
+    .financial-card { overflow:hidden; }
+    .financial-card__header { padding:1.1rem 1.25rem 0; }
+    .financial-card__title { margin:0; font-size:1.05rem; font-weight:800; color:#2f2b3a; }
+    .financial-card__subtitle { margin:.25rem 0 0; color:#8a869a; font-size:.88rem; }
+    .financial-card__body { padding:1rem 1.25rem 1.25rem; }
+    .financial-toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .financial-toolbar__filters { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+    .financial-toolbar__filters .form-control { min-width:180px; }
+    .financial-table-wrap { border:1px solid #ece9f4; border-radius:18px; overflow:hidden; background:#fff; }
+    .financial-table { width:100%; margin:0; }
+    .financial-table thead th { background:#f8f7fc; color:#5e5873; font-size:.85rem; font-weight:800; padding:1rem .8rem; border:0 !important; text-align:center !important; white-space:nowrap; }
+    .financial-table tbody td { color:#2f2b3a; font-size:.92rem; font-weight:700; padding:1rem .8rem; border:0 !important; border-top:1px solid #f0edf6 !important; text-align:center !important; vertical-align:middle; }
+    .financial-table tbody tr:hover { background:#fbfaff; }
+    .financial-action { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid rgba(59,130,246,.18); background:rgba(59,130,246,.08); color:#3b82f6 !important; text-decoration:none; }
+    .financial-action:hover { background:rgba(59,130,246,.15); color:#2563eb !important; text-decoration:none; }
+    .financial-v2 .dataTables_wrapper { padding-top:1rem; }
+    .financial-v2 .dataTables_filter, .financial-v2 .dataTables_length { margin-bottom:1rem; }
+    .financial-v2 .pagination { justify-content:center !important; }
+    .financial-v2 .modal-backdrop { z-index:2000 !important; }
+    .financial-v2 .modal { z-index:2010 !important; }
+    .financial-v2 .modal-dialog { margin:1.75rem auto; max-width:640px; }
+    .financial-v2 .modal-content { border:0; border-radius:20px; overflow:hidden; box-shadow:0 24px 60px rgba(36,30,62,.16); }
+    .financial-v2 .modal-header, .financial-v2 .modal-footer { border-color:rgba(91,75,138,.12); }
+    .financial-v2 .modal-header { padding:1.1rem 1.25rem; align-items:flex-start; background:linear-gradient(180deg,#fcfbff 0%,#f6f3fc 100%); }
+    .financial-v2 .modal-title { font-size:1.02rem; font-weight:800; color:#2f2b3a; }
+    .financial-v2 .financial-modal__header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; width:100%; }
+    .financial-v2 .financial-modal__title-wrap { display:grid; gap:.3rem; min-width:0; }
+    .financial-v2 .financial-modal__actions { display:flex; align-items:center; gap:.75rem; flex-shrink:0; }
+    .financial-v2 .financial-modal__details.btn { min-height:38px; padding:.5rem .9rem; border-radius:10px; font-size:.86rem; font-weight:800; color:#3b82f6 !important; border:1px solid rgba(59,130,246,.2); background:rgba(59,130,246,.08); text-decoration:none; }
+    .financial-v2 .financial-modal__details.btn:hover { background:rgba(59,130,246,.14); color:#2563eb !important; text-decoration:none; }
+    .financial-v2 .financial-modal__close { width:38px; height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:10px; background:rgba(47,43,58,.06); color:#5e5873; font-size:1.4rem; line-height:1; opacity:1; cursor:pointer; }
+    .financial-v2 .financial-modal__close:hover { background:rgba(47,43,58,.12); color:#2f2b3a; }
+    .financial-v2 .modal-body { padding:1.25rem 1.35rem; }
+    .financial-v2 .modal-footer { padding:1rem 1.35rem 1.25rem; display:flex; gap:.75rem; justify-content:flex-start; direction:rtl; }
+    .financial-v2 .modal-footer .btn { min-width:112px; min-height:44px; border-radius:12px; font-weight:800; }
+    .financial-v2 .modal-grid { display:grid; gap:1rem; }
+    .financial-v2 .modal-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; }
+    .financial-v2 .financial-stat { border-radius:16px; padding:.95rem .85rem; background:#f8f7fc; text-align:center; }
+    .financial-v2 .financial-stat__label { display:block; color:#8a869a; font-size:.8rem; font-weight:700; margin-bottom:.3rem; }
+    .financial-v2 .financial-stat__value { display:block; color:#2f2b3a; font-size:1.02rem; font-weight:800; }
+    .financial-v2 .financial-receipt-toggle { min-height:44px; border-radius:12px; font-weight:800; }
+    .financial-v2 .financial-form-group { display:grid; gap:.45rem; }
+    .financial-v2 .financial-form-group label { margin:0; font-size:.9rem; font-weight:800; color:#4d4762; text-align:right; }
+    .financial-v2 .form-control { min-height:46px; border-radius:12px; border:1px solid #dcd6eb; box-shadow:none; }
+    .financial-v2 .details { margin-inline-start:auto; }
+    .financial-v2 .btn, .financial-v2 a.btn { color:inherit; }
+    @media (max-width: 767px) {
+        .financial-card__body, .financial-card__header { padding-inline:.9rem; }
+        .financial-toolbar { align-items:stretch; }
+        .financial-toolbar__filters { width:100%; }
+        .financial-toolbar__filters .form-control { width:100%; min-width:0; }
+        .financial-v2 .modal-stats { grid-template-columns:1fr; }
+        .financial-v2 .financial-modal__header { flex-direction:column; align-items:stretch; }
+        .financial-v2 .financial-modal__actions { justify-content:space-between; }
     }
-    button,a{
-        color: white !important;
-    }
-    .form-group{
-        text-align: right;
-    }
-    label{
-        font-size: 20px;
-        color: black;
-    }
-    input{
-        font-size: 17px !important;
-    }
-    th{
-        font-size: 20px;
-    }
-    td{
-        font-size: 17px;
-    }
-    a.page-link{
-        color: #7571f9 !important;
-    }
-    .pagination{
-        justify-content: center;
-    }
-    .dropdown-item{
-        color: black !important;
-        width: auto !important;
-    }
-    .fa-folder{
-        margin: 2px;
-    }
-    .dorat{
-        color: blue !important;
-    }
-    img{
-        border-radius:50%;
-    }
-    /* ///////////////////////////////////// */
-
-
-.wrapper{
-  display: inline-flex;
-  background: #fff;
-  height: 100px;
-  width: 400px;
-  align-items: center;
-  justify-content: space-evenly;
-  border-radius: 5px;
-  padding: 20px 15px;
-  margin-left: 25px;
-  box-shadow: 5px 5px 30px rgba(0,0,0,0.2);
-}
-.wrapper .option{
-  background: #fff;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  margin: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 0 10px;
-  border: 2px solid lightgrey;
-  transition: all 0.3s ease;
-}
-.wrapper .option .dot{
-  height: 20px;
-  width: 20px;
-  background: #d9d9d9;
-  border-radius: 50%;
-  position: relative;
-}
-.wrapper .option .dot::before{
-  position: absolute;
-  content: "";
-  top: 4px;
-  left: 4px;
-  width: 12px;
-  height: 12px;
-  background: #0069d9;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(1.5);
-  transition: all 0.3s ease;
-}
-.wrapper input[type="radio"]{
-  display: none;
-}
-#option-1:checked:checked ~ .option-1,
-#option-2:checked:checked ~ .option-2{
-  border-color: #0069d9;
-  background: #0069d9;
-}
-#option-1:checked:checked ~ .option-1 .dot,
-#option-2:checked:checked ~ .option-2 .dot{
-  background: #fff;
-}
-#option-1:checked:checked ~ .option-1 .dot::before,
-#option-2:checked:checked ~ .option-2 .dot::before{
-  opacity: 1;
-  transform: scale(1);
-}
-.wrapper .option span{
-  font-size: 20px;
-  color: #808080;
-}
-#option-1:checked:checked ~ .option-1 span,
-#option-2:checked:checked ~ .option-2 span{
-  color: #fff;
-}
-
-
-
-
-
-
-
-
-.wrapper_lang{
-  display: inline-flex;
-  background: #fff;
-  height: 100px;
-  width: 400px;
-  align-items: center;
-  justify-content: space-evenly;
-  border-radius: 5px;
-  padding: 20px 15px;
-  margin-left: 25px;
-  box-shadow: 5px 5px 30px rgba(0,0,0,0.2);
-}
-.wrapper_lang .option{
-  background: #fff;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  margin: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 0 10px;
-  border: 2px solid lightgrey;
-  transition: all 0.3s ease;
-}
-.wrapper_lang .option .dot{
-  height: 20px;
-  width: 20px;
-  background: #d9d9d9;
-  border-radius: 50%;
-  position: relative;
-}
-.wrapper_lang .option .dot::before{
-  position: absolute;
-  content: "";
-  top: 4px;
-  left: 4px;
-  width: 12px;
-  height: 12px;
-  background: #0069d9;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(1.5);
-  transition: all 0.3s ease;
-}
-.wrapper_lang input[type="radio"]{
-  display: none;
-}
-#option-lang1:checked:checked ~ .option-lang1,
-#option-lang2:checked:checked ~ .option-lang2{
-  border-color: #0069d9;
-  background: #0069d9;
-}
-#option-lang1:checked:checked ~ .option-lang1 .dot,
-#option-lang2:checked:checked ~ .option-lang2 .dot{
-  background: #fff;
-}
-#option-lang1:checked:checked ~ .option-lang1 .dot::before,
-#option-lang2:checked:checked ~ .option-lang2 .dot::before{
-  opacity: 1;
-  transform: scale(1);
-}
-.wrapper_lang .option span{
-  font-size: 20px;
-  color: #808080;
-}
-#option-lang1:checked:checked ~ .option-lang1 span,
-#option-lang2:checked:checked ~ .option-lang2 span{
-  color: #fff;
-}
-
-th{
-    font-size: 20px;
-    border-bottom: 1px solid #008991 !important;
-    text-align: center !important;
-}
-td{
-    font-size: 17px;
-    border-bottom: 1px solid #008991 !important;
-    color: black;
-    text-align: center;
-}
 </style>
-<link href="{{ asset('assets/admin/plugins/toastr/css/toastr.min.css')  }}" rel="stylesheet">
-
 @endsection
 
-
 @section('breadcrumbs')
-
-<nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">قسم متابعة الأقساط المالية</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+<nav class="financial-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="financial-breadcrumbs__link">لوحة التحكم</a>
+    <span class="financial-breadcrumbs__sep">/</span>
+    <span class="financial-breadcrumbs__current">الأقساط المالية</span>
 </nav>
-
 @endsection
 
 @section('content')
-
-
-
-
-
-<div class="modal fade financialaccountModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('invoice_store') }}" enctype="multipart/form-data">
-                @csrf
-
-                <div class="modal-header" style="direction:rtl">
-                    <h4 class="modal-title">الحساب المالي  &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h4>
-
-                    <a  target="_blanke" class="btn btn-danger btn-sm details" style="    margin-right: 10rem;">تفاصيل</a>
-
-
-                    <button type="button" class="close" style="margin: -1rem -1rem auto;" data-dismiss="modal"
-                        aria-hidden="true">&times;</button>
-
-
-                </div>
-                <div class="modal-body">
-
-
-                    <input type="hidden" name="student_id" id="student_financial_id">
-                    <input type="hidden" name="class_id" id="class_id">
-
-                    <div class="row" style="text-align: center">
-                        <div class="col-4">
-                            <label style="font-weight: bold; font-size: 18px; " class="text-primary">الكامل</label>
-
-                        </div>
-
-                        <div class="col-4">
-                            <label style="font-weight: bold; font-size: 18px; " class="text-success"> المدفوع</label>
-                        </div>
-                        <div class="col-4">
-                            <label style="font-weight: bold; font-size: 16px; " class="text-warning"> المتبقي</label>
-
+<div class="financial-v2">
+    <div class="modal fade financialaccountModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('invoice_store') }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header">
+                        <div class="financial-modal__header">
+                            <div class="financial-modal__title-wrap">
+                                <h4 class="modal-title">الحساب المالي: <span class="student_name" style="font-weight:800"></span></h4>
+                            </div>
+                            <div class="financial-modal__actions">
+                                <a target="_blank" class="btn financial-modal__details details">تفاصيل الفواتير</a>
+                                <button type="button" class="financial-modal__close" data-dismiss="modal" aria-label="إغلاق">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="student_id" id="student_financial_id">
+                        <input type="hidden" name="class_id" id="class_id">
 
-                    <div class="row" style="text-align: center">
-                        <div class="col-4">
-                            <label  style="padding: 20px;font-size: 20px" id="full_account" class="badge badge-primary"></label>
-                        </div>
+                        <div class="modal-grid">
+                            <div class="modal-stats">
+                                <div class="financial-stat">
+                                    <span class="financial-stat__label">الكامل</span>
+                                    <span class="financial-stat__value" id="full_account"></span>
+                                </div>
+                                <div class="financial-stat">
+                                    <span class="financial-stat__label">المدفوع</span>
+                                    <span class="financial-stat__value" id="amount_paid"></span>
+                                </div>
+                                <div class="financial-stat">
+                                    <span class="financial-stat__label">المتبقي</span>
+                                    <span class="financial-stat__value" id="remaining_account"></span>
+                                </div>
+                            </div>
 
-                        <div class="col-4">
-                            <label for="" style="padding: 20px;font-size: 20px" class="badge badge-success" id="amount_paid"></label>
+                            <button type="button" class="btn btn-primary btn-block financial-receipt-toggle add_reciept" data-toggle="collapse" data-target="#demo">إضافة فاتورة</button>
 
-                        </div>
-
-                        <div class="col-4">
-                            <label for="" style="padding: 20px;font-size: 20px" class="badge badge-warning" id="remaining_account"></label>
-
+                            <div id="demo" class="collapse">
+                                <div class="modal-grid">
+                                    <div class="financial-form-group">
+                                        <label>رقم الفاتورة</label>
+                                        <input type="text" name="invoice_number" class="form-control b" maxlength="20">
+                                    </div>
+                                    <div class="financial-form-group">
+                                        <label>المبلغ المدفوع</label>
+                                        <input type="number" name="invoice_amount" class="form-control" id="invoice_amount">
+                                    </div>
+                                    <div class="financial-form-group">
+                                        <label>نوع الدفع</label>
+                                        <input type="text" name="payment_type" class="form-control" id="payment_type">
+                                    </div>
+                                    <div class="financial-form-group">
+                                        <label>اسم البنك</label>
+                                        <input type="text" name="bank_name" class="form-control" id="bank_name">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <div class="modal-footer">
+                        <a class="btn btn-light" data-dismiss="modal">إلغاء</a>
+                        <button class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                    <br>
-
-                    <button type="button" class="btn btn-primary btn-block add_reciept" data-toggle="collapse" data-target="#demo"> اضافة فاتورة</button>
-                    <div id="demo" class="collapse">
-
-                        <br>
-
-                        <div class="form-group" style="text-align:right">
-                            <label>رقم الفاتورة</label>
-                            <input type="text" name="invoice_number" class="form-control b"
-                                value="" maxlength="20"
-                              >
-                        </div>
-                        <div class="form-group" style="text-align:right">
-                            <label>المبلغ المدفوع</label>
-                            <input type="number" name="invoice_amount" class="form-control" id="invoice_amount"
-                                value=""
-                              >
-                        </div>
-                                                <div class="form-group" style="text-align:right">
-                            <label>نوع الدفع </label>
-                            <input type="text" name="payment_type" class="form-control" id="payment_type"
-                                value="">
-                        </div>
-                        <div class="form-group" style="text-align:right">
-                            <label> اسم البنك</label>
-                            <input type="text" name="bank_name" class="form-control" id="bank_name"
-                                value="">
-                        </div>
-
-
-                        <div class="modal-footer">
-                            <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                            <button class="btn btn-info" >حفظ</button>
-                        </div>
+    <div class="financial-shell">
+        <div class="v2-card financial-card">
+            <div class="financial-card__header">
+                <h3 class="financial-card__title">حسابات الطلاب</h3>
+                <p class="financial-card__subtitle">تصفية الطلاب حسب الرصيد المتبقي أو المدفوع ومراجعة الحساب المالي لكل طالب.</p>
+            </div>
+            <div class="financial-card__body">
+                <div class="financial-toolbar">
+                    <div class="financial-toolbar__filters">
+                        <select id="type_filtter" class="form-control">
+                            <option value="0">باقي له أكثر من</option>
+                            <option value="1">دافع أكثر من</option>
+                            <option value="2">دافع أقل من</option>
+                        </select>
+                        <input type="text" class="form-control" placeholder="المبلغ" id="amount_balance">
                     </div>
                 </div>
-            </form>
+
+                <div class="financial-table-wrap table-responsive">
+                    <table class="table financial-table" id="table_xx">
+                        <thead>
+                            <tr>
+                                <th>الاسم الأول</th>
+                                <th>الكنية</th>
+                                <th>المبلغ المدفوع</th>
+                                <th>المبلغ المتبقي</th>
+                                <th>الصف</th>
+                                <th>كامل القسط</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-
-<div class="card" style="margin: 30px">
-    <div class="card-body">
-        <div class="card-title">
-            <h1 style="text-align: center;color: #001586">جدول الطلاب</h1>
-        </div>
-        <div class="row" style="direction: rtl">
-            <div class=" col-lg-2 col-sm-4 col-12">
-                <select name="" id="type_filtter" class="form-control " style="display: inline-block">
-                    <option value="0">باقي له أكثر من</option>
-                    <option value="1">دافع أكثر من</option>
-                    <option value="2">دافع أقل من</option>
-                </select>
-            </div>
-            <div class=" col-lg-2 col-sm-4 col-12">
-                <input type="text" class="form-control" placeholder="المبلغ" id="amount_balance">
-            </div>
-        </div>
-        <div class="m-4">
-            <table class="table align-items-center" id="table_xx">
-                <thead class="thead-light">
-                    <tr>
-                        <th scope="col" class="sort" >الإسم الأول</th>
-                        <th scope="col" class="sort" >الكنية</th>
-                        <th scope="col" class="sort" >المبلغ المدفوع</th>
-                        <th scope="col" class="sort" >المبلغ المتبق</th>
-                        <th scope="col" class="sort" >الصف</th>
-                        <th scope="col" class="sort" >كامل القسط</th>
-                        <th scope="col" class="sort" >العمليات</th>
-                      </tr>
-                </thead>
-                <tbody >
-
-                </tbody>
-              </table>
-
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @section('js')
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
 <script>
-
-        $('#type_filtter').change(function () {
-            if ($('#min').val()!='' && $('#max').val()!='' ) {
-                table_test.draw();
-            }
-        })
-        $('#amount_balance').keyup(function () {
-            if ($('#min').val()!='' && $('#max').val()!='' ) {
-                table_test.draw();
-            }
-        })
+$('#type_filtter').change(function () {
+    table_test.draw();
+});
+$('#amount_balance').keyup(function () {
+    table_test.draw();
+});
 
 var table_test = $('#table_xx').DataTable({
-        processing: true,
-        oLanguage: {
-            sProcessing: "<h1>Proccessing</h1>"
+    processing: true,
+    oLanguage: {
+        sProcessing: "<h1>Proccessing</h1>"
+    },
+    serverSide: true,
+    pageLength: 10,
+    ajax: {
+        type: "GET",
+        url: "{{ route('getstudentsfina') }}",
+        type: "GET",
+        data: function (d) {
+            d.amount = $('#amount_balance').val();
+            d.type = $('#type_filtter').val();
         },
-        serverSide: true,
-        "pageLength": 10,
-        "ajax": {
-            "type": "GET",
-            "url": "{{ route('getstudentsfina') }}",
-            "type": "GET",
-            data : function (d) {
-                d.amount = $('#amount_balance').val();
-                d.type= $('#type_filtter').val();
-            },
-            "dataSrc": function (json) {
-                console.log(555,json.aaData);
-                return json.aaData;
+        dataSrc: function (json) {
+            console.log(555, json.aaData);
+            return json.aaData;
+        }
+    },
+    columns: [
+        { data: 'id', render: function (data, type, full) { return `${full.first_name}`; } },
+        { data: 'id', render: function (data, type, full) { return `${full.last_name}`; } },
+        { data: 'id', render: function (data, type, full) { return `${full.total}`; } },
+        { data: 'id', render: function (data, type, full) { return `${full.remain_total}`; } },
+        { data: 'id', render: function (data, type, full) { return `${full.class}`; } },
+        { data: 'id', render: function (data, type, full) { return `${full.fixed_cost}`; } },
+        {
+            data: 'id',
+            render: function (data, type, full) {
+                return `<a href=".financialaccountModal" class="financial_account financial-action" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.class_id }"><i class="fa fa-eye"></i></a>`;
             }
         },
-        columns: [
-            {
-
-                data: 'id',
-                render: function (data, type, full) {
-                    return `${full.first_name}`;
-                }
-            },
-            {
-                data: 'id',
-                render: function (data, type, full) {
-                    return `${full.last_name}`;
-                }
-            },
-            {
-                data: 'id',
-                render: function (data, type, full) {
-                    return `${full.total}`;
-                }
-            },
-            {
-                data: 'id',
-                render: function (data, type, full) {
-                    return `${full.remain_total}`;
-                }
-            },
-            {
-                data: 'id',
-                render: function (data, type, full) {
-                    return `${full.class}`;
-                }
-            },
-            {
-                data: 'id',
-                render: function (data, type, full) {
-                    return `${full.fixed_cost}`;
-                }
-            },
-                {
-                data: 'id',
-                render: function (data, type, full) {
-                    return `<a href=".financialaccountModal" class="financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.class_id }"   style="color: #0083FF"><i class="fa fa-eye fa-2x" style="color: #008CC4"></i></a>`;
-                }
-            },
-        ]
-    });
-
-
-
+    ]
+});
 
 $(document).on('click', '.financial_account', function () {
-        var student_id = $(this).data('id');
-        var class_id = $(this).data('class');
-        var student_name = $(this).data('name');
+    var student_id = $(this).data('id');
+    var class_id = $(this).data('class');
 
-        $('#student_financial_id').val($(this).data('id'));
-        $('#class_id').val($(this).data('class'));
-        $('.student_name').text($(this).data('name'));
+    $('#student_financial_id').val(student_id);
+    $('#class_id').val(class_id);
+    $('.student_name').text($(this).data('name'));
+    $('.details').attr('href', "{{ URL::to('SMT/admin/students/invoices_details') }}/" + student_id);
 
-        var url ="{{ URL::to('SMT/admin/students/invoices_details')}}/"+student_id;
-        // $('.details').attr('href',url);
-        var url = "{{ URL::to('SMT/admin/students/remain_account') }}/" + student_id +"/"+ class_id;
-        $.ajax({
+    var url = "{{ URL::to('SMT/admin/students/remain_account') }}/" + student_id + "/" + class_id;
+    $.ajax({
         url: url,
         type: "get",
         contentType: 'application/json',
         success: function (data) {
-
-                $('#full_account').text(data.full_amount);
-                $('#remaining_account').text(data.remain_amount);
-                $('#amount_paid').text(data.amount_paid);
-
-                $('#invoice_amount').attr('max',data.remain_amount);
-                $('#payment_type').attr('max', data.payment_type);
-                $('#bank_name').attr('max', data.bank_name);
-
-                if(data.remain_amount==0){
-
-                    $('.add_reciept').hide();
-
-                }else{
-                    $('.add_reciept').show();
-
-                }
-
-            },
-
-        });
-
-});
-
-$(document).on('click', '.financial_account', function () {
-
-        var student_id = $(this).data('id');
-        var class_id = $(this).data('class');
-        var student_name = $(this).data('name');
-
-        $('#student_financial_id').val($(this).data('id'));
-        $('#class_id').val($(this).data('class'));
-        $('.student_name').text($(this).data('name'));
-
-        var url = "{{ URL::to('SMT/admin/students/invoices_details')}}/" + student_id;
-        $('.details').attr('href',url);
-        var url = "{{ URL::to('SMT/admin/students/remain_account') }}/" + student_id + "/" + class_id;
-        $.ajax({
-            url: url,
-            type: "get",
-            contentType: 'application/json',
-            success: function (data) {
-console.log(data);
-                $('#full_account').text(data.full_amount);
-                $('#remaining_account').text(data.remain_amount);
-                $('#amount_paid').text(data.amount_paid);
-
-                $('#invoice_amount').attr('max', data.remain_amount);
-                $('#payment_type').attr('max', data.payment_type);
-                $('#bank_name').attr('max', data.bank_name);
-
-                if (data.remain_amount == 0) {
-
-                    $('.add_reciept').hide();
-
-                } else {
-                    $('.add_reciept').show();
-
-                }
-
-            },
-
-        });
-
+            $('#full_account').text(data.full_amount);
+            $('#remaining_account').text(data.remain_amount);
+            $('#amount_paid').text(data.amount_paid);
+            $('#invoice_amount').attr('max', data.remain_amount);
+            $('#payment_type').attr('max', data.payment_type);
+            $('#bank_name').attr('max', data.bank_name);
+            if (data.remain_amount == 0) {
+                $('.add_reciept').hide();
+            } else {
+                $('.add_reciept').show();
+            }
+        },
     });
-
-
-
-
+});
 </script>
-
 @endsection
