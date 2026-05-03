@@ -1,4 +1,4 @@
-@extends('admin.layouts.v2')
+@extends('admin.master')
 @section('style')
     <style>
         .custom-file-label {
@@ -22,34 +22,13 @@
         .modal-header {
             direction: rtl;
         }
-    
-
-        /* Transport modal stacking fix */
-        .modal {
-            z-index: 1055 !important;
-        }
-
-        .modal-backdrop {
-            z-index: 1040 !important;
-        }
-
-        .v2-navbar,
-        .v2-sidebar {
-            z-index: 1030 !important;
-        }
-
-        .transport-v2 .modal-dialog.modal-dialog-centered {
-            min-height: calc(100% - 3.5rem);
-        }
-
     </style>
 @endsection
 
 
 @section('breadcrumbs')
     <nav class="breadcrumbs">
-        <a class="breadcrumbs__item is-active">قسم الباصات </a>
-        <a href="{{ route('transportations') }}" class="breadcrumbs__item ">قسم المواصلات </a>
+        <a class="breadcrumbs__item is-active">قسم المواصلات </a>
         <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
     </nav>
 @endsection
@@ -58,7 +37,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     {{-- <div class="col" > --}}
-    <div class="transport-v2">
     <div class="card" style="direction:rtl; text-align:right;margin: 20px;">
 
         <!--@if (session()->has('success'))
@@ -76,52 +54,47 @@
 
 
         <div class="card-header border-0">
-            <h3 class="mb-0">جدول  الباصات </h3>
+            <h3 class="mb-0">جدول خطوط الباصات </h3>
         </div>
 
         <div class="table-responsive">
             @can('create_class')
                 <a href=".createClassModal" class=" btn btn-success" data-toggle="modal" data-id=""><i
-                        class="material-icons" data-toggle="tooltip">إنشاء باص جديد</i></a>
+                        class="material-icons" data-toggle="tooltip">إنشاء خط جديد</i></a>
             @endcan
             <table class="table align-items-center table-flush">
                 <thead class="thead-light">
                     <tr>
                         <!--<th scope="col" class="sort" data-sort="name">Id</th>-->
-                        <th scope="col" class="sort" data-sort="budget">  رقم الباص  </th>
-                        <th scope="col" class="sort" data-sort="budget"> عدد الطلاب </th>
-                        <th scope="col" class="sort" data-sort="budget">  الخط التابع له </th>
+                        <th scope="col" class="sort" data-sort="budget"> الاسم </th>
+                        <th scope="col" class="sort" data-sort="budget"> التكلفة السنوية </th>
                         <th scope="col" class="sort" data-sort="budget"> العمليات</th>
 
                     </tr>
                 </thead>
                 <tbody class="list">
-                    @foreach ($buses as $item)
+                    @foreach ($bus_lines as $item)
                         <tr>
 
 
                             <td class="budget" style="font-weight:bold;font-size:15px">
                                 {{ $item->name }}
                             </td>
-                            <td class="budget" style="font-weight:bold;font-size:15px">
-                                {{ $item->students_count }}
-                            </td>
 
                             <td class="budget" style="font-weight:bold;font-size:15px">
-                                {{ $item->bus_lines->name }}
+                                {{ $item->annual_cost }}
                             </td>
 
                             <td class="text-right">
-                                <a href="{{ route('bus_students', $item->id) }}" class="btn btn-success"
-                                    style="margin-left: 10px">الطلاب</a>
+                                <a href="{{ route('buses', $item->id) }}" class="btn btn-success"
+                                    style="margin-left: 10px">الباصات</a>
 
                                 @can('update_class')
 
                                  <a href=".editClassModal" class="btn btn-secondary edit"
                                         data-name="{{ $item->name }}"
-                                         data-students_count="{{ $item->students_count }}"
-                                         data-bus_lines_id="{{ $item->bus_lines_id }}"
-                                            
+                                        data-annual_cost="{{ $item->annual_cost }}"
+
                                          data-id="{{ $item->id }}"
                                   data-toggle="modal" style="color: white">
                                         تعديل </a>
@@ -147,7 +120,7 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    {{ $buses->links() }}
+                    {{ $bus_lines->links() }}
                 </div>
             </div>
         </div>
@@ -158,31 +131,28 @@
 
 
     <div class="modal fade createClassModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
-                <form id="" action="{{ route('buses_store') }}" method="POST" enctype="multipart/form-data">
+                <form id="" action="{{ route('bus_lines_store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="bus_lines_id"  value="{{ $id }}">
-
                     <div class="modal-header">
-                        <h4 class="modal-title">اضافة باص</h4>
+                        <h4 class="modal-title">اضافة خط</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group" style="text-align:right">
-                            <label> رقم الباص  </label>
+                            <label>الاسم </label>
                             <input type="text" name="name" class="form-control" value="" style="direction: rtl"
-                                placeholder="مثال :باص رقم 541" maxlength="20" required>
+                                placeholder="مثال :برامكة" maxlength="20" required>
                         </div>
+
+
+
                         <div class="form-group" style="text-align:right">
-                            <label>عدد الطلاب </label>
-                            <input type="number" name="students_count" class="form-control" value="" style="direction: rtl"
-                                placeholder="مثال :  20" maxlength="20" required>
+                            <label>التكلفة السنوية</label>
+                            <input type="number" name="annual_cost" class="form-control" value=""
+                                style="direction: rtl" maxlength="20" required>
                         </div>
-
-
-
-
 
 
 
@@ -200,36 +170,34 @@
 
 
     <div class="modal fade editClassModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
-                <form id="form_update" method="POST" action="{{ route('buses_update') }}"
+                <form id="form_update" method="POST" action="{{ route('bus_lines_update') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="bus_lines_id" id="bus_lines_id" value="{{ $id }}">
 
                     <div class="modal-header">
-                        <h4 class="modal-title">تعديل الباص</h4>
+                        <h4 class="modal-title">تعديل الخط</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     </div>
                     <div class="modal-body">
-                         <input type="hidden" name="id" id="id">
+                         <input type="hidden" name="id" id="bus_line_id">
                         <div class="form-group" style="text-align:right">
-                            <label> رقم الباص  </label>
-                            <input type="text" name="name" class="form-control" required
+                            <label>اسم </label>
+                            <input type="text" name="class_name" class="form-control" required
                                         value="" style="direction: rtl" id="name"
-                                        placeholder="مثال :547" maxlength="20" >
+                                        placeholder="مثال :برامكة" maxlength="20" >
                         </div>
+
+
+
+
                         <div class="form-group" style="text-align:right">
-                            <label>عدد الطلاب  </label>
-                            <input type="number" name="students_count" class="form-control" required
-                                        value="" style="direction: rtl" id="students_count"
-                                        placeholder="مثال :20" maxlength="20" >
+                            <label> التكلفة السنوية </label>
+                             <input type="number" name="annual_cost" id="annual_cost" class="form-control"
+                                        value=""
+                                        placeholder="" maxlength="20" >
                         </div>
-
-
-
-
-
 
 
 
@@ -255,22 +223,29 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <script>
- 
+        $(document).ready(function() {
     $('.edit').click(function() {
-        var bus_id = $(this).data('id');
+        var bus_line_id = $(this).data('id');
         var name = $(this).data('name');
-        var students_count = $(this).data('students_count');
-        var bus_line_id = $(this).data('bus_lines_id');
+        var annual_cost = $(this).data('annual_cost');
 
- 
+          $.each($('.classCost10'), function (index, val) {
+           $(this).val('');
+
+
+          })
+          $.each(classCost, function (index, val) {
+           $(`.modal-body #${val.country_id}`).val(val.cost);
+
+
+          })
 
         // Assign values to modal form fields
-        $('.modal-body #id').val(bus_id);
+        $('.modal-body #id').val(id);
         $('.modal-body #name').val(name);
-        $('.modal-body #students_count').val(students_count);
-        $('.modal-body #bus_lines_id').val(bus_lines_id);
+        $('.modal-body #annual_cost').val(annual_cost);
 
- 
+    });
 });
     </script>
 @endsection

@@ -5847,6 +5847,8 @@ if($student_room->room_id==$request->room_change_id){
 
                 'invoice_number' => $request->invoice_number,
                 'invoice_amount' => $request->invoice_amount,
+                'payment_type' => $request->payment_type,
+                'bank_name' => $request->bank_name,
                 'student_id' => $request->student_id,
                 'class_id' => $request->class_id,
                 'year_id' => $year->id,

@@ -1,7 +1,4 @@
-@extends('admin.layouts.v2')
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
-    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
-
+@extends('admin.master')
 @section('style')
     <style>
         .custom-file-label {
@@ -25,70 +22,13 @@
         .modal-header {
             direction: rtl;
         }
-        
-            .custom-file-label{
-    display:none !important;
-    }
-        .custom-file-label{
-            display:none;
-        }
-
-        .section2_btn {
-    border-radius: 35px;
-    padding: 10px 12px;
-    width: 100%;
-    height: 52px;
-    color: #fff;
-    font-size: 16px;
-    margin-bottom: 42px;
-    -webkit-transition: all 0.5s;
-    -o-transition: all 0.5s;
-    -ms-transition: all 0.5s;
-    -moz-transition: all 0.5s;
-    transition: all 0.5s
-}
-        .btn22 {
-    background: transparent;
-    border: 2px solid #4285f4;
-    color: #4285f4
-}
-
-.btn22:hover {
-    background: #4285f4;
-    color: #fff
-}
-.select2-selection__choice{
-    background: #0d376a !important;
-    color: #ddd !important;
-}
-
-    
-
-        /* Transport modal stacking fix */
-        .modal {
-            z-index: 1055 !important;
-        }
-
-        .modal-backdrop {
-            z-index: 1040 !important;
-        }
-
-        .v2-navbar,
-        .v2-sidebar {
-            z-index: 1030 !important;
-        }
-
-        .transport-v2 .modal-dialog.modal-dialog-centered {
-            min-height: calc(100% - 3.5rem);
-        }
-
     </style>
 @endsection
 
 
 @section('breadcrumbs')
     <nav class="breadcrumbs">
-        <a class="breadcrumbs__item is-active">قسم   طلاب الباص</a>
+        <a class="breadcrumbs__item is-active">قسم مشرفين الباصات</a>
         <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
     </nav>
 @endsection
@@ -97,7 +37,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     {{-- <div class="col" > --}}
-    <div class="transport-v2">
     <div class="card" style="direction:rtl; text-align:right;margin: 20px;">
 
         <!--@if (session()->has('success'))
@@ -115,13 +54,13 @@
 
 
         <div class="card-header border-0">
-            <h3 class="mb-0">جدول طلاب الباص [{{$bus->name}}]</h3>
+            <h3 class="mb-0">جدول مشرفي الباصات</h3>
         </div>
 
         <div class="table-responsive">
             @can('create_class')
                 <a href=".createClassModal" class=" btn btn-success" data-toggle="modal" data-id=""><i
-                        class="material-icons" data-toggle="tooltip"> اضافة طلاب   </i></a>
+                        class="material-icons" data-toggle="tooltip">إنشاء مشرف  جديد</i></a>
             @endcan
             <table class="table align-items-center table-flush">
                 <thead class="thead-light">
@@ -129,63 +68,55 @@
                         <!--<th scope="col" class="sort" data-sort="name">Id</th>-->
                         <th scope="col" class="sort" data-sort="budget"> الاسم </th>
 
-                        <th scope="col" class="sort" data-sort="budget">الكنية </th>
-                        <th scope="col" class="sort" data-sort="budget"> الهاتف </th>
                         <th scope="col" class="sort" data-sort="budget"> العنوان </th>
-                        <th scope="col" class="sort" data-sort="budget"> الصف </th>
-                        <th scope="col" class="sort" data-sort="budget"> الشعبة </th>
+                        <th scope="col" class="sort" data-sort="budget"> الهاتف </th>
+                        <th scope="col" class="sort" data-sort="budget"> الباص </th>
                         <th scope="col" class="sort" data-sort="budget"> العمليات</th>
 
                     </tr>
                 </thead>
                 <tbody class="list">
-                    @foreach ($students as $item)
+                    @foreach ($bus_supervisor as $item)
                         <tr>
 
                             <td class="budget" style="font-weight:bold;font-size:15px">
-                                {{ $item->first_name }}
+                                {{ $item->name }}
                             </td>
 
                             <td class="budget"style="font-weight:bold;font-size:15px">
-                                {{ $item->last_name }}
+                                {{ $item->address }}
                             </td>
                             <td class="budget"style="font-weight:bold;font-size:15px">
-                                {{ $item->details->phone }}
+                                {{ $item->phone }}
                             </td>
-                            
-                                       <td class="budget"style="font-weight:bold;font-size:15px">
-                                {{ $item->details->address }}
+                            <td class="budget"style="font-weight:bold;font-size:15px">
+                                {{ $item->bus_id }}
                             </td>
-                            
-                                
-                            <td class="budget"style="font-weight:bold;font-size:15px">
-                                        @if(count($item->room)>0)
-                                        {{ $item->room[0]->classes->name }}
-                                        @endif
-               
-                             </td>
-                             
-                            <td class="budget"style="font-weight:bold;font-size:15px">
-                                            @if(count($item->room)>0)
-                                            
-                                            {{ $item->room[0]->name }}
-                                            
-                                            @endif
-
-                             </td>
 
 
                             <td class="text-right">
 
- 
+
+
+                                 <a href=".editClassModal" class="btn btn-secondary edit"
+                                        data-name="{{ $item->name }}"
+                                        data-address="{{ $item->address }}"
+                                        data-phone="{{ $item->phone }}"
+                                        data-bus_id="{{ $item->bus_id }}"
+
+                                         data-id="{{ $item->id }}"
+
+                                        data-toggle="modal" style="color: white">
+                                        تعديل </a>
 
 
 
                                     <a href=".deleteClassModal" class="delete2 btn btn-warning text-light "
                                         style="color: white !important;background: #4e90aa  !important;border-color: #008CC4 !important;
                       margin-right: 10px"
-                                        data-name=" {{$item->first_name}} {{ $item->last_name }}" data-id="{{ $item->id }}" data-toggle="modal">
-                                        ازالة
+                                        data-name="{{ $item->name }}" data-id="{{ $item->id }}" data-toggle="modal">
+                                        {{-- <i class="fa fa-trash" style="font-size: 30px;color: #af686e"></i> --}}
+                                        حذف
                                     </a>
 
 
@@ -207,38 +138,97 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    {{ $students->links() }}
+                    {{ $bus_supervisor->links() }}
                 </div>
             </div>
         </div>
 
 
     </div>
-    </div>
     {{-- </div> --}}
 
- 
+
+
+    {{-- $class_cost = Class_cost::whereIn('class_id', $all_classes->pluck('id'))
+    ->whereIn('country_id', $countries_currencies->pluck('id'))
+->get(); --}}
+
+
+
+    <div class="modal fade createClassModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="" action="{{ route('bus_supervisor_store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header">
+                        <h4 class="modal-title">اضافة مشرف باص</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="text-align:right">
+                            <label>اسم المشرف </label>
+                            <input type="text" name="name" class="form-control" value=""
+                                style="direction: rtl" placeholder="مثال :أول" maxlength="20" required>
+                        </div>
+                        <div class="form-group" style="text-align:right">
+                            <label>العنوان  </label>
+                            <input type="text" name="address" class="form-control" value=""
+                                style="direction: rtl" placeholder="مثال :أول" maxlength="20" required>
+                        </div>
+                        <div class="form-group" style="text-align:right">
+                            <label>الهاتف</label>
+                            <input type="text" name="phone" class="form-control" value=""
+                                style="direction: rtl" placeholder="مثال :أول" maxlength="20" required>
+                        </div>
+
+
+
+                        <div class="form-group" style="text-align:right">
+                            <label> تحديد الباص    </label>
+
+                            <select name="bus_id" id="" class="form-control "
+                                style="min-height: 36px;direction: rtl" required>
+                                <option value="" hidden>حدد الباص  </option>
+                                @foreach ($buses as $buse)
+                                    <option value="{{ $buse->id }}"> {{ $buse->name }}</option>
+                                @endforeach
+
+                            </select>
+                        </div>
+
+
+                    </div>
+                    <div class="modal-footer" style="justify-content: right;">
+                        <a class="btn btn-default" data-dismiss="modal">الغاء</a>
+                        <button class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 
 
 
 
 
     <div class="modal fade editClassModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
-                <form id="form_update" method="POST" action="{{ route('bus_driver_update') }}"
+                <form id="form_update" method="POST" action="{{ route('bus_supervisor_update') }}"
                     enctype="multipart/form-data">
                     @csrf
 
                     <div class="modal-header">
-                        <h4 class="modal-title">تعديل معلومات السائق</h4>
+                        <h4 class="modal-title">تعديل معلومات المشرف</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     </div>
                     <div class="modal-body">
-                         <input type="hidden" name="driver_id" id="driver_id">
+                         <input type="hidden" name="class_id" id="class_id10">
                         <div class="form-group" style="text-align:right">
                             <label>الاسم  </label>
-                            <input type="text" name="name" class="form-control" required
+                            <input type="text" name="class_name" class="form-control" required
                                         value="" style="direction: rtl" id="name"
                                         placeholder=" اكتب الاسم" maxlength="20" >
                         </div>
@@ -262,7 +252,9 @@
                             <select name="bus_id" id="bus_id" class="form-control "
                                 style="min-height: 36px;direction: rtl" required>
                                 <option value="" hidden>حدد  الباص </option>
-                            
+                                @foreach ($buses as $buse)
+                                    <option value="{{ $buse->id }}"> {{ $buse->name }}</option>
+                                @endforeach
 
                             </select>
                         </div>
@@ -281,58 +273,14 @@
 
 
 
-            <div class="modal fade createClassModal">
-                <div class="modal-dialog modal-md modal-dialog-centered">
-                    <div class="modal-content">
-                        <form id="" action="{{ route('bus_students_store') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-<input type="hidden" name="bus_id" value="{{$bus->id}}" />
-                            <div class="modal-header">
-                                <h4 class="modal-title">اضافة طلاب</h4>
-                                <button type="button" class="close" data-dismiss="modal"
-                                    aria-hidden="true">&times;</button>
-                            </div>
-                            <div class="modal-body">
-
- 
-                                <div class="row d-flex justify-content-center mt-100">
-                                    <label>اختيار طلاب</label>
-
-                                    <div class="col-md-12">
-                                         <select  name="student_ids[]" id="choices-multiple-remove-button" class="form-control permissions" placeholder="Select Multi Students" multiple>
-                    @foreach ($all_students as $item)
-    @if(count($item->room)>0)
-                                                 <option value=" {{$item->id}}"> {{$item->first_name}} {{$item->father_name}}  {{$item->last_name}}  ( {{$item->room[0]->classes->name}} )  </option>
-    @endif
-    
-    @endforeach
-                                        </select>
-                                  </div>
-                                </div>
-
-
-
-
-
-                            </div>
-                            <div class="modal-footer">
-                                <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                                <button class="btn btn-info">حفظ</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-
     <div class="modal fade deleteEmployeeModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <form id="form_delete" method="POST">
                     @csrf
                     @method('delete')
                     <div class="modal-header">
-                        <h4 class="modal-title">إزالة طالب من الباص</h4>
+                        <h4 class="modal-title">Delete element</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     </div>
                     <div class="modal-body">
@@ -354,15 +302,15 @@
     {{-- delete class  --}}
 
     <div class="modal fade deleteClassModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
-                <form id="form_delete" action="{{ route('bus_students_delete') }}" method="POST" autocomplete="off">
+                <form id="form_delete" action="{{ route('bus_supervisor_delete') }}" method="POST" autocomplete="off">
 
                     @csrf
                     <input type="hidden" name="class_id_delete" id="class_id_delete" required>
 
                     <div class="modal-header">
-                        <h4 class="modal-title" style="color: #f00">حذف سائق</h4>
+                        <h4 class="modal-title" style="color: #f00">حذف مشرف</h4>
                         <button type="button" class="close" style="color: #f00" data-dismiss="modal"
                             aria-hidden="true">&times;</button>
                     </div>
@@ -391,16 +339,27 @@
     <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
-     $('.edit').click(function() {
-        var driver_id = $(this).data('id');
+        $(document).ready(function() {
+    $('.edit').click(function() {
+        var class_id = $(this).data('id');
         var name = $(this).data('name');
         var address = $(this).data('address');
         var phone = $(this).data('phone');
         var bus_id = $(this).data('bus_id');
 
-     
-  
-        $('.modal-body #driver_id').val(driver_id);
+          $.each($('.classCost10'), function (index, val) {
+           $(this).val('');
+
+
+          })
+          $.each(classCost, function (index, val) {
+           $(`.modal-body #${val.country_id}`).val(val.cost);
+
+
+          })
+
+        // Assign values to modal form fields
+        $('.modal-body #class_id10').val(class_id);
         $('.modal-body #name').val(name);
         $('.modal-body #address').val(address);
         $('.modal-body #phone').val(phone);
@@ -408,21 +367,9 @@
 
 
     });
-     </script>
+});
+    </script>
     <script>
-
-    $(document).ready(function(){
-
-var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
-removeItemButton: true,
-maxItemCount:200,
-searchResultLimit:50,
-renderChoiceLimit:50
-});
-
-
-
-});
 
         $('.alert-success').hide(5000);
 

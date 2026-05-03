@@ -1,4 +1,4 @@
-@extends('admin.layouts.v2')
+@extends('admin.master')
 @section('style')
     <style>
         .custom-file-label {
@@ -22,26 +22,6 @@
         .modal-header {
             direction: rtl;
         }
-    
-
-        /* Transport modal stacking fix */
-        .modal {
-            z-index: 1055 !important;
-        }
-
-        .modal-backdrop {
-            z-index: 1040 !important;
-        }
-
-        .v2-navbar,
-        .v2-sidebar {
-            z-index: 1030 !important;
-        }
-
-        .transport-v2 .modal-dialog.modal-dialog-centered {
-            min-height: calc(100% - 3.5rem);
-        }
-
     </style>
 @endsection
 
@@ -58,7 +38,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     {{-- <div class="col" > --}}
-    <div class="transport-v2">
     <div class="card" style="direction:rtl; text-align:right;margin: 20px;">
 
         <!--@if (session()->has('success'))
@@ -88,7 +67,7 @@
                 <thead class="thead-light">
                     <tr>
                         <!--<th scope="col" class="sort" data-sort="name">Id</th>-->
-                        <th scope="col" class="sort" data-sort="budget">  رقم الباص  </th>
+                        <th scope="col" class="sort" data-sort="budget"> الاسم </th>
                         <th scope="col" class="sort" data-sort="budget"> عدد الطلاب </th>
                         <th scope="col" class="sort" data-sort="budget">  الخط التابع له </th>
                         <th scope="col" class="sort" data-sort="budget"> العمليات</th>
@@ -112,16 +91,15 @@
                             </td>
 
                             <td class="text-right">
-                                <a href="{{ route('bus_students', $item->id) }}" class="btn btn-success"
+                                <a href="{{ route('buses', $item->id) }}" class="btn btn-success"
                                     style="margin-left: 10px">الطلاب</a>
 
                                 @can('update_class')
 
                                  <a href=".editClassModal" class="btn btn-secondary edit"
                                         data-name="{{ $item->name }}"
-                                         data-students_count="{{ $item->students_count }}"
-                                         data-bus_lines_id="{{ $item->bus_lines_id }}"
-                                            
+                                        data-annual_cost="{{ $item->annual_cost }}"
+
                                          data-id="{{ $item->id }}"
                                   data-toggle="modal" style="color: white">
                                         تعديل </a>
@@ -158,7 +136,7 @@
 
 
     <div class="modal fade createClassModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <form id="" action="{{ route('buses_store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -170,7 +148,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group" style="text-align:right">
-                            <label> رقم الباص  </label>
+                            <label>الاسم </label>
                             <input type="text" name="name" class="form-control" value="" style="direction: rtl"
                                 placeholder="مثال :باص رقم 541" maxlength="20" required>
                         </div>
@@ -200,24 +178,23 @@
 
 
     <div class="modal fade editClassModal">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <form id="form_update" method="POST" action="{{ route('buses_update') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="bus_lines_id" id="bus_lines_id" value="{{ $id }}">
 
                     <div class="modal-header">
                         <h4 class="modal-title">تعديل الباص</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     </div>
                     <div class="modal-body">
-                         <input type="hidden" name="id" id="id">
+                         <input type="hidden" name="id" id="bus_id">
                         <div class="form-group" style="text-align:right">
-                            <label> رقم الباص  </label>
+                            <label>اسم </label>
                             <input type="text" name="name" class="form-control" required
                                         value="" style="direction: rtl" id="name"
-                                        placeholder="مثال :547" maxlength="20" >
+                                        placeholder="مثال :برامكة" maxlength="20" >
                         </div>
                         <div class="form-group" style="text-align:right">
                             <label>عدد الطلاب  </label>
@@ -255,22 +232,29 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <script>
- 
+        $(document).ready(function() {
     $('.edit').click(function() {
         var bus_id = $(this).data('id');
         var name = $(this).data('name');
-        var students_count = $(this).data('students_count');
         var bus_line_id = $(this).data('bus_lines_id');
 
- 
+          $.each($('.classCost10'), function (index, val) {
+           $(this).val('');
+
+
+          })
+          $.each(classCost, function (index, val) {
+           $(`.modal-body #${val.country_id}`).val(val.cost);
+
+
+          })
 
         // Assign values to modal form fields
-        $('.modal-body #id').val(bus_id);
+        $('.modal-body #id').val(id);
         $('.modal-body #name').val(name);
-        $('.modal-body #students_count').val(students_count);
         $('.modal-body #bus_lines_id').val(bus_lines_id);
 
- 
+    });
 });
     </script>
 @endsection

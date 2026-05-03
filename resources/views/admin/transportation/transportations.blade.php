@@ -1,4 +1,4 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
 @section('style')
     <style>
         .custom-file-label {
@@ -22,6 +22,26 @@
         .modal-header {
             direction: rtl;
         }
+    
+
+        /* Transport modal stacking fix */
+        .modal {
+            z-index: 1055 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+
+        .v2-navbar,
+        .v2-sidebar {
+            z-index: 1030 !important;
+        }
+
+        .transport-v2 .modal-dialog.modal-dialog-centered {
+            min-height: calc(100% - 3.5rem);
+        }
+
     </style>
 @endsection
 
@@ -37,6 +57,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     {{-- <div class="col" > --}}
+    <div class="transport-v2">
     <div class="card" style="direction:rtl; text-align:right;margin: 20px;">
 
         <!--@if (session()->has('success'))
@@ -137,7 +158,7 @@
 
 
     <div class="modal fade createClassModal">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
                 <form id="" action="{{ route('bus_lines_store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -176,7 +197,7 @@
 
 
 <div class="modal fade editClassModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
          <form id="form_update" method="POST" action="{{ route('bus_lines_update') }}"
                     enctype="multipart/form-data">

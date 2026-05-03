@@ -1,5 +1,8 @@
-@extends('admin.master')
-<head>
+@extends('admin.layouts.v2')
+
+@section('page_title', 'Role Permissions')
+@section('page_subtitle', 'Manage roles and permission assignments')
+@section('style')
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
     <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
@@ -50,7 +53,7 @@
         border-top: 2px solid rgb(0 0 0) !important;
 }
     </style>
-</head>
+@endsection
 
 @section('breadcrumbs')
 
