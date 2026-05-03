@@ -184,6 +184,10 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('student/student_select', 'DashboardController@student_select')->name('student_select');
 
     Route::get('backups', 'DashboardController@backups')->name('backups');
+    // Legacy backup aliases used by existing Blade templates.
+    Route::get('get-backup', 'DashboardController@databasebackup')->name('get-backup');
+    Route::get('zip/{id}', 'DashboardController@zipfile')->name('zip');
+    Route::post('backup_del', 'DashboardController@backup_del')->name('backup_del');
     Route::get('backups/create', 'DashboardController@backups_create')->name('backups.create');
     Route::get('backups/download/{file_name}', 'DashboardController@backups_download')->name('backups.download');
     Route::get('backups/delete/{file_name}', 'DashboardController@backups_delete')->name('backups.delete');

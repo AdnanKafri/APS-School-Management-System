@@ -1,47 +1,51 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'Ù‚Ø¨ÙˆÙ„ Ø§Ù„Ø·Ù„Ø§Ø¨')
+@section('page_subtitle', 'Ù…Ø±Ø§Ø¬Ø¹Ø© Ø·Ù„Ø¨Ø§Øª ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø·Ù„Ø§Ø¨ ÙˆØªÙ†Ø¸ÙŠÙ…Ù‡Ø§')
 
 @section('style')
 <style>
-    *{
+    .student-admission-v2 *{
         direction: rtl !important;
         /* text-align: center; */
     }
-    button,a{
+    .student-admission-v2 button,
+    .student-admission-v2 .btn{
         color: white !important;
     }
-    .form-group{
+    .student-admission-v2 .form-group{
         text-align: right;
     }
-    label{
+    .student-admission-v2 label{
         font-size: 20px;
         color: black;
     }
-    input{
+    .student-admission-v2 input{
         font-size: 17px !important;
     }
-    th{
+    .student-admission-v2 th{
         font-size: 20px;
     }
-    td{
+    .student-admission-v2 td{
         font-size: 17px;
     }
-    a.page-link{
+    .student-admission-v2 a.page-link{
         color: #7571f9 !important;
     }
-    .pagination{
+    .student-admission-v2 .pagination{
         justify-content: center;
     }
-    .dropdown-item{
+    .student-admission-v2 .dropdown-item{
         color: black !important;
         width: auto !important;
     }
-    .fa-folder{
+    .student-admission-v2 .fa-folder{
         margin: 2px;
     }
-    .dorat{
+    .student-admission-v2 .dorat{
         color: blue !important;
     }
-    img{
+    .student-admission-v2 img{
         border-radius:50%;
     }
     /* ///////////////////////////////////// */
@@ -198,177 +202,263 @@
   color: #fff;
 }
 
-th{
+.student-admission-v2 th{
     font-size: 20px;
     border-bottom: 1px solid #008991 !important;
     text-align: center !important;
 }
-td{
+.student-admission-v2 td{
     font-size: 17px;
     border-bottom: 1px solid #008991 !important;
     color: black;
     text-align: center;
 }
-input:read-only {
+.student-admission-v2 input:read-only {
   color: black !important;
   font-size: 17px !important;
 }
 #table_xx_wrapper{
     overflow: auto;
 }
+
+/* V2 normalization */
+.student-admission-v2 {
+    direction: rtl;
+}
+.student-admission-v2 .v2-card {
+    padding: 1.2rem;
+}
+.student-admission-v2 .card {
+    margin: 0 !important;
+    border: 0;
+    box-shadow: none;
+}
+.student-admission-v2 .card-body {
+    padding: 0 !important;
+}
+.student-admission-v2 .v2-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .85rem;
+}
+.student-admission-v2 .v2-card__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2f2b3a;
+    line-height: 1.25;
+}
+.student-admission-v2 .form-group {
+    margin-bottom: .9rem !important;
+    text-align: right;
+}
+.student-admission-v2 label {
+    font-size: .9rem;
+    font-weight: 800;
+    color: #4d4762;
+    margin-bottom: .35rem;
+}
+.student-admission-v2 .form-control {
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid #dcd6eb;
+    box-shadow: none;
+}
+.student-admission-v2 .table-responsive {
+    border: 1px solid #ece9f4;
+    border-radius: 16px;
+    overflow: auto;
+}
+.student-admission-v2 .card-title {
+    margin: 0 !important;
+}
+.student-admission-v2 .m-4.table-responsive {
+    margin: 0 !important;
+}
+.student-admission-v2 table thead th {
+    background: #f8f7fc;
+    color: #5e5873;
+    font-weight: 800;
+    border-bottom: 0 !important;
+}
+
+.student-admission-v2 .modal-backdrop {
+    z-index: 1040 !important;
+}
+.student-admission-v2 .modal {
+    z-index: 1055 !important;
+}
+.student-admission-v2 .modal-content {
+    border: 0;
+    border-radius: 18px;
+}
+.student-admission-v2 .modal-header,
+.student-admission-v2 .modal-footer {
+    border-color: rgba(91, 75, 138, .12);
+}
+.student-admission-v2 .modal-footer .btn {
+    min-height: 42px;
+    border-radius: 12px;
+}
 </style>
 <link href="{{ asset('assets/admin/plugins/toastr/css/toastr.min.css')  }}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
 @endsection
 
 @section('breadcrumbs')
 
 <nav class="breadcrumbs">
-    <a  class="breadcrumbs__item is-active">قسم قبول الطلاب</a>
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
+    <a class="breadcrumbs__item is-active">قسم قبول الطلاب</a>
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">الصفحة الرئيسية</a>
 </nav>
 
 @endsection
 
 @section('content')
+<div class="student-admission-v2">
+<div class="v2-card">
 
 
 <!------------------------------------------------>
 
 <div class="modal fade createStudentModal">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
 
                 <div class="modal-header">
-                    <h4 class="modal-title">معلومات الطالب</h4>
+                    <h4 class="modal-title">Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ø·Ø§Ù„Ø¨</h4>
                     <button type="button" class="close" data-dismiss="modal"
                         aria-hidden="true">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                     <div class="form-group col-12 col-lg-6">
-                        <label>الإسم الأول</label>
+                        <label>Ø§Ù„Ø¥Ø³Ù… Ø§Ù„Ø£ÙˆÙ„</label>
                         <input readonly type="text" id="edit_first_name" class="form-control a" style="direction:rtl"
                             value="" maxlength="20"
-                            placeholder="الإسم الأول" required>
+                            placeholder="Ø§Ù„Ø¥Ø³Ù… Ø§Ù„Ø£ÙˆÙ„" required>
                     </div>
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>الكنية</label>
+                        <label>Ø§Ù„ÙƒÙ†ÙŠØ©</label>
                         <input readonly type="text" id="edit_last_name" class="form-control b"
                             value="" maxlength="20"style="direction:rtl"
-                            placeholder="الكنية" required>
+                            placeholder="Ø§Ù„ÙƒÙ†ÙŠØ©" required>
                     </div>
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>اسم الأب </label>
+                        <label>Ø§Ø³Ù… Ø§Ù„Ø£Ø¨ </label>
                         <input readonly type="text" id="edit_father_name" class="form-control b"
                             value="" maxlength="20"style="direction:rtl"
-                            placeholder="اسم الأب " required>
+                            placeholder="Ø§Ø³Ù… Ø§Ù„Ø£Ø¨ " required>
                     </div>
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>اسم الأم</label>
+                        <label>Ø§Ø³Ù… Ø§Ù„Ø£Ù…</label>
                         <input readonly type="text" id="edit_mother_name" class="form-control b"
                             value="" maxlength="20"style="direction:rtl"
-                            placeholder="اسم الأم" >
+                            placeholder="Ø§Ø³Ù… Ø§Ù„Ø£Ù…" >
                     </div>
                      {{-- <div class="form-group col-12 col-lg-6">
-                        <label>كنية الأم</label>
+                        <label>ÙƒÙ†ÙŠØ© Ø§Ù„Ø£Ù…</label>
                         <input readonly type="text" id="edit_last_mother_name" class="form-control b"
                             value="" maxlength="20"style="direction:rtl"
-                            placeholder="كنية الأم" >
+                            placeholder="ÙƒÙ†ÙŠØ© Ø§Ù„Ø£Ù…" >
                     </div> --}}
 
 
 
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>تاريخ الولادة</label>
+                        <label>ØªØ§Ø±ÙŠØ® Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©</label>
                         <input readonly type="date" id="edit_date_birth" class="form-control b"
                             value=""style="direction:rtl"
-                            placeholder="تاريخ الولادة" >
+                            placeholder="ØªØ§Ø±ÙŠØ® Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©" >
                     </div>
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label>مكان الولادة
+                        <label>Ù…ÙƒØ§Ù† Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©
                            </label>
                         <input readonly type="text" id="edit_place" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="مكان الولادة">
+                            placeholder="Ù…ÙƒØ§Ù† Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©">
                     </div> --}}
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label> الجنس
+                        <label> Ø§Ù„Ø¬Ù†Ø³
                            </label>
                         <input readonly type="text" id="edit_gender" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="الجنس">
+                            placeholder="Ø§Ù„Ø¬Ù†Ø³">
                     </div> --}}
                     <div class="form-group col-12 col-lg-6">
-                        <label> الديانة
+                        <label> Ø§Ù„Ø¯ÙŠØ§Ù†Ø©
                            </label>
                         <input readonly type="text" id="edit_religion" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="الديانة ">
+                            placeholder="Ø§Ù„Ø¯ÙŠØ§Ù†Ø© ">
                     </div>
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label> الجنسية
+                        <label> Ø§Ù„Ø¬Ù†Ø³ÙŠØ©
                            </label>
                         <input readonly type="text" id="edit_nationality" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="الجنسية">
+                            placeholder="Ø§Ù„Ø¬Ù†Ø³ÙŠØ©">
                     </div> --}}
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label> رقم جواز السفر
+                        <label> Ø±Ù‚Ù… Ø¬ÙˆØ§Ø² Ø§Ù„Ø³ÙØ±
                            </label>
                         <input readonly type="text" id="edit_pas_number" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="رقم جواز السفر">
+                            placeholder="Ø±Ù‚Ù… Ø¬ÙˆØ§Ø² Ø§Ù„Ø³ÙØ±">
                     </div> --}}
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label>   الرقم الوطني
+                        <label>   Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ·Ù†ÙŠ
                            </label>
                         <input readonly type="text" id="edit_number" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="الرقم الوطني">
+                            placeholder="Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ·Ù†ÙŠ">
                     </div> --}}
                     <div class="form-group col-12 col-lg-6">
-                        <label>البريد الالكتروني</label>
+                        <label>Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø§Ù„ÙƒØªØ±ÙˆÙ†ÙŠ</label>
                         <input readonly type="text" id="edit_email" class="form-control b"
                             value=""style="direction:rtl"
-                            placeholder="البريد الالكتروني" >
+                            placeholder="Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø§Ù„ÙƒØªØ±ÙˆÙ†ÙŠ" >
                     </div>
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>البلد </label>
+                        <label>Ø§Ù„Ø¨Ù„Ø¯ </label>
                         <input readonly type="text" id="edit_address" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder="البلد">
+                            placeholder="Ø§Ù„Ø¨Ù„Ø¯">
                     </div>
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label>المدينة </label>
+                        <label>Ø§Ù„Ù…Ø¯ÙŠÙ†Ø© </label>
                         <input readonly type="text" id="edit_city" class="form-control b"style="direction:rtl"
                             value="" maxlength="100"
-                            placeholder=" المدينة ">
+                            placeholder=" Ø§Ù„Ù…Ø¯ÙŠÙ†Ø© ">
                     </div> --}}
 
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>الهاتف</label>
+                        <label>Ø§Ù„Ù‡Ø§ØªÙ</label>
                         <input readonly type="text" id="edit_phone" class="form-control b"style="direction:rtl"
                             value="" maxlength="20"
-                            placeholder="الهاتف" >
+                            placeholder="Ø§Ù„Ù‡Ø§ØªÙ" >
                     </div>
                     {{-- <div class="form-group col-12 col-lg-6">
-                        <label>   الهاتف 2  </label>
+                        <label>   Ø§Ù„Ù‡Ø§ØªÙ 2  </label>
                         <input readonly type="text" id="edit_other_phone" class="form-control b"style="direction:rtl"
                             value="" maxlength="20"
-                            placeholder="الهاتف الذي ينوب عن الأهل" >
+                            placeholder="Ø§Ù„Ù‡Ø§ØªÙ Ø§Ù„Ø°ÙŠ ÙŠÙ†ÙˆØ¨ Ø¹Ù† Ø§Ù„Ø£Ù‡Ù„" >
                     </div> --}}
 
 
 
                     <div class="form-group col-12 col-lg-6">
-                        <label>الصف</label>
+                        <label>Ø§Ù„ØµÙ</label>
                         <input readonly type="text" id="edit_calss2" class="form-control b"style="direction:rtl"
                             value="" maxlength="20" >
                     </div>
@@ -383,77 +473,77 @@ input:read-only {
                     <!--</div>-->
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >الصورة الشخصية</label>
+                        <label style="text-align:center;display:block" >Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ø´Ø®ØµÙŠØ©</label>
                         <a href="" id="edit_personal_image" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >دفتر العائلة</label>
+                        <label style="text-align:center;display:block" >Ø¯ÙØªØ± Ø§Ù„Ø¹Ø§Ø¦Ù„Ø©</label>
                         <a href="" id="edit_family_book" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >هوية الأم</label>
+                        <label style="text-align:center;display:block" >Ù‡ÙˆÙŠØ© Ø§Ù„Ø£Ù…</label>
                         <a href="" id="edit_mother_image" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >هوية الأب</label>
+                        <label style="text-align:center;display:block" >Ù‡ÙˆÙŠØ© Ø§Ù„Ø£Ø¨</label>
                         <a href="" id="edit_father_image" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >اخراج قيد</label>
+                        <label style="text-align:center;display:block" >Ø§Ø®Ø±Ø§Ø¬ Ù‚ÙŠØ¯</label>
                         <a href="" id="edit_fourth_image" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >جواز السفر</label>
+                        <label style="text-align:center;display:block" >Ø¬ÙˆØ§Ø² Ø§Ù„Ø³ÙØ±</label>
                         <a href="" id="edit_passbord" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" > صورة جواز سفر الام</label>
+                        <label style="text-align:center;display:block" > ØµÙˆØ±Ø© Ø¬ÙˆØ§Ø² Ø³ÙØ± Ø§Ù„Ø§Ù…</label>
                         <a href="" id="edit_mather_page" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" > صورة جواز سفر الاب </label>
+                        <label style="text-align:center;display:block" > ØµÙˆØ±Ø© Ø¬ÙˆØ§Ø² Ø³ÙØ± Ø§Ù„Ø§Ø¨ </label>
                         <a href="" id="edit_father_page" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >تسلسل دراسي</label>
+                        <label style="text-align:center;display:block" >ØªØ³Ù„Ø³Ù„ Ø¯Ø±Ø§Ø³ÙŠ</label>
                         <a href="" id="edit_study_sequence" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >اخر شهادة</label>
+                        <label style="text-align:center;display:block" >Ø§Ø®Ø± Ø´Ù‡Ø§Ø¯Ø©</label>
                         <a href="" id="edit_certification" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
                     </div>
 
                     <div style="display:none;text-align: center" class="form-group col-12 col-lg-6 ">
-                        <label style="text-align:center;display:block" >شهادة التاسع</label>
+                        <label style="text-align:center;display:block" >Ø´Ù‡Ø§Ø¯Ø© Ø§Ù„ØªØ§Ø³Ø¹</label>
                         <a href="" id="edit_certification_nine" target="_blank">
                             <img style="border-radius: 0%;" width="200" src="" alt="" >
                         </a>
@@ -467,23 +557,23 @@ input:read-only {
                         <div class="row">
                             @can('accept_register')
                             <div style="text-align: center" class="form-group col-12 col-lg-6 ">
-                                <label style="text-align:center;display:block" >الصف</label>
+                                <label style="text-align:center;display:block" >Ø§Ù„ØµÙ</label>
                                 <select name="class_id" id="approve_class_id" class="form-control w-75" style="display: inline-block;" required>
-                                    <option value="">اختر صف</option>
+                                    <option value="">Ø§Ø®ØªØ± ØµÙ</option>
                                     @foreach ($classes as $item)
                                         <option value="{{ $item->id }}">{{ $item->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div style="text-align: center" class="form-group col-12 col-lg-6 " >
-                                <label style="text-align:center;display:block" >الشعبة</label>
+                                <label style="text-align:center;display:block" >Ø§Ù„Ø´Ø¹Ø¨Ø©</label>
                                 <select name="room_id" id="approve_room_id" class="form-control w-75" style="display: inline-block;" required>
 
                                 </select>
                             </div>
                             <div class="col-12" style="text-align: center">
 
-                                <input type="submit" class="btn btn-success" value="قبول" style="color:white !important;">
+                                <input type="submit" class="btn btn-success" value="Ù‚Ø¨ÙˆÙ„" style="color:white !important;">
 
                             </div>
                               @endcan
@@ -494,14 +584,14 @@ input:read-only {
 
 
                     {{-- <div class="form-group col-12 ">
-                        <label>ملاحظة</label>
+                        <label>Ù…Ù„Ø§Ø­Ø¸Ø©</label>
                         <textarea id="edit_note" cols="30" rows="5"></textarea>
                     </div> --}}
 
                     </div>
                 </div>
                 <div class="modal-footer" style="justify-content: right">
-                    <a class="btn btn-primary" data-dismiss="modal" style="float: right">الغاء</a>
+                    <a class="btn btn-primary" data-dismiss="modal" style="float: right">Ø§Ù„ØºØ§Ø¡</a>
                 </div>
             </div>
         </div>
@@ -510,15 +600,15 @@ input:read-only {
 
 
 <div class="modal fade financialaccountModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <form method="POST" action="{{ route('invoice_store') }}" enctype="multipart/form-data">
                 @csrf
 
                 <div class="modal-header" style="direction:rtl">
-                    <h4 class="modal-title">الحساب المالي  &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h4>
+                    <h4 class="modal-title">Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø§Ù„ÙŠ  &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h4>
 
-                    <a  target="_blanke" class="btn btn-danger btn-sm details" style="    margin-right: 10rem;">تفاصيل</a>
+                    <a  target="_blanke" class="btn btn-danger btn-sm details" style="    margin-right: 10rem;">ØªÙØ§ØµÙŠÙ„</a>
 
 
                     <button type="button" class="close" style="margin: -1rem -1rem auto;" data-dismiss="modal"
@@ -534,15 +624,15 @@ input:read-only {
 
                     <div class="row" style="text-align: center">
                         <div class="col-4">
-                            <label style="font-weight: bold; font-size: 18px; " class="text-primary">الكامل</label>
+                            <label style="font-weight: bold; font-size: 18px; " class="text-primary">Ø§Ù„ÙƒØ§Ù…Ù„</label>
 
                         </div>
 
                         <div class="col-4">
-                            <label style="font-weight: bold; font-size: 18px; " class="text-success"> المدفوع</label>
+                            <label style="font-weight: bold; font-size: 18px; " class="text-success"> Ø§Ù„Ù…Ø¯ÙÙˆØ¹</label>
                         </div>
                         <div class="col-4">
-                            <label style="font-weight: bold; font-size: 16px; " class="text-warning"> المتبقي</label>
+                            <label style="font-weight: bold; font-size: 16px; " class="text-warning"> Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ</label>
 
                         </div>
                     </div>
@@ -565,27 +655,27 @@ input:read-only {
 
                     <br>
 
-                    <button type="button" class="btn btn-primary btn-block add_reciept" data-toggle="collapse" data-target="#demo"> اضافة فاتورة</button>
+                    <button type="button" class="btn btn-primary btn-block add_reciept" data-toggle="collapse" data-target="#demo"> Ø§Ø¶Ø§ÙØ© ÙØ§ØªÙˆØ±Ø©</button>
                     <div id="demo" class="collapse">
 
                         <br>
 
                         <div class="form-group" style="text-align:right">
-                            <label>رقم الفاتورة</label>
+                            <label>Ø±Ù‚Ù… Ø§Ù„ÙØ§ØªÙˆØ±Ø©</label>
                             <input type="text" name="invoice_number" class="form-control b"
                                 value="" maxlength="20"
                               >
                         </div>
                         <div class="form-group" style="text-align:right">
-                            <label>المبلغ المدفوع</label>
+                            <label>Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹</label>
                             <input type="number" name="invoice_amount" class="form-control" id="invoice_amount"
                                 value=""
                               >
                         </div>
 
                         <div class="modal-footer">
-                            <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                            <button class="btn btn-info" >حفظ</button>
+                            <a class="btn btn-default" data-dismiss="modal">Ø§Ù„ØºØ§Ø¡</a>
+                            <button class="btn btn-info" >Ø­ÙØ¸</button>
                         </div>
                     </div>
                 </div>
@@ -596,13 +686,13 @@ input:read-only {
 
 
 <div class="modal fade deleteStudentModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <form method="POST" action="{{route('delete_student_request')}}" enctype="multipart/form-data">
                 @csrf
 
                 <div class="modal-header" style="direction:rtl">
-                    <h4 class="modal-title">  حذف طلب التسجيل   &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h4>
+                    <h4 class="modal-title">  Ø­Ø°Ù Ø·Ù„Ø¨ Ø§Ù„ØªØ³Ø¬ÙŠÙ„   &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h4>
 
                     <button type="button" class="close" style=" margin: -1rem -1rem auto;" data-dismiss="modal"
                         aria-hidden="true">&times;</button>
@@ -612,13 +702,13 @@ input:read-only {
 
                         <input type="hidden" name="student_id_delete" id="student_id_delete">
                         <div class="form-group" style="text-align:right">
-                            <label> اسم مقدم الطلب</label>
+                            <label> Ø§Ø³Ù… Ù…Ù‚Ø¯Ù… Ø§Ù„Ø·Ù„Ø¨</label>
                             <input type="text" name="" class="form-control" id="student_name_delete" value="">
                         </div>
 
                         <div class="modal-footer">
-                            <a class="btn btn-default" data-dismiss="modal">إالغاء</a>
-                            <button class="btn btn-info" >تأكيد</button>
+                            <a class="btn btn-default" data-dismiss="modal">Ø¥Ø§Ù„ØºØ§Ø¡</a>
+                            <button class="btn btn-info" >ØªØ£ÙƒÙŠØ¯</button>
                         </div>
                 </div>
             </form>
@@ -626,12 +716,12 @@ input:read-only {
     </div>
 </div>
 <div class="modal fade deleteSelectedStudentModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
 
 
                 <div class="modal-header" style="direction:rtl">
-                    <h2 class="modal-title">  حذف طلبات التسجيل المحددة  &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h2>
+                    <h2 class="modal-title">  Ø­Ø°Ù Ø·Ù„Ø¨Ø§Øª Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©  &nbsp; <span class="student_name" style="font-weight: bold; font-size: 20px"></span></h2>
 
                     <button type="button" class="close" style=" margin: -1rem -1rem auto;" data-dismiss="modal"
                         aria-hidden="true">&times;</button>
@@ -642,13 +732,13 @@ input:read-only {
                         <input type="hidden" name="student_id_delete" id="student_id_delete">
 
                         <div class="form-group" style="text-align:right">
-                            <label> سيتم حذف  الطلبات التالية  </label>
+                            <label> Ø³ÙŠØªÙ… Ø­Ø°Ù  Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„ØªØ§Ù„ÙŠØ©  </label>
                             <ul role="list" class="selectd_student_ul" ></ul>
                         </div>
 
                         <div class="modal-footer" >
-                            <button class="btn btn-danger btn-block go-ahead"  >تأكيد</button>
-                            <button class="btn btn-dark btn-block   " data-dismiss="modal" style="margin-top: 0 !important;margin-right:5px">إالغاء</button>
+                            <button class="btn btn-danger btn-block go-ahead"  >ØªØ£ÙƒÙŠØ¯</button>
+                            <button class="btn btn-dark btn-block   " data-dismiss="modal" style="margin-top: 0 !important;margin-right:5px">Ø¥Ø§Ù„ØºØ§Ø¡</button>
                         </div>
                 </div>
 
@@ -664,7 +754,7 @@ input:read-only {
              @can('delete_register')
             <a class="delete_selected_student btn btn-danger btn-sm"  data-target=".deleteSelectedStudentModal" data-toggLe="modal"
             style="padding-right:8px !important;font-size:22px;float:right;visibility:hidden;background:#e15b5bdb !important ">
-                حذف الطلبات المحددة
+                Ø­Ø°Ù Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©
             </a>
               @endcan
               <form method="POST" action="{{route('export_register_student')}}" enctype="multipart/form-data">
@@ -676,7 +766,7 @@ input:read-only {
 
                  <button type="submit" class="export_selected_student btn btn-success"
             style="padding-right:8px !important;font-size:22px; visibility:hidden;">
-                  تصدير الطلبات المحددة
+                  ØªØµØ¯ÙŠØ± Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©
             </button>
 
             </form>
@@ -688,43 +778,43 @@ input:read-only {
                     padding-right: 8px !important;
                     background: #f0f8ff08;
                     border: 1px dashed;">
-                    تحديد الكل
+                    ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ÙƒÙ„
             </button>
             {{-- <div class="row" >
                 <div class="col-12 col-lg-3">
                     <select  id="filter_class"  class="form-control" >
 
-                                <option style="text-align: center;" value="">اختر الصف</option>
-                              <option style="text-align: center;" value="1">  الصف الاول  </option>
-                              <option style="text-align: center;" value="2" >  الصف الثاني  </option>
-                              <option style="text-align: center;" value="3" >  الصف الثالث  </option>
-                              <option style="text-align: center;" value="4" >  الصف الرابع  </option>
-                              <option style="text-align: center;" value="5" >  الصف الخامس  </option>
-                              <option style="text-align: center;" value="6" >  الصف السادس  </option>
-                              <option style="text-align: center;" value="7" >  الصف السابع  </option>
-                              <option style="text-align: center;" value="8" >  الصف الثامن  </option>
-                              <option style="text-align: center;" value="9" >   الصف العاشر  </option>
-                              <option style="text-align: center;" value="11" >  الصف الحادي عشر  </option>
-                              <option style="text-align: center;" value="12">  الصف الثاني عشر  </option>
+                                <option style="text-align: center;" value="">Ø§Ø®ØªØ± Ø§Ù„ØµÙ</option>
+                              <option style="text-align: center;" value="1">  Ø§Ù„ØµÙ Ø§Ù„Ø§ÙˆÙ„  </option>
+                              <option style="text-align: center;" value="2" >  Ø§Ù„ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ  </option>
+                              <option style="text-align: center;" value="3" >  Ø§Ù„ØµÙ Ø§Ù„Ø«Ø§Ù„Ø«  </option>
+                              <option style="text-align: center;" value="4" >  Ø§Ù„ØµÙ Ø§Ù„Ø±Ø§Ø¨Ø¹  </option>
+                              <option style="text-align: center;" value="5" >  Ø§Ù„ØµÙ Ø§Ù„Ø®Ø§Ù…Ø³  </option>
+                              <option style="text-align: center;" value="6" >  Ø§Ù„ØµÙ Ø§Ù„Ø³Ø§Ø¯Ø³  </option>
+                              <option style="text-align: center;" value="7" >  Ø§Ù„ØµÙ Ø§Ù„Ø³Ø§Ø¨Ø¹  </option>
+                              <option style="text-align: center;" value="8" >  Ø§Ù„ØµÙ Ø§Ù„Ø«Ø§Ù…Ù†  </option>
+                              <option style="text-align: center;" value="9" >   Ø§Ù„ØµÙ Ø§Ù„Ø¹Ø§Ø´Ø±  </option>
+                              <option style="text-align: center;" value="11" >  Ø§Ù„ØµÙ Ø§Ù„Ø­Ø§Ø¯ÙŠ Ø¹Ø´Ø±  </option>
+                              <option style="text-align: center;" value="12">  Ø§Ù„ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ Ø¹Ø´Ø±  </option>
 
                     </select>
                 </div>
 
             </div> --}}
         </div>
-        <div class="m-4">
+        <div class="m-4 table-responsive">
             <form action="{{ route('delete_multiple_student') }}" class="multiple-select-form" method="POST">
                 @csrf
                 <table class="table align-items-center" id="table_xx">
                     <thead class="thead-light">
                         <tr>
-                            <th scope="col" class="sort" data-sort="budget">تحديد </th>
-                             <th scope="col" class="sort" data-sort="budget">ترتيب التسجيل  </th>
-                            <th scope="col" class="sort" data-sort="budget">الإسم الأول</th>
-                            <th scope="col" class="sort" data-sort="status">الكنية</th>
-                           <th scope="col" class="sort" data-sort="status">تاريخ التسجيل</th>
-                            <th scope="col" class="sort" data-sort="status">وقت التسجيل</th>
-                            <th scope="col" class="sort" data-sort="completion">العمليات</th>
+                            <th scope="col" class="sort" data-sort="budget">ØªØ­Ø¯ÙŠØ¯ </th>
+                             <th scope="col" class="sort" data-sort="budget">ØªØ±ØªÙŠØ¨ Ø§Ù„ØªØ³Ø¬ÙŠÙ„  </th>
+                            <th scope="col" class="sort" data-sort="budget">Ø§Ù„Ø¥Ø³Ù… Ø§Ù„Ø£ÙˆÙ„</th>
+                            <th scope="col" class="sort" data-sort="status">Ø§Ù„ÙƒÙ†ÙŠØ©</th>
+                           <th scope="col" class="sort" data-sort="status">ØªØ§Ø±ÙŠØ® Ø§Ù„ØªØ³Ø¬ÙŠÙ„</th>
+                            <th scope="col" class="sort" data-sort="status">ÙˆÙ‚Øª Ø§Ù„ØªØ³Ø¬ÙŠÙ„</th>
+                            <th scope="col" class="sort" data-sort="completion">Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª</th>
                         </tr>
                     </thead>
                     <tbody >
@@ -737,15 +827,30 @@ input:read-only {
     </div>
 </div>
 
+</div>
+</div>
 @endsection
 
 @section('js')
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+$(function () {
   var i=0;
     var v=0;
 var x=[];
 var obj ={ };
 var obj1={ };
+if (!$.fn.DataTable || !$('#table_xx').length) {
+    console.error('DataTables not available or #table_xx missing');
+    return;
+}
+if ($.fn.DataTable.isDataTable('#table_xx')) {
+    $('#table_xx').DataTable().destroy();
+}
 var table_test = $('#table_xx').DataTable({
         processing: true,
         oLanguage: {
@@ -1994,18 +2099,18 @@ else if(data.nationality == "ZW") nationality=
 
 if(data.gender==1)
 {
-    gender="ذكر";
+    gender="Ø°ÙƒØ±";
 }
 else{
-    gender="انثى";
+    gender="Ø§Ù†Ø«Ù‰";
 }
 
 if(data.religion==0)
 {
-    religion="مسلم";
+    religion="Ù…Ø³Ù„Ù…";
 }
 else{
-    religion="مسيحي";
+    religion="Ù…Ø³ÙŠØ­ÙŠ";
 }
 $('#edit_calss2').val(data.class.name);
 
@@ -2024,21 +2129,21 @@ $('#edit_calss2').val(data.class.name);
         $('#edit_calss').val(data.current_class);
         $('.edit_result_status').empty();
         if(data.status == 11){
-                    $('#edit_status').text("منقطع عن الدراسة");
+                    $('#edit_status').text("Ù…Ù†Ù‚Ø·Ø¹ Ø¹Ù† Ø§Ù„Ø¯Ø±Ø§Ø³Ø©");
                     if(data.write_or == 1){
                         $('.edit_result_status').append(`
-                            <label style="text-align: center;font-size: 30px;width: 100%;" > يجيد القراءة والكتابة والرياضيات </label>
+                            <label style="text-align: center;font-size: 30px;width: 100%;" > ÙŠØ¬ÙŠØ¯ Ø§Ù„Ù‚Ø±Ø§Ø¡Ø© ÙˆØ§Ù„ÙƒØªØ§Ø¨Ø© ÙˆØ§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª </label>
                         `);
                     }else{
                         $('.edit_result_status').append(`
-                            <label style="text-align: center;font-size: 30px;width: 100%;" > لا يجيد القراءة والكتابة والرياضيات </label>
+                            <label style="text-align: center;font-size: 30px;width: 100%;" > Ù„Ø§ ÙŠØ¬ÙŠØ¯ Ø§Ù„Ù‚Ø±Ø§Ø¡Ø© ÙˆØ§Ù„ÙƒØªØ§Ø¨Ø© ÙˆØ§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª </label>
                         `);
                     }
 
         }else{
-                    $('#edit_status').text("غير منقطع عن الدراسة");
+                    $('#edit_status').text("ØºÙŠØ± Ù…Ù†Ù‚Ø·Ø¹ Ø¹Ù† Ø§Ù„Ø¯Ø±Ø§Ø³Ø©");
                         $('.edit_result_status').append(`
-                            <label>الصف الحالي</label>
+                            <label>Ø§Ù„ØµÙ Ø§Ù„Ø­Ø§Ù„ÙŠ</label>
                         <input readonly type="text" class="form-control b"style="direction:rtl"
                             value="${data.current_class}" maxlength="20" >
                         `);
@@ -2181,7 +2286,7 @@ $(document).on('change', '#classes', function () {
                 $('#class_room').empty();
                 var type = `
 
-                    <option value="">اختر الشعبة الدراسية</option>
+                    <option value="">Ø§Ø®ØªØ± Ø§Ù„Ø´Ø¹Ø¨Ø© Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ©</option>
 
                     `;
 
@@ -2224,11 +2329,11 @@ $(document).on('change', '#classes', function () {
             contentType: 'application/json',
             success: function (data) {
                 var type = `
-                <label>الشعبة</label>
+                <label>Ø§Ù„Ø´Ø¹Ø¨Ø©</label>
 
                 <select name="room_change_id" id="" class="form-control dep"
                     style="min-height: 36px;direction:rtl" required>
-                    <option value="">اختر الشعبة الدراسية</option>
+                    <option value="">Ø§Ø®ØªØ± Ø§Ù„Ø´Ø¹Ø¨Ø© Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ©</option>
 
                     `;
 
@@ -2254,11 +2359,11 @@ $(document).on('change', '#classes', function () {
         type+=`
                 <br>
                 <div class="form-group" style="text-align:right">
-                <label >الصف</label>
+                <label >Ø§Ù„ØµÙ</label>
 
                 <select name="class_change_id" id="classes_change" class="form-control dep"
                     style="min-height: 36px;direction: rtl" required>
-                    <option value="">اختر الصف الدراسي</option>
+                    <option value="">Ø§Ø®ØªØ± Ø§Ù„ØµÙ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ</option>
 
                 @foreach ($classes as $class)
 
@@ -2287,7 +2392,7 @@ url: url,
 type: "get",
 contentType: 'application/json',
 success: function (data) {
-        $('.student_name').text(student_name+ " عام "+ data.year_name  +" كان" + " في الصف  " + data.class_name + " " + data.room_name);
+        $('.student_name').text(student_name+ " Ø¹Ø§Ù… "+ data.year_name  +" ÙƒØ§Ù†" + " ÙÙŠ Ø§Ù„ØµÙ  " + data.class_name + " " + data.room_name);
     },
 error: function (xhr) {
 
@@ -2335,8 +2440,8 @@ error: function (xhr) {
             $(`#super_${student_id}`).attr('style','color:green');
             $(`#super_${student_id}`).parent().attr('class','student_less')
                     swal({
-                        title: "حسناً",
-                        text: "! تمت العملية بنجاح",
+                        title: "Ø­Ø³Ù†Ø§Ù‹",
+                        text: "! ØªÙ…Øª Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­",
                         icon: "success",
                         button: "OK",
                         timer: 2000
@@ -2347,6 +2452,7 @@ error: function (xhr) {
 
     });
 
+});
 </script>
 
 @endsection
