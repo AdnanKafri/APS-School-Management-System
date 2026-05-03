@@ -85,6 +85,47 @@ class studentscontroller extends Controller
         });
     }
 
+    protected function studentResultsSetting($key, $default = null)
+    {
+        $configValue = config('student_results.' . $key);
+        if (! is_null($configValue)) {
+            return $configValue;
+        }
+
+        $configPath = config_path('student_results.php');
+        if (file_exists($configPath)) {
+            $settings = require $configPath;
+            if (is_array($settings) && array_key_exists($key, $settings)) {
+                return $settings[$key];
+            }
+        }
+
+        return $default;
+    }
+
+    protected function studentResultsPagesEnabled()
+    {
+        $value = $this->studentResultsSetting('student_pages_enabled', false);
+
+        if (is_string($value)) {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return (bool) $value;
+    }
+
+    protected function studentResultsBlockedResponse($student, $room_id, $school_data, $pageLabel)
+    {
+        return view('students.results_blocked', [
+            'student' => $student,
+            'room_id' => $room_id,
+            'school_data' => $school_data,
+            'pageLabel' => $pageLabel,
+            'blockedTitle' => $this->studentResultsSetting('blocked_title', 'النتائج غير متاحة حالياً'),
+            'blockedMessage' => $this->studentResultsSetting('blocked_message', 'العلامات قيد المعالجة حالياً. يرجى المحاولة مرة أخرى لاحقاً.'),
+        ]);
+    }
+
 
     public function create()
     {
@@ -701,6 +742,9 @@ class studentscontroller extends Controller
 
         $class = Classe::find($room->class_id);
         $school_data = School_data::first();
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedResponse($student, $room_id, $school_data, 'الاختبارات النهائية');
+        }
         return view('students.new_student_exams', compact('school_data','exams', 'room_name', 'class_name', 'student', 'now', 'room_id', 'class'));
     }
 
@@ -756,6 +800,9 @@ class studentscontroller extends Controller
         $class = Classe::find($room->class_id);
 
         $school_data = School_data::first();
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedResponse($student, $room_id, $school_data, 'الاختبارات القصيرة');
+        }
         return view('students.new_student_quizes', compact('school_data','exams', 'room_name', 'class_name', 'student', 'now', 'room_id', 'class'));
     }
 
