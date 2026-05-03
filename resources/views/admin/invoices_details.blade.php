@@ -34,6 +34,20 @@
     .invoice-action { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid rgba(59,130,246,.18); background:rgba(59,130,246,.08); color:#3b82f6 !important; text-decoration:none; }
     .invoice-action:hover { background:rgba(59,130,246,.15); color:#2563eb !important; text-decoration:none; }
     .invoice-print-head { display:none; }
+    .invoice-print-only { display:none; }
+    .invoice-doc { width:190mm; margin:0 auto; color:#111827; direction:rtl; font-family:Tahoma, Arial, sans-serif; }
+    .invoice-doc__school { margin:0; text-align:center; font-size:22px; font-weight:700; }
+    .invoice-doc__kind { margin:2mm 0 4mm; text-align:center; font-size:13px; color:#4b5563; }
+    .invoice-doc__title { margin:4mm 0 2mm; font-size:14px; font-weight:700; }
+    .invoice-doc table { width:100%; border-collapse:collapse; }
+    .invoice-doc__meta td, .invoice-doc__info td { border:1px solid #d1d5db; padding:7px 8px; font-size:12px; }
+    .invoice-doc__meta span, .invoice-doc__info span { color:#6b7280; }
+    .invoice-doc__table th, .invoice-doc__table td { border:1px solid #374151; padding:7px 6px; font-size:12px; text-align:center; word-break:break-word; }
+    .invoice-doc__table th { background:#f9fafb; font-weight:700; }
+    .invoice-doc__summary { width:40%; margin-right:auto; margin-top:3mm; }
+    .invoice-doc__summary td { border:1px solid #374151; padding:6px 8px; font-size:12px; }
+    .invoice-doc__summary td:last-child { font-weight:700; text-align:center; }
+    .invoice-doc__footer { margin-top:10mm; display:flex; justify-content:space-between; font-size:12px; }
     @page {
         size: A4;
         margin: 10mm;
@@ -53,6 +67,26 @@
         body {
             direction:rtl !important;
             text-align:right !important;
+            margin:0 !important;
+            padding:0 !important;
+        }
+        .v2-shell,
+        .v2-main,
+        .v2-content-wrap,
+        .v2-page,
+        .v2-layout,
+        .container,
+        .container-fluid,
+        .row,
+        .col,
+        [class*="col-"] {
+            margin:0 !important;
+            padding:0 !important;
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            float:none !important;
+            transform:none !important;
         }
         .v2-sidebar,
         .v2-navbar,
@@ -69,14 +103,29 @@
         .invoice-shell,
         .invoice-card,
         .invoice-card__body {
-            width:auto !important;
-            max-width:none !important;
+            width:100% !important;
+            max-width:100% !important;
             margin:0 !important;
             padding:0 !important;
             background:#fff !important;
             box-shadow:none !important;
             border:0 !important;
             overflow:visible !important;
+        }
+        .invoice-shell,
+        .invoice-card,
+        .invoice-card__body,
+        .invoice-print-scope,
+        .invoice-table-wrap,
+        .invoice-table {
+            display:block !important;
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            margin:0 !important;
+            padding:0 !important;
+            float:none !important;
+            transform:none !important;
         }
         .v2-main {
             margin-right:0 !important;
@@ -90,32 +139,58 @@
             display:block !important;
             width:190mm !important;
             max-width:190mm !important;
+            min-width:190mm !important;
             margin-left:auto !important;
             margin-right:auto !important;
+            margin-inline:auto !important;
             padding:10mm !important;
             background:#fff !important;
             box-shadow:none !important;
             border:0 !important;
             overflow:visible !important;
+            position:relative !important;
+            left:0 !important;
+            right:0 !important;
+            transform:none !important;
+            float:none !important;
             page-break-after:avoid !important;
             break-after:avoid-page !important;
+        }
+        .print-sheet > * {
+            display:block !important;
+            width:100% !important;
+            max-width:100% !important;
+        }
+        .invoice-print-scope {
+            display:block !important;
+            width:100% !important;
+            max-width:100% !important;
+            margin:0 !important;
+            padding:0 !important;
         }
         .invoice-print-head {
             display:block !important;
             width:100% !important;
             margin:0 0 6mm !important;
-            text-align:right;
+            text-align:center !important;
+            direction:rtl !important;
         }
         .invoice-print-head__title {
             margin:0 0 4mm;
             font-size:18pt;
             font-weight:800;
             color:#111827;
+            text-align:center !important;
         }
         .invoice-print-head__meta {
-            display:grid;
+            display:grid !important;
             grid-template-columns:repeat(3,minmax(0,1fr));
             gap:4mm;
+            width:100% !important;
+            margin:0 !important;
+            justify-items:stretch !important;
+            align-items:stretch !important;
+            text-align:right !important;
         }
         .invoice-print-head__box {
             border:1px solid #dbe2ea;
@@ -142,11 +217,31 @@
             background:#fff !important;
             width:100% !important;
             max-width:100% !important;
+            margin:0 !important;
+            padding:0 !important;
+        }
+        .table-responsive {
+            display:block !important;
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            overflow:visible !important;
+            margin:0 !important;
+            padding:0 !important;
+            border:0 !important;
+            float:none !important;
+            position:static !important;
+            -ms-overflow-style:auto !important;
         }
         .invoice-table {
+            display:table !important;
             width:100% !important;
+            max-width:100% !important;
+            min-width:100% !important;
             border-collapse:collapse !important;
             table-layout:fixed !important;
+            margin:0 !important;
+            direction:rtl !important;
         }
         .invoice-table thead th:last-child,
         .invoice-table tbody td:last-child {
@@ -155,6 +250,7 @@
         .invoice-table thead th,
         .invoice-table tbody td,
         .invoice-table tbody th {
+            width:auto !important;
             border:1px solid #dbe2ea !important;
             background:#fff !important;
             color:#111827 !important;
@@ -163,6 +259,7 @@
             line-height:1.35 !important;
             white-space:normal !important;
             word-break:break-word !important;
+            overflow-wrap:anywhere !important;
         }
         .invoice-action {
             display:none !important;
@@ -170,6 +267,59 @@
         tr, td, th, .invoice-print-head__box {
             page-break-inside:avoid !important;
             break-inside:avoid !important;
+        }
+
+        .v2-sidebar,
+        .v2-navbar,
+        .v2-page-header,
+        .v2-page-subtitle,
+        .invoice-breadcrumbs,
+        .invoice-details-v2,
+        .card,
+        button,
+        .actions,
+        .toolbar {
+            display:none !important;
+        }
+        .invoice-print-only {
+            display:block !important;
+            position:static !important;
+            visibility:visible !important;
+            opacity:1 !important;
+            width:190mm !important;
+            max-width:190mm !important;
+            margin:0 auto !important;
+            padding:0 !important;
+            background:#fff !important;
+        }
+        .invoice-print-only * {
+            visibility:visible !important;
+            display:revert !important;
+        }
+        .invoice-print-only table {
+            display:table !important;
+            width:100% !important;
+        }
+        .invoice-print-only thead {
+            display:table-header-group !important;
+        }
+        .invoice-print-only tbody {
+            display:table-row-group !important;
+        }
+        .invoice-print-only tr {
+            display:table-row !important;
+        }
+        .invoice-print-only th,
+        .invoice-print-only td {
+            display:table-cell !important;
+        }
+        .invoice-doc {
+            width:100% !important;
+            max-width:100% !important;
+            margin:0 !important;
+        }
+        .invoice-doc__footer {
+            display:flex !important;
         }
     }
     @media (max-width: 991px) {
@@ -190,6 +340,10 @@
 
 @section('content')
 <div class="invoice-details-v2">
+    @php
+        $firstInvoice = $invoices_details->first();
+        $school = \App\School_data::first();
+    @endphp
     <div class="invoice-shell">
         <div class="invoice-grid">
             <div class="invoice-stat">
@@ -213,7 +367,7 @@
             </div>
             <div class="invoice-card__body">
                 <div class="invoice-toolbar">
-                    <button class="btn btn-primary invoice-print-button" id="screenshot" type="button">طباعة الفاتورة</button>
+                    <button class="btn btn-primary invoice-print-button" id="screenshot" type="button" @if(!$firstInvoice) disabled @endif>طباعة الفاتورة</button>
                 </div>
 
                 <div class="invoice-print-scope print-sheet" id="dvContainer">
@@ -272,6 +426,74 @@
         </div>
     </div>
 </div>
+
+<div class="invoice-print-only" id="invoice-print-only">
+    <div class="invoice-doc">
+        <h1 class="invoice-doc__school">{{ $school->name_ar ?? $school->name_en ?? config('app.name') }}</h1>
+        <p class="invoice-doc__kind">سند قبض / فاتورة مالية</p>
+
+        <table class="invoice-doc__meta">
+            <tr>
+                <td><span>التاريخ:</span> {{ now()->format('Y-m-d H:i') }}</td>
+                <td><span>رقم الفاتورة:</span> {{ optional($firstInvoice)->invoice_number ?? '-' }}</td>
+            </tr>
+        </table>
+
+        <h3 class="invoice-doc__title">بيانات الطالب</h3>
+        <table class="invoice-doc__info">
+            <tr>
+                <td><span>اسم الطالب:</span> {{ $student->first_name }} {{ $student->last_name }}</td>
+                <td><span>عدد الفواتير:</span> {{ $invoices_details->count() }}</td>
+            </tr>
+        </table>
+
+        <h3 class="invoice-doc__title">تفاصيل الفواتير</h3>
+        <table class="invoice-doc__table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>رقم الفاتورة</th>
+                    <th>الوصف</th>
+                    <th>المبلغ</th>
+                    <th>طريقة الدفع</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($invoices_details as $i => $item)
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td>{{ $item->invoice_number }}</td>
+                        <td>قسط دراسي</td>
+                        <td>{{ $item->invoice_amount }}</td>
+                        <td>{{ $item->payment_type }}</td>
+                        <td>{{ optional($item->created_at)->format('Y-m-d') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <table class="invoice-doc__summary">
+            <tr>
+                <td>الإجمالي</td>
+                <td>{{ $invoices_details->sum('invoice_amount') }}</td>
+            </tr>
+            <tr>
+                <td>المدفوع</td>
+                <td>{{ $invoices_details->sum('invoice_amount') }}</td>
+            </tr>
+            <tr>
+                <td>المتبقي</td>
+                <td>0</td>
+            </tr>
+        </table>
+
+        <div class="invoice-doc__footer">
+            <div>توقيع المحاسب: ____________________</div>
+            <div>توقيع المستلم: ____________________</div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('js')
@@ -283,7 +505,131 @@ $(document).on('click', '.details', function () {
 });
 
 $(document).on("click", "#screenshot", function () {
-    window.print();
+    var invoiceNode = document.querySelector('.invoice-print-only .invoice-doc');
+    if (!invoiceNode) {
+        return;
+    }
+
+    var content = invoiceNode.outerHTML;
+    var printWindow = window.open('', '', 'width=900,height=700');
+    if (!printWindow) {
+        return;
+    }
+
+    var printStyles = `
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background: #ffffff;
+        }
+        body {
+            color: #111827;
+            direction: rtl;
+            font-family: Tahoma, Arial, sans-serif;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .invoice-doc {
+            width: 190mm;
+            margin: 0 auto;
+            color: #111827;
+            direction: rtl;
+            font-family: Tahoma, Arial, sans-serif;
+        }
+        .invoice-doc__school {
+            margin: 0;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .invoice-doc__kind {
+            margin: 2mm 0 4mm;
+            text-align: center;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        .invoice-doc__title {
+            margin: 4mm 0 2mm;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .invoice-doc table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .invoice-doc__meta td,
+        .invoice-doc__info td {
+            border: 1px solid #d1d5db;
+            padding: 7px 8px;
+            font-size: 12px;
+        }
+        .invoice-doc__meta span,
+        .invoice-doc__info span {
+            color: #6b7280;
+        }
+        .invoice-doc__table th,
+        .invoice-doc__table td {
+            border: 1px solid #374151;
+            padding: 7px 6px;
+            font-size: 12px;
+            text-align: center;
+            word-break: break-word;
+        }
+        .invoice-doc__table th {
+            background: #f9fafb;
+            font-weight: 700;
+        }
+        .invoice-doc__summary {
+            width: 40%;
+            margin-right: auto;
+            margin-top: 3mm;
+        }
+        .invoice-doc__summary td {
+            border: 1px solid #374151;
+            padding: 6px 8px;
+            font-size: 12px;
+        }
+        .invoice-doc__summary td:last-child {
+            font-weight: 700;
+            text-align: center;
+        }
+        .invoice-doc__footer {
+            margin-top: 10mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+    `;
+
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>طباعة الفاتورة</title>
+            <style>${printStyles}</style>
+        </head>
+        <body>
+            ${content}
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(function () {
+        printWindow.print();
+        printWindow.close();
+    }, 300);
 });
 </script>
 @endsection

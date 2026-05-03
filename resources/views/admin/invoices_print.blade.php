@@ -1,252 +1,236 @@
-﻿<!DOCTYPE html>
+@php
+    $school = \App\School_data::first();
+    $student = optional($invoice)->student;
+    $className = optional(optional($invoice)->classes)->name;
+    $printedAt = now();
+    $amount = (float) ($invoice->invoice_amount ?? 0);
+    $paid = $amount;
+    $remaining = 0.0;
+@endphp
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طباعة الفاتورة</title>
+    <title>فاتورة مالية {{ $invoice->invoice_number }}</title>
     <style>
         :root {
-            --ink: #1f2937;
+            --ink: #111827;
             --muted: #6b7280;
-            --line: #dbe2ea;
-            --surface: #ffffff;
-            --brand: #3b82f6;
-            --bg: #f5f7fb;
+            --line: #374151;
+            --line-soft: #d1d5db;
+            --paper: #ffffff;
+            --screen: #f3f4f6;
         }
 
         * { box-sizing: border-box; }
 
-        body {
+        html, body {
             margin: 0;
-            font-family: 'Cairo', sans-serif;
-            background: var(--bg);
+            padding: 0;
+            width: 100%;
+        }
+
+        body {
+            background: var(--screen);
             color: var(--ink);
+            font-family: "Tahoma", "Arial", sans-serif;
             direction: rtl;
         }
 
-        .print-toolbar {
-            max-width: 960px;
-            margin: 1.5rem auto 0;
-            padding: 0 1rem;
+        .tools {
+            max-width: 210mm;
+            margin: 14px auto 0;
+            padding: 0 10px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .print-toolbar__title {
-            font-size: 1.1rem;
-            font-weight: 800;
-        }
-
-        .print-toolbar__actions {
-            display: flex;
             align-items: center;
-            gap: .75rem;
+        }
+
+        .tools__actions {
+            display: flex;
+            gap: 8px;
         }
 
         .btn {
-            min-height: 44px;
-            border-radius: 12px;
-            border: 0;
-            padding: .65rem 1rem;
-            font-weight: 800;
+            border: 1px solid #9ca3af;
+            background: #fff;
+            color: #111827;
+            padding: 8px 12px;
+            font-size: 13px;
             cursor: pointer;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .45rem;
         }
 
-        .btn-primary {
-            background: var(--brand);
-            color: #fff;
+        .btn:hover { background: #f9fafb; }
+
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 10px auto 20px;
+            background: var(--paper);
+            padding: 12mm;
         }
 
-        .btn-light {
-            background: #eef2f7;
-            color: var(--ink);
-        }
-
-        .print-sheet {
-            width: min(190mm, calc(100vw - 2rem));
-            max-width: 190mm;
-            margin: 1rem auto 2rem;
-            background: var(--surface);
-            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
-            padding: 10mm;
-        }
-
-        .invoice-head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .invoice-head__title {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 900;
-        }
-
-        .invoice-head__meta {
-            color: var(--muted);
-            font-size: .95rem;
-            margin-top: .45rem;
-        }
-
-        .invoice-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .invoice-box {
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 1rem;
-            background: #fbfcfe;
-        }
-
-        .invoice-box__label {
-            display: block;
-            color: var(--muted);
-            font-size: .84rem;
+        .doc-title {
+            text-align: center;
+            margin: 0 0 4mm;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: .4rem;
+            letter-spacing: .2px;
         }
 
-        .invoice-box__value {
-            font-size: 1.02rem;
-            font-weight: 800;
+        .doc-subtitle {
+            text-align: center;
+            margin: 0 0 6mm;
+            font-size: 12px;
+            color: var(--muted);
         }
 
-        .invoice-table {
+        .rule {
+            border-top: 1px solid var(--line);
+            margin: 0 0 6mm;
+        }
+
+        .head-grid {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
+            margin-bottom: 5mm;
         }
 
-        .invoice-table th,
-        .invoice-table td {
-            border: 1px solid var(--line);
-            padding: .9rem .75rem;
-            text-align: center;
-            vertical-align: middle;
+        .head-grid td {
+            width: 50%;
+            vertical-align: top;
+            padding: 0;
         }
 
-        .invoice-table th {
-            background: #f8fafc;
-            font-size: .86rem;
-            font-weight: 800;
-            color: #475569;
+        .meta-table,
+        .student-table,
+        .summary-table,
+        .lines-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .invoice-table td {
-            font-size: .95rem;
+        .meta-table td,
+        .student-table td,
+        .summary-table td {
+            border: 1px solid var(--line-soft);
+            padding: 7px 8px;
+            font-size: 13px;
+        }
+
+        .label {
+            color: var(--muted);
+            width: 34%;
+            white-space: nowrap;
+        }
+
+        .value {
             font-weight: 700;
         }
 
-        .invoice-foot {
-            margin-top: 2rem;
-            padding-top: 1rem;
+        .section-title {
+            margin: 5mm 0 2mm;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .lines-table th,
+        .lines-table td {
+            border: 1px solid var(--line);
+            padding: 8px 7px;
+            text-align: center;
+            font-size: 13px;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .lines-table th {
+            background: #f9fafb;
+            font-weight: 700;
+        }
+
+        .summary-wrap {
+            margin-top: 4mm;
+            width: 44%;
+            margin-inline-start: auto;
+        }
+
+        .summary-table .label {
+            width: 45%;
+            font-size: 12px;
+        }
+
+        .summary-table .value {
+            font-size: 13px;
+        }
+
+        .summary-table tr:last-child td {
+            font-weight: 700;
+            border-color: var(--line);
+        }
+
+        .footer {
+            margin-top: 12mm;
+        }
+
+        .sign-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .sign-grid td {
+            width: 50%;
+            vertical-align: top;
+            padding-top: 8mm;
+            font-size: 13px;
+        }
+
+        .sign-line {
             border-top: 1px solid var(--line);
+            margin-top: 12mm;
+            padding-top: 3px;
+            width: 80%;
+        }
+
+        .note {
+            margin-top: 8mm;
+            font-size: 11px;
             color: var(--muted);
-            font-size: .88rem;
             text-align: center;
         }
 
         @page {
             size: A4;
-            margin: 10mm;
+            margin: 8mm;
         }
 
         @media print {
-            * {
-                box-sizing: border-box !important;
-            }
             html, body {
+                background: #fff !important;
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-            body {
-                background: #fff;
-                direction: rtl;
-                text-align: right;
             }
 
-            .print-toolbar {
+            .tools {
                 display: none !important;
             }
 
-            .print-sheet {
-                width: 190mm !important;
-                max-width: 190mm !important;
+            .sheet {
+                width: 100% !important;
                 min-height: auto !important;
-                display: block !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-                box-shadow: none;
+                margin: 0 !important;
                 padding: 0 !important;
-                overflow: visible !important;
-                border: 0 !important;
                 page-break-after: avoid !important;
                 break-after: avoid-page !important;
             }
 
-            .invoice-head,
-            .invoice-grid,
-            .invoice-table,
-            .invoice-foot {
-                page-break-inside: avoid;
-                break-inside: avoid-page;
-            }
-
-            .invoice-grid {
-                width: 100%;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 4mm;
-                margin: 6mm 0;
-            }
-
-            .invoice-box {
-                padding: 4mm;
-            }
-
-            .invoice-table {
-                width: 100% !important;
-                table-layout: fixed;
-                margin-top: 6mm;
-            }
-
-            .invoice-table th,
-            .invoice-table td {
-                padding: 3mm 2.5mm;
-                font-size: 9pt;
-                line-height: 1.35;
-                white-space: normal;
-                word-break: break-word;
-            }
-
-            .invoice-head {
-                padding-bottom: 4mm;
-                margin-bottom: 4mm;
-            }
-
-            .invoice-foot {
-                margin-top: 6mm;
-                padding-top: 4mm;
-            }
-
-            table, tr, td, th {
+            .section-title,
+            .lines-table,
+            .summary-wrap,
+            .footer {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
             }
@@ -254,68 +238,115 @@
     </style>
 </head>
 <body>
-    <div class="print-toolbar">
-        <div class="print-toolbar__title">نسخة طباعة الفاتورة</div>
-        <div class="print-toolbar__actions">
-            <a href="{{ route('invoices_details', $invoice->student_id) }}" class="btn btn-light">العودة للتفاصيل</a>
-            <button class="btn btn-primary" type="button" onclick="window.print()">طباعة</button>
+    <div class="tools">
+        <div>نسخة جاهزة للطباعة</div>
+        <div class="tools__actions">
+            <a href="{{ route('invoices_details', $invoice->student_id) }}" class="btn">العودة للتفاصيل</a>
+            <button class="btn" type="button" onclick="window.print()">طباعة</button>
         </div>
     </div>
 
-    <main class="print-sheet" id="dvContainer">
-        <header class="invoice-head">
-            <div>
-                <h1 class="invoice-head__title">فاتورة مالية</h1>
-                <div class="invoice-head__meta">نسخة مخصصة للطباعة وعرض بيانات الفاتورة فقط</div>
-            </div>
-            <div class="invoice-head__meta">رقم الفاتورة: {{ $invoice->invoice_number }}</div>
-        </header>
+    <main class="sheet">
+        <div style="text-align:center;font-size:28px;font-weight:700;border:2px solid #111;padding:8px;margin-bottom:8px;">
+            THIS IS THE NEW PRINT PAGE
+        </div>
+        <h1 class="doc-title">{{ $school->name_ar ?? $school->name_en ?? config('app.name') }}</h1>
+        <p class="doc-subtitle">وثيقة فاتورة مالية رسمية</p>
+        <div class="rule"></div>
 
-        <section class="invoice-grid">
-            <div class="invoice-box">
-                <span class="invoice-box__label">المعرف</span>
-                <span class="invoice-box__value">{{ $invoice->id }}</span>
-            </div>
-            <div class="invoice-box">
-                <span class="invoice-box__label">قيمة الفاتورة</span>
-                <span class="invoice-box__value">{{ $invoice->invoice_amount }}</span>
-            </div>
-            <div class="invoice-box">
-                <span class="invoice-box__label">نوع الدفع</span>
-                <span class="invoice-box__value">{{ $invoice->payment_type }}</span>
-            </div>
-            <div class="invoice-box">
-                <span class="invoice-box__label">اسم البنك</span>
-                <span class="invoice-box__value">{{ $invoice->bank_name }}</span>
-            </div>
-        </section>
+        <table class="head-grid">
+            <tr>
+                <td>
+                    <table class="meta-table">
+                        <tr>
+                            <td class="label">رقم الفاتورة</td>
+                            <td class="value">{{ $invoice->invoice_number ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">تاريخ الفاتورة</td>
+                            <td class="value">{{ optional($invoice->created_at)->format('Y-m-d H:i') ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="padding-right: 4mm;">
+                    <table class="meta-table">
+                        <tr>
+                            <td class="label">تاريخ الطباعة</td>
+                            <td class="value">{{ $printedAt->format('Y-m-d H:i') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">رقم المرجع</td>
+                            <td class="value">INV-{{ $invoice->id ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-        <table class="invoice-table">
+        <h2 class="section-title">بيانات الطالب</h2>
+        <table class="student-table">
+            <tr>
+                <td class="label">اسم الطالب</td>
+                <td class="value">{{ trim(($student->first_name ?? '').' '.($student->last_name ?? '')) ?: '-' }}</td>
+                <td class="label">الصف / الشعبة</td>
+                <td class="value">{{ $className ?: '-' }}</td>
+            </tr>
+        </table>
+
+        <h2 class="section-title">تفاصيل الفاتورة</h2>
+        <table class="lines-table">
             <thead>
                 <tr>
-                    <th>المعرف</th>
-                    <th>رقم الفاتورة</th>
-                    <th>قيمة الفاتورة</th>
-                    <th>نوع الدفع</th>
-                    <th>اسم البنك</th>
-                    <th>التاريخ</th>
+                    <th style="width: 8%;">#</th>
+                    <th style="width: 34%;">الوصف</th>
+                    <th style="width: 18%;">المبلغ</th>
+                    <th style="width: 20%;">طريقة الدفع</th>
+                    <th style="width: 20%;">التاريخ</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>{{ $invoice->id }}</td>
-                    <td>{{ $invoice->invoice_number }}</td>
-                    <td>{{ $invoice->invoice_amount }}</td>
-                    <td>{{ $invoice->payment_type }}</td>
-                    <td>{{ $invoice->bank_name }}</td>
-                    <td>{{ $invoice->created_at }}</td>
+                    <td>1</td>
+                    <td>قسط دراسي - فاتورة طالب</td>
+                    <td>{{ $invoice->invoice_amount ?? 0 }}</td>
+                    <td>{{ $invoice->payment_type ?? '-' }}</td>
+                    <td>{{ optional($invoice->created_at)->format('Y-m-d') ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
 
-        <footer class="invoice-foot">
-            تم تجهيز هذه الصفحة للطباعة المباشرة بدون أي عناصر من لوحة التحكم.
-        </footer>
+        <div class="summary-wrap">
+            <table class="summary-table">
+                <tr>
+                    <td class="label">الإجمالي</td>
+                    <td class="value">{{ $amount }}</td>
+                </tr>
+                <tr>
+                    <td class="label">المدفوع</td>
+                    <td class="value">{{ $paid }}</td>
+                </tr>
+                <tr>
+                    <td class="label">المتبقي</td>
+                    <td class="value">{{ $remaining }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer">
+            <table class="sign-grid">
+                <tr>
+                    <td>
+                        <div>توقيع المحاسب</div>
+                        <div class="sign-line"></div>
+                    </td>
+                    <td>
+                        <div>توقيع ولي الأمر / المستلم</div>
+                        <div class="sign-line"></div>
+                    </td>
+                </tr>
+            </table>
+            <div class="note">هذه الوثيقة صادرة من النظام المالي للمدرسة وتستخدم لأغراض التوثيق والتحصيل.</div>
+        </div>
     </main>
 </body>
 </html>
