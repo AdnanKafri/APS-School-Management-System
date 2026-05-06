@@ -90,6 +90,15 @@ Route::group([
 
 
   Route::post('/stu_register', 'websitecontroller@stu_register')->name('stu_register');
+  Route::get('/registration-wizard', 'websitecontroller@registration_wizard')->name('website.registration_wizard');
+
+  // Multi-step registration foundation endpoints (Phase 1, no UI/payment integration).
+  Route::prefix('registration-wizard')->group(function () {
+    Route::post('/step-1-terms', 'RegistrationWizardController@saveStep1Terms')->name('registration_wizard.step1');
+    Route::post('/step-2-form', 'RegistrationWizardController@saveStep2Form')->name('registration_wizard.step2');
+    Route::post('/step-3-transport', 'RegistrationWizardController@saveStep3Transport')->name('registration_wizard.step3');
+    Route::post('/prepare-payment-summary', 'RegistrationWizardController@preparePaymentSummary')->name('registration_wizard.summary');
+  });
 
   Route::get('/lessons/{class_id}', 'websitecontroller@lessons')->name('website.lessons');
 
@@ -139,7 +148,8 @@ Route::group([
 
   Route::post('/employee/store', 'websitecontroller@store_employee')->name('website.store_employee');
 
-  Route::get('/register', 'websitecontroller@register')->name('website.register');
+  Route::get('/register', 'websitecontroller@registration_wizard')->name('website.register');
+  Route::get('/register-legacy', 'websitecontroller@register')->name('website.register_legacy');
 
   Route::get('/faqs', 'websitecontroller@faqs')->name('website.faqs');
 

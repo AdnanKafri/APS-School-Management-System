@@ -46,6 +46,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use stdClass;
 use App\Country_currency;
+use App\TermsSetting;
 
 
 class websitecontroller extends Controller
@@ -441,6 +442,16 @@ class websitecontroller extends Controller
         return view('website.register_st',compact('countries_currencies','classes','counter','sliders','footer_web'));
 
 
+    }
+
+    public function registration_wizard()
+    {
+        $classes = Classe::select('id', 'name', 'name_en')->get();
+        $countries_currencies = Country_currency::all();
+        $schoolTerms = TermsSetting::where('type', 'school')->latest()->first();
+        $transportTerms = TermsSetting::where('type', 'transport')->latest()->first();
+
+        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms'));
     }
 
     public function lessons($class_id){

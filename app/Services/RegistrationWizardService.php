@@ -7,43 +7,23 @@ use App\Student_register;
 class RegistrationWizardService
 {
     /**
-     * Start a new registration or return existing one
-     */
-    public function initializeRegistration()
-    {
-        $student = new Student_register();
-        $student->status = 'draft';
-        $student->current_step = 1;
-        $student->save();
-
-        return $student;
-    }
-
-    /**
-     * Step 1: Save terms acceptance
-     */
-    public function saveStep1Terms($registrationId, $acceptedTerms)
-    {
-        $student = Student_register::findOrFail($registrationId);
-        $student->accepted_terms = $acceptedTerms ? 1 : 0;
-        
-        if ($acceptedTerms) {
-            $student->current_step = 2;
-        }
-        
-        $student->save();
-        return $student;
-    }
-
-    /**
      * Step 2: Save main form data
      */
     public function saveStep2Form($registrationId, array $data)
     {
-        $student = Student_register::findOrFail($registrationId);
+        $student = $registrationId
+            ? Student_register::findOrFail($registrationId)
+            : new Student_register();
+
+        // Keep compatibility with legacy form naming.
+        if (isset($data['last_mather_name']) && !isset($data['last_mother_name'])) {
+            $data['last_mother_name'] = $data['last_mather_name'];
+        }
+        unset($data['last_mather_name']);
         
         // Update basic info
         $student->fill($data);
+        $student->accepted_terms = 1;
         $student->current_step = 3;
         $student->save();
         
@@ -93,8 +73,6 @@ class RegistrationWizardService
         $student->services_fee = $servicesFee;
         $student->transport_fee = $transportFee;
         $student->total_amount = $registrationFee + $servicesFee + $transportFee;
-        
-        $student->status = 'pending_payment';
         $student->current_step = 5;
         $student->save();
         
@@ -107,15 +85,21 @@ class RegistrationWizardService
     public function submitRegistration($registrationId, $paymentMethod, $receiptFile = null)
     {
         $student = Student_register::findOrFail($registrationId);
-        
-        $student->payment_method = $paymentMethod;
+
+        if ($paymentMethod === 'shamcash') {
+            $student->payment_method = 1;
+        } elseif ($paymentMethod === 'manual') {
+            $student->payment_method = 0;
+        } elseif (is_numeric($paymentMethod)) {
+            $student->payment_method = (int) $paymentMethod;
+        }
+
         $student->payment_status = 'pending'; // Requires admin verification
-        $student->status = 'under_review';
-        
+
         if ($receiptFile) {
             $student->payment_receipt = $receiptFile;
         }
-        
+
         $student->payment_date = now();
         $student->current_step = null; // Wizard completed
         $student->save();
