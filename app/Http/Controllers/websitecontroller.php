@@ -446,12 +446,26 @@ class websitecontroller extends Controller
 
     public function registration_wizard()
     {
-        $classes = Classe::select('id', 'name', 'name_en')->get();
+        $registrationStatus = TermsSetting::where('type', 'registration_open')->latest()->value('content');
+        if ($registrationStatus !== null && (string) $registrationStatus === '0') {
+            return response()->view('website.registration_closed', [], 200);
+        }
+
+        $classes = Classe::select('id', 'name', 'name_en', 'stage_id')->get();
         $countries_currencies = Country_currency::all();
         $schoolTerms = TermsSetting::where('type', 'school')->latest()->first();
         $transportTerms = TermsSetting::where('type', 'transport')->latest()->first();
+        $paymentSettings = TermsSetting::whereIn('type', [
+            'payment_qr',
+            'payment_instructions_ar',
+            'payment_instructions_en',
+            'payment_reference_ar',
+            'payment_reference_en',
+            'payment_account_ar',
+            'payment_account_en',
+        ])->pluck('content', 'type');
 
-        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms'));
+        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms', 'paymentSettings'));
     }
 
     public function lessons($class_id){

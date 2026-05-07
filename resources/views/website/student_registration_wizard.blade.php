@@ -1,4 +1,4 @@
-@extends('website.layouts.app')
+﻿@extends('website.layouts.app')
 
 @section('css')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -293,6 +293,38 @@
         gap: 18px;
     }
 
+    .wizard-payment-section {
+        border: 1px solid #ece8f5;
+        border-radius: 16px;
+        padding: 16px;
+        background: #fcfcff;
+    }
+
+    .wizard-payment-section p {
+        margin: 0 0 8px;
+        color: #4d4762;
+        line-height: 1.8;
+        text-align: start;
+    }
+
+    .wizard-payment-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .wizard-payment-meta .wizard-summary-row {
+        margin: 0;
+    }
+
+    .wizard-submit-note {
+        color: #7f7891;
+        font-size: 13px;
+        margin-top: 8px;
+        text-align: start;
+    }
+
     .wizard-summary-section {
         border: 1px solid #ece8f5;
         border-radius: 16px;
@@ -456,6 +488,10 @@
             grid-template-columns: 1fr;
         }
 
+        .wizard-payment-meta {
+            grid-template-columns: 1fr;
+        }
+
         .wizard-actions {
             flex-direction: column-reverse;
         }
@@ -471,9 +507,25 @@
 @php
     $locale = LaravelLocalization::getCurrentLocale();
     $isRtl = $locale === 'ar';
+    $paymentInstructions = $isRtl
+        ? (string) ($paymentSettings['payment_instructions_ar'] ?? '')
+        : (string) ($paymentSettings['payment_instructions_en'] ?? '');
+    $paymentReference = $isRtl
+        ? (string) ($paymentSettings['payment_reference_ar'] ?? '')
+        : (string) ($paymentSettings['payment_reference_en'] ?? '');
+    $paymentAccount = $isRtl
+        ? (string) ($paymentSettings['payment_account_ar'] ?? '')
+        : (string) ($paymentSettings['payment_account_en'] ?? '');
+    $paymentQrPath = (string) ($paymentSettings['payment_qr'] ?? '');
     $countryLabelKey = $isRtl ? 'name_ar' : 'name_en';
     $countryOptions = collect($countries_currencies ?? [])->filter(function ($item) {
-        return !isset($item->active) || (int) $item->active === 1;
+        $labelAr = mb_strtolower(trim((string) ($item->name_ar ?? '')));
+        $labelEn = mb_strtolower(trim((string) ($item->name_en ?? '')));
+        $key = mb_strtolower(trim((string) ($item->key_country ?? '')));
+        $isSyria = str_contains($labelAr, 'سوريا') || str_contains($labelAr, 'سوري')
+            || str_contains($labelEn, 'syria') || str_contains($labelEn, 'syrian')
+            || in_array($key, ['sy', 'syr', 'syria'], true);
+        return (!isset($item->active) || (int) $item->active === 1) || $isSyria;
     })->map(function ($item) use ($countryLabelKey) {
         return [
             'value' => trim((string) ($item->key_country ?? $item->id)),
@@ -482,18 +534,66 @@
     })->filter(function ($item) {
         return $item['value'] !== '' && $item['label'] !== '';
     })->unique('value')->values();
+
+    $syrianItem = $countryOptions->first(function ($item) {
+        $label = mb_strtolower((string) $item['label']);
+        $value = mb_strtolower((string) $item['value']);
+        return in_array($value, ['sy', 'syr', 'syria', 'syrian arab republic'], true)
+            || str_contains($label, 'سوريا')
+            || str_contains($label, 'سوري')
+            || str_contains($label, 'syria')
+            || str_contains($label, 'syrian');
+    });
+    if (!$syrianItem) {
+        $syrianItem = [
+            'value' => 'SY',
+            'label' => $isRtl ? 'سوريا' : 'Syria',
+        ];
+    }
+    $otherCountries = $countryOptions->reject(function ($item) use ($syrianItem) {
+        return $syrianItem && (string) $item['value'] === (string) $syrianItem['value'];
+    })->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)->values();
+    $countryOptions = collect($syrianItem ? [$syrianItem] : [])->merge($otherCountries)->values();
+
+    $nationalityOptions = $countryOptions->map(function ($item) {
+        return [
+            'value' => $item['value'],
+            'label' => $item['label'],
+        ];
+    })->values();
+
+    $combinedNationalities = $isRtl
+        ? [
+            ['value' => 'SY-PS', 'label' => 'سوري فلسطيني'],
+            ['value' => 'SY-JO', 'label' => 'سوري أردني'],
+            ['value' => 'SY-LB', 'label' => 'سوري لبناني'],
+            ['value' => 'SY-IQ', 'label' => 'سوري عراقي'],
+            ['value' => 'SY-EG', 'label' => 'سوري مصري'],
+        ]
+        : [
+            ['value' => 'SY-PS', 'label' => 'سوري فلسطيني'],
+            ['value' => 'SY-JO', 'label' => 'سوري أردني'],
+            ['value' => 'SY-LB', 'label' => 'سوري لبناني'],
+            ['value' => 'SY-IQ', 'label' => 'سوري عراقي'],
+            ['value' => 'SY-EG', 'label' => 'سوري مصري'],
+        ];
+    $nationalityOptions = collect($syrianItem ? [['value' => $syrianItem['value'], 'label' => $syrianItem['label']]] : [])
+        ->merge($combinedNationalities)
+        ->merge($nationalityOptions)
+        ->unique('value')
+        ->values();
 @endphp
 
 <div class="wizard-wrap {{ $isRtl ? 'is-rtl' : 'is-ltr' }}">
     <div class="wizard-card">
-        <h1 class="wizard-title">{{ __('site.wizard.title') }}</h1>
-        <p class="wizard-subtitle">{{ __('site.wizard.subtitle') }}</p>
+        <h1 class="wizard-title">{{ __('wizard.title') }}</h1>
+        <p class="wizard-subtitle">{{ __('wizard.subtitle') }}</p>
         <div class="wizard-steps">
-            <span class="wizard-step-chip is-active" data-step="1">1) {{ __('site.wizard.steps.school_terms') }}</span>
-            <span class="wizard-step-chip" data-step="2">2) {{ __('site.wizard.steps.student_info') }}</span>
-            <span class="wizard-step-chip" data-step="3">3) {{ __('site.wizard.steps.transport') }}</span>
-            <span class="wizard-step-chip" data-step="4">4) {{ __('site.wizard.steps.transport_terms') }}</span>
-            <span class="wizard-step-chip" data-step="5">5) {{ __('site.wizard.steps.review_payment') }}</span>
+            <span class="wizard-step-chip is-active" data-step="1">1) {{ __('wizard.steps.school_terms') }}</span>
+            <span class="wizard-step-chip" data-step="2">2) {{ __('wizard.steps.student_info') }}</span>
+            <span class="wizard-step-chip" data-step="3">3) {{ __('wizard.steps.transport') }}</span>
+            <span class="wizard-step-chip" data-step="4">4) {{ __('wizard.steps.transport_terms') }}</span>
+            <span class="wizard-step-chip" data-step="5">5) {{ __('wizard.steps.review_payment') }}</span>
         </div>
     </div>
 
@@ -501,142 +601,179 @@
     <input type="hidden" id="registrationId" value="">
 
     <div class="wizard-card wizard-pane is-active" data-pane="1">
-        <h3 class="wizard-section-title">{{ __('site.wizard.sections.school_terms') }}</h3>
-        <div class="wizard-terms">{!! optional($schoolTerms)->content ?? e(__('site.wizard.terms.empty_school')) !!}</div>
+        <h3 class="wizard-section-title">{{ __('wizard.sections.school_terms') }}</h3>
+        <div class="wizard-terms">{!! optional($schoolTerms)->content ?? e(__('wizard.terms.empty_school')) !!}</div>
         <label class="wizard-check" for="agreeTerms">
             <input type="checkbox" id="agreeTerms">
-            <span class="wizard-check__text">{{ __('site.wizard.terms.school_agree') }}</span>
+            <span class="wizard-check__text">{{ __('wizard.terms.school_agree') }}</span>
         </label>
-        <div class="wizard-error" id="agreeTermsError">{{ __('site.wizard.errors.terms_required') }}</div>
+        <div class="wizard-error" id="agreeTermsError">{{ __('wizard.errors.terms_required') }}</div>
         <div class="wizard-actions">
-            <button type="button" class="btn btn-light" disabled>{{ __('site.wizard.buttons.previous') }}</button>
-            <button type="button" class="btn btn-primary" id="btnStep1Next">{{ __('site.wizard.buttons.next') }}</button>
+            <button type="button" class="btn btn-light" disabled>{{ __('wizard.buttons.previous') }}</button>
+            <button type="button" class="btn btn-primary" id="btnStep1Next">{{ __('wizard.buttons.next') }}</button>
         </div>
     </div>
 
     <div class="wizard-card wizard-pane" data-pane="2">
-        <h3 class="wizard-section-title">{{ __('site.wizard.sections.student_info') }}</h3>
+        <h3 class="wizard-section-title">{{ __('wizard.sections.student_info') }}</h3>
         <div class="wizard-grid" id="wizardStep2Form">
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="first_name">{{ __('site.wizard.fields.first_name') }}</label><input id="first_name" type="text"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="last_name">{{ __('site.wizard.fields.last_name') }}</label><input id="last_name" type="text"></div>
-            <div class="wizard-field col-6"><label for="first_name_en">{{ __('site.wizard.fields.first_name_en') }}</label><input id="first_name_en" type="text"></div>
-            <div class="wizard-field col-6"><label for="last_name_en">{{ __('site.wizard.fields.last_name_en') }}</label><input id="last_name_en" type="text"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="father_name">{{ __('site.wizard.fields.father_name') }}</label><input id="father_name" type="text"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="mather_name">{{ __('site.wizard.fields.mother_name') }}</label><input id="mather_name" type="text"></div>
-            <div class="wizard-field col-6"><label for="last_mother_name">{{ __('site.wizard.fields.mother_last_name') }}</label><input id="last_mother_name" type="text"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="date">{{ __('site.wizard.fields.date') }}</label><input id="date" type="date"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="first_name">{{ __('wizard.fields.first_name') }}</label><input id="first_name" type="text"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="last_name">{{ __('wizard.fields.last_name') }}</label><input id="last_name" type="text"></div>
+            <div class="wizard-field col-6"><label for="first_name_en">{{ __('wizard.fields.first_name_en') }}</label><input id="first_name_en" type="text"></div>
+            <div class="wizard-field col-6"><label for="last_name_en">{{ __('wizard.fields.last_name_en') }}</label><input id="last_name_en" type="text"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="father_name">{{ __('wizard.fields.father_name') }}</label><input id="father_name" type="text"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="mather_name">{{ __('wizard.fields.mother_name') }}</label><input id="mather_name" type="text"></div>
+            <div class="wizard-field col-6"><label for="last_mother_name">{{ __('wizard.fields.mother_last_name') }}</label><input id="last_mother_name" type="text"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="date">{{ __('wizard.fields.date') }}</label><input id="date" type="date"></div>
             <div class="wizard-field col-6">
-                <label class="wizard-label-required" for="class1">{{ __('site.wizard.fields.class') }}</label>
+                <label class="wizard-label-required" for="class1">{{ __('wizard.fields.class') }}</label>
                 <select id="class1">
-                    <option value="">{{ __('site.wizard.placeholders.choose_class') }}</option>
+                    <option value="">{{ __('wizard.placeholders.choose_class') }}</option>
                     @foreach($classes as $class)
                         @php
                             $classLabel = $isRtl ? ($class->name ?? $class->name_en) : ($class->name_en ?? $class->name);
                         @endphp
-                        <option value="{{ $class->id }}" data-grade="{{ $classLabel }}">{{ $classLabel }}</option>
+                        @php
+                            $stageId = (int) ($class->stage_id ?? 0);
+                            if ($stageId === 0) {
+                                $stageKey = 'kindergarten';
+                            } elseif ($stageId === 1 || $stageId === 2) {
+                                $stageKey = 'primary';
+                            } elseif ($stageId === 3) {
+                                $stageKey = 'middle';
+                            } else {
+                                $stageKey = 'high';
+                            }
+                        @endphp
+                        <option value="{{ $class->id }}" data-class-label="{{ $classLabel }}" data-stage-key="{{ $stageKey }}">{{ $classLabel }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="wizard-field col-6">
-                <label for="gender">{{ __('site.wizard.fields.gender') }}</label>
+                <label for="gender">{{ __('wizard.fields.gender') }}</label>
                 <select id="gender">
-                    <option value="">{{ __('site.wizard.placeholders.choose_gender') }}</option>
-                    <option value="1">{{ __('site.wizard.options.male') }}</option>
-                    <option value="0">{{ __('site.wizard.options.female') }}</option>
+                    <option value="">{{ __('wizard.placeholders.choose_gender') }}</option>
+                    <option value="1">{{ __('wizard.options.male') }}</option>
+                    <option value="0">{{ __('wizard.options.female') }}</option>
                 </select>
             </div>
             <div class="wizard-field col-6">
-                <label for="religion">{{ __('site.wizard.fields.religion') }}</label>
+                <label for="religion">{{ __('wizard.fields.religion') }}</label>
                 <select id="religion">
-                    <option value="">{{ __('site.wizard.placeholders.choose_religion') }}</option>
-                    <option value="0">{{ __('site.wizard.options.muslim') }}</option>
-                    <option value="1">{{ __('site.wizard.options.christian') }}</option>
+                    <option value="">{{ __('wizard.placeholders.choose_religion') }}</option>
+                    <option value="0">{{ __('wizard.options.muslim') }}</option>
+                    <option value="1">{{ __('wizard.options.christian') }}</option>
                 </select>
             </div>
             <div class="wizard-field col-6">
-                <label for="nationality">{{ __('site.wizard.fields.nationality') }}</label>
+                <label for="nationality">{{ __('wizard.fields.nationality') }}</label>
                 <select id="nationality">
-                    <option value="">{{ __('site.wizard.placeholders.choose_nationality') }}</option>
-                    @foreach($countryOptions as $item)
+                    <option value="">{{ __('wizard.placeholders.choose_nationality') }}</option>
+                    @foreach($nationalityOptions as $item)
                         <option value="{{ $item['value'] }}">{{ $item['label'] }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="wizard-field col-6"><label for="the_ID_number">{{ __('site.wizard.fields.id_number') }}</label><input id="the_ID_number" type="text"></div>
-            <div class="wizard-field col-6"><label for="passport_number">{{ __('site.wizard.fields.passport_number') }}</label><input id="passport_number" type="text"></div>
-            <div class="wizard-field col-6"><label for="place_of_birth">{{ __('site.wizard.fields.place_of_birth') }}</label><input id="place_of_birth" type="text"></div>
+            <div class="wizard-field col-6"><label for="the_ID_number">{{ __('wizard.fields.id_number') }}</label><input id="the_ID_number" type="text"></div>
+            <div class="wizard-field col-6"><label for="passport_number">{{ __('wizard.fields.passport_number') }}</label><input id="passport_number" type="text"></div>
+            <div class="wizard-field col-6"><label for="place_of_birth">{{ __('wizard.fields.place_of_birth') }}</label><input id="place_of_birth" type="text"></div>
             <div class="wizard-field col-6">
-                <label class="wizard-label-required" for="country">{{ __('site.wizard.fields.country') }}</label>
+                <label class="wizard-label-required" for="country">{{ __('wizard.fields.country') }}</label>
                 <select id="country">
-                    <option value="">{{ __('site.wizard.placeholders.choose_country') }}</option>
+                    <option value="">{{ __('wizard.placeholders.choose_country') }}</option>
                     @foreach($countryOptions as $item)
                         <option value="{{ $item['value'] }}">{{ $item['label'] }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="wizard-field col-6"><label for="city">{{ __('site.wizard.fields.city') }}</label><input id="city" type="text"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="phone">{{ __('site.wizard.fields.phone') }}</label><input id="phone" type="text"></div>
-            <div class="wizard-field col-6"><label for="other_phone">{{ __('site.wizard.fields.other_phone') }}</label><input id="other_phone" type="text"></div>
-            <div class="wizard-field col-6"><label for="email">{{ __('site.wizard.fields.email') }}</label><input id="email" type="email"></div>
-            <div class="wizard-field col-6"><label for="the_previous_school">{{ __('site.wizard.fields.previous_school') }}</label><input id="the_previous_school" type="text"></div>
-            <div class="wizard-field col-12"><label for="con_sch">{{ __('site.wizard.fields.notes') }}</label><textarea id="con_sch"></textarea></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="fourth_image">{{ __('site.wizard.fields.birth_record') }}</label><input id="fourth_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="personal_image">{{ __('site.wizard.fields.personal_image') }}</label><input id="personal_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label for="passbord">{{ __('site.wizard.fields.passport_copy') }}</label><input id="passbord" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="certification">{{ __('site.wizard.fields.latest_certificate') }}</label><input id="certification" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="mather_page">{{ __('site.wizard.fields.mother_passport') }}</label><input id="mather_page" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="father_page">{{ __('site.wizard.fields.father_passport') }}</label><input id="father_page" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6"><label for="city">{{ __('wizard.fields.city') }}</label><input id="city" type="text"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="phone">{{ __('wizard.fields.phone') }}</label><input id="phone" type="text"></div>
+            <div class="wizard-field col-6"><label for="other_phone">{{ __('wizard.fields.other_phone') }}</label><input id="other_phone" type="text"></div>
+            <div class="wizard-field col-6"><label for="email">{{ __('wizard.fields.email') }}</label><input id="email" type="email"></div>
+            <div class="wizard-field col-6"><label for="the_previous_school">{{ __('wizard.fields.previous_school') }}</label><input id="the_previous_school" type="text"></div>
+            <div class="wizard-field col-12"><label for="con_sch">{{ __('wizard.fields.notes') }}</label><textarea id="con_sch"></textarea></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="fourth_image">{{ __('wizard.fields.birth_record') }}</label><input id="fourth_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="personal_image">{{ __('wizard.fields.personal_image') }}</label><input id="personal_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6"><label for="passbord">{{ __('wizard.fields.passport_copy') }}</label><input id="passbord" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="certification">{{ __('wizard.fields.latest_certificate') }}</label><input id="certification" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="mather_page">{{ __('wizard.fields.mother_passport') }}</label><input id="mather_page" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6"><label class="wizard-label-required" for="father_page">{{ __('wizard.fields.father_passport') }}</label><input id="father_page" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
         </div>
-        <div class="wizard-error" id="step2Error">{{ __('site.wizard.errors.step2_required') }}</div>
+        <div class="wizard-error" id="step2Error">{{ __('wizard.errors.step2_required') }}</div>
         <div class="wizard-actions">
-            <button type="button" class="btn btn-light" data-back="1">{{ __('site.wizard.buttons.previous') }}</button>
-            <button type="button" class="btn btn-primary" id="btnStep2Next">{{ __('site.wizard.buttons.next') }}</button>
+            <button type="button" class="btn btn-light" data-back="1">{{ __('wizard.buttons.previous') }}</button>
+            <button type="button" class="btn btn-primary" id="btnStep2Next">{{ __('wizard.buttons.next') }}</button>
         </div>
     </div>
 
     <div class="wizard-card wizard-pane" data-pane="3">
-        <h3 class="wizard-section-title">{{ __('site.wizard.sections.transport') }}</h3>
+        <h3 class="wizard-section-title">{{ __('wizard.sections.transport') }}</h3>
         <div class="wizard-choice-wrap">
             <label class="wizard-choice" id="choiceYes">
                 <input type="radio" name="wants_transport" value="1">
                 <span class="wizard-choice__content">
-                    <span class="wizard-choice__title">{{ __('site.wizard.options.transport_yes_title') }}</span>
-                    <span class="wizard-choice__hint">{{ __('site.wizard.options.transport_yes_hint') }}</span>
+                    <span class="wizard-choice__title">{{ __('wizard.options.transport_yes_title') }}</span>
+                    <span class="wizard-choice__hint">{{ __('wizard.options.transport_yes_hint') }}</span>
                 </span>
             </label>
             <label class="wizard-choice" id="choiceNo">
                 <input type="radio" name="wants_transport" value="0">
                 <span class="wizard-choice__content">
-                    <span class="wizard-choice__title">{{ __('site.wizard.options.transport_no_title') }}</span>
-                    <span class="wizard-choice__hint">{{ __('site.wizard.options.transport_no_hint') }}</span>
+                    <span class="wizard-choice__title">{{ __('wizard.options.transport_no_title') }}</span>
+                    <span class="wizard-choice__hint">{{ __('wizard.options.transport_no_hint') }}</span>
                 </span>
             </label>
         </div>
         <div class="wizard-actions">
-            <button type="button" class="btn btn-light" data-back="2">{{ __('site.wizard.buttons.previous') }}</button>
-            <button type="button" class="btn btn-primary" id="btnStep3Next" disabled>{{ __('site.wizard.buttons.next') }}</button>
+            <button type="button" class="btn btn-light" data-back="2">{{ __('wizard.buttons.previous') }}</button>
+            <button type="button" class="btn btn-primary" id="btnStep3Next" disabled>{{ __('wizard.buttons.next') }}</button>
         </div>
     </div>
 
     <div class="wizard-card wizard-pane" data-pane="4">
-        <h3 class="wizard-section-title">{{ __('site.wizard.sections.transport_terms') }}</h3>
-        <div class="wizard-terms">{!! optional($transportTerms)->content ?? e(__('site.wizard.terms.empty_transport')) !!}</div>
+        <h3 class="wizard-section-title">{{ __('wizard.sections.transport_terms') }}</h3>
+        <div class="wizard-terms">{!! optional($transportTerms)->content ?? e(__('wizard.terms.empty_transport')) !!}</div>
         <label class="wizard-check" for="agreeTransportTerms">
             <input type="checkbox" id="agreeTransportTerms">
-            <span class="wizard-check__text">{{ __('site.wizard.terms.transport_agree') }}</span>
+            <span class="wizard-check__text">{{ __('wizard.terms.transport_agree') }}</span>
         </label>
         <div class="wizard-actions">
-            <button type="button" class="btn btn-light" data-back="3">{{ __('site.wizard.buttons.previous') }}</button>
-            <button type="button" class="btn btn-primary" id="btnStep4Next" disabled>{{ __('site.wizard.buttons.next') }}</button>
+            <button type="button" class="btn btn-light" data-back="3">{{ __('wizard.buttons.previous') }}</button>
+            <button type="button" class="btn btn-primary" id="btnStep4Next" disabled>{{ __('wizard.buttons.next') }}</button>
         </div>
     </div>
 
     <div class="wizard-card wizard-pane" data-pane="5">
-        <h3 class="wizard-section-title">{{ __('site.wizard.sections.review_payment') }}</h3>
+        <h3 class="wizard-section-title">{{ __('wizard.sections.review_payment') }}</h3>
         <div class="wizard-summary" id="summaryBox"></div>
+        <div class="wizard-payment-section">
+            <h4 class="wizard-summary-heading">{{ __('wizard.payment.title') }}</h4>
+            <p>{{ $paymentInstructions !== '' ? $paymentInstructions : __('wizard.payment.instructions') }}</p>
+            <div class="wizard-payment-meta">
+                <div class="wizard-summary-row">
+                    <span>{{ __('wizard.payment.reference') }}</span>
+                    <span>{{ $paymentReference !== '' ? $paymentReference : __('wizard.payment.reference_value') }}</span>
+                </div>
+                <div class="wizard-summary-row">
+                    <span>{{ __('wizard.payment.method') }}</span>
+                    <span>{{ $paymentAccount !== '' ? $paymentAccount : __('wizard.payment.method_manual') }}</span>
+                </div>
+            </div>
+            @if($paymentQrPath !== '')
+                <div class="mt-3" style="text-align:center;">
+                    <img src="{{ asset('storage/' . $paymentQrPath) }}" alt="Payment QR" style="max-width:180px;border:1px solid #e5e0f0;border-radius:10px;padding:6px;background:#fff;">
+                </div>
+            @endif
+            <div class="wizard-field col-12" style="margin-top: 12px;">
+                <label class="wizard-label-required" for="payment_receipt">{{ __('wizard.payment.receipt_label') }}</label>
+                <input id="payment_receipt" type="file" accept=".jpg,.jpeg,.png,.pdf">
+            </div>
+            <div class="wizard-error" id="paymentReceiptError">{{ __('wizard.errors.required_file') }}</div>
+            <div class="wizard-submit-note">{{ __('wizard.payment.submit_note') }}</div>
+        </div>
         <div class="wizard-actions">
-            <button type="button" class="btn btn-light" id="btnStep5Back">{{ __('site.wizard.buttons.previous') }}</button>
-            <button type="button" class="btn btn-success" disabled>{{ __('site.wizard.buttons.confirm_later') }}</button>
+            <button type="button" class="btn btn-light" id="btnStep5Back">{{ __('wizard.buttons.previous') }}</button>
+            <button type="button" class="btn btn-success" id="btnFinalSubmit">{{ __('wizard.buttons.submit_registration') }}</button>
         </div>
     </div>
 </div>
@@ -652,41 +789,53 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    const redirectAfterSubmit = @json(url($locale));
     const urls = {
         step1: "{{ route('registration_wizard.step1') }}",
         step2: "{{ route('registration_wizard.step2') }}",
         step3: "{{ route('registration_wizard.step3') }}",
-        summary: "{{ route('registration_wizard.summary') }}"
+        summary: "{{ route('registration_wizard.summary') }}",
+        finalSubmit: "{{ route('registration_wizard.final_submit') }}"
     };
     const requiredStep2 = ['first_name', 'last_name', 'father_name', 'mather_name', 'date', 'class1', 'country', 'phone'];
     const requiredStep2Files = ['fourth_image', 'personal_image', 'certification', 'mather_page', 'father_page'];
     const i18n = {!! json_encode([
         'errors' => [
-            'termsRequired' => __('site.wizard.errors.terms_required'),
-            'step2Required' => __('site.wizard.errors.step2_required'),
-            'requestFailed' => __('site.wizard.errors.request_failed'),
-            'studentSaveFailed' => __('site.wizard.errors.student_save_failed'),
-            'completeStudentFirst' => __('site.wizard.errors.complete_student_first'),
-            'transportSaveFailed' => __('site.wizard.errors.transport_save_failed'),
-            'transportTermsFailed' => __('site.wizard.errors.transport_terms_failed'),
+            'termsRequired' => __('wizard.errors.terms_required'),
+            'step2Required' => __('wizard.errors.step2_required'),
+            'requestFailed' => __('wizard.errors.request_failed'),
+            'studentSaveFailed' => __('wizard.errors.student_save_failed'),
+            'completeStudentFirst' => __('wizard.errors.complete_student_first'),
+            'transportSaveFailed' => __('wizard.errors.transport_save_failed'),
+            'transportTermsFailed' => __('wizard.errors.transport_terms_failed'),
+            'paymentReceiptRequired' => __('wizard.errors.required_file'),
+            'finalSubmitFailed' => __('wizard.errors.final_submit_failed'),
+        ],
+        'buttons' => [
+            'submitRegistration' => __('wizard.buttons.submit_registration'),
+            'submitted' => __('wizard.buttons.submitted'),
+        ],
+        'success' => [
+            'finalSubmit' => __('wizard.success.final_submit'),
+            'finalSubmitHint' => __('wizard.success.final_submit_hint'),
         ],
         'summary' => [
-            'studentSummary' => __('site.wizard.sections.student_summary'),
-            'feesSummary' => __('site.wizard.sections.fees_summary'),
-            'fullName' => __('site.wizard.summary.full_name'),
-            'fatherName' => __('site.wizard.summary.father_name'),
-            'motherName' => __('site.wizard.summary.mother_name'),
-            'phone' => __('site.wizard.summary.phone'),
-            'class' => __('site.wizard.summary.class'),
-            'address' => __('site.wizard.summary.address'),
-            'idNumber' => __('site.wizard.summary.id_number'),
-            'transport' => __('site.wizard.summary.transport'),
-            'registrationFee' => __('site.wizard.summary.registration_fee'),
-            'servicesFee' => __('site.wizard.summary.services_fee'),
-            'transportFee' => __('site.wizard.summary.transport_fee'),
-            'total' => __('site.wizard.summary.total'),
-            'yes' => __('site.wizard.summary.yes'),
-            'no' => __('site.wizard.summary.no'),
+            'studentSummary' => __('wizard.sections.student_summary'),
+            'feesSummary' => __('wizard.sections.fees_summary'),
+            'fullName' => __('wizard.summary.full_name'),
+            'fatherName' => __('wizard.summary.father_name'),
+            'motherName' => __('wizard.summary.mother_name'),
+            'phone' => __('wizard.summary.phone'),
+            'class' => __('wizard.summary.class'),
+            'address' => __('wizard.summary.address'),
+            'idNumber' => __('wizard.summary.id_number'),
+            'transport' => __('wizard.summary.transport'),
+            'registrationFee' => __('wizard.summary.registration_fee'),
+            'servicesFee' => __('wizard.summary.services_fee'),
+            'transportFee' => __('wizard.summary.transport_fee'),
+            'total' => __('wizard.summary.total'),
+            'yes' => __('wizard.summary.yes'),
+            'no' => __('wizard.summary.no'),
             'dash' => '-',
         ],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
@@ -796,6 +945,7 @@ document.addEventListener('DOMContentLoaded', function () {
             last_mother_name: document.getElementById('last_mother_name').value.trim(),
             date: document.getElementById('date').value,
             class1: classSelect.value,
+            class_name: classOption ? (classOption.text || '') : '',
             gender: document.getElementById('gender').value,
             religion: document.getElementById('religion').value,
             nationality: document.getElementById('nationality').value,
@@ -810,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function () {
             email: document.getElementById('email').value.trim(),
             the_previous_school: document.getElementById('the_previous_school').value.trim(),
             con_sch: document.getElementById('con_sch').value.trim(),
-            grade_level: classOption ? (classOption.dataset.grade || '') : ''
+            grade_level: classOption ? (classOption.dataset.stageKey || '') : ''
         };
     }
 
@@ -858,6 +1008,9 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('registration_id', state.registrationId);
         }
         Object.keys(data).forEach(function (key) {
+            if (key === 'country_label') {
+                return;
+            }
             formData.append('form_data[' + key + ']', data[key]);
         });
         ['fourth_image', 'passbord', 'personal_image', 'certification', 'mather_page', 'father_page'].forEach(function (field) {
@@ -887,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fatherName) + '</span><span>' + escapeHtml(displayValue(state.formData.father_name)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherName) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_name)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.phone) + '</span><span>' + escapeHtml(displayValue(state.formData.phone)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.class) + '</span><span>' + escapeHtml(displayValue(state.formData.grade_level)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.class) + '</span><span>' + escapeHtml(displayValue(state.formData.class_name)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.address) + '</span><span>' + escapeHtml(displayValue(addressValue)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.idNumber) + '</span><span>' + escapeHtml(displayValue(state.formData.the_ID_number)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.transport) + '</span><span>' + escapeHtml(displayValue(transportLabel)) + '</span></div>' +
@@ -1048,6 +1201,54 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnStep5Back').addEventListener('click', function () {
         setStep(state.wantsTransport === 1 ? 4 : 3);
     });
+
+    document.getElementById('payment_receipt').addEventListener('change', function () {
+        const valid = this.files && this.files.length > 0;
+        setFieldValidity('payment_receipt', valid);
+        document.getElementById('paymentReceiptError').classList.toggle('show', !valid);
+    });
+
+    document.getElementById('btnFinalSubmit').addEventListener('click', async function () {
+        if (!state.registrationId) {
+            showAlert(i18n.errors.completeStudentFirst);
+            return;
+        }
+
+        const receiptInput = document.getElementById('payment_receipt');
+        const hasReceipt = !!(receiptInput && receiptInput.files && receiptInput.files.length > 0);
+        setFieldValidity('payment_receipt', hasReceipt);
+        document.getElementById('paymentReceiptError').classList.toggle('show', !hasReceipt);
+
+        if (!hasReceipt) {
+            showAlert(i18n.errors.paymentReceiptRequired);
+            return;
+        }
+
+        const button = this;
+        button.disabled = true;
+        try {
+            const payload = new FormData();
+            payload.append('registration_id', state.registrationId);
+            payload.append('payment_method', 'manual');
+            payload.append('payment_receipt', receiptInput.files[0]);
+
+            const response = await postFormData(urls.finalSubmit, payload);
+            showAlert((response && response.message) ? response.message : i18n.success.finalSubmit);
+            button.textContent = i18n.buttons.submitted;
+            const submitNote = document.querySelector('.wizard-submit-note');
+            if (submitNote) {
+                submitNote.textContent = i18n.success.finalSubmitHint;
+            }
+            window.setTimeout(function () {
+                window.location.href = redirectAfterSubmit;
+            }, 1400);
+        } catch (error) {
+            showAlert(error.message || i18n.errors.finalSubmitFailed);
+            button.disabled = false;
+        }
+    });
 });
 </script>
 @endsection
+
+

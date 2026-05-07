@@ -98,6 +98,7 @@ Route::group([
     Route::post('/step-2-form', 'RegistrationWizardController@saveStep2Form')->name('registration_wizard.step2');
     Route::post('/step-3-transport', 'RegistrationWizardController@saveStep3Transport')->name('registration_wizard.step3');
     Route::post('/prepare-payment-summary', 'RegistrationWizardController@preparePaymentSummary')->name('registration_wizard.summary');
+    Route::post('/final-submit', 'RegistrationWizardController@finalSubmit')->name('registration_wizard.final_submit');
   });
 
   Route::get('/lessons/{class_id}', 'websitecontroller@lessons')->name('website.lessons');

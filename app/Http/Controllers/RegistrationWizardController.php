@@ -27,7 +27,7 @@ class RegistrationWizardController extends Controller
         if (!((bool) $data['accepted_terms'])) {
             return response()->json([
                 'success' => false,
-                'message' => __('site.wizard.errors.terms_required'),
+                'message' => __('wizard.errors.terms_required'),
             ], 422);
         }
 
@@ -74,7 +74,7 @@ class RegistrationWizardController extends Controller
             $hasExistingFile = $existingRegistration && !empty($existingRegistration->{$fileField});
 
             if (!$hasUploadedFile && !$hasExistingFile) {
-                $missingFiles[$fileField] = __('site.wizard.errors.required_file');
+                $missingFiles[$fileField] = __('wizard.errors.required_file');
             }
         }
 
@@ -146,6 +146,32 @@ class RegistrationWizardController extends Controller
         ]);
     }
 
+    public function finalSubmit(Request $request)
+    {
+        $data = $request->validate([
+            'registration_id' => 'required|integer|exists:student_register,id',
+            'payment_method' => 'nullable|in:manual,shamcash,0,1',
+            'payment_receipt' => 'required|file|max:6144',
+        ]);
+
+        $receiptPath = $this->storeRegistrationFile($request->file('payment_receipt'));
+        $paymentMethod = $data['payment_method'] ?? 'manual';
+
+        $registration = $this->wizard->submitRegistration(
+            (int) $data['registration_id'],
+            $paymentMethod,
+            $receiptPath
+        );
+
+        return response()->json([
+            'success' => true,
+            'registration_id' => $registration->id,
+            'status' => $registration->status,
+            'payment_status' => $registration->payment_status,
+            'message' => __('wizard.success.final_submit'),
+        ]);
+    }
+
     private function storeRegistrationFile(UploadedFile $file): string
     {
         $extension = strtolower((string) $file->getClientOriginalExtension());
@@ -156,7 +182,7 @@ class RegistrationWizardController extends Controller
 
         if (!in_array($extension, ['jpg', 'jpeg', 'png', 'pdf'], true)) {
             throw ValidationException::withMessages([
-                'file' => __('site.wizard.errors.unsupported_file'),
+                'file' => __('wizard.errors.unsupported_file'),
             ]);
         }
 
@@ -165,3 +191,4 @@ class RegistrationWizardController extends Controller
         return $file->storeAs('filesteachers', $name, 'public');
     }
 }
+

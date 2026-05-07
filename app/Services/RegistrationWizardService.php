@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Classe;
+use App\FeeSetting;
 use App\Student_register;
+use Illuminate\Support\Facades\Schema;
 
 class RegistrationWizardService
 {
@@ -20,6 +23,13 @@ class RegistrationWizardService
             $data['last_mother_name'] = $data['last_mather_name'];
         }
         unset($data['last_mather_name']);
+
+        // Guard against UI-only keys (e.g. country_label) that are not DB columns.
+        static $fillableColumns = null;
+        if ($fillableColumns === null) {
+            $fillableColumns = array_flip(Schema::getColumnListing('student_register'));
+        }
+        $data = array_intersect_key($data, $fillableColumns);
         
         // Update basic info
         $student->fill($data);
@@ -57,14 +67,26 @@ class RegistrationWizardService
         $servicesFee = 0;
         $transportFee = 0;
         
+        $gradeLevel = $student->grade_level;
+        $validFeeKeys = ['kindergarten', 'primary', 'middle', 'high'];
+        if (!in_array((string) $gradeLevel, $validFeeKeys, true) && !empty($student->class1)) {
+            $class = Classe::select('stage_id')->find($student->class1);
+            if ($class) {
+                $gradeLevel = $this->mapStageIdToGradeLevel((int) $class->stage_id);
+            }
+        }
+        if (in_array((string) $gradeLevel, $validFeeKeys, true)) {
+            $student->grade_level = $gradeLevel;
+        }
+
         if ($student->grade_level) {
-            $feeSetting = \App\FeeSetting::where('grade_level', $student->grade_level)->first();
+            $feeSetting = FeeSetting::where('grade_level', $student->grade_level)->first();
             if ($feeSetting) {
-                $registrationFee = $feeSetting->registration_fee;
-                $servicesFee = $feeSetting->services_fee;
-                
+                $registrationFee = (float) $feeSetting->registration_fee;
+                $servicesFee = (float) $feeSetting->services_fee;
+
                 if ($student->wants_transport) {
-                    $transportFee = $feeSetting->transport_fee;
+                    $transportFee = (float) $feeSetting->transport_fee;
                 }
             }
         }
@@ -77,6 +99,20 @@ class RegistrationWizardService
         $student->save();
         
         return $student;
+    }
+
+    protected function mapStageIdToGradeLevel(int $stageId): string
+    {
+        if ($stageId === 0) {
+            return 'kindergarten';
+        }
+        if ($stageId === 1 || $stageId === 2) {
+            return 'primary';
+        }
+        if ($stageId === 3) {
+            return 'middle';
+        }
+        return 'high';
     }
 
     /**

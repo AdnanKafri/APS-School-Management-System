@@ -105,6 +105,12 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('/students', 'DashboardController@students')->name('students');
     Route::post('students/store', 'DashboardController@student_store')->name('student_store');
     Route::get('/studentadmission', 'DashboardController@studentadmission')->name('studentadmission');
+    Route::get('/studentadmission/setup', 'DashboardController@studentadmission_setup')->name('studentadmission_setup');
+    Route::get('/studentadmission/requests', 'DashboardController@studentadmission_requests')->name('studentadmission_requests');
+    Route::get('/studentadmission/requests/{id}', 'DashboardController@studentadmission_request_show')->name('studentadmission_request_show');
+    Route::get('/studentadmission/media/file', 'DashboardController@studentadmission_media_file')->name('studentadmission_media_file');
+    Route::post('/studentadmission/setup', 'DashboardController@studentadmission_setup_store')->name('studentadmission_setup_store');
+    Route::get('/studentadmission/request/{id}', 'DashboardController@studentadmission_request_details')->name('studentadmission_request_details');
     Route::get('/students/financial', 'DashboardController@students_financial')->name('students_financial');
 
     Route::get('/students/financial_transport', 'TransportationController@students_financial_transport')->name('students_financial_transport');

@@ -73,6 +73,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Shuttle_Dumper;
 use Shuttle_Exception;
 use App\Advantages;
@@ -132,6 +133,8 @@ use App\Country_currency;
 use App\School_staff;
 use App\Staff_file;
 use App\Class_cost;
+use App\FeeSetting;
+use App\TermsSetting;
 //electronic section
 use App\Electronic_file;
 use App\Electronic_section;
@@ -3429,33 +3432,46 @@ public function startQueueWorker()
         $columnIndex = $columnIndex_arr[0]['column'];
         $columnIndex = $columnIndex > 2 ? 0 : $columnIndex;
          $array_of_sorting = ['created_at', 'last_name','first_name' ]; // Column index
-        $searchValue = $search_arr['value']; // Search value
-        if (substr($searchValue, 0, 1) == "*" && substr($searchValue, 0, 2) == "") {
-            $searchValue = "";
-        } else {
-            $searchValue = explode('*', $searchValue);
-        }
+        $searchValue = trim((string) ($search_arr['value'] ?? '')); // Search value
         $records = new Collection;
-        // $searchValue = array_filter($searchValue, 'strlen');
-        $result_search = "";
-        foreach ($searchValue as $key => $item_search) {
-            if ($key == 0) {
-                $result_search = "%" . $item_search . "%";
-            } else {
-                $result_search .= "%" . $item_search . "%";
-            }
+        $result_search = str_replace('*', '%', $searchValue);
+
+        $baseQuery = Student_register::query()
+            ->where(function ($q) {
+                $q->whereNull('probe')->orWhere('probe', 0);
+            })
+            // Show finalized/real requests while hiding active drafts.
+            // Legacy flow rows are typically current_step=NULL.
+            // New wizard rows become visible after completion/payment progress.
+            ->where(function ($query) {
+                $query->whereNull('current_step')
+                    ->orWhere(function ($q) {
+                        $q->whereNotNull('current_step')
+                            ->where(function ($f) {
+                                $f->whereNotNull('payment_method')
+                                    ->orWhereNotNull('payment_receipt')
+                                    ->orWhereNotNull('payment_date');
+                            });
+                    });
+            })
+            ->where('current_class', "like", "%" . $current_class . "%")
+            ->where(function ($query) use ($result_search) {
+                $query->where('first_name', 'like', "%" . $result_search . "%")
+                    ->orWhere('last_name', 'like', "%" . $result_search . "%");
+            });
+
+        if ($class_id !== "") {
+            $baseQuery->where('class1', $class_id);
         }
 
-        $totalRecords = Student_register::count();
-        if ($class_id != "") {
-            $totalRecordswithFilter = Student_register::where('first_name', "like", "%" . $result_search . "%")->where('current_class', "like", "%" . $current_class . "%")->where('class1', $class_id)->where('probe', 0)->orwhere('last_name', "like", "%" . $result_search . "%")->where('probe', 0)->where('class1', $class_id)->where('current_class', "like", "%" . $current_class . "%")->count();
-            $records = Student_register::where('first_name', "like", "%" . $result_search . "%")->where('current_class', "like", "%" . $current_class . "%")->where('class1', $class_id)->where('probe', 0)->orwhere('last_name', "like", "%" . $result_search . "%")->where('probe', 0)->where('class1', $class_id)->where('current_class', "like", "%" . $current_class . "%")->skip($start)
-                ->take($rowperpage)->with('class')->orderBy($array_of_sorting[$columnIndex], $columnIndex_arr[0]['dir'])->get();
-        } else {
-            $totalRecordswithFilter = Student_register::where('first_name', "like", "%" . $result_search . "%")->where('current_class', "like", "%" . $current_class . "%")->where('probe', 0)->orwhere('last_name', "like", "%" . $result_search . "%")->where('probe', 0)->where('current_class', "like", "%" . $current_class . "%")->count();
-            $records = Student_register::where('first_name', "like", "%" . $result_search . "%")->where('current_class', "like", "%" . $current_class . "%")->where('probe', 0)->orwhere('last_name', "like", "%" . $result_search . "%")->where('probe', 0)->where('current_class', "like", "%" . $current_class . "%")->skip($start)
-                ->take($rowperpage)->with('class')->orderBy($array_of_sorting[$columnIndex], $columnIndex_arr[0]['dir'])->get();
-        }
+        $totalRecords = (clone $baseQuery)->count();
+        $totalRecordswithFilter = $totalRecords;
+        $records = (clone $baseQuery)
+            ->skip($start)
+            ->take($rowperpage)
+            ->with('class')
+            ->orderBy($array_of_sorting[$columnIndex], $columnIndex_arr[0]['dir'])
+            ->get();
 
 
         $data_arr = array();
@@ -3508,6 +3524,154 @@ public function startQueueWorker()
         return (string) $nextNumber;
     }
 
+    protected function admissionStageDefaults(): array
+    {
+        return [
+            'kindergarten' => ['label_ar' => 'رياض الأطفال'],
+            'primary' => ['label_ar' => 'المرحلة الابتدائية'],
+            'middle' => ['label_ar' => 'المرحلة الإعدادية'],
+            'high' => ['label_ar' => 'المرحلة الثانوية'],
+        ];
+    }
+
+    protected function upsertAdmissionTerms(string $type, ?string $content): void
+    {
+        TermsSetting::updateOrCreate(
+            ['type' => $type],
+            ['content' => trim((string) $content)]
+        );
+    }
+
+    protected function normalizeRegistrationMediaPath(?string $path): ?string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $normalized = str_replace('\\', '/', ltrim($path, '/'));
+        $prefixes = ['public/', 'storage/'];
+        foreach ($prefixes as $prefix) {
+            if (Str::startsWith($normalized, $prefix)) {
+                $normalized = substr($normalized, strlen($prefix));
+            }
+        }
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (Storage::disk('public')->exists($normalized)) {
+            return $normalized;
+        }
+
+        if (file_exists(public_path('storage/' . $normalized))) {
+            return $normalized;
+        }
+
+        if (file_exists(public_path($normalized))) {
+            return $normalized;
+        }
+
+        if (strpos($normalized, '/') === false && Storage::disk('public')->exists('filesteachers/' . $normalized)) {
+            return 'filesteachers/' . $normalized;
+        }
+
+        return $normalized;
+    }
+
+    protected function admissionMediaMeta(?string $path): ?array
+    {
+        $normalized = $this->normalizeRegistrationMediaPath($path);
+        if (!$normalized) {
+            return null;
+        }
+
+        if (Str::startsWith($normalized, ['http://', 'https://'])) {
+            $ext = strtolower(pathinfo(parse_url($normalized, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION));
+            return [
+                'label_path' => $path,
+                'path' => $normalized,
+                'url' => $normalized,
+                'download_url' => $normalized,
+                'ext' => $ext,
+                'exists' => true,
+            ];
+        }
+
+        $url = route('studentadmission_media_file', ['path' => $normalized]);
+        $ext = strtolower(pathinfo($normalized, PATHINFO_EXTENSION));
+        if ($ext === '' && Storage::disk('public')->exists($normalized)) {
+            $mime = strtolower((string) Storage::disk('public')->mimeType($normalized));
+            if (Str::contains($mime, 'pdf')) {
+                $ext = 'pdf';
+            } elseif (Str::startsWith($mime, 'image/')) {
+                $ext = 'jpg';
+            }
+        }
+        return [
+            'label_path' => $path,
+            'path' => $normalized,
+            'url' => $url,
+            'download_url' => route('studentadmission_media_file', ['path' => $normalized, 'download' => 1]),
+            'ext' => $ext,
+            'exists' => Storage::disk('public')->exists($normalized) || file_exists(public_path('storage/' . $normalized)) || file_exists(public_path($normalized)),
+        ];
+    }
+
+    protected function createAdmissionInvoicesFromRegistration(Student $student, Student_register $studentRegister, int $classId, int $yearId): void
+    {
+        $registrationFee = (float) ($studentRegister->registration_fee ?? 0);
+        $servicesFee = (float) ($studentRegister->services_fee ?? 0);
+        $transportFee = (float) ($studentRegister->transport_fee ?? 0);
+        $wantsTransport = (int) ($studentRegister->wants_transport ?? 0) === 1;
+
+        $schoolAmount = $registrationFee + $servicesFee;
+        if ($schoolAmount <= 0) {
+            $schoolAmount = (float) ($studentRegister->total_amount ?? 0);
+        }
+
+        if ($schoolAmount > 0) {
+            Invoice::create([
+                'invoice_number' => $student->id . '-S',
+                'invoice_amount' => $schoolAmount,
+                'payment_type' => '',
+                'bank_name' => '',
+                'student_id' => $student->id,
+                'class_id' => $classId,
+                'year_id' => $yearId,
+            ]);
+        }
+
+        if ($wantsTransport && $transportFee > 0) {
+            Invoice::create([
+                'invoice_number' => $student->id . '-T',
+                'invoice_amount' => $transportFee,
+                'payment_type' => '',
+                'bank_name' => '',
+                'student_id' => $student->id,
+                'class_id' => $classId,
+                'year_id' => $yearId,
+            ]);
+        }
+
+        if ($schoolAmount <= 0 && (!$wantsTransport || $transportFee <= 0)) {
+            Invoice::create([
+                'invoice_number' => (string) $student->id,
+                'invoice_amount' => 0,
+                'payment_type' => '',
+                'bank_name' => '',
+                'student_id' => $student->id,
+                'class_id' => $classId,
+                'year_id' => $yearId,
+            ]);
+        }
+    }
+
 
     public function approve_student(Request $request)
     {
@@ -3541,15 +3705,7 @@ public function startQueueWorker()
 
         $year = Year::where('current_year', '1')->first();
         $rooom = Room::find($request->room_id);
-        Invoice::create([
-            'invoice_number' => $student->id,
-            'invoice_amount' => 0,
-            'payment_type' => '',
-            'bank_name' => '',
-            'student_id' => $student->id,
-            'class_id' => $rooom->class_id,
-            'year_id' => $year->id,
-        ]);
+        $this->createAdmissionInvoicesFromRegistration($student, $student_register, (int) $rooom->class_id, (int) $year->id);
 
         $normalizedGender = null;
         if ($student_register->gender !== null && $student_register->gender !== '') {
@@ -3894,9 +4050,218 @@ public function startQueueWorker()
 
     public function studentadmission()
     {
+        return view('admin.studentadmission_index');
+    }
+
+    public function studentadmission_setup()
+    {
+        $stageDefaults = $this->admissionStageDefaults();
+        $feeSettings = FeeSetting::whereIn('grade_level', array_keys($stageDefaults))
+            ->get()
+            ->keyBy('grade_level');
+        $termsSettings = TermsSetting::whereIn('type', [
+            'school_ar',
+            'school_en',
+            'transport_ar',
+            'transport_en',
+            'registration_open',
+            'payment_qr',
+            'payment_instructions_ar',
+            'payment_instructions_en',
+            'payment_reference_ar',
+            'payment_reference_en',
+            'payment_account_ar',
+            'payment_account_en',
+        ])
+            ->pluck('content', 'type');
+
+        return view('admin.studentadmission_setup', compact('stageDefaults', 'feeSettings', 'termsSettings'));
+    }
+
+    public function studentadmission_requests()
+    {
         $year2 = Year::where('current_year', '1')->first();
         $classes = Classe::all();
+
         return view('admin.studentapprove', compact('year2', 'classes'));
+    }
+
+    public function studentadmission_setup_store(Request $request)
+    {
+        $stageKeys = array_keys($this->admissionStageDefaults());
+        $rules = [
+            'transport_fee' => 'nullable|numeric|min:0',
+            'school_terms_ar' => 'nullable|string',
+            'school_terms_en' => 'nullable|string',
+            'transport_terms_ar' => 'nullable|string',
+            'transport_terms_en' => 'nullable|string',
+            'payment_qr' => 'nullable|file|max:6144|mimes:jpg,jpeg,png,webp',
+            'payment_instructions_ar' => 'nullable|string',
+            'payment_instructions_en' => 'nullable|string',
+            'payment_reference_ar' => 'nullable|string|max:255',
+            'payment_reference_en' => 'nullable|string|max:255',
+            'payment_account_ar' => 'nullable|string|max:255',
+            'payment_account_en' => 'nullable|string|max:255',
+        ];
+
+        foreach ($stageKeys as $stageKey) {
+            $rules["fees.$stageKey.registration_fee"] = 'required|numeric|min:0';
+            $rules["fees.$stageKey.services_fee"] = 'required|numeric|min:0';
+        }
+
+        $validated = $request->validate($rules);
+        $transportFee = (float) ($validated['transport_fee'] ?? 0);
+
+        foreach ($stageKeys as $stageKey) {
+            $row = $validated['fees'][$stageKey] ?? [];
+            FeeSetting::updateOrCreate(
+                ['grade_level' => $stageKey],
+                [
+                    'registration_fee' => (float) ($row['registration_fee'] ?? 0),
+                    'services_fee' => (float) ($row['services_fee'] ?? 0),
+                    'transport_fee' => $transportFee,
+                ]
+            );
+        }
+
+        $this->upsertAdmissionTerms('school_ar', $validated['school_terms_ar'] ?? '');
+        $this->upsertAdmissionTerms('school_en', $validated['school_terms_en'] ?? '');
+        $this->upsertAdmissionTerms('transport_ar', $validated['transport_terms_ar'] ?? '');
+        $this->upsertAdmissionTerms('transport_en', $validated['transport_terms_en'] ?? '');
+
+        $this->upsertAdmissionTerms('school', $validated['school_terms_ar'] ?? '');
+        $this->upsertAdmissionTerms('transport', $validated['transport_terms_ar'] ?? '');
+        $this->upsertAdmissionTerms('registration_open', $request->boolean('registration_open') ? '1' : '0');
+        $this->upsertAdmissionTerms('payment_instructions_ar', $validated['payment_instructions_ar'] ?? '');
+        $this->upsertAdmissionTerms('payment_instructions_en', $validated['payment_instructions_en'] ?? '');
+        $this->upsertAdmissionTerms('payment_reference_ar', $validated['payment_reference_ar'] ?? '');
+        $this->upsertAdmissionTerms('payment_reference_en', $validated['payment_reference_en'] ?? '');
+        $this->upsertAdmissionTerms('payment_account_ar', $validated['payment_account_ar'] ?? '');
+        $this->upsertAdmissionTerms('payment_account_en', $validated['payment_account_en'] ?? '');
+
+        if ($request->hasFile('payment_qr')) {
+            $oldQr = TermsSetting::where('type', 'payment_qr')->latest()->value('content');
+            if (!empty($oldQr) && Storage::disk('public')->exists($oldQr)) {
+                Storage::disk('public')->delete($oldQr);
+            }
+            $qrPath = $request->file('payment_qr')->store('admission/payment', 'public');
+            $this->upsertAdmissionTerms('payment_qr', $qrPath);
+        }
+
+        return redirect()->back()->with('success', 'تم تحديث إعدادات القبول بنجاح');
+    }
+
+    public function studentadmission_request_show($id)
+    {
+        $record = Student_register::with('class')->findOrFail($id);
+        $classes = Classe::all();
+        $docs = [
+            'صورة شخصية' => $record->personal_image,
+            'صورة هوية الأم' => $record->mother_image,
+            'صورة هوية الأب' => $record->father_image,
+            'إخراج قيد/ميلاد' => $record->fourth_image,
+            'جواز السفر' => $record->passbord,
+            'جواز الأم' => $record->mather_page,
+            'جواز الأب' => $record->father_page,
+            'دفتر العائلة' => $record->family_book,
+            'التسلسل الدراسي' => $record->study_sequence,
+            'آخر شهادة' => $record->certification,
+            'شهادة التاسع' => $record->certification_nine,
+            'إيصال الدفع' => $record->payment_receipt,
+        ];
+
+        // Legacy-safe fallback: include any non-empty media-like columns that were not explicitly mapped above.
+        $knownValues = [];
+        foreach ($docs as $pathValue) {
+            $normalized = $this->normalizeRegistrationMediaPath($pathValue);
+            if ($normalized) {
+                $knownValues[$normalized] = true;
+            }
+        }
+        foreach ((array) $record->getAttributes() as $column => $value) {
+            if (!is_string($value) || trim($value) === '') {
+                continue;
+            }
+            if (!preg_match('/(image|page|book|receipt|passport|certification|sequence)/i', (string) $column)) {
+                continue;
+            }
+            $normalized = $this->normalizeRegistrationMediaPath($value);
+            if (!$normalized || isset($knownValues[$normalized])) {
+                continue;
+            }
+            $docs['مستند إضافي - ' . $column] = $value;
+            $knownValues[$normalized] = true;
+        }
+
+        $docsMeta = [];
+        $seenPaths = [];
+        foreach ($docs as $label => $storedPath) {
+            $meta = $this->admissionMediaMeta($storedPath);
+            if ($meta) {
+                if (isset($seenPaths[$meta['path']])) {
+                    continue;
+                }
+                $meta['label'] = $label;
+                $docsMeta[] = $meta;
+                $seenPaths[$meta['path']] = true;
+            }
+        }
+
+        return view('admin.studentadmission_request_show', compact('record', 'classes', 'docsMeta'));
+    }
+
+    public function studentadmission_media_file(Request $request)
+    {
+        $rawPath = $request->query('path');
+        $normalized = $this->normalizeRegistrationMediaPath($rawPath);
+        if (!$normalized || Str::startsWith($normalized, ['http://', 'https://'])) {
+            abort(404);
+        }
+
+        $download = $request->boolean('download');
+        $candidatePublicStorage = public_path('storage/' . $normalized);
+        $candidatePublicRoot = public_path($normalized);
+
+        if (Storage::disk('public')->exists($normalized)) {
+            $stream = Storage::disk('public')->readStream($normalized);
+            if ($stream === false) {
+                abort(404);
+            }
+
+            $mime = Storage::disk('public')->mimeType($normalized) ?: 'application/octet-stream';
+            $filename = basename($normalized);
+            $headers = ['Content-Type' => $mime];
+            $headers['Content-Disposition'] = ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"';
+
+            return response()->stream(function () use ($stream) {
+                fpassthru($stream);
+                fclose($stream);
+            }, 200, $headers);
+        }
+
+        if (file_exists($candidatePublicStorage)) {
+            return $download
+                ? response()->download($candidatePublicStorage, basename($candidatePublicStorage))
+                : response()->file($candidatePublicStorage);
+        }
+
+        if (file_exists($candidatePublicRoot)) {
+            return $download
+                ? response()->download($candidatePublicRoot, basename($candidatePublicRoot))
+                : response()->file($candidatePublicRoot);
+        }
+
+        abort(404);
+    }
+
+    public function studentadmission_request_details($id)
+    {
+        $record = Student_register::with('class')->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $record,
+        ]);
     }
     public function studentprobe()
     {

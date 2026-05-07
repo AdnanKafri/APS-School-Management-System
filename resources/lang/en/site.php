@@ -250,6 +250,18 @@ return [
         "previous" => "Previous",
         "next" => "Next",
         "confirm_later" => "Confirm and continue later",
+        "submit_registration" => "Confirm & Send Application",
+        "submitted" => "Submitted",
+    ],
+    "payment" => [
+        "title" => "Payment confirmation",
+        "instructions" => "Please complete a manual transfer using the provided school payment details, then upload the payment receipt below to finalize your admission request.",
+        "reference" => "Payment reference",
+        "reference_value" => "School Admission Registration",
+        "method" => "Method",
+        "method_manual" => "Manual transfer",
+        "receipt_label" => "Upload payment receipt (image or PDF)",
+        "submit_note" => "Your application will be sent to the admission team only after receipt upload and final confirmation.",
     ],
     "terms" => [
         "school_agree" => "I agree to the school terms.",
@@ -330,6 +342,10 @@ return [
         "transport_terms_failed" => "Unable to save the transport terms.",
         "unsupported_file" => "Unsupported file format. Allowed formats: jpg, jpeg, png, pdf.",
         "required_file" => "This file is required.",
+        "final_submit_failed" => "Unable to finalize your registration request.",
+    ],
+    "success" => [
+        "final_submit" => "Registration submitted successfully. Your application is now under review.",
     ],
 ],
 ];

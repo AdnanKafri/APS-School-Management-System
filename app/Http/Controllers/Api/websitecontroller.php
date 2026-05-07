@@ -77,6 +77,27 @@ class websitecontroller extends Controller
     {
         $this->year = Year::where('current_year', '1')->first();
     }
+
+    protected function studentResultsPagesEnabled(): bool
+    {
+        $value = config('student_results.student_pages_enabled', false);
+        if (is_string($value)) {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+        return (bool) $value;
+    }
+
+    protected function studentResultsBlockedJson(string $message = null, array $extra = [])
+    {
+        $payload = array_merge([
+            'status' => false,
+            'blocked' => true,
+            'code' => 'STUDENT_RESULTS_BLOCKED',
+            'message' => $message ?: config('student_results.blocked_message', 'العلامات قيد المعالجة حالياً. يرجى المحاولة مرة أخرى لاحقاً.'),
+        ], $extra);
+
+        return response()->json($payload, 200);
+    }
     public function fetchPolicyContent()
     {
 
@@ -1852,6 +1873,13 @@ class websitecontroller extends Controller
 
     public function view_test_exam($exam_id, $student_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson(null, [
+                'student_result' => null,
+                'content_mark' => null,
+                'questions' => [],
+            ]);
+        }
 
         $content = Lesson_teacher_room_term_exam::findOrFail($exam_id);
         $content_mark = $content->success_mark;
@@ -1980,6 +2008,13 @@ $a=0;
 
     public function view_quize_exam($exam_id, $student_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson(null, [
+                'student_result' => null,
+                'content_mark' => null,
+                'questions' => [],
+            ]);
+        }
 
         $content = Exams2::findOrFail($exam_id);
         $content_mark = $content->mark;
@@ -2466,6 +2501,12 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
 
     public function student_main_exams($room_id, $student_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson(null, [
+                'exams' => [],
+            ]);
+        }
+
         $term = Term_year::where('current_term', 1)->first();
         $student = Student::with('details')->findOrFail($student_id);
 
@@ -2581,6 +2622,12 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
 
     public function student_main_quizes($room_id, $student_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson(null, [
+                'exams' => [],
+            ]);
+        }
+
         $term = Term_year::where('current_term', 1)->first();
         $student = Student::with('details')->findOrFail($student_id);
 
@@ -3032,6 +3079,10 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
     }
     public function student_graduate($student_id, $room_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson();
+        }
+
         // هنا نختبر حالة جهوزية الجلاء من حقل مميز بدفتر العلامات تتغير قيمته من صفر عدم جهوزية الى واحد جهوزية عند استصدار الجلاء من قبل الادمن
         // بحال كان هناك جلاء اي قيمة اكس ستكون واحد سيكون اللينك هو رابط واجهة الجلاء لدى الطالب بالويب اي سيتنقل الطالب من التطبيق لحسابه بالويب ومن هناك يمكنه تنزيل الجلاء ك بي دي اف
         $link = 'http://localhost:8087/SMARMANger/dashboard/student/view/report/card';
@@ -3046,6 +3097,10 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
     }
     public function student_graduate222($student_id, $room_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson();
+        }
+
         // هنا نختبر حالة جهوزية الجلاء من حقل مميز بدفتر العلامات تتغير قيمته من صفر عدم جهوزية الى واحد جهوزية عند استصدار الجلاء من قبل الادمن
         // بحال كان هناك جلاء اي قيمة اكس ستكون واحد سيكون اللينك هو رابط واجهة الجلاء لدى الطالب بالويب اي سيتنقل الطالب من التطبيق لحسابه بالويب ومن هناك يمكنه تنزيل الجلاء ك بي دي اف
         // $link = 'https://www.google.com/search?q=google+translate&oq=&sourceid=chrome&ie=UTF-8' ;
@@ -3187,6 +3242,11 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
     }
     public function quize($student_id, $lesson_id, $parent_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson(null, [
+                'quize' => [],
+            ]);
+        }
 
         $parent = Parents::with(['connections'  =>  function ($query) use ($parent_id) {
             $query->where('parent_id', $parent_id);
@@ -3216,6 +3276,11 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
     }
     public function exam($student_id, $lesson_id, $parent_id)
     {
+        if (! $this->studentResultsPagesEnabled()) {
+            return $this->studentResultsBlockedJson(null, [
+                'exam' => [],
+            ]);
+        }
 
         $parent = Parents::with(['connections'  =>  function ($query) use ($parent_id) {
             $query->where('parent_id', $parent_id);
