@@ -3415,24 +3415,31 @@ public function startQueueWorker()
 
     public function getstudentsapprove(Request $request)
     {
-        $draw = $request->draw;
-        $start = $request->start;
-        $rowperpage = $request->length; // Rows display per page
+        $draw = (int) $request->input('draw', 1);
+        $start = max(0, (int) $request->input('start', 0));
+        $rowperpage = (int) $request->input('length', 10);
+        if ($rowperpage <= 0) {
+            $rowperpage = 10;
+        }
 
-        $columnIndex_arr = $request->order;
-        $columnName_arr = $request->columns;
-        $search_arr = $request->search;
-        $current_class = $request->current_class;
-        $class_id = $request->class_id;
-        // $store = Store::where('quantity','>',0)->get();
-        // foreach($store as $store_item){
-        //     $ids[] = $store_item->product_id;
-        // }
+        $search_arr = (array) $request->input('search', []);
+        $current_class = trim((string) $request->input('current_class', ''));
+        $class_id = trim((string) $request->input('class_id', ''));
 
-        $columnIndex = $columnIndex_arr[0]['column'];
-        $columnIndex = $columnIndex > 2 ? 0 : $columnIndex;
-         $array_of_sorting = ['created_at', 'last_name','first_name' ]; // Column index
-        $searchValue = trim((string) ($search_arr['value'] ?? '')); // Search value
+        $orderRows = (array) $request->input('order', []);
+        $array_of_sorting = ['created_at', 'last_name', 'first_name'];
+        $columnIndex = 0;
+        $orderDir = 'desc';
+        if (!empty($orderRows) && isset($orderRows[0]['column'])) {
+            $requestedIndex = (int) $orderRows[0]['column'];
+            if ($requestedIndex >= 0 && $requestedIndex <= 2) {
+                $columnIndex = $requestedIndex;
+            }
+            $dir = strtolower((string) ($orderRows[0]['dir'] ?? 'desc'));
+            $orderDir = $dir === 'asc' ? 'asc' : 'desc';
+        }
+
+        $searchValue = trim((string) ($search_arr['value'] ?? ''));
         $records = new Collection;
         $result_search = str_replace('*', '%', $searchValue);
 
@@ -3453,8 +3460,13 @@ public function startQueueWorker()
                                     ->orWhereNotNull('payment_date');
                             });
                     });
-            })
-            ->where('current_class', "like", "%" . $current_class . "%")
+            });
+
+        if ($current_class !== '') {
+            $baseQuery->where('current_class', "like", "%" . $current_class . "%");
+        }
+
+        $baseQuery
             ->where(function ($query) use ($result_search) {
                 $query->where('first_name', 'like', "%" . $result_search . "%")
                     ->orWhere('last_name', 'like', "%" . $result_search . "%");
@@ -3470,7 +3482,7 @@ public function startQueueWorker()
             ->skip($start)
             ->take($rowperpage)
             ->with('class')
-            ->orderBy($array_of_sorting[$columnIndex], $columnIndex_arr[0]['dir'])
+            ->orderBy($array_of_sorting[$columnIndex], $orderDir)
             ->get();
 
 
@@ -3488,13 +3500,12 @@ public function startQueueWorker()
 
 
         $response = array(
-            "draw" => intval($draw),
+            "draw" => $draw,
             "iTotalRecords" => $totalRecords,
             "iTotalDisplayRecords" => $totalRecordswithFilter,
             "aaData" => $data_arr
         );
-        echo json_encode($response);
-        exit;
+        return response()->json($response);
     }
 
 

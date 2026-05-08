@@ -91,6 +91,7 @@ Route::group([
 
   Route::post('/stu_register', 'websitecontroller@stu_register')->name('stu_register');
   Route::get('/registration-wizard', 'websitecontroller@registration_wizard')->name('website.registration_wizard');
+  Route::get('/registration-wizard/payment-qr', 'websitecontroller@registration_payment_qr')->name('website.registration_payment_qr');
 
   // Multi-step registration foundation endpoints (Phase 1, no UI/payment integration).
   Route::prefix('registration-wizard')->group(function () {

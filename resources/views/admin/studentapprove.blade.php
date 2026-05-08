@@ -165,6 +165,7 @@ $(function () {
         processing: true,
         serverSide: true,
         pageLength: 10,
+        order: [[0, 'desc']],
         ajax: {
             url: "{{ route('getstudentsapprove') }}",
             type: "GET",

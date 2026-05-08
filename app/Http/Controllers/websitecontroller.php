@@ -467,12 +467,34 @@ class websitecontroller extends Controller
             'payment_account_en',
         ])->pluck('content', 'type');
 
-        $paymentQrUrl = $this->resolvePublicStorageUrl((string) ($paymentSettings['payment_qr'] ?? ''));
+        $paymentQrPath = (string) ($paymentSettings['payment_qr'] ?? '');
+        $paymentQrUrl = $this->resolveRegistrationPaymentQrUrl($paymentQrPath);
 
         return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms', 'paymentSettings', 'paymentQrUrl'));
     }
 
-    protected function resolvePublicStorageUrl(?string $path): ?string
+    public function registration_payment_qr()
+    {
+        $path = TermsSetting::where('type', 'payment_qr')->latest()->value('content');
+        $normalized = $this->normalizePublicStoragePath($path);
+        if ($normalized === null) {
+            abort(404);
+        }
+
+        return $this->streamPublicStoragePath($normalized);
+    }
+
+    protected function resolveRegistrationPaymentQrUrl(?string $path): ?string
+    {
+        $normalized = $this->normalizePublicStoragePath($path);
+        if ($normalized === null) {
+            return null;
+        }
+
+        return route('website.registration_payment_qr');
+    }
+
+    protected function normalizePublicStoragePath(?string $path): ?string
     {
         $path = trim((string) $path);
         if ($path === '') {
@@ -480,7 +502,7 @@ class websitecontroller extends Controller
         }
 
         if (Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
+            return null;
         }
 
         $normalized = str_replace('\\', '/', ltrim($path, '/'));
@@ -495,18 +517,56 @@ class websitecontroller extends Controller
         }
 
         if (Storage::disk('public')->exists($normalized)) {
-            return asset('storage/' . $normalized);
+            return $normalized;
         }
 
         if (file_exists(public_path('storage/' . $normalized))) {
-            return asset('storage/' . $normalized);
+            return $normalized;
         }
 
         if (file_exists(public_path($normalized))) {
-            return asset($normalized);
+            return $normalized;
         }
 
         return null;
+    }
+
+    protected function streamPublicStoragePath(string $normalized)
+    {
+        $download = request()->boolean('download');
+        $candidatePublicStorage = public_path('storage/' . $normalized);
+        $candidatePublicRoot = public_path($normalized);
+
+        if (Storage::disk('public')->exists($normalized)) {
+            $stream = Storage::disk('public')->readStream($normalized);
+            if ($stream === false) {
+                abort(404);
+            }
+
+            $mime = Storage::disk('public')->mimeType($normalized) ?: 'application/octet-stream';
+            $filename = basename($normalized);
+            $headers = ['Content-Type' => $mime];
+            $headers['Content-Disposition'] = ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"';
+
+            return response()->stream(function () use ($stream) {
+                fpassthru($stream);
+                fclose($stream);
+            }, 200, $headers);
+        }
+
+        if (file_exists($candidatePublicStorage)) {
+            return $download
+                ? response()->download($candidatePublicStorage, basename($candidatePublicStorage))
+                : response()->file($candidatePublicStorage);
+        }
+
+        if (file_exists($candidatePublicRoot)) {
+            return $download
+                ? response()->download($candidatePublicRoot, basename($candidatePublicRoot))
+                : response()->file($candidatePublicRoot);
+        }
+
+        abort(404);
     }
 
     public function lessons($class_id){

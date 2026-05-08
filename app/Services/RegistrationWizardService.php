@@ -137,6 +137,7 @@ class RegistrationWizardService
         }
 
         $student->payment_date = now();
+        $student->probe = 0;
         $student->current_step = null; // Wizard completed
         $student->save();
         

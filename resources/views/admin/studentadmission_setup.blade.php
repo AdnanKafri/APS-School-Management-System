@@ -332,7 +332,7 @@
                             <label>Payment QR</label>
                             @if(!empty($termsSettings['payment_qr']))
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $termsSettings['payment_qr']) }}" alt="Payment QR" style="max-width:160px;border:1px solid #e5e0f0;border-radius:10px;padding:6px;background:#fff;">
+                                    <img src="{{ route('studentadmission_media_file', ['path' => $termsSettings['payment_qr']]) }}" alt="Payment QR" style="max-width:160px;border:1px solid #e5e0f0;border-radius:10px;padding:6px;background:#fff;" onerror="this.style.display='none';">
                                 </div>
                             @endif
                             <input class="form-control" type="file" name="payment_qr" accept=".jpg,.jpeg,.png,.webp">

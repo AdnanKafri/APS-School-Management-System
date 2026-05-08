@@ -1,184 +1,606 @@
 @extends('admin.layouts.v2')
 
 @section('page_title', 'تفاصيل طلب القبول')
-@section('page_subtitle', 'مراجعة بيانات الطالب قبل الاعتماد')
+@section('page_subtitle', 'مراجعة شاملة لبيانات الطالب والدفعة والمستندات قبل الاعتماد')
 
 @section('style')
 <style>
     .admission-request-show {
         direction: rtl;
+        --review-border: #ebe7f5;
+        --review-surface: #ffffff;
+        --review-muted: #f8f7fc;
+        --review-text: #2f2b3a;
+        --review-subtle: #7d7692;
+        --review-accent: #5f4b92;
+        --review-success: #1f8f5f;
+        --review-warning: #b67a15;
+        --review-danger: #b64242;
     }
 
-    .admission-request-show .v2-card.section-card {
+    .admission-request-show .review-shell {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .admission-request-show .review-hero,
+    .admission-request-show .review-card {
+        border: 1px solid var(--review-border);
+        border-radius: 20px;
+        background: var(--review-surface);
+        box-shadow: 0 14px 32px rgba(47, 34, 80, 0.06);
+    }
+
+    .admission-request-show .review-hero {
+        padding: 1.2rem;
+        background:
+            radial-gradient(circle at top right, rgba(95, 75, 146, 0.12), transparent 33%),
+            linear-gradient(135deg, #ffffff 0%, #fbfaff 100%);
+    }
+
+    .admission-request-show .review-hero__top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .admission-request-show .review-hero__identity {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .admission-request-show .review-avatar {
+        width: 68px;
+        height: 68px;
+        border-radius: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #5f4b92, #7a62b6);
+        color: #fff;
+        font-size: 1.35rem;
+        font-weight: 800;
+        box-shadow: 0 12px 22px rgba(95, 75, 146, 0.22);
+        flex-shrink: 0;
+    }
+
+    .admission-request-show .review-kicker {
+        margin: 0 0 .25rem;
+        color: var(--review-accent);
+        font-size: .82rem;
+        font-weight: 800;
+    }
+
+    .admission-request-show .review-hero__identity h2 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--review-text);
+    }
+
+    .admission-request-show .review-hero__identity p {
+        margin: .35rem 0 0;
+        color: var(--review-subtle);
+        font-size: .9rem;
+    }
+
+    .admission-request-show .review-hero__actions {
+        display: flex;
+        gap: .65rem;
+        flex-wrap: wrap;
+    }
+
+    .admission-request-show .review-pill-row {
+        display: flex;
+        gap: .55rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .admission-request-show .review-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .45rem .75rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 800;
+        line-height: 1;
+        border: 1px solid transparent;
+        background: #f0edf8;
+        color: #5a4a80;
+    }
+
+    .admission-request-show .review-pill.is-success {
+        background: #eefaf3;
+        color: var(--review-success);
+        border-color: #d6f1e0;
+    }
+
+    .admission-request-show .review-pill.is-warning {
+        background: #fff7e8;
+        color: var(--review-warning);
+        border-color: #f5e0ad;
+    }
+
+    .admission-request-show .review-pill.is-danger {
+        background: #fff1f1;
+        color: var(--review-danger);
+        border-color: #f2c8c8;
+    }
+
+    .admission-request-show .review-pill.is-muted {
+        background: #f3f1f8;
+        color: #6c6481;
+        border-color: #e0dbee;
+    }
+
+    .admission-request-show .review-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(320px, .95fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .admission-request-show .review-column {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .admission-request-show .review-card {
         padding: 1rem 1.05rem;
     }
 
-    .admission-request-show .section-title {
-        margin: 0 0 .75rem;
-        font-size: 1.02rem;
+    .admission-request-show .review-card__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: .9rem;
+    }
+
+    .admission-request-show .review-card__head h3 {
+        margin: 0;
+        font-size: 1rem;
         font-weight: 800;
-        color: #2f2b3a;
+        color: var(--review-text);
     }
 
-    .admission-request-show .section-subtitle {
-        margin: -.35rem 0 .85rem;
+    .admission-request-show .review-card__head p {
+        margin: .3rem 0 0;
+        color: var(--review-subtle);
         font-size: .86rem;
-        color: #7d7692;
+        line-height: 1.7;
     }
 
-    .admission-request-show .summary-grid {
+    .admission-request-show .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: .6rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: .75rem;
     }
 
-    .admission-request-show .summary-item {
-        border: 1px solid #ebe7f5;
-        border-radius: 14px;
-        padding: .6rem .7rem;
-        background: #fcfbff;
+    .admission-request-show .info-card {
+        border: 1px solid var(--review-border);
+        border-radius: 16px;
+        background: var(--review-muted);
+        padding: .75rem .85rem;
     }
 
-    .admission-request-show .summary-item small {
+    .admission-request-show .info-card__label {
         display: block;
-        color: #7d7692;
-        margin-bottom: .15rem;
+        margin-bottom: .28rem;
+        color: var(--review-subtle);
+        font-size: .8rem;
+        font-weight: 700;
     }
 
-    .admission-request-show .summary-item strong {
-        color: #2f2b3a;
-        font-size: .92rem;
+    .admission-request-show .info-card__value {
+        color: var(--review-text);
+        font-size: .94rem;
+        font-weight: 800;
+        line-height: 1.75;
+        word-break: break-word;
+    }
+
+    .admission-request-show .status-list {
+        display: grid;
+        gap: .7rem;
+    }
+
+    .admission-request-show .status-item {
+        border: 1px solid var(--review-border);
+        border-radius: 16px;
+        background: var(--review-muted);
+        padding: .8rem .9rem;
+    }
+
+    .admission-request-show .status-item__label {
+        display: block;
+        color: var(--review-subtle);
+        font-size: .8rem;
+        font-weight: 700;
+        margin-bottom: .45rem;
+    }
+
+    .admission-request-show .money-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .7rem;
+        margin-bottom: .8rem;
+    }
+
+    .admission-request-show .money-card {
+        border: 1px solid var(--review-border);
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fff 0%, #f9f7fd 100%);
+        padding: .85rem .9rem;
+    }
+
+    .admission-request-show .money-card.is-total {
+        background: linear-gradient(135deg, #5f4b92, #725aad);
+        border-color: #5f4b92;
+        color: #fff;
+        box-shadow: 0 18px 32px rgba(95, 75, 146, 0.18);
+    }
+
+    .admission-request-show .money-card__label {
+        display: block;
+        font-size: .8rem;
+        font-weight: 700;
+        color: inherit;
+        opacity: .85;
+        margin-bottom: .35rem;
+    }
+
+    .admission-request-show .money-card__value {
+        display: block;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: inherit;
+        line-height: 1.3;
+    }
+
+    .admission-request-show .payment-proof {
+        border: 1px solid var(--review-border);
+        border-radius: 18px;
+        background: #fbfbfe;
+        padding: .9rem;
+        display: grid;
+        gap: .8rem;
+    }
+
+    .admission-request-show .payment-proof__meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+    .admission-request-show .payment-proof__title {
+        margin: 0;
+        font-size: .93rem;
+        font-weight: 800;
+        color: var(--review-text);
+    }
+
+    .admission-request-show .payment-proof__hint {
+        margin: .2rem 0 0;
+        font-size: .82rem;
+        color: var(--review-subtle);
     }
 
     .admission-request-show .doc-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: .6rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: .8rem;
     }
 
     .admission-request-show .doc-card {
-        border: 1px solid #ece8f5;
-        border-radius: 14px;
-        padding: .7rem;
+        border: 1px solid var(--review-border);
+        border-radius: 18px;
         background: #fff;
+        padding: .9rem;
+        display: grid;
+        gap: .8rem;
+        min-height: 180px;
     }
 
-    .admission-request-show .doc-card h6 {
-        margin: 0 0 .6rem;
-        font-size: .88rem;
+    .admission-request-show .doc-card__top {
+        display: flex;
+        align-items: flex-start;
+        gap: .8rem;
+    }
+
+    .admission-request-show .doc-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f1eef8, #e4ddf6);
+        color: var(--review-accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .8rem;
         font-weight: 800;
-        color: #3e3758;
+        flex-shrink: 0;
+        text-transform: uppercase;
     }
 
-    .admission-request-show .doc-actions {
+    .admission-request-show .doc-card h4 {
+        margin: 0 0 .2rem;
+        color: var(--review-text);
+        font-size: .92rem;
+        font-weight: 800;
+    }
+
+    .admission-request-show .doc-card p {
+        margin: 0;
+        color: var(--review-subtle);
+        font-size: .8rem;
+        line-height: 1.6;
+    }
+
+    .admission-request-show .doc-meta {
         display: flex;
         gap: .45rem;
         flex-wrap: wrap;
     }
 
-    .admission-request-show .approve-wrap .form-control {
-        min-height: 42px;
-        border-radius: 12px;
+    .admission-request-show .doc-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: .2rem .55rem;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 800;
+        background: #f3f1f8;
+        color: #6a6182;
     }
 
-    .admission-request-show .doc-preview-frame {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ebe7f5;
-        border-radius: 12px;
-        background: #fff;
+    .admission-request-show .doc-badge.is-success {
+        background: #eefaf3;
+        color: var(--review-success);
     }
 
-    .admission-request-show .doc-preview-image {
-        max-width: 100%;
-        max-height: 100%;
+    .admission-request-show .doc-badge.is-danger {
+        background: #fff1f1;
+        color: var(--review-danger);
+    }
+
+    .admission-request-show .doc-actions {
+        display: flex;
+        gap: .55rem;
+        flex-wrap: wrap;
+        margin-top: auto;
+    }
+
+    .admission-request-show .doc-actions .btn {
+        min-width: 110px;
+    }
+
+    .admission-request-show .empty-panel {
+        border: 1px dashed #d7d0e8;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fff 0%, #faf9fe 100%);
+        padding: 1rem;
+        text-align: center;
+        color: var(--review-subtle);
+    }
+
+    .admission-request-show .approve-form .form-control {
+        min-height: 44px;
+        border-radius: 12px;
+        border-color: #d9d4e8;
+    }
+
+    .admission-request-show .approve-form label {
         display: block;
-        margin: 0 auto;
-        border-radius: 8px;
-        object-fit: contain;
-        background: #fff;
+        margin-bottom: .35rem;
+        color: #4d4762;
+        font-size: .85rem;
+        font-weight: 800;
+    }
+
+    .admission-request-show .approve-submit {
+        min-height: 44px;
+        border-radius: 12px;
+        font-weight: 800;
+    }
+
+    #mediaViewerModal.modal {
+        z-index: 1065 !important;
     }
 
     .modal-backdrop {
-        z-index: 1040 !important;
+        z-index: 1060 !important;
     }
 
-    #docPreviewModal.modal {
-        z-index: 1055 !important;
+    #mediaViewerModal .modal-dialog {
+        width: calc(100vw - 2.4rem);
+        max-width: 1200px;
+        height: calc(100vh - 2.4rem);
+        margin: 1.2rem auto;
     }
 
-    #docPreviewModal .modal-content {
+    #mediaViewerModal .modal-content {
+        height: 100%;
         border: 0;
-        border-radius: 16px;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 26px 50px rgba(31, 18, 56, 0.22);
     }
 
-    #docPreviewModal .modal-dialog {
-        width: calc(100vw - 2rem);
-        max-width: 1100px;
-        margin: 1rem auto;
-    }
-
-    #docPreviewModal .modal-body {
-        padding: .9rem;
-        background: #faf9fe;
-    }
-
-    .doc-preview-stage {
-        min-height: 72vh;
-        max-height: 72vh;
-        border: 1px solid #ebe7f5;
-        border-radius: 12px;
+    #mediaViewerModal .modal-header {
+        padding: 1rem 1.1rem;
+        border-bottom: 1px solid var(--review-border);
         background: #fff;
+        align-items: center;
+    }
+
+    #mediaViewerModal .modal-title {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        flex-wrap: wrap;
+        color: var(--review-text);
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    #mediaViewerModal .modal-body {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: .8rem;
+        padding: 1rem;
+        background: #f7f6fb;
+        min-height: 0;
+    }
+
+    .media-viewer-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .8rem;
+        flex-wrap: wrap;
+    }
+
+    .media-viewer-toolbar__actions {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+    }
+
+    .media-tool {
+        min-width: 44px;
+        min-height: 38px;
+        border-radius: 12px;
+        border: 1px solid #ddd6ee;
+        background: #fff;
+        color: #554b6f;
+        font-size: .82rem;
+        font-weight: 800;
+    }
+
+    .media-tool[disabled] {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    .media-stage {
+        min-height: 0;
+        border: 1px solid var(--review-border);
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fbfbfe 0%, #f2eff8 100%);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .media-stage__scroll {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        padding: .9rem;
+    }
+
+    .media-stage__canvas {
+        min-width: 100%;
+        min-height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
-        padding: .5rem;
     }
 
-    .doc-preview-state {
+    .media-viewer-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transform-origin: center center;
+        transition: transform .18s ease;
+        box-shadow: 0 18px 34px rgba(33, 23, 57, 0.18);
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .media-viewer-frame {
         width: 100%;
+        height: 100%;
+        min-height: calc(100vh - 15rem);
+        border: 0;
+        background: #fff;
+        border-radius: 14px;
+    }
+
+    .media-viewer-state {
+        display: grid;
+        place-items: center;
+        gap: .7rem;
+        min-height: calc(100vh - 15rem);
+        color: var(--review-subtle);
         text-align: center;
-        color: #7d7692;
-        padding: 1rem;
+        padding: 1.2rem;
     }
 
-    .doc-preview-state .spinner-border {
-        width: 2rem;
-        height: 2rem;
+    .media-viewer-state .alert {
+        margin: 0;
+        max-width: 480px;
     }
 
-    @media (max-width: 992px) {
-        .doc-preview-stage {
-            min-height: 64vh;
-            max-height: 64vh;
+    @media (max-width: 1199px) {
+        .admission-request-show .review-layout {
+            grid-template-columns: 1fr;
         }
     }
 
-    @media (max-width: 576px) {
-        #docPreviewModal .modal-dialog {
+    @media (max-width: 767px) {
+        .admission-request-show .review-hero,
+        .admission-request-show .review-card {
+            border-radius: 18px;
+        }
+
+        .admission-request-show .review-hero {
+            padding: 1rem;
+        }
+
+        .admission-request-show .review-hero__identity {
+            align-items: flex-start;
+        }
+
+        .admission-request-show .review-avatar {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            font-size: 1.12rem;
+        }
+
+        .admission-request-show .money-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #mediaViewerModal .modal-dialog {
             width: calc(100vw - 1rem);
+            height: calc(100vh - 1rem);
             margin: .5rem auto;
         }
-        #docPreviewModal .modal-body {
-            padding: .6rem;
-        }
-        .doc-preview-stage {
-            min-height: 58vh;
-            max-height: 58vh;
-            padding: .35rem;
-        }
-    }
 
-    .admission-request-show .doc-missing-note {
-        display: inline-block;
-        margin-top: .5rem;
-        font-size: .75rem;
-        color: #b43a3a;
-        background: #fff3f3;
-        border: 1px solid #ffdada;
-        padding: .2rem .45rem;
-        border-radius: 999px;
+        #mediaViewerModal .modal-body {
+            padding: .8rem;
+        }
+
+        .media-stage__scroll {
+            padding: .65rem;
+        }
+
+        .media-viewer-frame,
+        .media-viewer-state {
+            min-height: calc(100vh - 17rem);
+        }
     }
 </style>
 @endsection
@@ -193,119 +615,437 @@
 @endsection
 
 @section('content')
+@php
+    $fullName = trim((string) ($record->first_name . ' ' . $record->last_name));
+    $initials = mb_strtoupper(trim(mb_substr((string) $record->first_name, 0, 1) . mb_substr((string) $record->last_name, 0, 1)));
+    $paymentMethodMap = [
+        '0' => 'تحويل يدوي',
+        '1' => 'ShamCash',
+        'manual' => 'تحويل يدوي',
+        'shamcash' => 'ShamCash',
+    ];
+    $paymentMethodKey = (string) $record->payment_method;
+    $paymentMethodLabel = $paymentMethodMap[$paymentMethodKey] ?? ($paymentMethodKey !== '' ? $paymentMethodKey : 'غير محدد');
+    $paymentStatusKey = strtolower((string) ($record->payment_status ?: 'pending'));
+    $paymentStatusMap = [
+        'pending' => ['label' => 'بانتظار التحقق', 'class' => 'is-warning'],
+        'paid' => ['label' => 'مدفوع', 'class' => 'is-success'],
+        'rejected' => ['label' => 'مرفوض', 'class' => 'is-danger'],
+    ];
+    $paymentStatus = $paymentStatusMap[$paymentStatusKey] ?? ['label' => ($record->payment_status ?: 'غير محدد'), 'class' => 'is-muted'];
+    if (is_null($record->current_step) && !empty($record->payment_receipt)) {
+        $requestStatus = ['label' => 'مكتمل وجاهز للمراجعة', 'class' => 'is-success'];
+    } elseif (!is_null($record->current_step)) {
+        $requestStatus = ['label' => 'طلب غير مكتمل', 'class' => 'is-warning'];
+    } else {
+        $requestStatus = ['label' => 'بحاجة إلى متابعة', 'class' => 'is-muted'];
+    }
+    $transportStatus = (int) $record->wants_transport === 1
+        ? ['label' => 'النقل مطلوب', 'class' => 'is-success']
+        : ['label' => 'بدون نقل', 'class' => 'is-muted'];
+    $paymentReceiptState = !empty($record->payment_receipt)
+        ? ['label' => 'إثبات دفع مرفوع', 'class' => 'is-success']
+        : ['label' => 'لا يوجد إثبات دفع', 'class' => 'is-danger'];
+    $formatDate = function ($value, $fallback = '-') {
+        if (!$value) {
+            return $fallback;
+        }
+        try {
+            return \Carbon\Carbon::parse($value)->format('Y/m/d - h:i A');
+        } catch (\Throwable $e) {
+            return (string) $value;
+        }
+    };
+    $formatMoney = function ($value) {
+        return number_format((float) $value, 2) . ' ل.س';
+    };
+    $yesNoMeta = function ($value) {
+        return (int) $value === 1
+            ? ['label' => 'نعم', 'class' => 'is-success']
+            : ['label' => 'لا', 'class' => 'is-danger'];
+    };
+    $fieldValue = function ($value) {
+        return trim((string) $value) !== '' ? (string) $value : '-';
+    };
+
+    $documentLabelsByPath = [
+        (string) $record->personal_image => 'الصورة الشخصية',
+        (string) $record->mother_image => 'هوية الأم',
+        (string) $record->father_image => 'هوية الأب',
+        (string) $record->fourth_image => 'إخراج قيد / شهادة ميلاد',
+        (string) $record->passbord => 'جواز السفر',
+        (string) $record->mather_page => 'جواز الأم',
+        (string) $record->father_page => 'جواز الأب',
+        (string) $record->family_book => 'دفتر العائلة',
+        (string) $record->study_sequence => 'التسلسل الدراسي',
+        (string) $record->certification => 'آخر شهادة',
+        (string) $record->certification_nine => 'شهادة التاسع',
+    ];
+
+    $paymentReceiptDoc = null;
+    $documentDocs = [];
+    foreach ((array) $docsMeta as $doc) {
+        $labelPath = (string) ($doc['label_path'] ?? '');
+        if ($labelPath !== '' && $labelPath === (string) $record->payment_receipt) {
+            $doc['label'] = 'إثبات الدفع';
+            $paymentReceiptDoc = $doc;
+            continue;
+        }
+        $doc['label'] = $documentLabelsByPath[$labelPath] ?? 'مستند إضافي';
+        $documentDocs[] = $doc;
+    }
+    if (!$paymentReceiptDoc && !empty($paymentReceiptMeta)) {
+        $paymentReceiptMeta['label'] = 'إثبات الدفع';
+        $paymentReceiptDoc = $paymentReceiptMeta;
+    }
+
+    $studentInfo = [
+        'الاسم الكامل' => $fullName ?: '-',
+        'رقم الهاتف' => $fieldValue($record->phone),
+        'البريد الإلكتروني' => $fieldValue($record->email),
+        'تاريخ الميلاد' => $fieldValue($record->date),
+        'الجنسية' => $fieldValue($record->nationality),
+        'مكان الولادة' => $fieldValue($record->place_of_birth),
+        'رقم الهوية / الوطني' => $fieldValue($record->the_ID_number),
+        'رقم جواز السفر' => $fieldValue($record->passport_number),
+    ];
+    $parentInfo = [
+        'اسم الأب' => $fieldValue($record->father_name),
+        'اسم الأم' => $fieldValue($record->mather_name),
+        'هاتف الأب' => $fieldValue($record->father_phone),
+        'هاتف الأم' => $fieldValue($record->mather_phone),
+        'هاتف إضافي' => $fieldValue($record->other_phone),
+        'بلد الإقامة' => $fieldValue($record->country),
+        'المدينة' => $fieldValue($record->city),
+        'العنوان / الملاحظات' => $fieldValue($record->con_sch),
+    ];
+    $academicInfo = [
+        'الصف المطلوب' => optional($record->class)->name ?: $fieldValue($record->class1),
+        'المدرسة السابقة' => $fieldValue($record->the_previous_school),
+        'تاريخ تقديم الطلب' => $formatDate($record->created_at),
+        'آخر خطوة مسجلة' => !is_null($record->current_step) ? (string) $record->current_step : 'تم الإرسال النهائي',
+    ];
+    $transportInfo = [
+        'خدمة النقل' => $transportStatus['label'],
+        'الموافقة على الشروط المدرسية' => $yesNoMeta($record->accepted_terms)['label'],
+        'الموافقة على شروط النقل' => $yesNoMeta($record->accepted_transport_terms)['label'],
+    ];
+@endphp
+
 <div class="admission-request-show">
-    <div class="v2-card section-card mb-3">
-        <h3 class="section-title">بيانات الطالب</h3>
-        <p class="section-subtitle">بيانات التسجيل الأساسية كما أدخلها ولي الأمر في نموذج التسجيل.</p>
-        <div class="summary-grid">
-            <div class="summary-item"><small>الاسم الكامل</small><strong>{{ $record->first_name }} {{ $record->last_name }}</strong></div>
-            <div class="summary-item"><small>الهاتف</small><strong>{{ $record->phone ?: '-' }}</strong></div>
-            <div class="summary-item"><small>البريد</small><strong>{{ $record->email ?: '-' }}</strong></div>
-            <div class="summary-item"><small>الصف المطلوب</small><strong>{{ optional($record->class)->name ?: '-' }}</strong></div>
-            <div class="summary-item"><small>تاريخ الميلاد</small><strong>{{ $record->date ?: '-' }}</strong></div>
-            <div class="summary-item"><small>الدولة</small><strong>{{ $record->country ?: '-' }}</strong></div>
-            <div class="summary-item"><small>المدينة</small><strong>{{ $record->city ?: '-' }}</strong></div>
-            <div class="summary-item"><small>الرقم الوطني</small><strong>{{ $record->the_ID_number ?: '-' }}</strong></div>
-        </div>
-    </div>
-
-    <div class="v2-card section-card mb-3">
-        <h3 class="section-title">بيانات الأسرة</h3>
-        <div class="summary-grid">
-            <div class="summary-item"><small>اسم الأب</small><strong>{{ $record->father_name ?: '-' }}</strong></div>
-            <div class="summary-item"><small>اسم الأم</small><strong>{{ $record->mather_name ?: '-' }}</strong></div>
-            <div class="summary-item"><small>هاتف الأب</small><strong>{{ $record->father_phone ?: '-' }}</strong></div>
-            <div class="summary-item"><small>هاتف الأم</small><strong>{{ $record->mather_phone ?: '-' }}</strong></div>
-            <div class="summary-item"><small>هاتف إضافي</small><strong>{{ $record->other_phone ?: '-' }}</strong></div>
-        </div>
-    </div>
-
-    <div class="v2-card section-card mb-3">
-        <h3 class="section-title">معلومات النقل والشروط</h3>
-        <div class="summary-grid">
-            <div class="summary-item"><small>النقل</small><strong>{{ (int)$record->wants_transport === 1 ? 'نعم' : 'لا' }}</strong></div>
-            <div class="summary-item"><small>قبول الشروط المدرسية</small><strong>{{ (int)$record->accepted_terms === 1 ? 'نعم' : 'لا' }}</strong></div>
-            <div class="summary-item"><small>قبول شروط النقل</small><strong>{{ (int)$record->accepted_transport_terms === 1 ? 'نعم' : 'لا' }}</strong></div>
-            <div class="summary-item"><small>الخطوة الحالية</small><strong>{{ $record->current_step ?: '-' }}</strong></div>
-        </div>
-    </div>
-
-    <div class="v2-card section-card mb-3">
-        <h3 class="section-title">معلومات الدفع والرسوم</h3>
-        <div class="summary-grid">
-            <div class="summary-item"><small>طريقة الدفع</small><strong>{{ $record->payment_method ?? '-' }}</strong></div>
-            <div class="summary-item"><small>حالة الدفع</small><strong>{{ $record->payment_status ?: '-' }}</strong></div>
-            <div class="summary-item"><small>تاريخ الدفع</small><strong>{{ $record->payment_date ?: '-' }}</strong></div>
-            <div class="summary-item"><small>رسوم التسجيل</small><strong>{{ number_format((float)$record->registration_fee, 2) }}</strong></div>
-            <div class="summary-item"><small>رسوم الخدمات</small><strong>{{ number_format((float)$record->services_fee, 2) }}</strong></div>
-            <div class="summary-item"><small>رسوم النقل</small><strong>{{ number_format((float)$record->transport_fee, 2) }}</strong></div>
-            <div class="summary-item"><small>الإجمالي</small><strong>{{ number_format((float)$record->total_amount, 2) }}</strong></div>
-        </div>
-    </div>
-
-    <div class="v2-card section-card mb-3">
-        <h3 class="section-title">المستندات المرفوعة</h3>
-        <p class="section-subtitle">معاينة المستندات داخل النظام أو تنزيلها مباشرة.</p>
-        <div class="doc-grid">
-            @foreach($docsMeta as $doc)
-                    <div class="doc-card">
-                        <h6>{{ $doc['label'] }}</h6>
-                        <div class="doc-actions">
-                            <button type="button" class="btn btn-sm btn-outline-primary js-doc-preview" data-url="{{ $doc['url'] }}" data-download-url="{{ $doc['download_url'] }}" data-label="{{ $doc['label'] }}" data-ext="{{ $doc['ext'] }}" data-exists="{{ $doc['exists'] ? '1' : '0' }}">معاينة</button>
-                            <a href="{{ $doc['download_url'] }}" class="btn btn-sm btn-outline-secondary">تنزيل</a>
-                        </div>
-                        @if(!$doc['exists'])
-                            <span class="doc-missing-note">الملف غير متاح في المسار المتوقع</span>
-                        @endif
+    <div class="review-shell">
+        <div class="review-hero">
+            <div class="review-hero__top">
+                <div class="review-hero__identity">
+                    <div class="review-avatar">{{ $initials !== '' ? $initials : 'ST' }}</div>
+                    <div>
+                        <p class="review-kicker">طلب قبول رقم #{{ $record->id }}</p>
+                        <h2>{{ $fullName ?: 'طلب قبول' }}</h2>
+                        <p>{{ optional($record->class)->name ?: 'الصف غير محدد' }} | تم الإرسال في {{ $formatDate($record->created_at) }}</p>
                     </div>
-            @endforeach
-            @if(empty($docsMeta))
-                <span class="text-muted">لا توجد مستندات مرفوعة.</span>
-            @endif
-        </div>
-    </div>
-
-    <div class="v2-card section-card approve-wrap">
-        <h3 class="section-title">اعتماد الطالب</h3>
-        <p class="section-subtitle">بعد الاعتماد يتم إنشاء الطالب وسجلاته الأكاديمية والفواتير المرتبطة حسب الرسوم المحددة.</p>
-        <form method="POST" action="{{ route('approve_student') }}">
-            @csrf
-            <input type="hidden" name="student_id" value="{{ $record->id }}">
-            <div class="row align-items-end">
-                <div class="col-12 col-md-4">
-                    <label class="d-block mb-1">الصف النهائي</label>
-                    <select name="class_id" id="approve_class_id" class="form-control" required>
-                        <option value="">اختر الصف</option>
-                        @foreach ($classes as $item)
-                            <option value="{{ $item->id }}" {{ (string)$record->class1 === (string)$item->id ? 'selected' : '' }}>{{ $item->name }}</option>
-                        @endforeach
-                    </select>
                 </div>
-                <div class="col-12 col-md-4">
-                    <label class="d-block mb-1">الشعبة</label>
-                    <select name="room_id" id="approve_room_id" class="form-control" required></select>
-                </div>
-                <div class="col-12 col-md-4 mt-2 mt-md-0">
-                    <button class="btn btn-success btn-block" type="submit">اعتماد الطالب وإنشاء السجلات</button>
+                <div class="review-hero__actions">
+                    <a href="{{ route('studentadmission_requests') }}" class="btn btn-light">العودة إلى الطلبات</a>
+                    @if($paymentReceiptDoc)
+                        <a href="{{ $paymentReceiptDoc['download_url'] }}" class="btn btn-outline-primary">تنزيل إثبات الدفع</a>
+                    @endif
                 </div>
             </div>
-        </form>
+            <div class="review-pill-row">
+                <span class="review-pill {{ $requestStatus['class'] }}">{{ $requestStatus['label'] }}</span>
+                <span class="review-pill {{ $paymentStatus['class'] }}">{{ $paymentStatus['label'] }}</span>
+                <span class="review-pill {{ $transportStatus['class'] }}">{{ $transportStatus['label'] }}</span>
+                <span class="review-pill {{ $paymentReceiptState['class'] }}">{{ $paymentReceiptState['label'] }}</span>
+            </div>
+        </div>
+
+        <div class="review-layout">
+            <div class="review-column">
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>معلومات الطالب</h3>
+                            <p>عرض منظم للهوية الأساسية وبيانات التواصل المدخلة من ولي الأمر.</p>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        @foreach($studentInfo as $label => $value)
+                            <div class="info-card">
+                                <span class="info-card__label">{{ $label }}</span>
+                                <div class="info-card__value">{{ $value }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>الأهل وبيانات التواصل</h3>
+                            <p>معلومات الأسرة والاتصال والعنوان الحالي كما وردت في الطلب.</p>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        @foreach($parentInfo as $label => $value)
+                            <div class="info-card">
+                                <span class="info-card__label">{{ $label }}</span>
+                                <div class="info-card__value">{{ $value }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>المعلومات الأكاديمية</h3>
+                            <p>الصف المطلوب والخلفية الدراسية وحالة اكتمال الطلب الحالية.</p>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        @foreach($academicInfo as $label => $value)
+                            <div class="info-card">
+                                <span class="info-card__label">{{ $label }}</span>
+                                <div class="info-card__value">{{ $value }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>المستندات المرفوعة</h3>
+                            <p>مستندات الطالب الأساسية في مساحة مستقلة، مع إبقاء إثبات الدفع ضمن القسم المالي.</p>
+                        </div>
+                        <span class="review-pill is-muted">{{ count($documentDocs) }} مستند</span>
+                    </div>
+                    @if(count($documentDocs))
+                        <div class="doc-grid">
+                            @foreach($documentDocs as $doc)
+                                @php
+                                    $ext = strtolower((string) ($doc['ext'] ?? 'file'));
+                                    $existsClass = !empty($doc['exists']) ? 'is-success' : 'is-danger';
+                                @endphp
+                                <div class="doc-card">
+                                    <div class="doc-card__top">
+                                        <div class="doc-icon">{{ $ext !== '' ? $ext : 'file' }}</div>
+                                        <div>
+                                            <h4>{{ $doc['label'] }}</h4>
+                                            <p>معاينة مباشرة أو تنزيل الملف مع الحفاظ على توافق المستندات القديمة والجديدة.</p>
+                                        </div>
+                                    </div>
+                                    <div class="doc-meta">
+                                        <span class="doc-badge">{{ strtoupper($ext !== '' ? $ext : 'FILE') }}</span>
+                                        <span class="doc-badge {{ $existsClass }}">{{ !empty($doc['exists']) ? 'جاهز للمعاينة' : 'الملف غير متاح' }}</span>
+                                    </div>
+                                    <div class="doc-actions">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary js-viewer-trigger"
+                                            data-url="{{ $doc['url'] }}"
+                                            data-download-url="{{ $doc['download_url'] }}"
+                                            data-label="{{ $doc['label'] }}"
+                                            data-ext="{{ $doc['ext'] }}"
+                                            data-exists="{{ !empty($doc['exists']) ? '1' : '0' }}">
+                                            معاينة
+                                        </button>
+                                        <a href="{{ $doc['download_url'] }}" class="btn btn-sm btn-light">تنزيل</a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-panel">لا توجد مستندات طالب متاحة للعرض حالياً.</div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="review-column">
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>الحالة والموافقات</h3>
+                            <p>ملخص سريع لحالة الطلب الحالية، النقل، وقبول الشروط.</p>
+                        </div>
+                    </div>
+                    <div class="status-list">
+                        <div class="status-item">
+                            <span class="status-item__label">حالة الطلب</span>
+                            <span class="review-pill {{ $requestStatus['class'] }}">{{ $requestStatus['label'] }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-item__label">حالة الدفع</span>
+                            <span class="review-pill {{ $paymentStatus['class'] }}">{{ $paymentStatus['label'] }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-item__label">خدمة النقل</span>
+                            <span class="review-pill {{ $transportStatus['class'] }}">{{ $transportStatus['label'] }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-item__label">قبول الشروط المدرسية</span>
+                            @php $schoolTermsMeta = $yesNoMeta($record->accepted_terms); @endphp
+                            <span class="review-pill {{ $schoolTermsMeta['class'] }}">{{ $schoolTermsMeta['label'] }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-item__label">قبول شروط النقل</span>
+                            @php $transportTermsMeta = $yesNoMeta($record->accepted_transport_terms); @endphp
+                            <span class="review-pill {{ $transportTermsMeta['class'] }}">{{ $transportTermsMeta['label'] }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>الرسوم والدفع</h3>
+                            <p>تفصيل الرسوم المعتمدة في الإعدادات مع حالة الدفع الحالية وإثبات التحويل.</p>
+                        </div>
+                    </div>
+                    <div class="money-grid">
+                        <div class="money-card">
+                            <span class="money-card__label">رسوم التسجيل</span>
+                            <span class="money-card__value">{{ $formatMoney($record->registration_fee) }}</span>
+                        </div>
+                        <div class="money-card">
+                            <span class="money-card__label">رسوم الخدمات</span>
+                            <span class="money-card__value">{{ $formatMoney($record->services_fee) }}</span>
+                        </div>
+                        <div class="money-card">
+                            <span class="money-card__label">رسوم النقل</span>
+                            <span class="money-card__value">{{ $formatMoney($record->transport_fee) }}</span>
+                        </div>
+                        <div class="money-card is-total">
+                            <span class="money-card__label">الإجمالي</span>
+                            <span class="money-card__value">{{ $formatMoney($record->total_amount) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="status-list" style="margin-bottom: .8rem;">
+                        <div class="status-item">
+                            <span class="status-item__label">طريقة الدفع</span>
+                            <div class="info-card__value">{{ $paymentMethodLabel }}</div>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-item__label">تاريخ الدفع</span>
+                            <div class="info-card__value">{{ $formatDate($record->payment_date) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="payment-proof">
+                        <div class="payment-proof__meta">
+                            <div>
+                                <p class="payment-proof__title">إثبات الدفع</p>
+                                <p class="payment-proof__hint">تم فصل إثبات الدفع عن مستندات الطالب العامة لتسهيل المراجعة المالية.</p>
+                            </div>
+                            <span class="review-pill {{ $paymentReceiptState['class'] }}">{{ $paymentReceiptState['label'] }}</span>
+                        </div>
+
+                        @if($paymentReceiptDoc)
+                            <div class="doc-meta">
+                                <span class="doc-badge">{{ strtoupper((string) ($paymentReceiptDoc['ext'] ?: 'FILE')) }}</span>
+                                <span class="doc-badge {{ !empty($paymentReceiptDoc['exists']) ? 'is-success' : 'is-danger' }}">{{ !empty($paymentReceiptDoc['exists']) ? 'جاهز للمعاينة' : 'الملف غير متاح' }}</span>
+                            </div>
+                            <div class="doc-actions">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-primary js-viewer-trigger"
+                                    data-url="{{ $paymentReceiptDoc['url'] }}"
+                                    data-download-url="{{ $paymentReceiptDoc['download_url'] }}"
+                                    data-label="{{ $paymentReceiptDoc['label'] }}"
+                                    data-ext="{{ $paymentReceiptDoc['ext'] }}"
+                                    data-exists="{{ !empty($paymentReceiptDoc['exists']) ? '1' : '0' }}">
+                                    معاينة الإثبات
+                                </button>
+                                <a href="{{ $paymentReceiptDoc['download_url'] }}" class="btn btn-light">تنزيل الإثبات</a>
+                            </div>
+                        @else
+                            <div class="empty-panel">لم يتم رفع إثبات دفع لهذا الطلب بعد.</div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>النقل والشروط</h3>
+                            <p>مرجع سريع لتفاصيل النقل ومدى اكتمال الموافقات المطلوبة من ولي الأمر.</p>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        @foreach($transportInfo as $label => $value)
+                            <div class="info-card">
+                                <span class="info-card__label">{{ $label }}</span>
+                                <div class="info-card__value">{{ $value }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="review-card approve-form">
+                    <div class="review-card__head">
+                        <div>
+                            <h3>اعتماد الطالب</h3>
+                            <p>يتم إنشاء سجلات الطالب الأكاديمية والفواتير المرتبطة مباشرة بعد الاعتماد، مع الحفاظ على نفس التدفق الخلفي الحالي.</p>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('approve_student') }}">
+                        @csrf
+                        <input type="hidden" name="student_id" value="{{ $record->id }}">
+                        <div class="row">
+                            <div class="col-12">
+                                <label for="approve_class_id">الصف النهائي</label>
+                                <select name="class_id" id="approve_class_id" class="form-control" required>
+                                    <option value="">اختر الصف</option>
+                                    @foreach ($classes as $item)
+                                        <option value="{{ $item->id }}" {{ (string) $record->class1 === (string) $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label for="approve_room_id">الشعبة</label>
+                                <select name="room_id" id="approve_room_id" class="form-control" required></select>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <button class="btn btn-success btn-block approve-submit" type="submit">اعتماد الطالب وإنشاء السجلات</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="modal fade" id="docPreviewModal">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+<div class="modal fade" id="mediaViewerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="docPreviewTitle">معاينة مستند</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5 class="modal-title">
+                    <span id="mediaViewerTitle">معاينة مستند</span>
+                    <span id="mediaViewerType" class="doc-badge">FILE</span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
-                <div id="docPreviewContainer" class="doc-preview-stage"></div>
-            </div>
-            <div class="modal-footer">
-                <a href="#" id="docPreviewDownload" class="btn btn-primary" download>تنزيل</a>
-                <button type="button" class="btn btn-light" data-dismiss="modal">إغلاق</button>
+                <div class="media-viewer-toolbar">
+                    <div class="media-viewer-toolbar__actions">
+                        <button type="button" class="media-tool" data-media-action="zoom-out">-</button>
+                        <button type="button" class="media-tool" data-media-action="fit">احتواء</button>
+                        <button type="button" class="media-tool" data-media-action="zoom-in">+</button>
+                    </div>
+                    <div class="media-viewer-toolbar__actions">
+                        <span class="doc-badge" id="mediaViewerZoomLabel">100%</span>
+                        <a href="#" id="mediaViewerDownload" class="btn btn-primary btn-sm">تنزيل</a>
+                    </div>
+                </div>
+                <div class="media-stage">
+                    <div class="media-stage__scroll" id="mediaViewerScroll">
+                        <div class="media-stage__canvas" id="mediaViewerCanvas"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -335,51 +1075,154 @@ $(function () {
         loadRooms($(this).val(), null);
     });
 
-    function renderPreview(url, ext, existsFlag) {
-        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
-        const previewBox = $('#docPreviewContainer');
-        previewBox.empty();
-        const loading = '<div class="doc-preview-state"><div class="spinner-border text-primary mb-2" role="status"></div><div>جاري تحميل المعاينة...</div></div>';
-        previewBox.html(loading);
+    const viewerState = {
+        type: null,
+        ext: '',
+        baseUrl: '',
+        downloadUrl: '',
+        scale: 1,
+        fit: true
+    };
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
 
-        if (String(existsFlag) !== '1') {
-            previewBox.html('<div class="doc-preview-state"><div class="alert alert-warning mb-0">تعذر العثور على الملف في المسار المخزن. يمكنك التحقق من الأرشفة أو إعادة الرفع.</div></div>');
-            return;
-        }
-
-        if (imageExts.indexOf(ext) !== -1) {
-            const img = $('<img>', { src: url, class: 'doc-preview-image', alt: 'document preview' });
-            img.on('error', function () {
-                previewBox.html('<div class="doc-preview-state"><div class="alert alert-warning mb-0">فشل تحميل الصورة. يمكنك تنزيل الملف مباشرة.</div></div>');
-            });
-            previewBox.html(img);
-            return;
-        }
-
-        if (ext === 'pdf') {
-            const iframe = $('<iframe>', { src: url, class: 'doc-preview-frame' });
-            iframe.on('error', function () {
-                previewBox.html('<div class="doc-preview-state"><div class="alert alert-warning mb-0">فشلت معاينة ملف PDF. يمكنك تنزيله مباشرة.</div></div>');
-            });
-            previewBox.html(iframe);
-            return;
-        }
-
-        previewBox.html('<div class="doc-preview-state"><div class="alert alert-info mb-0">لا تتوفر معاينة مباشرة لهذا النوع. يمكنك تنزيل الملف.</div></div>');
+    function buildPdfUrl() {
+        const cleanUrl = String(viewerState.baseUrl || '').split('#')[0];
+        const zoomValue = viewerState.fit ? 'page-width' : Math.round(viewerState.scale * 100);
+        return cleanUrl + '#toolbar=0&navpanes=0&scrollbar=0&zoom=' + zoomValue;
     }
 
-    $(document).on('click', '.js-doc-preview', function () {
-        const url = $(this).data('url');
-        const downloadUrl = $(this).data('download-url') || url;
-        const label = $(this).data('label') || 'معاينة مستند';
-        const ext = ($(this).data('ext') || '').toString().toLowerCase();
-        const existsFlag = $(this).data('exists');
+    function updateViewerToolbar() {
+        const canZoom = viewerState.type === 'image' || viewerState.type === 'pdf';
+        $('[data-media-action]').prop('disabled', !canZoom);
+        $('#mediaViewerZoomLabel').text(viewerState.fit ? 'احتواء' : (Math.round(viewerState.scale * 100) + '%'));
+    }
 
-        $('#docPreviewTitle').text(label);
-        $('#docPreviewDownload').attr('href', downloadUrl);
-        renderPreview(url, ext, existsFlag);
-        $('#docPreviewModal').modal('show');
+    function renderViewerState(message, alertClass) {
+        const html = '' +
+            '<div class="media-viewer-state">' +
+                '<div class="alert ' + alertClass + '">' + message + '</div>' +
+            '</div>';
+        $('#mediaViewerCanvas').html(html);
+        updateViewerToolbar();
+    }
+
+    function applyViewerScale() {
+        if (viewerState.type === 'image') {
+            $('#mediaViewerCanvas').find('.media-viewer-image').css('transform', 'scale(' + viewerState.scale + ')');
+        } else if (viewerState.type === 'pdf') {
+            const iframe = $('#mediaViewerCanvas').find('.media-viewer-frame');
+            if (iframe.length) {
+                iframe.attr('src', buildPdfUrl());
+            }
+        }
+        updateViewerToolbar();
+    }
+
+    function openViewer(url, downloadUrl, label, ext, existsFlag) {
+        viewerState.type = null;
+        viewerState.ext = String(ext || '').toLowerCase();
+        viewerState.baseUrl = String(url || '');
+        viewerState.downloadUrl = String(downloadUrl || url || '#');
+        viewerState.scale = 1;
+        viewerState.fit = true;
+
+        $('#mediaViewerTitle').text(label || 'معاينة مستند');
+        $('#mediaViewerType').text((viewerState.ext || 'file').toUpperCase());
+        $('#mediaViewerDownload').attr('href', viewerState.downloadUrl);
+        $('#mediaViewerCanvas').empty();
+
+        if (String(existsFlag) !== '1') {
+            renderViewerState('الملف غير متاح في المسار الحالي. يمكنك تنزيله لاحقاً إذا تمت إعادة مزامنته.', 'alert-warning');
+            $('#mediaViewerModal').modal('show');
+            return;
+        }
+
+        renderViewerState('جارِ تحميل المعاينة...', 'alert-light');
+        $('#mediaViewerModal').modal('show');
+
+        if (imageExts.indexOf(viewerState.ext) !== -1) {
+            viewerState.type = 'image';
+            const img = $('<img>', {
+                src: viewerState.baseUrl,
+                alt: label || 'preview',
+                class: 'media-viewer-image',
+                css: { display: 'none' }
+            });
+            $('#mediaViewerCanvas').append(img);
+            img.on('load', function () {
+                $('#mediaViewerCanvas').find('.media-viewer-state').remove();
+                img.show();
+                applyViewerScale();
+            });
+            img.on('error', function () {
+                renderViewerState('تعذر تحميل الصورة داخل المعاينة. يمكنك تنزيل الملف مباشرة.', 'alert-warning');
+            });
+            return;
+        }
+
+        if (viewerState.ext === 'pdf') {
+            viewerState.type = 'pdf';
+            const iframe = $('<iframe>', {
+                class: 'media-viewer-frame',
+                src: buildPdfUrl(),
+                css: { display: 'none' }
+            });
+            $('#mediaViewerCanvas').append(iframe);
+            iframe.on('load', function () {
+                $('#mediaViewerCanvas').find('.media-viewer-state').remove();
+                iframe.show();
+                updateViewerToolbar();
+            });
+            iframe.on('error', function () {
+                renderViewerState('تعذر عرض ملف PDF داخل النظام. يمكنك تنزيل الملف وفتحه محلياً.', 'alert-warning');
+            });
+            return;
+        }
+
+        renderViewerState('هذا النوع من الملفات غير مدعوم للمعاينة المباشرة. استخدم زر التنزيل لفتحه.', 'alert-info');
+    }
+
+    $(document).on('click', '.js-viewer-trigger', function () {
+        openViewer(
+            $(this).data('url'),
+            $(this).data('download-url'),
+            $(this).data('label'),
+            $(this).data('ext'),
+            $(this).data('exists')
+        );
     });
+
+    $(document).on('click', '[data-media-action]', function () {
+        const action = $(this).data('media-action');
+        if (!(viewerState.type === 'image' || viewerState.type === 'pdf')) {
+            return;
+        }
+
+        if (action === 'zoom-in') {
+            viewerState.fit = false;
+            viewerState.scale = Math.min(viewerState.scale + 0.2, 3);
+        } else if (action === 'zoom-out') {
+            viewerState.fit = false;
+            viewerState.scale = Math.max(viewerState.scale - 0.2, 0.6);
+        } else if (action === 'fit') {
+            viewerState.fit = true;
+            viewerState.scale = 1;
+        }
+
+        applyViewerScale();
+    });
+
+    $('#mediaViewerModal').on('hidden.bs.modal', function () {
+        $('#mediaViewerCanvas').empty();
+        viewerState.type = null;
+        viewerState.baseUrl = '';
+        viewerState.downloadUrl = '';
+        viewerState.scale = 1;
+        viewerState.fit = true;
+        updateViewerToolbar();
+    });
+
+    updateViewerToolbar();
 });
 </script>
 @endsection

@@ -574,11 +574,7 @@
     $paymentAccount = $isRtl
         ? (string) ($paymentSettings['payment_account_ar'] ?? '')
         : (string) ($paymentSettings['payment_account_en'] ?? '');
-    $paymentQrPath = (string) ($paymentSettings['payment_qr'] ?? '');
     $paymentQrUrl = (string) ($paymentQrUrl ?? '');
-    if ($paymentQrUrl === '' && $paymentQrPath !== '') {
-        $paymentQrUrl = asset('storage/' . ltrim(str_replace(['\\', 'public/', 'storage/'], ['/', '', ''], $paymentQrPath), '/'));
-    }
     $countryLabelKey = $isRtl ? 'name_ar' : 'name_en';
     $countryOptions = collect($countries_currencies ?? [])->filter(function ($item) {
         $labelAr = mb_strtolower(trim((string) ($item->name_ar ?? '')));
@@ -852,6 +848,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
     const redirectAfterSubmit = @json(url($locale));
+    const leaveWarningMessage = @json($isRtl ? 'لديك بيانات قيد الإدخال. قد تفقد التغييرات غير المكتملة إذا غادرت الصفحة الآن.' : 'You have registration data in progress. You may lose unfinished changes if you leave this page now.');
+    let allowSilentUnload = false;
     const urls = {
         step1: "{{ route('registration_wizard.step1') }}",
         step2: "{{ route('registration_wizard.step2') }}",
@@ -934,6 +932,59 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         return toast;
     }
+
+    function hasDirtyWizardState() {
+        if (allowSilentUnload) {
+            return false;
+        }
+
+        const scope = document.querySelector('.wizard-wrap');
+        if (!scope) {
+            return false;
+        }
+
+        const inputs = scope.querySelectorAll('input:not([type="hidden"]), textarea, select');
+        for (const input of inputs) {
+            const tag = (input.tagName || '').toLowerCase();
+            const type = (input.type || '').toLowerCase();
+
+            if (type === 'file') {
+                if (input.files && input.files.length > 0) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (type === 'checkbox' || type === 'radio') {
+                if (input.checked) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (tag === 'select') {
+                if (String(input.value || '').trim() !== '') {
+                    return true;
+                }
+                continue;
+            }
+
+            if (String(input.value || '').trim() !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    window.addEventListener('beforeunload', function (event) {
+        if (!hasDirtyWizardState()) {
+            return;
+        }
+        event.preventDefault();
+        event.returnValue = leaveWarningMessage;
+        return leaveWarningMessage;
+    });
 
     function setStep(step) {
         state.step = step;
@@ -1317,6 +1368,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (submitNote) {
                 submitNote.textContent = i18n.success.finalSubmitHint;
             }
+            allowSilentUnload = true;
             window.setTimeout(function () {
                 window.location.href = redirectAfterSubmit;
             }, 1700);
