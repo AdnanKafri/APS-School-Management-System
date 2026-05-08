@@ -163,6 +163,11 @@ class RegistrationWizardController extends Controller
             $receiptPath
         );
 
+        $request->session()->flash('registration_success', [
+            'title' => __('wizard.success.final_submit'),
+            'hint' => __('wizard.success.final_submit_hint'),
+        ]);
+
         return response()->json([
             'success' => true,
             'registration_id' => $registration->id,

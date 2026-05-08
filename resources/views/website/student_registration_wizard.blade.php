@@ -399,6 +399,64 @@
         display: block;
     }
 
+    .wizard-success-toast {
+        position: fixed;
+        inset-inline: 0;
+        top: 24px;
+        z-index: 1080;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity .24s ease, transform .24s ease;
+    }
+
+    .wizard-success-toast.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .wizard-success-toast__inner {
+        width: min(92vw, 560px);
+        border: 1px solid #cfe9d8;
+        background: #f3fbf6;
+        border-radius: 14px;
+        box-shadow: 0 10px 26px rgba(46, 133, 79, 0.16);
+        padding: 14px 16px;
+        pointer-events: auto;
+    }
+
+    .wizard-success-toast__title {
+        margin: 0;
+        color: #1f7a46;
+        font-size: 16px;
+        font-weight: 800;
+        text-align: start;
+    }
+
+    .wizard-success-toast__hint {
+        margin: 6px 0 0;
+        color: #356b4a;
+        font-size: 13px;
+        text-align: start;
+    }
+
+    .wizard-payment-qr-wrap {
+        margin-top: 12px;
+        text-align: center;
+    }
+
+    .wizard-payment-qr {
+        width: min(220px, 100%);
+        max-height: 220px;
+        object-fit: contain;
+        border: 1px solid #e5e0f0;
+        border-radius: 10px;
+        padding: 6px;
+        background: #fff;
+    }
+
     .wizard-check {
         display: inline-flex;
         align-items: center;
@@ -517,6 +575,10 @@
         ? (string) ($paymentSettings['payment_account_ar'] ?? '')
         : (string) ($paymentSettings['payment_account_en'] ?? '');
     $paymentQrPath = (string) ($paymentSettings['payment_qr'] ?? '');
+    $paymentQrUrl = (string) ($paymentQrUrl ?? '');
+    if ($paymentQrUrl === '' && $paymentQrPath !== '') {
+        $paymentQrUrl = asset('storage/' . ltrim(str_replace(['\\', 'public/', 'storage/'], ['/', '', ''], $paymentQrPath), '/'));
+    }
     $countryLabelKey = $isRtl ? 'name_ar' : 'name_en';
     $countryOptions = collect($countries_currencies ?? [])->filter(function ($item) {
         $labelAr = mb_strtolower(trim((string) ($item->name_ar ?? '')));
@@ -759,9 +821,9 @@
                     <span>{{ $paymentAccount !== '' ? $paymentAccount : __('wizard.payment.method_manual') }}</span>
                 </div>
             </div>
-            @if($paymentQrPath !== '')
-                <div class="mt-3" style="text-align:center;">
-                    <img src="{{ asset('storage/' . $paymentQrPath) }}" alt="Payment QR" style="max-width:180px;border:1px solid #e5e0f0;border-radius:10px;padding:6px;background:#fff;">
+            @if($paymentQrUrl !== '')
+                <div class="wizard-payment-qr-wrap">
+                    <img class="wizard-payment-qr" src="{{ $paymentQrUrl }}" alt="Payment QR" loading="lazy" onerror="this.closest('.wizard-payment-qr-wrap').style.display='none';">
                 </div>
             @endif
             <div class="wizard-field col-12" style="margin-top: 12px;">
@@ -856,6 +918,21 @@ document.addEventListener('DOMContentLoaded', function () {
         window.setTimeout(function () {
             alertBox.classList.remove('show');
         }, 5000);
+    }
+
+    function showSuccessToast(title, hint) {
+        const toast = document.createElement('div');
+        toast.className = 'wizard-success-toast';
+        toast.innerHTML =
+            '<div class="wizard-success-toast__inner">' +
+                '<p class="wizard-success-toast__title">' + escapeHtml(title || '') + '</p>' +
+                '<p class="wizard-success-toast__hint">' + escapeHtml(hint || '') + '</p>' +
+            '</div>';
+        document.body.appendChild(toast);
+        window.requestAnimationFrame(function () {
+            toast.classList.add('is-visible');
+        });
+        return toast;
     }
 
     function setStep(step) {
@@ -1233,7 +1310,8 @@ document.addEventListener('DOMContentLoaded', function () {
             payload.append('payment_receipt', receiptInput.files[0]);
 
             const response = await postFormData(urls.finalSubmit, payload);
-            showAlert((response && response.message) ? response.message : i18n.success.finalSubmit);
+            const successTitle = (response && response.message) ? response.message : i18n.success.finalSubmit;
+            showSuccessToast(successTitle, i18n.success.finalSubmitHint);
             button.textContent = i18n.buttons.submitted;
             const submitNote = document.querySelector('.wizard-submit-note');
             if (submitNote) {
@@ -1241,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             window.setTimeout(function () {
                 window.location.href = redirectAfterSubmit;
-            }, 1400);
+            }, 1700);
         } catch (error) {
             showAlert(error.message || i18n.errors.finalSubmitFailed);
             button.disabled = false;

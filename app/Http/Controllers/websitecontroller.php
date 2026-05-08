@@ -47,6 +47,8 @@ use Illuminate\Http\Request;
 use stdClass;
 use App\Country_currency;
 use App\TermsSetting;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 
 class websitecontroller extends Controller
@@ -465,7 +467,46 @@ class websitecontroller extends Controller
             'payment_account_en',
         ])->pluck('content', 'type');
 
-        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms', 'paymentSettings'));
+        $paymentQrUrl = $this->resolvePublicStorageUrl((string) ($paymentSettings['payment_qr'] ?? ''));
+
+        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms', 'paymentSettings', 'paymentQrUrl'));
+    }
+
+    protected function resolvePublicStorageUrl(?string $path): ?string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $normalized = str_replace('\\', '/', ltrim($path, '/'));
+        foreach (['public/', 'storage/'] as $prefix) {
+            if (Str::startsWith($normalized, $prefix)) {
+                $normalized = substr($normalized, strlen($prefix));
+            }
+        }
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (Storage::disk('public')->exists($normalized)) {
+            return asset('storage/' . $normalized);
+        }
+
+        if (file_exists(public_path('storage/' . $normalized))) {
+            return asset('storage/' . $normalized);
+        }
+
+        if (file_exists(public_path($normalized))) {
+            return asset($normalized);
+        }
+
+        return null;
     }
 
     public function lessons($class_id){

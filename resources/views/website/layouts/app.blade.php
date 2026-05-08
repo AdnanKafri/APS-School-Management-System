@@ -178,6 +178,11 @@
     if (empty($heroVideoMeta) && isset($other) && $other && !empty($other->img3)) {
         $heroVideoMeta = $normalizeHeroVideo($other->img3);
     }
+
+    $registrationSuccess = session('registration_success');
+    $registrationSuccessTitle = is_array($registrationSuccess) ? (string) ($registrationSuccess['title'] ?? '') : '';
+    $registrationSuccessHint = is_array($registrationSuccess) ? (string) ($registrationSuccess['hint'] ?? '') : '';
+    $showRegistrationSuccess = $registrationSuccessTitle !== '';
 @endphp
 <!doctype html>
 <html class="no-js" lang="{{ $locale ?? 'ar' }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -231,6 +236,51 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/website/css/modern-school.css') }}">
+    <style>
+        .site-toast-success {
+            position: fixed;
+            inset-inline: 0;
+            top: 18px;
+            z-index: 1200;
+            display: flex;
+            justify-content: center;
+            padding-inline: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity .24s ease, transform .24s ease;
+        }
+
+        .site-toast-success.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .site-toast-success__card {
+            width: min(96vw, 620px);
+            pointer-events: auto;
+            border: 1px solid #cce6d5;
+            background: #f2fbf5;
+            border-radius: 14px;
+            box-shadow: 0 10px 24px rgba(42, 122, 72, 0.18);
+            padding: 14px 16px;
+        }
+
+        .site-toast-success__title {
+            margin: 0;
+            color: #1f7a46;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.6;
+        }
+
+        .site-toast-success__hint {
+            margin: 6px 0 0;
+            color: #356b4a;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+    </style>
     @yield('css')
     @stack('styles')
 
@@ -240,6 +290,16 @@
 <body class="{{ $isRtl ? 'site-rtl' : 'site-ltr' }} {{ $isHomepage ? 'is-homepage' : '' }}">
     <!-- page wrapper -->
     <div class="page-wrapper" id="page">
+        @if($showRegistrationSuccess)
+            <div class="site-toast-success" id="registrationSuccessToast" role="status" aria-live="polite">
+                <div class="site-toast-success__card">
+                    <p class="site-toast-success__title">{{ $registrationSuccessTitle }}</p>
+                    @if($registrationSuccessHint !== '')
+                        <p class="site-toast-success__hint">{{ $registrationSuccessHint }}</p>
+                    @endif
+                </div>
+            </div>
+        @endif
 
 
 
@@ -726,6 +786,23 @@
     <script src="{{ asset('assets/website/js/scripts.js') }}"></script>
     <!-- GSAP Animation -->
     <script src='{{ asset('assets/website/js/gsap-animation.js') }}'></script>
+    <script>
+        (function() {
+            var toast = document.getElementById('registrationSuccessToast');
+            if (!toast) return;
+            window.requestAnimationFrame(function() {
+                toast.classList.add('is-visible');
+            });
+            window.setTimeout(function() {
+                toast.classList.remove('is-visible');
+                window.setTimeout(function() {
+                    if (toast && toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 250);
+            }, 5000);
+        })();
+    </script>
     <script>
         (function() {
             var toggle = document.querySelector('.sch-menu-toggle');
