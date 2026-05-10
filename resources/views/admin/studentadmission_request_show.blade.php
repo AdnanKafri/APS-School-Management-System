@@ -1,7 +1,7 @@
 @extends('admin.layouts.v2')
 
-@section('page_title', 'تفاصيل طلب القبول')
-@section('page_subtitle', 'مراجعة شاملة لبيانات الطالب والدفعة والمستندات قبل الاعتماد')
+@section('page_title', 'Ã˜ÂªÃ™ÂÃ˜Â§Ã˜ÂµÃ™Å Ã™â€ž Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜Â§Ã™â€žÃ™â€šÃ˜Â¨Ã™Ë†Ã™â€ž')
+@section('page_subtitle', 'Ã™â€¦Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â© Ã˜Â´Ã˜Â§Ã™â€¦Ã™â€žÃ˜Â© Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨ Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯Ã˜Â§Ã˜Âª Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â§Ã˜Â¯')
 
 @section('style')
 <style>
@@ -400,6 +400,50 @@
         border-color: #d9d4e8;
     }
 
+    .admission-request-show .approve-form .finance-adjust-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: .85rem;
+        margin-top: 1rem;
+        margin-bottom: .2rem;
+    }
+
+    .admission-request-show .approve-form .finance-adjust-card {
+        border: 1px solid var(--review-border);
+        border-radius: 16px;
+        background: var(--review-muted);
+        padding: .85rem .95rem;
+    }
+
+    .admission-request-show .approve-form .finance-adjust-card.is-disabled {
+        opacity: .7;
+    }
+
+    .admission-request-show .approve-form .finance-adjust-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-bottom: .45rem;
+    }
+
+    .admission-request-show .approve-form .finance-adjust-limit {
+        color: var(--review-subtle);
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .admission-request-show .approve-form .finance-adjust-hint {
+        margin: .45rem 0 0;
+        color: var(--review-subtle);
+        font-size: .78rem;
+        line-height: 1.7;
+    }
+
+    .admission-request-show .approve-form .finance-adjust-errors {
+        margin-bottom: .95rem;
+    }
+
     .admission-request-show .approve-form label {
         display: block;
         margin-bottom: .35rem;
@@ -607,10 +651,10 @@
 
 @section('breadcrumbs')
 <nav class="breadcrumbs">
-    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">الرئيسية</a>
-    <a href="{{ route('studentadmission') }}" class="breadcrumbs__item">قسم القبول</a>
-    <a href="{{ route('studentadmission_requests') }}" class="breadcrumbs__item">طلبات القبول</a>
-    <a class="breadcrumbs__item is-active">تفاصيل الطلب</a>
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©</a>
+    <a href="{{ route('studentadmission') }}" class="breadcrumbs__item">Ã™â€šÃ˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€šÃ˜Â¨Ã™Ë†Ã™â€ž</a>
+    <a href="{{ route('studentadmission_requests') }}" class="breadcrumbs__item">Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€šÃ˜Â¨Ã™Ë†Ã™â€ž</a>
+    <a class="breadcrumbs__item is-active">Ã˜ÂªÃ™ÂÃ˜Â§Ã˜ÂµÃ™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨</a>
 </nav>
 @endsection
 
@@ -619,33 +663,41 @@
     $fullName = trim((string) ($record->first_name . ' ' . $record->last_name));
     $initials = mb_strtoupper(trim(mb_substr((string) $record->first_name, 0, 1) . mb_substr((string) $record->last_name, 0, 1)));
     $paymentMethodMap = [
-        '0' => 'تحويل يدوي',
+        '0' => 'Ã˜ÂªÃ˜Â­Ã™Ë†Ã™Å Ã™â€ž Ã™Å Ã˜Â¯Ã™Ë†Ã™Å ',
         '1' => 'ShamCash',
-        'manual' => 'تحويل يدوي',
+        'manual' => 'Ã˜ÂªÃ˜Â­Ã™Ë†Ã™Å Ã™â€ž Ã™Å Ã˜Â¯Ã™Ë†Ã™Å ',
         'shamcash' => 'ShamCash',
     ];
     $paymentMethodKey = (string) $record->payment_method;
-    $paymentMethodLabel = $paymentMethodMap[$paymentMethodKey] ?? ($paymentMethodKey !== '' ? $paymentMethodKey : 'غير محدد');
+    $paymentMethodLabel = $paymentMethodMap[$paymentMethodKey] ?? ($paymentMethodKey !== '' ? $paymentMethodKey : 'Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯');
     $paymentStatusKey = strtolower((string) ($record->payment_status ?: 'pending'));
     $paymentStatusMap = [
-        'pending' => ['label' => 'بانتظار التحقق', 'class' => 'is-warning'],
-        'paid' => ['label' => 'مدفوع', 'class' => 'is-success'],
-        'rejected' => ['label' => 'مرفوض', 'class' => 'is-danger'],
+        'pending' => ['label' => 'Ã˜Â¨Ã˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€šÃ™â€š', 'class' => 'is-warning'],
+        'paid' => ['label' => 'Ã™â€¦Ã˜Â¯Ã™ÂÃ™Ë†Ã˜Â¹', 'class' => 'is-success'],
+        'rejected' => ['label' => 'Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶', 'class' => 'is-danger'],
     ];
-    $paymentStatus = $paymentStatusMap[$paymentStatusKey] ?? ['label' => ($record->payment_status ?: 'غير محدد'), 'class' => 'is-muted'];
+    $paymentStatus = $paymentStatusMap[$paymentStatusKey] ?? ['label' => ($record->payment_status ?: 'Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯'), 'class' => 'is-muted'];
     if (is_null($record->current_step) && !empty($record->payment_receipt)) {
-        $requestStatus = ['label' => 'مكتمل وجاهز للمراجعة', 'class' => 'is-success'];
+        $requestStatus = ['label' => 'Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€ž Ã™Ë†Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â² Ã™â€žÃ™â€žÃ™â€¦Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â©', 'class' => 'is-success'];
     } elseif (!is_null($record->current_step)) {
-        $requestStatus = ['label' => 'طلب غير مكتمل', 'class' => 'is-warning'];
+        $requestStatus = ['label' => 'Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€ž', 'class' => 'is-warning'];
     } else {
-        $requestStatus = ['label' => 'بحاجة إلى متابعة', 'class' => 'is-muted'];
+        $requestStatus = ['label' => 'Ã˜Â¨Ã˜Â­Ã˜Â§Ã˜Â¬Ã˜Â© Ã˜Â¥Ã™â€žÃ™â€° Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©', 'class' => 'is-muted'];
     }
     $transportStatus = (int) $record->wants_transport === 1
-        ? ['label' => 'النقل مطلوب', 'class' => 'is-success']
-        : ['label' => 'بدون نقل', 'class' => 'is-muted'];
+        ? ['label' => 'Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž Ã™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨', 'class' => 'is-success']
+        : ['label' => 'Ã˜Â¨Ã˜Â¯Ã™Ë†Ã™â€  Ã™â€ Ã™â€šÃ™â€ž', 'class' => 'is-muted'];
+    $schoolFeesTotal = (float) ($record->registration_fee ?? 0) + (float) ($record->services_fee ?? 0);
+    if ($schoolFeesTotal <= 0) {
+        $schoolFeesTotal = (float) ($record->total_amount ?? 0);
+    }
+    $hasTransportSelection = (int) $record->wants_transport === 1;
+    $transportFeesTotal = $hasTransportSelection ? (float) ($record->transport_fee ?? 0) : 0;
+    $defaultSchoolPaidAmount = old('school_paid_amount', $schoolFeesTotal);
+    $defaultTransportPaidAmount = old('transport_paid_amount', $transportFeesTotal);
     $paymentReceiptState = !empty($record->payment_receipt)
-        ? ['label' => 'إثبات دفع مرفوع', 'class' => 'is-success']
-        : ['label' => 'لا يوجد إثبات دفع', 'class' => 'is-danger'];
+        ? ['label' => 'Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â¯Ã™ÂÃ˜Â¹ Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¹', 'class' => 'is-success']
+        : ['label' => 'Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â¯Ã™ÂÃ˜Â¹', 'class' => 'is-danger'];
     $formatDate = function ($value, $fallback = '-') {
         if (!$value) {
             return $fallback;
@@ -657,29 +709,29 @@
         }
     };
     $formatMoney = function ($value) {
-        return number_format((float) $value, 2) . ' ل.س';
+        return number_format((float) $value, 2) . ' Ã™â€ž.Ã˜Â³';
     };
     $yesNoMeta = function ($value) {
         return (int) $value === 1
-            ? ['label' => 'نعم', 'class' => 'is-success']
-            : ['label' => 'لا', 'class' => 'is-danger'];
+            ? ['label' => 'Ã™â€ Ã˜Â¹Ã™â€¦', 'class' => 'is-success']
+            : ['label' => 'Ã™â€žÃ˜Â§', 'class' => 'is-danger'];
     };
     $fieldValue = function ($value) {
         return trim((string) $value) !== '' ? (string) $value : '-';
     };
 
     $documentLabelsByPath = [
-        (string) $record->personal_image => 'الصورة الشخصية',
-        (string) $record->mother_image => 'هوية الأم',
-        (string) $record->father_image => 'هوية الأب',
-        (string) $record->fourth_image => 'إخراج قيد / شهادة ميلاد',
-        (string) $record->passbord => 'جواز السفر',
-        (string) $record->mather_page => 'جواز الأم',
-        (string) $record->father_page => 'جواز الأب',
-        (string) $record->family_book => 'دفتر العائلة',
-        (string) $record->study_sequence => 'التسلسل الدراسي',
-        (string) $record->certification => 'آخر شهادة',
-        (string) $record->certification_nine => 'شهادة التاسع',
+        (string) $record->personal_image => 'Ã˜Â§Ã™â€žÃ˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å Ã˜Â©',
+        (string) $record->mother_image => 'Ã™â€¡Ã™Ë†Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦',
+        (string) $record->father_image => 'Ã™â€¡Ã™Ë†Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¨',
+        (string) $record->fourth_image => 'Ã˜Â¥Ã˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬ Ã™â€šÃ™Å Ã˜Â¯ / Ã˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€¦Ã™Å Ã™â€žÃ˜Â§Ã˜Â¯',
+        (string) $record->passbord => 'Ã˜Â¬Ã™Ë†Ã˜Â§Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â³Ã™ÂÃ˜Â±',
+        (string) $record->mather_page => 'Ã˜Â¬Ã™Ë†Ã˜Â§Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦',
+        (string) $record->father_page => 'Ã˜Â¬Ã™Ë†Ã˜Â§Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¨',
+        (string) $record->family_book => 'Ã˜Â¯Ã™ÂÃ˜ÂªÃ˜Â± Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â§Ã˜Â¦Ã™â€žÃ˜Â©',
+        (string) $record->study_sequence => 'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã™â€žÃ˜Â³Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â±Ã˜Â§Ã˜Â³Ã™Å ',
+        (string) $record->certification => 'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â©',
+        (string) $record->certification_nine => 'Ã˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã˜Â³Ã˜Â¹',
     ];
 
     $paymentReceiptDoc = null;
@@ -687,48 +739,48 @@
     foreach ((array) $docsMeta as $doc) {
         $labelPath = (string) ($doc['label_path'] ?? '');
         if ($labelPath !== '' && $labelPath === (string) $record->payment_receipt) {
-            $doc['label'] = 'إثبات الدفع';
+            $doc['label'] = 'Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹';
             $paymentReceiptDoc = $doc;
             continue;
         }
-        $doc['label'] = $documentLabelsByPath[$labelPath] ?? 'مستند إضافي';
+        $doc['label'] = $documentLabelsByPath[$labelPath] ?? 'Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯ Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ™Å ';
         $documentDocs[] = $doc;
     }
     if (!$paymentReceiptDoc && !empty($paymentReceiptMeta)) {
-        $paymentReceiptMeta['label'] = 'إثبات الدفع';
+        $paymentReceiptMeta['label'] = 'Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹';
         $paymentReceiptDoc = $paymentReceiptMeta;
     }
 
     $studentInfo = [
-        'الاسم الكامل' => $fullName ?: '-',
-        'رقم الهاتف' => $fieldValue($record->phone),
-        'البريد الإلكتروني' => $fieldValue($record->email),
-        'تاريخ الميلاد' => $fieldValue($record->date),
-        'الجنسية' => $fieldValue($record->nationality),
-        'مكان الولادة' => $fieldValue($record->place_of_birth),
-        'رقم الهوية / الوطني' => $fieldValue($record->the_ID_number),
-        'رقم جواز السفر' => $fieldValue($record->passport_number),
+        'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™Æ’Ã˜Â§Ã™â€¦Ã™â€ž' => $fullName ?: '-',
+        'Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€¡Ã˜Â§Ã˜ÂªÃ™Â' => $fieldValue($record->phone),
+        'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¥Ã™â€žÃ™Æ’Ã˜ÂªÃ˜Â±Ã™Ë†Ã™â€ Ã™Å ' => $fieldValue($record->email),
+        'Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ™â€¦Ã™Å Ã™â€žÃ˜Â§Ã˜Â¯' => $fieldValue($record->date),
+        'Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€ Ã˜Â³Ã™Å Ã˜Â©' => $fieldValue($record->nationality),
+        'Ã™â€¦Ã™Æ’Ã˜Â§Ã™â€  Ã˜Â§Ã™â€žÃ™Ë†Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â©' => $fieldValue($record->place_of_birth),
+        'Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€¡Ã™Ë†Ã™Å Ã˜Â© / Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â·Ã™â€ Ã™Å ' => $fieldValue($record->the_ID_number),
+        'Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â¬Ã™Ë†Ã˜Â§Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â³Ã™ÂÃ˜Â±' => $fieldValue($record->passport_number),
     ];
     $parentInfo = [
-        'اسم الأب' => $fieldValue($record->father_name),
-        'اسم الأم' => $fieldValue($record->mather_name),
-        'هاتف الأب' => $fieldValue($record->father_phone),
-        'هاتف الأم' => $fieldValue($record->mather_phone),
-        'هاتف إضافي' => $fieldValue($record->other_phone),
-        'بلد الإقامة' => $fieldValue($record->country),
-        'المدينة' => $fieldValue($record->city),
-        'العنوان / الملاحظات' => $fieldValue($record->con_sch),
+        'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¨' => $fieldValue($record->father_name),
+        'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦' => $fieldValue($record->mather_name),
+        'Ã™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¨' => $fieldValue($record->father_phone),
+        'Ã™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦' => $fieldValue($record->mather_phone),
+        'Ã™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ™Å ' => $fieldValue($record->other_phone),
+        'Ã˜Â¨Ã™â€žÃ˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¥Ã™â€šÃ˜Â§Ã™â€¦Ã˜Â©' => $fieldValue($record->country),
+        'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã™Å Ã™â€ Ã˜Â©' => $fieldValue($record->city),
+        'Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€ Ã™Ë†Ã˜Â§Ã™â€  / Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â§Ã˜Âª' => $fieldValue($record->con_sch),
     ];
     $academicInfo = [
-        'الصف المطلوب' => optional($record->class)->name ?: $fieldValue($record->class1),
-        'المدرسة السابقة' => $fieldValue($record->the_previous_school),
-        'تاريخ تقديم الطلب' => $formatDate($record->created_at),
-        'آخر خطوة مسجلة' => !is_null($record->current_step) ? (string) $record->current_step : 'تم الإرسال النهائي',
+        'Ã˜Â§Ã™â€žÃ˜ÂµÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨' => optional($record->class)->name ?: $fieldValue($record->class1),
+        'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â±Ã˜Â³Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¨Ã™â€šÃ˜Â©' => $fieldValue($record->the_previous_school),
+        'Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜ÂªÃ™â€šÃ˜Â¯Ã™Å Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨' => $formatDate($record->created_at),
+        'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â®Ã˜Â·Ã™Ë†Ã˜Â© Ã™â€¦Ã˜Â³Ã˜Â¬Ã™â€žÃ˜Â©' => !is_null($record->current_step) ? (string) $record->current_step : 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã˜Â¦Ã™Å ',
     ];
     $transportInfo = [
-        'خدمة النقل' => $transportStatus['label'],
-        'الموافقة على الشروط المدرسية' => $yesNoMeta($record->accepted_terms)['label'],
-        'الموافقة على شروط النقل' => $yesNoMeta($record->accepted_transport_terms)['label'],
+        'Ã˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž' => $transportStatus['label'],
+        'Ã˜Â§Ã™â€žÃ™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â© Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â· Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â±Ã˜Â³Ã™Å Ã˜Â©' => $yesNoMeta($record->accepted_terms)['label'],
+        'Ã˜Â§Ã™â€žÃ™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â© Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â´Ã˜Â±Ã™Ë†Ã˜Â· Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž' => $yesNoMeta($record->accepted_transport_terms)['label'],
     ];
 @endphp
 
@@ -739,15 +791,15 @@
                 <div class="review-hero__identity">
                     <div class="review-avatar">{{ $initials !== '' ? $initials : 'ST' }}</div>
                     <div>
-                        <p class="review-kicker">طلب قبول رقم #{{ $record->id }}</p>
-                        <h2>{{ $fullName ?: 'طلب قبول' }}</h2>
-                        <p>{{ optional($record->class)->name ?: 'الصف غير محدد' }} | تم الإرسال في {{ $formatDate($record->created_at) }}</p>
+                        <p class="review-kicker">Ã˜Â·Ã™â€žÃ˜Â¨ Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž Ã˜Â±Ã™â€šÃ™â€¦ #{{ $record->id }}</p>
+                        <h2>{{ $fullName ?: 'Ã˜Â·Ã™â€žÃ˜Â¨ Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž' }}</h2>
+                        <p>{{ optional($record->class)->name ?: 'Ã˜Â§Ã™â€žÃ˜ÂµÃ™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯' }} | Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã™ÂÃ™Å  {{ $formatDate($record->created_at) }}</p>
                     </div>
                 </div>
                 <div class="review-hero__actions">
-                    <a href="{{ route('studentadmission_requests') }}" class="btn btn-light">العودة إلى الطلبات</a>
+                    <a href="{{ route('studentadmission_requests') }}" class="btn btn-light">Ã˜Â§Ã™â€žÃ˜Â¹Ã™Ë†Ã˜Â¯Ã˜Â© Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª</a>
                     @if($paymentReceiptDoc)
-                        <a href="{{ $paymentReceiptDoc['download_url'] }}" class="btn btn-outline-primary">تنزيل إثبات الدفع</a>
+                        <a href="{{ $paymentReceiptDoc['download_url'] }}" class="btn btn-outline-primary">Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹</a>
                     @endif
                 </div>
             </div>
@@ -764,8 +816,8 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>معلومات الطالب</h3>
-                            <p>عرض منظم للهوية الأساسية وبيانات التواصل المدخلة من ولي الأمر.</p>
+                            <h3>Ã™â€¦Ã˜Â¹Ã™â€žÃ™Ë†Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨</h3>
+                            <p>Ã˜Â¹Ã˜Â±Ã˜Â¶ Ã™â€¦Ã™â€ Ã˜Â¸Ã™â€¦ Ã™â€žÃ™â€žÃ™â€¡Ã™Ë†Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â§Ã˜Â³Ã™Å Ã˜Â© Ã™Ë†Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜ÂµÃ™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â®Ã™â€žÃ˜Â© Ã™â€¦Ã™â€  Ã™Ë†Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦Ã˜Â±.</p>
                         </div>
                     </div>
                     <div class="info-grid">
@@ -781,8 +833,8 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>الأهل وبيانات التواصل</h3>
-                            <p>معلومات الأسرة والاتصال والعنوان الحالي كما وردت في الطلب.</p>
+                            <h3>Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¡Ã™â€ž Ã™Ë†Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜ÂµÃ™â€ž</h3>
+                            <p>Ã™â€¦Ã˜Â¹Ã™â€žÃ™Ë†Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â±Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â§Ã˜ÂªÃ˜ÂµÃ˜Â§Ã™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€ Ã™Ë†Ã˜Â§Ã™â€  Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å  Ã™Æ’Ã™â€¦Ã˜Â§ Ã™Ë†Ã˜Â±Ã˜Â¯Ã˜Âª Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨.</p>
                         </div>
                     </div>
                     <div class="info-grid">
@@ -798,8 +850,8 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>المعلومات الأكاديمية</h3>
-                            <p>الصف المطلوب والخلفية الدراسية وحالة اكتمال الطلب الحالية.</p>
+                            <h3>Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã™â€žÃ™Ë†Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â£Ã™Æ’Ã˜Â§Ã˜Â¯Ã™Å Ã™â€¦Ã™Å Ã˜Â©</h3>
+                            <p>Ã˜Â§Ã™â€žÃ˜ÂµÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨ Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â®Ã™â€žÃ™ÂÃ™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â±Ã˜Â§Ã˜Â³Ã™Å Ã˜Â© Ã™Ë†Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™Æ’Ã˜ÂªÃ™â€¦Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â©.</p>
                         </div>
                     </div>
                     <div class="info-grid">
@@ -815,10 +867,10 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>المستندات المرفوعة</h3>
-                            <p>مستندات الطالب الأساسية في مساحة مستقلة، مع إبقاء إثبات الدفع ضمن القسم المالي.</p>
+                            <h3>Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¹Ã˜Â©</h3>
+                            <p>Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨ Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â§Ã˜Â³Ã™Å Ã˜Â© Ã™ÂÃ™Å  Ã™â€¦Ã˜Â³Ã˜Â§Ã˜Â­Ã˜Â© Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€šÃ™â€žÃ˜Â©Ã˜Å’ Ã™â€¦Ã˜Â¹ Ã˜Â¥Ã˜Â¨Ã™â€šÃ˜Â§Ã˜Â¡ Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹ Ã˜Â¶Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â§Ã™â€žÃ™Å .</p>
                         </div>
-                        <span class="review-pill is-muted">{{ count($documentDocs) }} مستند</span>
+                        <span class="review-pill is-muted">{{ count($documentDocs) }} Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯</span>
                     </div>
                     @if(count($documentDocs))
                         <div class="doc-grid">
@@ -832,12 +884,12 @@
                                         <div class="doc-icon">{{ $ext !== '' ? $ext : 'file' }}</div>
                                         <div>
                                             <h4>{{ $doc['label'] }}</h4>
-                                            <p>معاينة مباشرة أو تنزيل الملف مع الحفاظ على توافق المستندات القديمة والجديدة.</p>
+                                            <p>Ã™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â© Ã™â€¦Ã˜Â¨Ã˜Â§Ã˜Â´Ã˜Â±Ã˜Â© Ã˜Â£Ã™Ë† Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã™â€¦Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â­Ã™ÂÃ˜Â§Ã˜Â¸ Ã˜Â¹Ã™â€žÃ™â€° Ã˜ÂªÃ™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€šÃ˜Â¯Ã™Å Ã™â€¦Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯Ã˜Â©.</p>
                                         </div>
                                     </div>
                                     <div class="doc-meta">
                                         <span class="doc-badge">{{ strtoupper($ext !== '' ? $ext : 'FILE') }}</span>
-                                        <span class="doc-badge {{ $existsClass }}">{{ !empty($doc['exists']) ? 'جاهز للمعاينة' : 'الملف غير متاح' }}</span>
+                                        <span class="doc-badge {{ $existsClass }}">{{ !empty($doc['exists']) ? 'Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â² Ã™â€žÃ™â€žÃ™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â©' : 'Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­' }}</span>
                                     </div>
                                     <div class="doc-actions">
                                         <button
@@ -848,15 +900,15 @@
                                             data-label="{{ $doc['label'] }}"
                                             data-ext="{{ $doc['ext'] }}"
                                             data-exists="{{ !empty($doc['exists']) ? '1' : '0' }}">
-                                            معاينة
+                                            Ã™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â©
                                         </button>
-                                        <a href="{{ $doc['download_url'] }}" class="btn btn-sm btn-light">تنزيل</a>
+                                        <a href="{{ $doc['download_url'] }}" class="btn btn-sm btn-light">Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž</a>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="empty-panel">لا توجد مستندات طالب متاحة للعرض حالياً.</div>
+                        <div class="empty-panel">Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â·Ã˜Â§Ã™â€žÃ˜Â¨ Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â© Ã™â€žÃ™â€žÃ˜Â¹Ã˜Â±Ã˜Â¶ Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹.</div>
                     @endif
                 </div>
             </div>
@@ -865,30 +917,30 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>الحالة والموافقات</h3>
-                            <p>ملخص سريع لحالة الطلب الحالية، النقل، وقبول الشروط.</p>
+                            <h3>Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â§Ã˜Âª</h3>
+                            <p>Ã™â€¦Ã™â€žÃ˜Â®Ã˜Âµ Ã˜Â³Ã˜Â±Ã™Å Ã˜Â¹ Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â©Ã˜Å’ Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€žÃ˜Å’ Ã™Ë†Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â·.</p>
                         </div>
                     </div>
                     <div class="status-list">
                         <div class="status-item">
-                            <span class="status-item__label">حالة الطلب</span>
+                            <span class="status-item__label">Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨</span>
                             <span class="review-pill {{ $requestStatus['class'] }}">{{ $requestStatus['label'] }}</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-item__label">حالة الدفع</span>
+                            <span class="status-item__label">Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹</span>
                             <span class="review-pill {{ $paymentStatus['class'] }}">{{ $paymentStatus['label'] }}</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-item__label">خدمة النقل</span>
+                            <span class="status-item__label">Ã˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž</span>
                             <span class="review-pill {{ $transportStatus['class'] }}">{{ $transportStatus['label'] }}</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-item__label">قبول الشروط المدرسية</span>
+                            <span class="status-item__label">Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â· Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â±Ã˜Â³Ã™Å Ã˜Â©</span>
                             @php $schoolTermsMeta = $yesNoMeta($record->accepted_terms); @endphp
                             <span class="review-pill {{ $schoolTermsMeta['class'] }}">{{ $schoolTermsMeta['label'] }}</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-item__label">قبول شروط النقل</span>
+                            <span class="status-item__label">Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž Ã˜Â´Ã˜Â±Ã™Ë†Ã˜Â· Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž</span>
                             @php $transportTermsMeta = $yesNoMeta($record->accepted_transport_terms); @endphp
                             <span class="review-pill {{ $transportTermsMeta['class'] }}">{{ $transportTermsMeta['label'] }}</span>
                         </div>
@@ -898,36 +950,36 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>الرسوم والدفع</h3>
-                            <p>تفصيل الرسوم المعتمدة في الإعدادات مع حالة الدفع الحالية وإثبات التحويل.</p>
+                            <h3>Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹</h3>
+                            <p>Ã˜ÂªÃ™ÂÃ˜ÂµÃ™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â© Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª Ã™â€¦Ã˜Â¹ Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â© Ã™Ë†Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Ë†Ã™Å Ã™â€ž.</p>
                         </div>
                     </div>
                     <div class="money-grid">
                         <div class="money-card">
-                            <span class="money-card__label">رسوم التسجيل</span>
+                            <span class="money-card__label">Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž</span>
                             <span class="money-card__value">{{ $formatMoney($record->registration_fee) }}</span>
                         </div>
                         <div class="money-card">
-                            <span class="money-card__label">رسوم الخدمات</span>
+                            <span class="money-card__label">Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â§Ã˜Âª</span>
                             <span class="money-card__value">{{ $formatMoney($record->services_fee) }}</span>
                         </div>
                         <div class="money-card">
-                            <span class="money-card__label">رسوم النقل</span>
+                            <span class="money-card__label">Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž</span>
                             <span class="money-card__value">{{ $formatMoney($record->transport_fee) }}</span>
                         </div>
                         <div class="money-card is-total">
-                            <span class="money-card__label">الإجمالي</span>
+                            <span class="money-card__label">Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å </span>
                             <span class="money-card__value">{{ $formatMoney($record->total_amount) }}</span>
                         </div>
                     </div>
 
                     <div class="status-list" style="margin-bottom: .8rem;">
                         <div class="status-item">
-                            <span class="status-item__label">طريقة الدفع</span>
+                            <span class="status-item__label">Ã˜Â·Ã˜Â±Ã™Å Ã™â€šÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹</span>
                             <div class="info-card__value">{{ $paymentMethodLabel }}</div>
                         </div>
                         <div class="status-item">
-                            <span class="status-item__label">تاريخ الدفع</span>
+                            <span class="status-item__label">Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹</span>
                             <div class="info-card__value">{{ $formatDate($record->payment_date) }}</div>
                         </div>
                     </div>
@@ -935,8 +987,8 @@
                     <div class="payment-proof">
                         <div class="payment-proof__meta">
                             <div>
-                                <p class="payment-proof__title">إثبات الدفع</p>
-                                <p class="payment-proof__hint">تم فصل إثبات الدفع عن مستندات الطالب العامة لتسهيل المراجعة المالية.</p>
+                                <p class="payment-proof__title">Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹</p>
+                                <p class="payment-proof__hint">Ã˜ÂªÃ™â€¦ Ã™ÂÃ˜ÂµÃ™â€ž Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¯Ã™ÂÃ˜Â¹ Ã˜Â¹Ã™â€  Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨ Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â§Ã™â€¦Ã˜Â© Ã™â€žÃ˜ÂªÃ˜Â³Ã™â€¡Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â§Ã™â€žÃ™Å Ã˜Â©.</p>
                             </div>
                             <span class="review-pill {{ $paymentReceiptState['class'] }}">{{ $paymentReceiptState['label'] }}</span>
                         </div>
@@ -944,7 +996,7 @@
                         @if($paymentReceiptDoc)
                             <div class="doc-meta">
                                 <span class="doc-badge">{{ strtoupper((string) ($paymentReceiptDoc['ext'] ?: 'FILE')) }}</span>
-                                <span class="doc-badge {{ !empty($paymentReceiptDoc['exists']) ? 'is-success' : 'is-danger' }}">{{ !empty($paymentReceiptDoc['exists']) ? 'جاهز للمعاينة' : 'الملف غير متاح' }}</span>
+                                <span class="doc-badge {{ !empty($paymentReceiptDoc['exists']) ? 'is-success' : 'is-danger' }}">{{ !empty($paymentReceiptDoc['exists']) ? 'Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â² Ã™â€žÃ™â€žÃ™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â©' : 'Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­' }}</span>
                             </div>
                             <div class="doc-actions">
                                 <button
@@ -955,12 +1007,12 @@
                                     data-label="{{ $paymentReceiptDoc['label'] }}"
                                     data-ext="{{ $paymentReceiptDoc['ext'] }}"
                                     data-exists="{{ !empty($paymentReceiptDoc['exists']) ? '1' : '0' }}">
-                                    معاينة الإثبات
+                                    Ã™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª
                                 </button>
-                                <a href="{{ $paymentReceiptDoc['download_url'] }}" class="btn btn-light">تنزيل الإثبات</a>
+                                <a href="{{ $paymentReceiptDoc['download_url'] }}" class="btn btn-light">Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª</a>
                             </div>
                         @else
-                            <div class="empty-panel">لم يتم رفع إثبات دفع لهذا الطلب بعد.</div>
+                            <div class="empty-panel">Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜Â¥Ã˜Â«Ã˜Â¨Ã˜Â§Ã˜Âª Ã˜Â¯Ã™ÂÃ˜Â¹ Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨ Ã˜Â¨Ã˜Â¹Ã˜Â¯.</div>
                         @endif
                     </div>
                 </div>
@@ -968,8 +1020,8 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
-                            <h3>النقل والشروط</h3>
-                            <p>مرجع سريع لتفاصيل النقل ومدى اكتمال الموافقات المطلوبة من ولي الأمر.</p>
+                            <h3>Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â·</h3>
+                            <p>Ã™â€¦Ã˜Â±Ã˜Â¬Ã˜Â¹ Ã˜Â³Ã˜Â±Ã™Å Ã˜Â¹ Ã™â€žÃ˜ÂªÃ™ÂÃ˜Â§Ã˜ÂµÃ™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž Ã™Ë†Ã™â€¦Ã˜Â¯Ã™â€° Ã˜Â§Ã™Æ’Ã˜ÂªÃ™â€¦Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â© Ã™â€¦Ã™â€  Ã™Ë†Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦Ã˜Â±.</p>
                         </div>
                     </div>
                     <div class="info-grid">
@@ -985,29 +1037,89 @@
                 <div class="review-card approve-form">
                     <div class="review-card__head">
                         <div>
-                            <h3>اعتماد الطالب</h3>
-                            <p>يتم إنشاء سجلات الطالب الأكاديمية والفواتير المرتبطة مباشرة بعد الاعتماد، مع الحفاظ على نفس التدفق الخلفي الحالي.</p>
+                            <h3>Ã˜Â§Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â§Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨</h3>
+                            <p>Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â³Ã˜Â¬Ã™â€žÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨ Ã˜Â§Ã™â€žÃ˜Â£Ã™Æ’Ã˜Â§Ã˜Â¯Ã™Å Ã™â€¦Ã™Å Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ™ÂÃ™Ë†Ã˜Â§Ã˜ÂªÃ™Å Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã˜ÂªÃ˜Â¨Ã˜Â·Ã˜Â© Ã™â€¦Ã˜Â¨Ã˜Â§Ã˜Â´Ã˜Â±Ã˜Â© Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â§Ã˜Â¯Ã˜Å’ Ã™â€¦Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â­Ã™ÂÃ˜Â§Ã˜Â¸ Ã˜Â¹Ã™â€žÃ™â€° Ã™â€ Ã™ÂÃ˜Â³ Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã™ÂÃ™â€š Ã˜Â§Ã™â€žÃ˜Â®Ã™â€žÃ™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å .</p>
                         </div>
                     </div>
+                    @if ($errors->any())
+                        <div class="alert alert-danger finance-adjust-errors">
+                            <ul class="mb-0 pr-3">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <form method="POST" action="{{ route('approve_student') }}">
                         @csrf
                         <input type="hidden" name="student_id" value="{{ $record->id }}">
                         <div class="row">
                             <div class="col-12">
-                                <label for="approve_class_id">الصف النهائي</label>
+                                <label for="approve_class_id">Ã˜Â§Ã™â€žÃ˜ÂµÃ™Â Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã˜Â¦Ã™Å </label>
                                 <select name="class_id" id="approve_class_id" class="form-control" required>
-                                    <option value="">اختر الصف</option>
+                                    <option value="">Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â± Ã˜Â§Ã™â€žÃ˜ÂµÃ™Â</option>
                                     @foreach ($classes as $item)
                                         <option value="{{ $item->id }}" {{ (string) $record->class1 === (string) $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-12 mt-3">
-                                <label for="approve_room_id">الشعبة</label>
+                                <label for="approve_room_id">Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â¹Ã˜Â¨Ã˜Â©</label>
                                 <select name="room_id" id="approve_room_id" class="form-control" required></select>
                             </div>
+                            <div class="col-12">
+                                <div class="finance-adjust-grid">
+                                    <div class="finance-adjust-card">
+                                        <div class="finance-adjust-meta">
+                                            <label for="school_paid_amount" class="mb-0">Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ˜Â³Ã˜Â¨ Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â±Ã˜Â³Ã™Å Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â§Ã˜Âª</label>
+                                            <span class="finance-adjust-limit">Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â£Ã™â€šÃ˜ÂµÃ™â€°: {{ $formatMoney($schoolFeesTotal) }}</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max="{{ $schoolFeesTotal }}"
+                                            name="school_paid_amount"
+                                            id="school_paid_amount"
+                                            class="form-control"
+                                            value="{{ $defaultSchoolPaidAmount }}"
+                                            required>
+                                        <p class="finance-adjust-hint">Ã™â€¡Ã˜Â°Ã˜Â§ Ã™â€¡Ã™Ë† Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº Ã˜Â§Ã™â€žÃ˜Â°Ã™Å  Ã˜Â³Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¤Ã™â€¡ Ã™Æ’Ã™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã™â€¦Ã˜Â¯Ã˜Â±Ã˜Â³Ã™Å Ã˜Â© Ã™ÂÃ˜Â¹Ã™â€žÃ™Å Ã˜Â© Ã˜Â¯Ã˜Â§Ã˜Â®Ã™â€ž Ã˜Â§Ã™â€žÃ™â€ Ã˜Â¸Ã˜Â§Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â§Ã˜Â¯.</p>
+                                    </div>
+
+                                    @if($hasTransportSelection)
+                                        <div class="finance-adjust-card">
+                                            <div class="finance-adjust-meta">
+                                                <label for="transport_paid_amount" class="mb-0">Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ˜Â³Ã˜Â¨ Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž</label>
+                                                <span class="finance-adjust-limit">Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â£Ã™â€šÃ˜ÂµÃ™â€°: {{ $formatMoney($transportFeesTotal) }}</span>
+                                            </div>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max="{{ $transportFeesTotal }}"
+                                                name="transport_paid_amount"
+                                                id="transport_paid_amount"
+                                                class="form-control"
+                                                value="{{ $defaultTransportPaidAmount }}"
+                                                required>
+                                            <p class="finance-adjust-hint">Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â­Ã™â€šÃ™â€ž Ã˜Â¹Ã™â€ Ã˜Â¯ Ã™Ë†Ã˜ÂµÃ™Ë†Ã™â€ž Ã˜Â¯Ã™ÂÃ˜Â¹Ã˜Â© Ã˜Â¬Ã˜Â²Ã˜Â¦Ã™Å Ã˜Â© Ã™â€žÃ™â€žÃ™â€ Ã™â€šÃ™â€žÃ˜Å’ Ã™Ë†Ã˜Â³Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã˜Â§Ã™â€¦Ã™â€¡ Ã™â€¦Ã˜Â¨Ã˜Â§Ã˜Â´Ã˜Â±Ã˜Â© Ã™ÂÃ™Å  Ã™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã™â€ Ã˜Â´Ã˜Â£Ã˜Â©.</p>
+                                        </div>
+                                    @else
+                                        <div class="finance-adjust-card is-disabled">
+                                            <div class="finance-adjust-meta">
+                                                <label class="mb-0">Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž</label>
+                                                <span class="finance-adjust-limit">Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â©</span>
+                                            </div>
+                                            <input type="hidden" name="transport_paid_amount" value="0">
+                                            <input type="text" class="form-control" value="Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã™â€ Ã™â€šÃ™â€ž Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨" disabled>
+                                            <p class="finance-adjust-hint">Ã˜Â³Ã™Å Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¬Ã˜Â§Ã™â€¡Ã™â€ž Ã˜Â£Ã™Å  Ã™â€¦Ã˜Â¨Ã˜Â§Ã™â€žÃ˜Âº Ã™â€ Ã™â€šÃ™â€ž Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨ Ã™â€žÃ˜Â£Ã™â€  Ã™Ë†Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â£Ã™â€¦Ã˜Â± Ã™â€žÃ™â€¦ Ã™Å Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€ Ã™â€šÃ™â€ž.</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
                             <div class="col-12 mt-3">
-                                <button class="btn btn-success btn-block approve-submit" type="submit">اعتماد الطالب وإنشاء السجلات</button>
+                                <button class="btn btn-success btn-block approve-submit" type="submit">Ã˜Â§Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â§Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â§Ã™â€žÃ˜Â¨ Ã™Ë†Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã™â€žÃ˜Â§Ã˜Âª</button>
                             </div>
                         </div>
                     </form>
@@ -1022,7 +1134,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <span id="mediaViewerTitle">معاينة مستند</span>
+                    <span id="mediaViewerTitle">Ã™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â© Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯</span>
                     <span id="mediaViewerType" class="doc-badge">FILE</span>
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -1033,12 +1145,12 @@
                 <div class="media-viewer-toolbar">
                     <div class="media-viewer-toolbar__actions">
                         <button type="button" class="media-tool" data-media-action="zoom-out">-</button>
-                        <button type="button" class="media-tool" data-media-action="fit">احتواء</button>
+                        <button type="button" class="media-tool" data-media-action="fit">Ã˜Â§Ã˜Â­Ã˜ÂªÃ™Ë†Ã˜Â§Ã˜Â¡</button>
                         <button type="button" class="media-tool" data-media-action="zoom-in">+</button>
                     </div>
                     <div class="media-viewer-toolbar__actions">
                         <span class="doc-badge" id="mediaViewerZoomLabel">100%</span>
-                        <a href="#" id="mediaViewerDownload" class="btn btn-primary btn-sm">تنزيل</a>
+                        <a href="#" id="mediaViewerDownload" class="btn btn-primary btn-sm">Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž</a>
                     </div>
                 </div>
                 <div class="media-stage">
@@ -1080,21 +1192,32 @@ $(function () {
         ext: '',
         baseUrl: '',
         downloadUrl: '',
+        objectUrl: '',
         scale: 1,
         fit: true
     };
     const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
 
     function buildPdfUrl() {
-        const cleanUrl = String(viewerState.baseUrl || '').split('#')[0];
+        const cleanUrl = String(viewerState.objectUrl || viewerState.baseUrl || '').split('#')[0];
         const zoomValue = viewerState.fit ? 'page-width' : Math.round(viewerState.scale * 100);
         return cleanUrl + '#toolbar=0&navpanes=0&scrollbar=0&zoom=' + zoomValue;
+    }
+
+    function cleanupViewerObjectUrl() {
+        if (viewerState.objectUrl) {
+            try {
+                URL.revokeObjectURL(viewerState.objectUrl);
+            } catch (e) {
+            }
+            viewerState.objectUrl = '';
+        }
     }
 
     function updateViewerToolbar() {
         const canZoom = viewerState.type === 'image' || viewerState.type === 'pdf';
         $('[data-media-action]').prop('disabled', !canZoom);
-        $('#mediaViewerZoomLabel').text(viewerState.fit ? 'احتواء' : (Math.round(viewerState.scale * 100) + '%'));
+        $('#mediaViewerZoomLabel').text(viewerState.fit ? 'Ã˜Â§Ã˜Â­Ã˜ÂªÃ™Ë†Ã˜Â§Ã˜Â¡' : (Math.round(viewerState.scale * 100) + '%'));
     }
 
     function renderViewerState(message, alertClass) {
@@ -1118,26 +1241,27 @@ $(function () {
         updateViewerToolbar();
     }
 
-    function openViewer(url, downloadUrl, label, ext, existsFlag) {
+    async function openViewer(url, downloadUrl, label, ext, existsFlag) {
         viewerState.type = null;
         viewerState.ext = String(ext || '').toLowerCase();
         viewerState.baseUrl = String(url || '');
         viewerState.downloadUrl = String(downloadUrl || url || '#');
+        cleanupViewerObjectUrl();
         viewerState.scale = 1;
         viewerState.fit = true;
 
-        $('#mediaViewerTitle').text(label || 'معاينة مستند');
+        $('#mediaViewerTitle').text(label || 'Ã™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â© Ã™â€¦Ã˜Â³Ã˜ÂªÃ™â€ Ã˜Â¯');
         $('#mediaViewerType').text((viewerState.ext || 'file').toUpperCase());
         $('#mediaViewerDownload').attr('href', viewerState.downloadUrl);
         $('#mediaViewerCanvas').empty();
 
         if (String(existsFlag) !== '1') {
-            renderViewerState('الملف غير متاح في المسار الحالي. يمكنك تنزيله لاحقاً إذا تمت إعادة مزامنته.', 'alert-warning');
+            renderViewerState('Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­ Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å . Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€žÃ™â€¡ Ã™â€žÃ˜Â§Ã˜Â­Ã™â€šÃ˜Â§Ã™â€¹ Ã˜Â¥Ã˜Â°Ã˜Â§ Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€¦Ã˜Â²Ã˜Â§Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡.', 'alert-warning');
             $('#mediaViewerModal').modal('show');
             return;
         }
 
-        renderViewerState('جارِ تحميل المعاينة...', 'alert-light');
+        renderViewerState('Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Â Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â©...', 'alert-light');
         $('#mediaViewerModal').modal('show');
 
         if (imageExts.indexOf(viewerState.ext) !== -1) {
@@ -1155,33 +1279,56 @@ $(function () {
                 applyViewerScale();
             });
             img.on('error', function () {
-                renderViewerState('تعذر تحميل الصورة داخل المعاينة. يمكنك تنزيل الملف مباشرة.', 'alert-warning');
+                renderViewerState('Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â¯Ã˜Â§Ã˜Â®Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜Â§Ã™Å Ã™â€ Ã˜Â©. Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã™â€¦Ã˜Â¨Ã˜Â§Ã˜Â´Ã˜Â±Ã˜Â©.', 'alert-warning');
             });
             return;
         }
 
         if (viewerState.ext === 'pdf') {
-            viewerState.type = 'pdf';
-            const iframe = $('<iframe>', {
-                class: 'media-viewer-frame',
-                src: buildPdfUrl(),
-                css: { display: 'none' }
-            });
-            $('#mediaViewerCanvas').append(iframe);
-            iframe.on('load', function () {
-                $('#mediaViewerCanvas').find('.media-viewer-state').remove();
-                iframe.show();
-                updateViewerToolbar();
-            });
-            iframe.on('error', function () {
-                renderViewerState('تعذر عرض ملف PDF داخل النظام. يمكنك تنزيل الملف وفتحه محلياً.', 'alert-warning');
-            });
+            fetch(viewerState.baseUrl, {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            })
+                .then(function (previewResponse) {
+                    if (!previewResponse.ok) {
+                        throw new Error('preview_response_' + previewResponse.status);
+                    }
+
+                    return previewResponse.blob();
+                })
+                .then(function (previewBlob) {
+                    const previewType = String(previewBlob.type || '').toLowerCase();
+                    if (previewType && previewType.indexOf('pdf') === -1) {
+                        throw new Error('preview_not_pdf');
+                    }
+
+                    cleanupViewerObjectUrl();
+                    viewerState.objectUrl = URL.createObjectURL(previewBlob);
+                    viewerState.type = 'pdf';
+
+                    const iframe = $('<iframe>', {
+                        class: 'media-viewer-frame',
+                        src: buildPdfUrl(),
+                        css: { display: 'none' }
+                    });
+
+                    $('#mediaViewerCanvas').append(iframe);
+                    iframe.on('load', function () {
+                        $('#mediaViewerCanvas').find('.media-viewer-state').remove();
+                        iframe.show();
+                        updateViewerToolbar();
+                    });
+                    iframe.on('error', function () {
+                        cleanupViewerObjectUrl();
+                        renderViewerState('\u062A\u0639\u0630\u0631 \u0639\u0631\u0636 \u0645\u0644\u0641 PDF \u062F\u0627\u062E\u0644 \u0627\u0644\u0645\u0639\u0627\u064A\u0646\u0629. \u064A\u0645\u0643\u0646\u0643 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0632\u0631 \u0627\u0644\u062A\u0646\u0632\u064A\u0644 \u0625\u0630\u0627 \u0644\u0632\u0645 \u0627\u0644\u0623\u0645\u0631.', 'alert-warning');
+                    });
+                })
+                .catch(function () {
+                    cleanupViewerObjectUrl();
+                    renderViewerState('\u062A\u0639\u0630\u0631 \u062A\u062D\u0645\u064A\u0644 \u0645\u0644\u0641 PDF \u062F\u0627\u062E\u0644 \u0627\u0644\u0645\u0639\u0627\u064A\u0646\u0629. \u064A\u0645\u0643\u0646\u0643 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0632\u0631 \u0627\u0644\u062A\u0646\u0632\u064A\u0644 \u0625\u0630\u0627 \u0644\u0632\u0645 \u0627\u0644\u0623\u0645\u0631.', 'alert-warning');
+                });
             return;
         }
-
-        renderViewerState('هذا النوع من الملفات غير مدعوم للمعاينة المباشرة. استخدم زر التنزيل لفتحه.', 'alert-info');
-    }
-
     $(document).on('click', '.js-viewer-trigger', function () {
         openViewer(
             $(this).data('url'),
@@ -1214,6 +1361,7 @@ $(function () {
 
     $('#mediaViewerModal').on('hidden.bs.modal', function () {
         $('#mediaViewerCanvas').empty();
+        cleanupViewerObjectUrl();
         viewerState.type = null;
         viewerState.baseUrl = '';
         viewerState.downloadUrl = '';
