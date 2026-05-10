@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'إعدادات القبول')
 @section('page_subtitle', 'تهيئة الرسوم والشروط وحالة التسجيل من الموقع')

@@ -16,6 +16,7 @@ class Student_register extends Model
         'accepted_terms' => 'boolean',
         'accepted_transport_terms' => 'boolean',
         'wants_transport' => 'boolean',
+        'fever_medicine_permission' => 'boolean',
         'payment_method' => 'integer',
         'registration_fee' => 'decimal:2',
         'services_fee' => 'decimal:2',

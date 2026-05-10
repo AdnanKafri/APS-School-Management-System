@@ -515,6 +515,29 @@
         text-align: start;
     }
 
+    .wizard-subsection {
+        grid-column: span 12;
+        margin-top: 2px;
+        padding-top: 16px;
+        border-top: 1px solid #ece8f5;
+    }
+
+    .wizard-subsection__title {
+        margin: 0 0 6px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #2f2b3a;
+        text-align: start;
+    }
+
+    .wizard-subsection__text {
+        margin: 0 0 10px;
+        color: #7f7891;
+        font-size: 13px;
+        line-height: 1.7;
+        text-align: start;
+    }
+
     .wizard-wrap.is-ltr .wizard-check,
     .wizard-wrap.is-ltr .wizard-choice,
     .wizard-wrap.is-ltr .wizard-summary-row,
@@ -750,6 +773,33 @@
             <div class="wizard-field col-6"><label for="email">{{ __('wizard.fields.email') }}</label><input id="email" type="email"></div>
             <div class="wizard-field col-6"><label for="the_previous_school">{{ __('wizard.fields.previous_school') }}</label><input id="the_previous_school" type="text"></div>
             <div class="wizard-field col-12"><label for="con_sch">{{ __('wizard.fields.notes') }}</label><textarea id="con_sch"></textarea></div>
+            <div class="wizard-subsection col-12">
+                <h4 class="wizard-subsection__title">{{ __('wizard.sections.guardian_contacts') }}</h4>
+                <p class="wizard-subsection__text">{{ __('wizard.section_notes.family') }}</p>
+            </div>
+            <div class="wizard-field col-6"><label for="father_phone">{{ __('wizard.fields.father_phone') }}</label><input id="father_phone" type="text" inputmode="tel"></div>
+            <div class="wizard-field col-6"><label for="mather_phone">{{ __('wizard.fields.mother_phone') }}</label><input id="mather_phone" type="text" inputmode="tel"></div>
+            <div class="wizard-field col-6"><label for="father_job">{{ __('wizard.fields.father_job') }}</label><input id="father_job" type="text"></div>
+            <div class="wizard-field col-6"><label for="mather_job">{{ __('wizard.fields.mother_job') }}</label><input id="mather_job" type="text"></div>
+            <div class="wizard-field col-6"><label for="guardian_name">{{ __('wizard.fields.guardian_name') }}</label><input id="guardian_name" type="text"></div>
+            <div class="wizard-field col-6"><label for="guardian_relation">{{ __('wizard.fields.guardian_relation') }}</label><input id="guardian_relation" type="text"></div>
+            <div class="wizard-field col-6"><label for="guardian_phone">{{ __('wizard.fields.guardian_phone') }}</label><input id="guardian_phone" type="text" inputmode="tel"></div>
+            <div class="wizard-subsection col-12">
+                <h4 class="wizard-subsection__title">{{ __('wizard.sections.address_health') }}</h4>
+                <p class="wizard-subsection__text">{{ __('wizard.section_notes.contact') }}</p>
+            </div>
+            <div class="wizard-field col-12"><label for="permanent_address">{{ __('wizard.fields.permanent_address') }}</label><textarea id="permanent_address"></textarea></div>
+            <div class="wizard-field col-12"><label for="current_address">{{ __('wizard.fields.current_address') }}</label><textarea id="current_address"></textarea></div>
+            <div class="wizard-field col-6"><label for="medical_notes">{{ __('wizard.fields.medical_notes') }}</label><textarea id="medical_notes"></textarea></div>
+            <div class="wizard-field col-6"><label for="chronic_diseases">{{ __('wizard.fields.chronic_diseases') }}</label><textarea id="chronic_diseases"></textarea></div>
+            <div class="wizard-field col-6"><label for="allergies">{{ __('wizard.fields.allergies') }}</label><textarea id="allergies"></textarea></div>
+            <div class="wizard-field col-6"><label for="custody_notes">{{ __('wizard.fields.custody_notes') }}</label><textarea id="custody_notes"></textarea></div>
+            <div class="wizard-field col-12">
+                <label class="wizard-check" for="fever_medicine_permission" style="margin-top: 6px;">
+                    <input type="checkbox" id="fever_medicine_permission">
+                    <span class="wizard-check__text">{{ __('wizard.fields.fever_medicine_permission') }}</span>
+                </label>
+            </div>
             <div class="wizard-field col-6"><label class="wizard-label-required" for="fourth_image">{{ __('wizard.fields.birth_record') }}</label><input id="fourth_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
             <div class="wizard-field col-6"><label class="wizard-label-required" for="personal_image">{{ __('wizard.fields.personal_image') }}</label><input id="personal_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
             <div class="wizard-field col-6"><label for="passbord">{{ __('wizard.fields.passport_copy') }}</label><input id="passbord" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
@@ -879,17 +929,43 @@ document.addEventListener('DOMContentLoaded', function () {
             'finalSubmit' => __('wizard.success.final_submit'),
             'finalSubmitHint' => __('wizard.success.final_submit_hint'),
         ],
+        'fields' => [
+            'nationality' => __('wizard.fields.nationality'),
+            'notes' => __('wizard.fields.notes'),
+        ],
+        'sections' => [
+            'guardian_contacts' => __('wizard.sections.guardian_contacts'),
+            'address_health' => __('wizard.sections.address_health'),
+        ],
+        'options' => [
+            'allowed' => __('wizard.options.allowed'),
+            'not_allowed' => __('wizard.options.not_allowed'),
+        ],
         'summary' => [
             'studentSummary' => __('wizard.sections.student_summary'),
             'feesSummary' => __('wizard.sections.fees_summary'),
             'fullName' => __('wizard.summary.full_name'),
             'fatherName' => __('wizard.summary.father_name'),
             'motherName' => __('wizard.summary.mother_name'),
+            'fatherPhone' => __('wizard.summary.father_phone'),
+            'motherPhone' => __('wizard.summary.mother_phone'),
+            'fatherJob' => __('wizard.summary.father_job'),
+            'motherJob' => __('wizard.summary.mother_job'),
+            'guardianName' => __('wizard.summary.guardian_name'),
+            'guardianRelation' => __('wizard.summary.guardian_relation'),
+            'guardianPhone' => __('wizard.summary.guardian_phone'),
             'phone' => __('wizard.summary.phone'),
             'class' => __('wizard.summary.class'),
-            'address' => __('wizard.summary.address'),
+            'permanentAddress' => __('wizard.summary.permanent_address'),
+            'currentAddress' => __('wizard.summary.current_address'),
+            'emergencyPhone' => __('wizard.summary.emergency_phone'),
             'idNumber' => __('wizard.summary.id_number'),
             'transport' => __('wizard.summary.transport'),
+            'medicalNotes' => __('wizard.summary.medical_notes'),
+            'chronicDiseases' => __('wizard.summary.chronic_diseases'),
+            'allergies' => __('wizard.summary.allergies'),
+            'feverMedicinePermission' => __('wizard.summary.fever_medicine_permission'),
+            'custodyNotes' => __('wizard.summary.custody_notes'),
             'registrationFee' => __('wizard.summary.registration_fee'),
             'servicesFee' => __('wizard.summary.services_fee'),
             'transportFee' => __('wizard.summary.transport_fee'),
@@ -1084,10 +1160,24 @@ document.addEventListener('DOMContentLoaded', function () {
             country_label: countryOption ? (countryOption.text || '') : '',
             city: document.getElementById('city').value.trim(),
             phone: document.getElementById('phone').value.trim(),
+            father_phone: document.getElementById('father_phone').value.trim(),
+            mather_phone: document.getElementById('mather_phone').value.trim(),
+            father_job: document.getElementById('father_job').value.trim(),
+            mather_job: document.getElementById('mather_job').value.trim(),
+            guardian_name: document.getElementById('guardian_name').value.trim(),
+            guardian_relation: document.getElementById('guardian_relation').value.trim(),
+            guardian_phone: document.getElementById('guardian_phone').value.trim(),
             other_phone: document.getElementById('other_phone').value.trim(),
             email: document.getElementById('email').value.trim(),
             the_previous_school: document.getElementById('the_previous_school').value.trim(),
             con_sch: document.getElementById('con_sch').value.trim(),
+            permanent_address: document.getElementById('permanent_address').value.trim(),
+            current_address: document.getElementById('current_address').value.trim(),
+            medical_notes: document.getElementById('medical_notes').value.trim(),
+            chronic_diseases: document.getElementById('chronic_diseases').value.trim(),
+            allergies: document.getElementById('allergies').value.trim(),
+            fever_medicine_permission: document.getElementById('fever_medicine_permission').checked ? 1 : 0,
+            custody_notes: document.getElementById('custody_notes').value.trim(),
             grade_level: classOption ? (classOption.dataset.stageKey || '') : ''
         };
     }
@@ -1155,9 +1245,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return value === null || value === undefined || value === '' ? i18n.summary.dash : String(value);
         }
 
+        function displayBoolean(value) {
+            if (value === null || value === undefined || value === '') {
+                return i18n.summary.dash;
+            }
+            return Number(value) === 1 ? i18n.options.allowed : i18n.options.not_allowed;
+        }
+
         const transportLabel = state.wantsTransport === 1 ? i18n.summary.yes : i18n.summary.no;
         const fullName = ((state.formData.first_name || '') + ' ' + (state.formData.last_name || '')).trim();
-        const addressValue = state.formData.country_label ? [state.formData.country_label, state.formData.city].filter(Boolean).join(' - ') : (state.formData.city || i18n.summary.dash);
         const fees = data && data.fees ? data.fees : {};
 
         document.getElementById('summaryBox').innerHTML =
@@ -1169,9 +1265,35 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherName) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_name)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.phone) + '</span><span>' + escapeHtml(displayValue(state.formData.phone)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.class) + '</span><span>' + escapeHtml(displayValue(state.formData.class_name)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.address) + '</span><span>' + escapeHtml(displayValue(addressValue)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.idNumber) + '</span><span>' + escapeHtml(displayValue(state.formData.the_ID_number)) + '</span></div>' +
                     '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.transport) + '</span><span>' + escapeHtml(displayValue(transportLabel)) + '</span></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="wizard-summary-section">' +
+                '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.sections.guardian_contacts) + '</h4>' +
+                '<div class="wizard-summary-grid">' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fatherPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.father_phone)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_phone)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fatherJob) + '</span><span>' + escapeHtml(displayValue(state.formData.father_job)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherJob) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_job)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.guardianName) + '</span><span>' + escapeHtml(displayValue(state.formData.guardian_name)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.guardianRelation) + '</span><span>' + escapeHtml(displayValue(state.formData.guardian_relation)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.guardianPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.guardian_phone)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.emergencyPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.other_phone)) + '</span></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="wizard-summary-section">' +
+                '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.sections.address_health) + '</h4>' +
+                '<div class="wizard-summary-grid">' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.fields.nationality) + '</span><span>' + escapeHtml(displayValue(state.formData.nationality)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.permanentAddress) + '</span><span>' + escapeHtml(displayValue(state.formData.permanent_address)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.currentAddress) + '</span><span>' + escapeHtml(displayValue(state.formData.current_address)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.medicalNotes) + '</span><span>' + escapeHtml(displayValue(state.formData.medical_notes)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.chronicDiseases) + '</span><span>' + escapeHtml(displayValue(state.formData.chronic_diseases)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.allergies) + '</span><span>' + escapeHtml(displayValue(state.formData.allergies)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.feverMedicinePermission) + '</span><span>' + escapeHtml(displayBoolean(state.formData.fever_medicine_permission)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.custodyNotes) + '</span><span>' + escapeHtml(displayValue(state.formData.custody_notes)) + '</span></div>' +
+                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.fields.notes) + '</span><span>' + escapeHtml(displayValue(state.formData.con_sch)) + '</span></div>' +
                 '</div>' +
             '</div>' +
             '<div class="wizard-summary-section">' +
