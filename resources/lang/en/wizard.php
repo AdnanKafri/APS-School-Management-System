@@ -45,6 +45,7 @@ return [
         "submit_note" => "Your application will be sent to the admission team only after receipt upload and final confirmation.",
     ],
     "terms" => [
+        "agreement_intro" => "Please read the agreement terms carefully before continuing and accepting them.",
         "school_agree" => "I agree to the school terms.",
         "transport_agree" => "I agree to the transport terms.",
         "empty_school" => "No school terms are available at the moment.",

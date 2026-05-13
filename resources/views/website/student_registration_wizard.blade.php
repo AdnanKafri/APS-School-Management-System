@@ -181,15 +181,105 @@
         background: #fffafa;
     }
 
-    .wizard-terms {
-        border: 1px solid #e9e8ef;
-        border-radius: 14px;
-        padding: 14px;
-        max-height: 320px;
-        overflow: auto;
-        line-height: 1.9;
-        background: #fcfcfe;
+    .wizard-terms-panel {
+        border: 1px solid #e7e1f3;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfafe 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        overflow: hidden;
+    }
+
+    .wizard-terms-panel + .wizard-check {
+        margin-top: 14px;
+    }
+
+    .wizard-terms-panel__head {
+        padding: 16px 18px 12px;
+        border-bottom: 1px solid #ece8f5;
+    }
+
+    .wizard-terms-panel__title {
+        margin: 0 0 6px;
+        font-size: 17px;
+        font-weight: 800;
+        color: #2f2b3a;
         text-align: start;
+    }
+
+    .wizard-terms-panel__intro {
+        margin: 0;
+        color: #7a7489;
+        font-size: 13px;
+        line-height: 1.85;
+        text-align: start;
+    }
+
+    .wizard-terms-panel__body {
+        max-height: 340px;
+        overflow: auto;
+        padding: 16px 18px 18px;
+        color: #2f2b3a;
+        line-height: 1.95;
+        text-align: start;
+    }
+
+    .wizard-terms-panel__body :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+        margin: 0 0 0.9rem;
+    }
+
+    .wizard-terms-panel__body :is(p, li, blockquote) {
+        font-size: 14px;
+    }
+
+    .wizard-terms-panel__body :is(ul, ol) {
+        padding-inline-start: 1.35rem;
+        padding-inline-end: 0;
+    }
+
+    .wizard-terms-panel__body li + li {
+        margin-top: 0.45rem;
+    }
+
+    .wizard-terms-panel__body ol {
+        list-style: decimal;
+    }
+
+    .wizard-terms-panel__body ul {
+        list-style: disc;
+    }
+
+    .wizard-terms-panel__body li {
+        padding-inline-start: 0.15rem;
+    }
+
+    .wizard-terms-panel__body p:last-child,
+    .wizard-terms-panel__body ul:last-child,
+    .wizard-terms-panel__body ol:last-child {
+        margin-bottom: 0;
+    }
+
+    .wizard-terms-panel__body .agreement-empty {
+        margin: 0;
+        color: #8d869c;
+        font-style: italic;
+    }
+
+    .wizard-terms-panel__body .agreement-paragraph {
+        white-space: pre-line;
+    }
+
+    .wizard-agreement-consent {
+        border: 1px solid #ece8f5;
+        border-radius: 16px;
+        background: #fff;
+        padding: 14px 16px;
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+    }
+
+    .wizard-agreement-consent .wizard-check {
+        margin-top: 0;
     }
 
     .wizard-actions {
@@ -586,6 +676,48 @@
 
 @section('content')
 @php
+    $renderAgreementContent = function ($content, $fallback) {
+        $content = trim((string) $content);
+        if ($content === '') {
+            return '<p class="agreement-empty">' . e($fallback) . '</p>';
+        }
+
+        if (preg_match('/<\s*[a-z][\s\S]*>/i', $content)) {
+            return $content;
+        }
+
+        $normalized = str_replace(["\r\n", "\r"], "\n", $content);
+        $normalized = preg_replace('/<br\s*\/?>/i', "\n", $normalized);
+        $chunks = preg_split('/\n{2,}/u', $normalized) ?: [];
+        $items = [];
+
+        foreach ($chunks as $chunk) {
+            $chunk = trim($chunk);
+            if ($chunk === '') {
+                continue;
+            }
+
+            $chunk = preg_replace('/^\s*(?:\d+[\.\)\-:،]|\-|\–|\•|\*)\s*/u', '', $chunk);
+            $parts = preg_split('/\n+/u', $chunk) ?: [];
+            foreach ($parts as $part) {
+                $part = trim($part);
+                if ($part !== '') {
+                    $items[] = $part;
+                }
+            }
+        }
+
+        if (count($items) > 1) {
+            $html = '<ol class="agreement-list">';
+            foreach ($items as $item) {
+                $html .= '<li>' . e($item) . '</li>';
+            }
+            $html .= '</ol>';
+            return $html;
+        }
+
+        return '<div class="agreement-paragraph">' . e($content) . '</div>';
+    };
     $locale = LaravelLocalization::getCurrentLocale();
     $isRtl = $locale === 'ar';
     $paymentInstructions = $isRtl
@@ -683,11 +815,21 @@
 
     <div class="wizard-card wizard-pane is-active" data-pane="1">
         <h3 class="wizard-section-title">{{ __('wizard.sections.school_terms') }}</h3>
-        <div class="wizard-terms">{!! optional($schoolTerms)->content ?? e(__('wizard.terms.empty_school')) !!}</div>
-        <label class="wizard-check" for="agreeTerms">
-            <input type="checkbox" id="agreeTerms">
-            <span class="wizard-check__text">{{ __('wizard.terms.school_agree') }}</span>
-        </label>
+        <div class="wizard-terms-panel">
+            <div class="wizard-terms-panel__head">
+                <p class="wizard-terms-panel__title">{{ __('wizard.sections.school_terms') }}</p>
+                <p class="wizard-terms-panel__intro">{{ __('wizard.terms.agreement_intro') }}</p>
+            </div>
+            <div class="wizard-terms-panel__body">
+                {!! $renderAgreementContent(optional($schoolTerms)->content ?? '', __('wizard.terms.empty_school')) !!}
+            </div>
+        </div>
+        <div class="wizard-agreement-consent">
+            <label class="wizard-check" for="agreeTerms">
+                <input type="checkbox" id="agreeTerms">
+                <span class="wizard-check__text">{{ __('wizard.terms.school_agree') }}</span>
+            </label>
+        </div>
         <div class="wizard-error" id="agreeTermsError">{{ __('wizard.errors.terms_required') }}</div>
         <div class="wizard-actions">
             <button type="button" class="btn btn-light" disabled>{{ __('wizard.buttons.previous') }}</button>
@@ -840,11 +982,21 @@
 
     <div class="wizard-card wizard-pane" data-pane="4">
         <h3 class="wizard-section-title">{{ __('wizard.sections.transport_terms') }}</h3>
-        <div class="wizard-terms">{!! optional($transportTerms)->content ?? e(__('wizard.terms.empty_transport')) !!}</div>
-        <label class="wizard-check" for="agreeTransportTerms">
-            <input type="checkbox" id="agreeTransportTerms">
-            <span class="wizard-check__text">{{ __('wizard.terms.transport_agree') }}</span>
-        </label>
+        <div class="wizard-terms-panel">
+            <div class="wizard-terms-panel__head">
+                <p class="wizard-terms-panel__title">{{ __('wizard.sections.transport_terms') }}</p>
+                <p class="wizard-terms-panel__intro">{{ __('wizard.terms.agreement_intro') }}</p>
+            </div>
+            <div class="wizard-terms-panel__body">
+                {!! $renderAgreementContent(optional($transportTerms)->content ?? '', __('wizard.terms.empty_transport')) !!}
+            </div>
+        </div>
+        <div class="wizard-agreement-consent">
+            <label class="wizard-check" for="agreeTransportTerms">
+                <input type="checkbox" id="agreeTransportTerms">
+                <span class="wizard-check__text">{{ __('wizard.terms.transport_agree') }}</span>
+            </label>
+        </div>
         <div class="wizard-actions">
             <button type="button" class="btn btn-light" data-back="3">{{ __('wizard.buttons.previous') }}</button>
             <button type="button" class="btn btn-primary" id="btnStep4Next" disabled>{{ __('wizard.buttons.next') }}</button>
