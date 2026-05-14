@@ -34,6 +34,8 @@ class RegistrationWizardService
         // Update basic info
         $student->fill($data);
         $student->accepted_terms = 1;
+        $student->admission_status = 'draft';
+        $student->admission_status_changed_at = now();
         $student->current_step = 3;
         $student->save();
         
@@ -48,6 +50,10 @@ class RegistrationWizardService
         $student = Student_register::findOrFail($registrationId);
         $student->wants_transport = $wantsTransport ? 1 : 0;
         $student->accepted_transport_terms = $acceptedTransportTerms ? 1 : 0;
+        if (empty($student->admission_status) || $student->admission_status === 'draft') {
+            $student->admission_status = 'draft';
+            $student->admission_status_changed_at = now();
+        }
         
         $student->current_step = 4;
         $student->save();
@@ -95,6 +101,10 @@ class RegistrationWizardService
         $student->services_fee = $servicesFee;
         $student->transport_fee = $transportFee;
         $student->total_amount = $registrationFee + $servicesFee + $transportFee;
+        if (empty($student->admission_status) || $student->admission_status === 'draft') {
+            $student->admission_status = 'draft';
+            $student->admission_status_changed_at = now();
+        }
         $student->current_step = 5;
         $student->save();
         
@@ -131,6 +141,9 @@ class RegistrationWizardService
         }
 
         $student->payment_status = 'pending'; // Requires admin verification
+        $student->admission_status = 'pending_review';
+        $student->admission_submitted_at = now();
+        $student->admission_status_changed_at = now();
 
         if ($receiptFile) {
             $student->payment_receipt = $receiptFile;

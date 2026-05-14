@@ -690,6 +690,7 @@
         $normalized = preg_replace('/<br\s*\/?>/i', "\n", $normalized);
         $chunks = preg_split('/\n{2,}/u', $normalized) ?: [];
         $items = [];
+        $hasManualNumbering = false;
 
         foreach ($chunks as $chunk) {
             $chunk = trim($chunk);
@@ -697,17 +698,19 @@
                 continue;
             }
 
-            $chunk = preg_replace('/^\s*(?:\d+[\.\)\-:،]|\-|\–|\•|\*)\s*/u', '', $chunk);
             $parts = preg_split('/\n+/u', $chunk) ?: [];
             foreach ($parts as $part) {
                 $part = trim($part);
                 if ($part !== '') {
+                    if (preg_match('/^\s*(?:[0-9]+|[٠-٩]+)\s*[\.\)\-:،]?\s+/u', $part)) {
+                        $hasManualNumbering = true;
+                    }
                     $items[] = $part;
                 }
             }
         }
 
-        if (count($items) > 1) {
+        if (!$hasManualNumbering && count($items) > 1) {
             $html = '<ol class="agreement-list">';
             foreach ($items as $item) {
                 $html .= '<li>' . e($item) . '</li>';
@@ -716,7 +719,7 @@
             return $html;
         }
 
-        return '<div class="agreement-paragraph">' . e($content) . '</div>';
+        return '<div class="agreement-paragraph agreement-paragraph--raw">' . e($normalized) . '</div>';
     };
     $locale = LaravelLocalization::getCurrentLocale();
     $isRtl = $locale === 'ar';

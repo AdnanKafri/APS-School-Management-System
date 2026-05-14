@@ -70,6 +70,26 @@
         min-width: 36px;
     }
 
+    .admission-requests-v2 .review-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .38rem .7rem;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 800;
+        line-height: 1;
+        border: 1px solid transparent;
+        background: #f0edf8;
+        color: #5a4a80;
+    }
+
+    .admission-requests-v2 .review-pill.is-success { background: #eefaf3; color: #1f8f5f; }
+    .admission-requests-v2 .review-pill.is-warning { background: #fff7e8; color: #b67a15; }
+    .admission-requests-v2 .review-pill.is-info { background: #eef6ff; color: #2f6fc8; }
+    .admission-requests-v2 .review-pill.is-danger { background: #fff0f0; color: #b64242; }
+    .admission-requests-v2 .review-pill.is-muted { background: #f4f2f8; color: #6f6787; }
+
     .admission-requests-v2 .modal-backdrop {
         z-index: 1040 !important;
     }
@@ -102,7 +122,7 @@
     <div class="v2-card main-shell">
         <div class="section-head">
             <h3>جدول طلبات القبول</h3>
-            <p>نفس سير العمل المعتاد: تصفية الطلبات، فتح التفاصيل، ثم الاعتماد أو الحذف.</p>
+            <p>نفس سير العمل المعتاد: تصفية الطلبات، فتح التفاصيل، ثم الاعتماد أو الإلغاء مع بقاء السجل التاريخي محفوظاً.</p>
         </div>
 
         <div class="toolbar">
@@ -112,6 +132,16 @@
                 @foreach ($classes as $item)
                     <option value="{{ $item->id }}">{{ $item->name }}</option>
                 @endforeach
+            </select>
+            <select id="filter_status" class="form-control" style="max-width:220px;">
+                <option value="active">الطلبات النشطة</option>
+                <option value="draft">مسودات</option>
+                <option value="pending_review">بانتظار المراجعة</option>
+                <option value="under_review">قيد المراجعة</option>
+                <option value="rejected">مرفوضة</option>
+                <option value="cancelled">ملغاة</option>
+                <option value="converted_to_student">مكتملة القبول</option>
+                <option value="all">كل السجلات</option>
             </select>
         </div>
 
@@ -123,6 +153,7 @@
                     <th>الاسم الأول</th>
                     <th>الكنية</th>
                     <th>الصف المطلوب</th>
+                    <th>الحالة</th>
                     <th>تاريخ التسجيل</th>
                     <th>وقت التسجيل</th>
                     <th>الإجراءات</th>
@@ -140,7 +171,7 @@
             <form method="POST" action="{{ route('delete_student_request') }}">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title">حذف طلب التسجيل</h5>
+                    <h5 class="modal-title">إلغاء طلب التسجيل</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -149,7 +180,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                    <button type="submit" class="btn btn-danger">تأكيد الإلغاء</button>
                 </div>
             </form>
         </div>
@@ -172,6 +203,7 @@ $(function () {
             data: function (d) {
                 d.class_id = $('#filter_class').val();
                 d.current_class = $('#filter_current').val();
+                d.status_filter = $('#filter_status').val();
             },
             dataSrc: function (json) {
                 return json.aaData || [];
@@ -187,6 +219,18 @@ $(function () {
                     return full.class && full.class.name ? full.class.name : '-';
                 }
             },
+            {
+                data: 'admission_status_label',
+                render: function (data, type, full) {
+                    const label = data || '-';
+                    const badgeClass = full.admission_status_class || 'is-muted';
+                    const linkedBadge = full.is_converted ? '<span class="review-pill is-info">مرتبط بالسجل الأكاديمي</span>' : '';
+                    return '<div class="d-inline-flex flex-wrap justify-content-center" style="gap:.35rem;">' +
+                        '<span class="review-pill ' + badgeClass + '">' + label + '</span>' +
+                        linkedBadge +
+                    '</div>';
+                }
+            },
             { data: 'date2' },
             { data: 'time', orderable: false },
             {
@@ -194,9 +238,11 @@ $(function () {
                 orderable: false,
                 render: function (data, type, full) {
                     const viewUrl = "{{ route('studentadmission_request_show', ['id' => '__id__']) }}".replace('__id__', full.id2);
-                    return '' +
-                        '<a href="' + viewUrl + '" class="btn btn-sm btn-outline-primary action-btn" title="تفاصيل"><i class="fa fa-eye"></i></a> ' +
-                        '<button class="btn btn-sm btn-outline-danger action-delete action-btn" title="حذف" data-id="' + full.id2 + '" data-name="' + (full.first_name + ' ' + full.last_name) + '"><i class="fa fa-trash"></i></button>';
+                    let html = '<a href="' + viewUrl + '" class="btn btn-sm btn-outline-primary action-btn" title="تفاصيل"><i class="fa fa-eye"></i></a> ';
+                    if (!full.is_converted) {
+                        html += '<button class="btn btn-sm btn-outline-danger action-delete action-btn" title="إلغاء الطلب" data-id="' + full.id2 + '" data-name="' + (full.first_name + ' ' + full.last_name) + '"><i class="fa fa-ban"></i></button>';
+                    }
+                    return html;
                 }
             }
         ]
@@ -204,10 +250,11 @@ $(function () {
 
     $('#filter_class').on('change', function () { table.draw(); });
     $('#filter_current').on('keyup', function () { table.draw(); });
+    $('#filter_status').on('change', function () { table.draw(); });
 
     $(document).on('click', '.action-delete', function () {
         $('#student_id_delete').val($(this).data('id'));
-        $('#deleteName').text('سيتم حذف طلب: ' + $(this).data('name'));
+        $('#deleteName').text('سيتم إلغاء طلب: ' + $(this).data('name'));
         $('#deleteStudentModal').modal('show');
     });
 });

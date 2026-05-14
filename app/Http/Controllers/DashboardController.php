@@ -3425,6 +3425,7 @@ public function startQueueWorker()
         $search_arr = (array) $request->input('search', []);
         $current_class = trim((string) $request->input('current_class', ''));
         $class_id = trim((string) $request->input('class_id', ''));
+        $statusFilter = trim((string) $request->input('status_filter', 'active'));
 
         $orderRows = (array) $request->input('order', []);
         $array_of_sorting = ['created_at', 'last_name', 'first_name'];
@@ -3446,21 +3447,67 @@ public function startQueueWorker()
         $baseQuery = Student_register::query()
             ->where(function ($q) {
                 $q->whereNull('probe')->orWhere('probe', 0);
-            })
-            // Show finalized/real requests while hiding active drafts.
-            // Legacy flow rows are typically current_step=NULL.
-            // New wizard rows become visible after completion/payment progress.
-            ->where(function ($query) {
-                $query->whereNull('current_step')
-                    ->orWhere(function ($q) {
-                        $q->whereNotNull('current_step')
-                            ->where(function ($f) {
-                                $f->whereNotNull('payment_method')
-                                    ->orWhereNotNull('payment_receipt')
-                                    ->orWhereNotNull('payment_date');
+            });
+
+        if ($statusFilter !== '' && $statusFilter !== 'all') {
+            $baseQuery->where(function ($query) use ($statusFilter) {
+                if ($statusFilter === 'active') {
+                    $query->whereIn('admission_status', ['draft', 'pending_review', 'under_review'])
+                        ->orWhere(function ($legacy) {
+                            $legacy->whereNull('admission_status')
+                                ->where(function ($q) {
+                                    $q->whereNotNull('current_step')
+                                        ->orWhereNotNull('payment_receipt')
+                                        ->orWhereNotNull('payment_date')
+                                        ->orWhereNotNull('payment_method');
+                                });
+                        });
+                    return;
+                }
+
+                if ($statusFilter === 'draft') {
+                    $query->where(function ($q) {
+                        $q->where('admission_status', 'draft')
+                            ->orWhere(function ($legacy) {
+                                $legacy->whereNull('admission_status')
+                                    ->whereNotNull('current_step');
                             });
                     });
+                    return;
+                }
+
+                if ($statusFilter === 'pending_review') {
+                    $query->where(function ($q) {
+                        $q->where('admission_status', 'pending_review')
+                            ->orWhere(function ($legacy) {
+                                $legacy->whereNull('admission_status')
+                                    ->whereNull('current_step')
+                                    ->where(function ($f) {
+                                        $f->whereNotNull('payment_receipt')
+                                            ->orWhereNotNull('payment_date')
+                                            ->orWhereNotNull('payment_method');
+                                    });
+                            });
+                    });
+                    return;
+                }
+
+                if (in_array($statusFilter, ['under_review', 'approved', 'rejected', 'cancelled'], true)) {
+                    $query->where('admission_status', $statusFilter);
+                    return;
+                }
+
+                if ($statusFilter === 'converted_to_student') {
+                    $query->where(function ($q) {
+                        $q->whereNotNull('admission_converted_student_id')
+                            ->orWhere('admission_status', 'converted_to_student');
+                    });
+                    return;
+                }
+
+                $query->where('admission_status', $statusFilter);
             });
+        }
 
         if ($current_class !== '') {
             $baseQuery->where('current_class', "like", "%" . $current_class . "%");
@@ -3495,6 +3542,11 @@ public function startQueueWorker()
             $record["date2"] = \Carbon\Carbon::parse($record->created_at)->isoFormat('D/M/Y');
             $record["time"]  = \Carbon\Carbon::parse($record->created_at)->isoFormat('h:m a');
             $record["id2"]   = $record->id;
+            $lifecycleStatus = $this->resolveAdmissionLifecycleStatus($record);
+            $record["admission_status"] = $lifecycleStatus;
+            $record["admission_status_label"] = $this->admissionLifecycleMeta($lifecycleStatus)['label'];
+            $record["admission_status_class"] = $this->admissionLifecycleMeta($lifecycleStatus)['class'];
+            $record["is_converted"] = $this->isAdmissionConverted($record);
             $data_arr[] = $record;
              }
 
@@ -3636,61 +3688,8 @@ public function startQueueWorker()
 
     protected function createAdmissionInvoicesFromRegistration(Student $student, Student_register $studentRegister, int $classId, int $yearId, ?float $schoolPaidAmount = null, ?float $transportPaidAmount = null): void
     {
-        $registrationFee = (float) ($studentRegister->registration_fee ?? 0);
-        $servicesFee = (float) ($studentRegister->services_fee ?? 0);
-        $transportFee = (float) ($studentRegister->transport_fee ?? 0);
-        $wantsTransport = (int) ($studentRegister->wants_transport ?? 0) === 1;
-        $defaultPaymentType = "\u{062F}\u{0641}\u{0639} \u{0625}\u{0644}\u{0643}\u{062A}\u{0631}\u{0648}\u{0646}\u{064A} / Electronic Payment";
-        $defaultBankName = "\u{0634}\u{0627}\u{0645} \u{0643}\u{0627}\u{0634} / Sham Cash";
-
-        $schoolConfiguredAmount = $registrationFee + $servicesFee;
-        if ($schoolConfiguredAmount <= 0) {
-            $schoolConfiguredAmount = (float) ($studentRegister->total_amount ?? 0);
-        }
-
-        $schoolAmount = $schoolPaidAmount !== null
-            ? max(0, (float) $schoolPaidAmount)
-            : $schoolConfiguredAmount;
-
-        $transportAmount = $transportPaidAmount !== null
-            ? max(0, (float) $transportPaidAmount)
-            : $transportFee;
-
-        if ($schoolAmount > 0) {
-            Invoice::create([
-                'invoice_number' => $student->id . '-S',
-                'invoice_amount' => $schoolAmount,
-                'payment_type' => $defaultPaymentType,
-                'bank_name' => $defaultBankName,
-                'student_id' => $student->id,
-                'class_id' => $classId,
-                'year_id' => $yearId,
-            ]);
-        }
-
-        if ($wantsTransport && $transportAmount > 0) {
-            Invoice::create([
-                'invoice_number' => $student->id . '-T',
-                'invoice_amount' => $transportAmount,
-                'payment_type' => $defaultPaymentType,
-                'bank_name' => $defaultBankName,
-                'student_id' => $student->id,
-                'class_id' => $classId,
-                'year_id' => $yearId,
-            ]);
-        }
-
-        if ($schoolAmount <= 0 && (!$wantsTransport || $transportAmount <= 0)) {
-            Invoice::create([
-                'invoice_number' => (string) $student->id,
-                'invoice_amount' => 0,
-                'payment_type' => $defaultPaymentType,
-                'bank_name' => $defaultBankName,
-                'student_id' => $student->id,
-                'class_id' => $classId,
-                'year_id' => $yearId,
-            ]);
-        }
+        // Finance synchronization from admission approval has been intentionally disabled.
+        // The admission pipeline now stops at academic conversion, while finance is handled manually later.
     }
 
 
@@ -3703,46 +3702,24 @@ public function startQueueWorker()
             return redirect()->route('studentadmission_requests')->with('success', "\u{0647}\u{0630}\u{0627} \u{0627}\u{0644}\u{0637}\u{0644}\u{0628} \u{062A}\u{0645}\u{062A} \u{0645}\u{0639}\u{0627}\u{0644}\u{062C}\u{062A}\u{0647} \u{0645}\u{0633}\u{0628}\u{0642}\u{0627}\u{064B} \u{0623}\u{0648} \u{0644}\u{0645} \u{064A}\u{0639}\u{062F} \u{0645}\u{062A}\u{0627}\u{062D}\u{0627}\u{064B}.");
         }
 
-        $schoolConfiguredAmount = (float) ($student_register->registration_fee ?? 0) + (float) ($student_register->services_fee ?? 0);
-        if ($schoolConfiguredAmount <= 0) {
-            $schoolConfiguredAmount = (float) ($student_register->total_amount ?? 0);
+        if ($this->isAdmissionConverted($student_register) && !empty($student_register->admission_converted_student_id)) {
+            return redirect()->route('studentadmission_request_show', ['id' => $student_register->id])
+                ->with('success', 'هذا الطلب مكتمل القبول بالفعل ويمكن مراجعته من سجل القبول التاريخي.');
         }
-
-        $hasTransport = (int) ($student_register->wants_transport ?? 0) === 1;
-        $transportConfiguredAmount = $hasTransport ? (float) ($student_register->transport_fee ?? 0) : 0.0;
 
         $validator = Validator::make($request->all(), [
             'class_id' => 'required|exists:classes,id',
             'room_id' => 'required|exists:rooms,id',
-            'school_paid_amount' => 'required|numeric|min:0',
-            'transport_paid_amount' => ($hasTransport ? 'required' : 'nullable') . '|numeric|min:0',
         ], [
-            'school_paid_amount.required' => 'يرجى تحديد المبلغ المحتسب على الرسوم المدرسية والخدمات.',
-            'school_paid_amount.numeric' => 'قيمة الرسوم المدرسية يجب أن تكون رقماً صالحاً.',
-            'transport_paid_amount.required' => 'يرجى تحديد المبلغ المحتسب على رسوم النقل.',
-            'transport_paid_amount.numeric' => 'قيمة رسوم النقل يجب أن تكون رقماً صالحاً.',
+            'class_id.required' => 'يرجى اختيار الصف النهائي.',
+            'class_id.exists' => 'الصف المحدد غير صالح.',
+            'room_id.required' => 'يرجى اختيار الشعبة.',
+            'room_id.exists' => 'الشعبة المحددة غير صالحة.',
         ]);
-
-        $validator->after(function ($validator) use ($request, $schoolConfiguredAmount, $transportConfiguredAmount, $hasTransport) {
-            $schoolPaidAmount = (float) $request->input('school_paid_amount', 0);
-            if ($schoolPaidAmount > $schoolConfiguredAmount) {
-                $validator->errors()->add('school_paid_amount', 'المبلغ المدرسي المحتسب لا يمكن أن يتجاوز إجمالي الرسوم المدرسية والخدمات.');
-            }
-
-            $transportPaidAmount = (float) $request->input('transport_paid_amount', 0);
-            if ($hasTransport && $transportPaidAmount > $transportConfiguredAmount) {
-                $validator->errors()->add('transport_paid_amount', 'مبلغ النقل المحتسب لا يمكن أن يتجاوز إجمالي رسوم النقل المعتمدة.');
-            }
-        });
 
         if ($validator->fails()) {
             return redirect()->back()->withInput()->withErrors($validator);
         }
-
-        $schoolPaidAmount = round((float) $request->input('school_paid_amount', $schoolConfiguredAmount), 2);
-        $transportPaidAmount = $hasTransport
-            ? round((float) $request->input('transport_paid_amount', $transportConfiguredAmount), 2)
-            : 0.0;
 
         DB::beginTransaction();
 
@@ -3779,15 +3756,6 @@ public function startQueueWorker()
 
         $year = Year::where('current_year', '1')->first();
         $rooom = Room::findOrFail($request->room_id);
-        $this->createAdmissionInvoicesFromRegistration(
-            $student,
-            $student_register,
-            (int) $rooom->class_id,
-            (int) $year->id,
-            $schoolPaidAmount,
-            $transportPaidAmount
-        );
-
         $normalizedGender = null;
         if ($student_register->gender !== null && $student_register->gender !== '') {
             $normalizedGender = (string) $student_register->gender === '0' ? '2' : (string) $student_register->gender;
@@ -3858,6 +3826,14 @@ public function startQueueWorker()
         $user->view_password = $password;
         $user->save();
 
+        $this->updateAdmissionLifecycle($student_register, 'converted_to_student', null, [
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+            'approved_at' => now(),
+            'converted_at' => now(),
+            'converted_student_id' => $student->id,
+        ]);
+
 
         $room_student = new Room_student;
         $room_student->year_id = $year->id;
@@ -3867,7 +3843,6 @@ public function startQueueWorker()
 
         $student->email = $email;
         $student->save();
-        $student_register->delete();
 
         $reportCardDetails = Report_card_details::where('year_id', $year->id)->where('class_id', $request->class_id)->first();
         $adjustable = isset($reportCardDetails) ? $reportCardDetails->report_card_status : 0;
@@ -4134,7 +4109,7 @@ public function startQueueWorker()
 
         DB::commit();
 
-        return redirect()->route('studentadmission_requests')->with('success', "\u{062A}\u{0645} \u{0627}\u{0639}\u{062A}\u{0645}\u{0627}\u{062F} \u{0627}\u{0644}\u{0637}\u{0644}\u{0628} \u{0628}\u{0646}\u{062C}\u{0627}\u{062D}\u{060C} \u{0648}\u{062A}\u{0645} \u{0625}\u{0646}\u{0634}\u{0627}\u{0621} \u{0627}\u{0644}\u{0637}\u{0627}\u{0644}\u{0628} \u{0648}\u{0627}\u{0644}\u{0641}\u{0648}\u{0627}\u{062A}\u{064A}\u{0631} \u{0627}\u{0644}\u{0645}\u{0631}\u{062A}\u{0628}\u{0637}\u{0629} \u{062A}\u{0644}\u{0642}\u{0627}\u{0626}\u{064A}\u{0627}\u{064B}.");
+        return redirect()->route('studentadmission_request_show', ['id' => $student_register->id])->with('success', 'تم قبول الطالب وإنشاء السجل الأكاديمي بنجاح.');
         } catch (\Throwable $exception) {
             DB::rollBack();
             report($exception);
@@ -4150,6 +4125,121 @@ public function startQueueWorker()
     public function studentadmission()
     {
         return view('admin.studentadmission_index');
+    }
+
+    protected function admissionLifecycleMeta(?string $status): array
+    {
+        $status = $status ?: 'pending_review';
+
+        $map = [
+            'draft' => ['label' => 'مسودة', 'class' => 'is-muted'],
+            'pending_review' => ['label' => 'بانتظار المراجعة', 'class' => 'is-warning'],
+            'under_review' => ['label' => 'قيد المراجعة', 'class' => 'is-info'],
+            'approved' => ['label' => 'معتمد', 'class' => 'is-success'],
+            'rejected' => ['label' => 'مرفوض', 'class' => 'is-danger'],
+            'cancelled' => ['label' => 'ملغى', 'class' => 'is-muted'],
+            'converted_to_student' => ['label' => 'مكتمل القبول', 'class' => 'is-success'],
+        ];
+
+        return $map[$status] ?? ['label' => ucfirst(str_replace('_', ' ', $status)), 'class' => 'is-muted'];
+    }
+
+    protected function resolveAdmissionLifecycleStatus(Student_register $record): string
+    {
+        $status = trim((string) ($record->admission_status ?? ''));
+        if ($status !== '') {
+            if ($status === 'approved' && !empty($record->admission_converted_student_id)) {
+                return 'converted_to_student';
+            }
+            return $status;
+        }
+
+        if (!empty($record->admission_converted_student_id)) {
+            return 'converted_to_student';
+        }
+
+        if ((int) $record->probe === 1) {
+            return 'draft';
+        }
+
+        if (!is_null($record->current_step)) {
+            return 'draft';
+        }
+
+        return 'pending_review';
+    }
+
+    protected function isAdmissionConverted(Student_register $record): bool
+    {
+        return $this->resolveAdmissionLifecycleStatus($record) === 'converted_to_student'
+            || !empty($record->admission_converted_student_id);
+    }
+
+    protected function admissionLifecycleTimeline(Student_register $record): array
+    {
+        $status = $this->resolveAdmissionLifecycleStatus($record);
+        $statusMeta = $this->admissionLifecycleMeta($status);
+
+        return [
+            [
+                'label' => 'تاريخ تقديم الطلب',
+                'value' => optional($record->created_at)->format('Y-m-d H:i') ?: '-',
+            ],
+            [
+                'label' => 'آخر تحديث للحالة',
+                'value' => optional($record->admission_status_changed_at)->format('Y-m-d H:i') ?: optional($record->updated_at)->format('Y-m-d H:i') ?: '-',
+            ],
+            [
+                'label' => 'تاريخ المراجعة',
+                'value' => optional($record->admission_reviewed_at)->format('Y-m-d H:i') ?: '-',
+            ],
+            [
+                'label' => 'تاريخ الاعتماد',
+                'value' => optional($record->admission_approved_at)->format('Y-m-d H:i') ?: '-',
+            ],
+            [
+                'label' => 'تاريخ التحويل',
+                'value' => optional($record->admission_converted_at)->format('Y-m-d H:i') ?: '-',
+            ],
+            [
+                'label' => 'الحالة الحالية',
+                'value' => $statusMeta['label'],
+            ],
+        ];
+    }
+
+    protected function updateAdmissionLifecycle(Student_register $record, string $status, ?string $note = null, array $extra = []): Student_register
+    {
+        $allowed = ['draft', 'pending_review', 'under_review', 'rejected', 'cancelled', 'converted_to_student'];
+        if (!in_array($status, $allowed, true)) {
+            throw new \InvalidArgumentException('Invalid admission status.');
+        }
+
+        $record->admission_status = $status;
+        $record->admission_status_changed_at = now();
+
+        foreach ([
+            'reviewed_by' => 'admission_reviewed_by',
+            'reviewed_at' => 'admission_reviewed_at',
+            'approved_at' => 'admission_approved_at',
+            'rejected_at' => 'admission_rejected_at',
+            'cancelled_at' => 'admission_cancelled_at',
+            'converted_at' => 'admission_converted_at',
+            'converted_student_id' => 'admission_converted_student_id',
+            'submitted_at' => 'admission_submitted_at',
+        ] as $source => $target) {
+            if (array_key_exists($source, $extra)) {
+                $record->{$target} = $extra[$source];
+            }
+        }
+
+        if ($note !== null) {
+            $record->admission_status_note = $note;
+        }
+
+        $record->save();
+
+        return $record;
     }
 
 
@@ -4256,6 +4346,14 @@ public function startQueueWorker()
         $record = Student_register::with('class')->findOrFail($id);
         $classes = Classe::all();
         $countryCurrencies = Country_currency::select('id', 'name_ar', 'name_en', 'key_country', 'currency_country', 'active')->get();
+        $lifecycleStatus = $this->resolveAdmissionLifecycleStatus($record);
+        $admissionLifecycle = [
+            'status' => $lifecycleStatus,
+            'meta' => $this->admissionLifecycleMeta($lifecycleStatus),
+            'timeline' => $this->admissionLifecycleTimeline($record),
+            'is_converted' => $this->isAdmissionConverted($record),
+            'linked_student' => $record->admission_converted_student_id ? Student::find($record->admission_converted_student_id) : null,
+        ];
         $docs = [
             'صورة شخصية' => $record->personal_image,
             'صورة هوية الأم' => $record->mother_image,
@@ -4308,7 +4406,7 @@ public function startQueueWorker()
             }
         }
 
-        return view('admin.studentadmission_request_show', compact('record', 'classes', 'docsMeta', 'countryCurrencies'));
+        return view('admin.studentadmission_request_show', compact('record', 'classes', 'docsMeta', 'countryCurrencies', 'admissionLifecycle'));
     }
 
     public function studentadmission_media_file(Request $request)
@@ -4391,8 +4489,18 @@ public function startQueueWorker()
 
     public function delete_student_request(Request $request)
     {
-        $student_register = Student_register::findOrFail($request->student_id_delete)->delete();
-        return redirect()->back()->with('success', 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­');
+        $student_register = Student_register::findOrFail($request->student_id_delete);
+        if ($this->isAdmissionConverted($student_register)) {
+            return redirect()->back()->withErrors([
+                'student_id_delete' => 'لا يمكن إلغاء الطلب المكتمل القبول. السجل أصبح تاريخياً للقراءة فقط.',
+            ]);
+        }
+        $this->updateAdmissionLifecycle($student_register, 'cancelled', null, [
+            'reviewed_by' => auth()->id(),
+            'cancelled_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'تم إلغاء الطلب مع الاحتفاظ بسجل القبول والمرفقات.');
     }
 
 
@@ -4400,9 +4508,65 @@ public function startQueueWorker()
     {
 
         foreach ($request->selected_stu as $to_delete) {
-            $student_register = Student_register::findOrFail($to_delete)->delete();
+            $student_register = Student_register::findOrFail($to_delete);
+            if ($this->isAdmissionConverted($student_register)) {
+                continue;
+            }
+            $this->updateAdmissionLifecycle($student_register, 'cancelled', null, [
+                'reviewed_by' => auth()->id(),
+                'cancelled_at' => now(),
+            ]);
         }
-        return redirect()->back()->with('success', 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­');
+        return redirect()->back()->with('success', 'تم إلغاء الطلبات المحددة مع الإبقاء على السجلات التاريخية.');
+    }
+
+    public function update_studentadmission_status(Request $request)
+    {
+        $data = $request->validate([
+            'student_id' => 'required|exists:student_register,id',
+            'admission_status' => 'required|in:draft,pending_review,under_review,rejected,cancelled',
+            'admission_status_note' => 'nullable|string|max:2000',
+        ]);
+
+        $record = Student_register::findOrFail($data['student_id']);
+        $currentStatus = $this->resolveAdmissionLifecycleStatus($record);
+        $newStatus = $data['admission_status'];
+
+        if ($this->isAdmissionConverted($record) && $newStatus !== 'converted_to_student') {
+            return redirect()->back()->withErrors([
+                'admission_status' => 'الطلب المكتمل القبول يصبح للقراءة فقط ولا يمكن تغيير حالته يدوياً.',
+            ]);
+        }
+
+        $extra = [
+            'reviewed_by' => auth()->id(),
+        ];
+
+        if ($newStatus === 'pending_review') {
+            $extra['submitted_at'] = $record->admission_submitted_at ?: now();
+        }
+        if ($newStatus === 'under_review') {
+            $extra['reviewed_at'] = now();
+        }
+        if ($newStatus === 'rejected') {
+            $extra['reviewed_at'] = now();
+            $extra['rejected_at'] = now();
+        }
+        if ($newStatus === 'cancelled') {
+            $extra['cancelled_at'] = now();
+        }
+
+        $this->updateAdmissionLifecycle($record, $newStatus, trim((string) ($data['admission_status_note'] ?? '')) ?: null, $extra);
+
+        $messageMap = [
+            'draft' => 'تمت إعادة الطلب إلى المسودة.',
+            'pending_review' => 'تمت إعادة الطلب إلى قائمة المراجعة.',
+            'under_review' => 'تم وضع الطلب قيد المراجعة.',
+            'rejected' => 'تم رفض الطلب.',
+            'cancelled' => 'تم إلغاء الطلب.',
+        ];
+
+        return redirect()->back()->with('success', $messageMap[$newStatus] ?? 'تم تحديث حالة الطلب بنجاح.');
     }
 
 

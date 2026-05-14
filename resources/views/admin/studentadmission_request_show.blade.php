@@ -121,6 +121,12 @@
         border-color: #d6f1e0;
     }
 
+    .admission-request-show .review-pill.is-info {
+        background: #eef6ff;
+        color: #2f6fc8;
+        border-color: #d8e8fb;
+    }
+
     .admission-request-show .review-pill.is-warning {
         background: #fff7e8;
         color: var(--review-warning);
@@ -441,6 +447,35 @@
         line-height: 1.7;
     }
 
+    .admission-request-show .approve-form .finance-summary-list {
+        display: grid;
+        gap: .5rem;
+        margin-top: .75rem;
+    }
+
+    .admission-request-show .approve-form .finance-summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .65rem .75rem;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid rgba(95, 75, 146, 0.1);
+        color: var(--review-text);
+    }
+
+    .admission-request-show .approve-form .finance-summary-row span {
+        font-size: .83rem;
+        font-weight: 700;
+        color: var(--review-subtle);
+    }
+
+    .admission-request-show .approve-form .finance-summary-row strong {
+        font-size: .95rem;
+        font-weight: 800;
+    }
+
     .admission-request-show .approve-form .finance-adjust-errors {
         margin-bottom: .95rem;
     }
@@ -678,13 +713,23 @@
         'rejected' => ['label' => 'مرفوض', 'class' => 'is-danger'],
     ];
     $paymentStatus = $paymentStatusMap[$paymentStatusKey] ?? ['label' => ($record->payment_status ?: 'غير محدد'), 'class' => 'is-muted'];
-    if (is_null($record->current_step) && !empty($record->payment_receipt)) {
-        $requestStatus = ['label' => 'مكتمل وجاهز للمراجعة', 'class' => 'is-success'];
-    } elseif (!is_null($record->current_step)) {
-        $requestStatus = ['label' => 'طلب غير مكتمل', 'class' => 'is-warning'];
-    } else {
-        $requestStatus = ['label' => 'بحاجة إلى متابعة', 'class' => 'is-muted'];
+    $admissionLifecycle = $admissionLifecycle ?? [];
+    $lifecycleMeta = $admissionLifecycle['meta'] ?? null;
+    if (!$lifecycleMeta) {
+        if (is_null($record->current_step) && !empty($record->payment_receipt)) {
+            $lifecycleMeta = ['label' => 'مكتمل وجاهز للمراجعة', 'class' => 'is-success'];
+        } elseif (!is_null($record->current_step)) {
+            $lifecycleMeta = ['label' => 'طلب غير مكتمل', 'class' => 'is-warning'];
+        } else {
+            $lifecycleMeta = ['label' => 'بحاجة إلى متابعة', 'class' => 'is-muted'];
+        }
     }
+    $lifecycleStatus = $admissionLifecycle['status'] ?? null;
+    $lifecycleTimeline = $admissionLifecycle['timeline'] ?? [];
+    $linkedStudent = $admissionLifecycle['linked_student'] ?? null;
+    $isConvertedAdmission = (bool) ($admissionLifecycle['is_converted'] ?? false);
+    $admissionStatusNote = trim((string) ($record->admission_status_note ?? ''));
+    $requestStatus = $lifecycleMeta;
     $transportStatus = (int) $record->wants_transport === 1
         ? ['label' => 'النقل مطلوب', 'class' => 'is-success']
         : ['label' => 'بدون نقل', 'class' => 'is-muted'];
@@ -694,8 +739,6 @@
     }
     $hasTransportSelection = (int) $record->wants_transport === 1;
     $transportFeesTotal = $hasTransportSelection ? (float) ($record->transport_fee ?? 0) : 0;
-    $defaultSchoolPaidAmount = old('school_paid_amount', $schoolFeesTotal);
-    $defaultTransportPaidAmount = old('transport_paid_amount', $transportFeesTotal);
     $paymentReceiptState = !empty($record->payment_receipt)
         ? ['label' => 'إثبات دفع مرفوع', 'class' => 'is-success']
         : ['label' => 'لا يوجد إثبات دفع', 'class' => 'is-danger'];
@@ -930,6 +973,9 @@
             </div>
             <div class="review-pill-row">
                 <span class="review-pill {{ $requestStatus['class'] }}">{{ $requestStatus['label'] }}</span>
+                @if($isConvertedAdmission)
+                    <span class="review-pill is-info">مرتبط بالسجل الأكاديمي</span>
+                @endif
                 <span class="review-pill {{ $paymentStatus['class'] }}">{{ $paymentStatus['label'] }}</span>
                 <span class="review-pill {{ $transportStatus['class'] }}">{{ $transportStatus['label'] }}</span>
                 <span class="review-pill {{ $paymentReceiptState['class'] }}">{{ $paymentReceiptState['label'] }}</span>
@@ -1117,6 +1163,63 @@
                 <div class="review-card">
                     <div class="review-card__head">
                         <div>
+                            <h3>سجل القبول</h3>
+                            <p>تاريخ واضح لحالة الطلب والتحولات التي مر بها خلال دورة القبول.</p>
+                        </div>
+                    </div>
+                    <div class="status-list">
+                        @foreach($lifecycleTimeline as $timelineRow)
+                            <div class="status-item">
+                                <span class="status-item__label">{{ $timelineRow['label'] }}</span>
+                                <div class="info-card__value">{{ $timelineRow['value'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                    @if($linkedStudent)
+                        <div class="payment-proof" style="margin-top: .9rem;">
+                            <div class="payment-proof__meta">
+                                <div>
+                                    <p class="payment-proof__title">السجل الأكاديمي المرتبط</p>
+                                    <p class="payment-proof__hint">هذا الطلب مكتمل القبول ويمكن فتح السجل الأكاديمي مباشرة.</p>
+                                </div>
+                                <a href="{{ route('student_details', $linkedStudent->id) }}" class="btn btn-outline-primary btn-sm" target="_blank">فتح السجل</a>
+                            </div>
+                        </div>
+                    @endif
+                    @if($admissionStatusNote !== '')
+                        <div class="payment-proof" style="margin-top: .9rem;">
+                            <div>
+                                <p class="payment-proof__title">ملاحظة الحالة</p>
+                                <p class="payment-proof__hint">{{ $admissionStatusNote }}</p>
+                            </div>
+                        </div>
+                    @endif
+                    @if(!$isConvertedAdmission)
+                        <form method="POST" action="{{ route('studentadmission_request_status') }}" class="mt-3">
+                            @csrf
+                            <input type="hidden" name="student_id" value="{{ $record->id }}">
+                            <div class="form-group mb-2">
+                                <label for="admission_status">تحديث حالة المراجعة</label>
+                                <select name="admission_status" id="admission_status" class="form-control">
+                                    <option value="pending_review" {{ $lifecycleStatus === 'pending_review' ? 'selected' : '' }}>بانتظار المراجعة</option>
+                                    <option value="under_review" {{ $lifecycleStatus === 'under_review' ? 'selected' : '' }}>قيد المراجعة</option>
+                                    <option value="rejected" {{ $lifecycleStatus === 'rejected' ? 'selected' : '' }}>مرفوض</option>
+                                    <option value="cancelled" {{ $lifecycleStatus === 'cancelled' ? 'selected' : '' }}>ملغى</option>
+                                    <option value="draft" {{ $lifecycleStatus === 'draft' ? 'selected' : '' }}>مسودة</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="admission_status_note">ملاحظة الحالة</label>
+                                <textarea name="admission_status_note" id="admission_status_note" class="form-control" rows="3" placeholder="ملاحظة اختيارية تظهر في سجل المراجعة"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary btn-block">حفظ حالة المراجعة</button>
+                        </form>
+                    @endif
+                </div>
+
+                <div class="review-card">
+                    <div class="review-card__head">
+                        <div>
                             <h3>الحالة والموافقات</h3>
                             <p>ملخص سريع لحالة الطلب الحالية، النقل، وقبول الشروط.</p>
                         </div>
@@ -1234,96 +1337,80 @@
                     </div>
                 </div>
 
-                <div class="review-card approve-form">
-                    <div class="review-card__head">
-                        <div>
-                            <h3>اعتماد الطالب</h3>
-                            <p>يتم إنشاء سجلات الطالب الأكاديمية والفواتير المرتبطة مباشرة بعد الاعتماد، مع الحفاظ على نفس التدفق الخلفي الحالي.</p>
+                @if(!$isConvertedAdmission)
+                    <div class="review-card approve-form">
+                        <div class="review-card__head">
+                            <div>
+                                <h3>قبول الطالب</h3>
+                                <p>هذا هو الإجراء النهائي الذي يقبل الطلب ويحولّه إلى سجل أكاديمي. تصبح حالة الطلب مكتملة القبول تلقائياً بعد نجاح العملية.</p>
+                            </div>
                         </div>
-                    </div>
-                    @if ($errors->any())
-                        <div class="alert alert-danger finance-adjust-errors">
-                            <ul class="mb-0 pr-3">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-                    <form method="POST" action="{{ route('approve_student') }}">
-                        @csrf
-                        <input type="hidden" name="student_id" value="{{ $record->id }}">
-                        <div class="row">
-                            <div class="col-12">
-                                <label for="approve_class_id">الصف النهائي</label>
-                                <select name="class_id" id="approve_class_id" class="form-control" required>
-                                    <option value="">اختر الصف</option>
-                                    @foreach ($classes as $item)
-                                        <option value="{{ $item->id }}" {{ (string) $record->class1 === (string) $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                        @if (isset($errors) && $errors->any())
+                            <div class="alert alert-danger finance-adjust-errors">
+                                <ul class="mb-0 pr-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
                                     @endforeach
-                                </select>
+                                </ul>
                             </div>
-                            <div class="col-12 mt-3">
-                                <label for="approve_room_id">الشعبة</label>
-                                <select name="room_id" id="approve_room_id" class="form-control" required></select>
-                            </div>
-                            <div class="col-12">
-                                <div class="finance-adjust-grid">
-                                    <div class="finance-adjust-card">
-                                        <div class="finance-adjust-meta">
-                                            <label for="school_paid_amount" class="mb-0">المبلغ المحتسب على الرسوم المدرسية والخدمات</label>
-                                            <span class="finance-adjust-limit">الحد الأقصى: {{ $formatMoney($schoolFeesTotal) }}</span>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            max="{{ $schoolFeesTotal }}"
-                                            name="school_paid_amount"
-                                            id="school_paid_amount"
-                                            class="form-control"
-                                            value="{{ $defaultSchoolPaidAmount }}"
-                                            required>
-                                        <p class="finance-adjust-hint">هذا هو المبلغ الذي سيتم إنشاؤه كفاتورة مدرسية فعلية داخل النظام المالي بعد الاعتماد.</p>
-                                    </div>
-
-                                    @if($hasTransportSelection)
-                                        <div class="finance-adjust-card">
-                                            <div class="finance-adjust-meta">
-                                                <label for="transport_paid_amount" class="mb-0">المبلغ المحتسب على رسوم النقل</label>
-                                                <span class="finance-adjust-limit">الحد الأقصى: {{ $formatMoney($transportFeesTotal) }}</span>
-                                            </div>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                max="{{ $transportFeesTotal }}"
-                                                name="transport_paid_amount"
-                                                id="transport_paid_amount"
-                                                class="form-control"
-                                                value="{{ $defaultTransportPaidAmount }}"
-                                                required>
-                                            <p class="finance-adjust-hint">يمكن تعديل هذا الحقل عند وصول دفعة جزئية للنقل، وسيتم استخدامه مباشرة في فاتورة النقل المنشأة.</p>
-                                        </div>
-                                    @else
+                        @endif
+                        <form method="POST" action="{{ route('approve_student') }}">
+                            @csrf
+                            <input type="hidden" name="student_id" value="{{ $record->id }}">
+                            <div class="row">
+                                <div class="col-12">
+                                    <label for="approve_class_id">الصف النهائي</label>
+                                    <select name="class_id" id="approve_class_id" class="form-control" required>
+                                        <option value="">اختر الصف</option>
+                                        @foreach ($classes as $item)
+                                            <option value="{{ $item->id }}" {{ (string) $record->class1 === (string) $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <label for="approve_room_id">الشعبة</label>
+                                    <select name="room_id" id="approve_room_id" class="form-control" required></select>
+                                </div>
+                                <div class="col-12">
+                                    <div class="finance-adjust-grid">
                                         <div class="finance-adjust-card is-disabled">
                                             <div class="finance-adjust-meta">
-                                                <label class="mb-0">رسوم النقل</label>
-                                                <span class="finance-adjust-limit">غير مطلوبة</span>
+                                                <label class="mb-0">ملخص الرسوم المسجلة في الطلب</label>
+                                                <span class="finance-adjust-limit">للاطلاع فقط</span>
                                             </div>
-                                            <input type="hidden" name="transport_paid_amount" value="0">
-                                            <input type="text" class="form-control" value="لا توجد خدمة نقل لهذا الطلب" disabled>
-                                            <p class="finance-adjust-hint">سيتم تجاهل أي مبالغ نقل لهذا الطلب لأن ولي الأمر لم يطلب خدمة النقل.</p>
+                                            <div class="finance-summary-list">
+                                                <div class="finance-summary-row">
+                                                    <span>الرسوم المدرسية والخدمات</span>
+                                                    <strong>{{ $formatMoney($schoolFeesTotal) }}</strong>
+                                                </div>
+                                                <div class="finance-summary-row">
+                                                    <span>رسوم النقل</span>
+                                                    <strong>{{ $hasTransportSelection ? $formatMoney($transportFeesTotal) : 'غير مطلوبة' }}</strong>
+                                                </div>
+                                            </div>
+                                            <p class="finance-adjust-hint">لن يتم إنشاء فواتير أو قيود مالية تلقائياً عند الاعتماد. يتم تحويل الطلب أكاديمياً فقط، ثم تعالج المالية لاحقاً يدوياً.</p>
                                         </div>
-                                    @endif
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <button class="btn btn-success btn-block approve-submit" type="submit">قبول الطالب</button>
                                 </div>
                             </div>
-                            <div class="col-12 mt-3">
-                                <button class="btn btn-success btn-block approve-submit" type="submit">اعتماد الطالب وإنشاء السجلات</button>
+                        </form>
+                    </div>
+                @else
+                    <div class="review-card approve-form">
+                        <div class="review-card__head">
+                            <div>
+                                <h3>قبول الطالب</h3>
+                                <p>تم قبول هذا الطلب وأصبح محفوظاً كمرجع تاريخي للرجوع إليه عند الحاجة.</p>
                             </div>
                         </div>
-                    </form>
-                </div>
+                        <div class="empty-panel">
+                            هذا الطلب مكتمل القبول بالفعل ويمكن فتحه من بطاقة سجل القبول أعلاه.
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

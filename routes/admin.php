@@ -110,6 +110,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('/studentadmission/requests/{id}', 'DashboardController@studentadmission_request_show')->name('studentadmission_request_show');
     Route::get('/studentadmission/media/file', 'DashboardController@studentadmission_media_file')->name('studentadmission_media_file');
     Route::post('/studentadmission/setup', 'DashboardController@studentadmission_setup_store')->name('studentadmission_setup_store');
+    Route::post('/studentadmission/request/status', 'DashboardController@update_studentadmission_status')->name('studentadmission_request_status');
     Route::get('/studentadmission/request/{id}', 'DashboardController@studentadmission_request_details')->name('studentadmission_request_details');
     Route::get('/students/financial', 'DashboardController@students_financial')->name('students_financial');
 

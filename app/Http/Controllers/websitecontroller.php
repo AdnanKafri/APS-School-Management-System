@@ -453,10 +453,11 @@ class websitecontroller extends Controller
             return response()->view('website.registration_closed', [], 200);
         }
 
+        $locale = LaravelLocalization::getCurrentLocale();
         $classes = Classe::select('id', 'name', 'name_en', 'stage_id')->get();
         $countries_currencies = Country_currency::all();
-        $schoolTerms = TermsSetting::where('type', 'school')->latest()->first();
-        $transportTerms = TermsSetting::where('type', 'transport')->latest()->first();
+        $schoolTerms = $this->resolveLocalizedAdmissionTerm('school', $locale);
+        $transportTerms = $this->resolveLocalizedAdmissionTerm('transport', $locale);
         $paymentSettings = TermsSetting::whereIn('type', [
             'payment_qr',
             'payment_instructions_ar',
@@ -492,6 +493,31 @@ class websitecontroller extends Controller
         }
 
         return route('website.registration_payment_qr');
+    }
+
+    protected function resolveLocalizedAdmissionTerm(string $baseType, ?string $locale = null)
+    {
+        $locale = strtolower((string) ($locale ?: LaravelLocalization::getCurrentLocale()));
+        $preferredType = $locale === 'en' ? $baseType . '_en' : $baseType . '_ar';
+        $fallbackType = $locale === 'en' ? $baseType . '_ar' : $baseType . '_en';
+        $legacyType = $baseType;
+
+        $preferred = TermsSetting::where('type', $preferredType)->latest()->first();
+        if ($preferred && trim((string) $preferred->content) !== '') {
+            return $preferred;
+        }
+
+        $fallback = TermsSetting::where('type', $fallbackType)->latest()->first();
+        if ($fallback && trim((string) $fallback->content) !== '') {
+            return $fallback;
+        }
+
+        $legacy = TermsSetting::where('type', $legacyType)->latest()->first();
+        if ($legacy && trim((string) $legacy->content) !== '') {
+            return $legacy;
+        }
+
+        return $preferred ?: $fallback ?: $legacy;
     }
 
     protected function normalizePublicStoragePath(?string $path): ?string

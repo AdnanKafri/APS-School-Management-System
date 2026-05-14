@@ -113,6 +113,7 @@ class RegistrationWizardController extends Controller
             'registration_id' => $registration->id,
             'current_step' => $registration->current_step,
             'status' => $registration->status,
+            'admission_status' => $registration->admission_status,
         ]);
     }
 
@@ -135,6 +136,7 @@ class RegistrationWizardController extends Controller
             'registration_id' => $registration->id,
             'current_step' => $registration->current_step,
             'status' => $registration->status,
+            'admission_status' => $registration->admission_status,
         ]);
     }
 
@@ -151,6 +153,7 @@ class RegistrationWizardController extends Controller
             'registration_id' => $registration->id,
             'current_step' => $registration->current_step,
             'status' => $registration->status,
+            'admission_status' => $registration->admission_status,
             'fees' => [
                 'registration_fee' => $registration->registration_fee,
                 'services_fee' => $registration->services_fee,
@@ -190,6 +193,7 @@ class RegistrationWizardController extends Controller
             'success' => true,
             'registration_id' => $registration->id,
             'status' => $registration->status,
+            'admission_status' => $registration->admission_status,
             'payment_status' => $registration->payment_status,
             'message' => __('wizard.success.final_submit'),
         ]);
