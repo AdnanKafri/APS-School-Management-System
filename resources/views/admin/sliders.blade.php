@@ -1,19 +1,7 @@
-@extends('admin.master')
-@section('style')
-    <style>
-        .custom-file-label {
-            display: none !important;
-        }
-
-        .custom-file-label {
-            display: none;
-        }
-
-        .pagination {
-            justify-content: center !important;
-        }
-    </style>
-@endsection
+﻿@extends('admin.layouts.v2')
+@section('body_class', 'website-mgmt-v2')
+@section('page_title', 'السلايدر')
+@section('page_subtitle', 'إدارة شرائح الصفحة الرئيسية ومحتواها')
 @section('breadcrumbs')
     <nav class="breadcrumbs">
         <a class="breadcrumbs__item is-active">سلايدر </a>
@@ -22,9 +10,413 @@
         <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item ">الصفحة الرئيسية</a>
     </nav>
 @endsection
+@section('style')
+    <style>
+        .slider-page .table-responsive {
+            padding: 0 1rem 1rem;
+        }
+
+        .slider-thumb {
+            width: min(170px, 100%);
+            aspect-ratio: 16 / 9;
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            background: #fbfbfe;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 10px 24px rgba(36, 30, 62, .06);
+        }
+
+        .slider-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .slider-thumb.is-placeholder img {
+            object-fit: contain;
+            padding: .55rem;
+            background: #fdfdff;
+        }
+
+        .slider-thumb__empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            width: 100%;
+            height: 100%;
+            color: #8a869a;
+            font-size: .85rem;
+            font-weight: 700;
+        }
+
+        .slider-media-row {
+            display: grid;
+            gap: .85rem;
+            padding: 1rem;
+            margin-top: .25rem;
+            border: 1px dashed rgba(91, 75, 138, .18);
+            border-radius: 18px;
+            background: linear-gradient(180deg, #fff 0%, #fafbfe 100%);
+        }
+
+        .slider-media-panel {
+            display: grid;
+            gap: .85rem;
+        }
+
+        .slider-media-panel .input_image {
+            background: #fbfbfe;
+            border: 1px dashed rgba(91, 75, 138, .18);
+        }
+
+        .slider-media-panel .input_image::file-selector-button,
+        .slider-media-panel .input_image::-webkit-file-upload-button {
+            border: 0;
+            border-radius: 10px;
+            padding: .55rem .85rem;
+            margin-inline-end: .8rem;
+            background: rgba(91, 75, 138, .10);
+            color: var(--v2-primary);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .slider-preview-shell {
+            display: grid;
+            gap: .55rem;
+        }
+
+        .slider-preview-frame {
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 16 / 9;
+            border-radius: 18px;
+            border: 1px solid var(--v2-border);
+            background: #fdfdff;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 24px rgba(36, 30, 62, .08);
+        }
+
+        .slider-preview-frame img,
+        .slider-preview-frame .slider-preview-empty {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slider-preview-frame img {
+            display: block;
+            object-fit: cover;
+            background: #fff;
+        }
+
+        .slider-preview-frame.is-empty img {
+            display: none !important;
+        }
+
+        .slider-preview-frame.is-empty .slider-preview-empty {
+            display: flex;
+        }
+
+        .slider-preview-empty {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: .4rem;
+            color: #8a869a;
+            font-size: .88rem;
+            font-weight: 700;
+            background:
+                radial-gradient(circle at top, rgba(91, 75, 138, .08), transparent 60%),
+                #fdfdff;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .slider-preview-empty i {
+            font-size: 1.5rem;
+            color: rgba(91, 75, 138, .38);
+        }
+
+        .slider-preview-actions {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+        }
+
+        .slider-preview-actions .close-btn {
+            flex: 0 0 auto;
+        }
+
+        .slider-media-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .slider-modal.v2-dashboard-modal.modal.show {
+            padding: 1.25rem 1rem 1rem;
+        }
+
+        .slider-modal.v2-dashboard-modal .modal-dialog {
+            width: min(820px, calc(100vw - 2rem));
+            max-width: 820px;
+            margin-top: 0;
+        }
+
+        .slider-modal.v2-dashboard-modal .modal-content {
+            border-radius: 22px;
+            box-shadow: 0 28px 70px rgba(36, 30, 62, .22);
+            max-height: calc(100vh - 2.25rem);
+            background: #fff;
+        }
+
+        .slider-modal.v2-dashboard-modal .modal-header,
+        .slider-modal.v2-dashboard-modal .modal-footer {
+            padding: 1.05rem 1.35rem;
+            background: #fafbfe;
+        }
+
+        .slider-modal.v2-dashboard-modal .modal-body {
+            padding: 1.35rem 1.45rem 1.35rem;
+            display: flex;
+            flex-direction: column;
+            gap: .15rem;
+        }
+
+        .slider-modal .form-group {
+            margin-bottom: 0;
+            display: grid;
+            gap: .4rem;
+        }
+
+        .slider-modal .form-control {
+            min-height: 46px;
+            border-radius: 14px;
+            border: 1px solid var(--v2-border);
+            background: #fff;
+            padding-inline: .95rem;
+            box-shadow: none;
+            transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+
+        .slider-modal .form-control:focus {
+            border-color: var(--v2-primary);
+            box-shadow: 0 0 0 4px rgba(91, 75, 138, .12);
+            background: #fff;
+        }
+
+        .slider-modal textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.8;
+            padding-top: .85rem;
+        }
+
+        .slider-modal .form-group label {
+            margin-bottom: 0;
+            font-weight: 700;
+            color: #3c3750;
+            line-height: 1.5;
+        }
+
+        .slider-modal .modal-body > .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-modal .custom-file-label {
+            display: none !important;
+        }
+
+        .slider-modal .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .6rem;
+        }
+
+        .slider-modal .modal-footer .btn {
+            min-width: 110px;
+        }
+
+        @media (max-width: 768px) {
+            .slider-modal.v2-dashboard-modal .modal-body {
+                padding: 1rem;
+            }
+
+            .slider-modal .slider-media-row {
+                padding: .85rem;
+            }
+
+            .slider-modal .modal-footer {
+                justify-content: stretch;
+                flex-wrap: wrap;
+            }
+
+            .slider-modal .modal-footer .btn {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+        }
+
+        .slider-modal .input_image {
+            background: #fbfbfe;
+            border: 1px dashed rgba(91, 75, 138, .18);
+        }
+
+        .slider-modal .input_image::file-selector-button,
+        .slider-modal .input_image::-webkit-file-upload-button {
+            border: 0;
+            border-radius: 10px;
+            padding: .55rem .85rem;
+            margin-inline-end: .8rem;
+            background: rgba(91, 75, 138, .10);
+            color: var(--v2-primary);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .slider-modal .slider-media-row .slider-media-preview {
+            max-width: 260px;
+        }
+
+        .slider-modal .slider-media-row .del_icon,
+        .slider-modal .slider-media-row .del_img {
+            flex: 0 0 auto;
+        }
+
+        .slider-modal .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .6rem;
+        }
+
+        .slider-modal .modal-footer .btn {
+            min-width: 110px;
+        }
+
+        .slider-modal .modal-body > .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .slider-modal.v2-dashboard-modal .modal-body {
+                padding: 1rem;
+            }
+
+            .slider-modal .slider-media-row {
+                padding: .85rem;
+            }
+
+            .slider-modal .modal-footer {
+                justify-content: stretch;
+                flex-wrap: wrap;
+            }
+
+            .slider-modal .modal-footer .btn {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+        }
+    </style>
+@endsection
 @section('content')
+    @php
+        $sliderFallbackImage = asset('assets/admin/plugins/ckeditor/plugins/image/images/noimage.png');
+        $localMediaExists = function ($relativePath) {
+            $relativePath = ltrim((string) $relativePath, '/');
+            if ($relativePath === '') {
+                return false;
+            }
+
+            $candidates = [
+                public_path($relativePath),
+                public_path('storage/' . $relativePath),
+                storage_path($relativePath),
+                storage_path('app/public/' . $relativePath),
+            ];
+
+            if (\Illuminate\Support\Str::startsWith($relativePath, 'storage/')) {
+                $trimmed = ltrim(substr($relativePath, strlen('storage/')), '/');
+                if ($trimmed !== '') {
+                    $candidates[] = storage_path($trimmed);
+                    $candidates[] = storage_path('app/public/' . $trimmed);
+                }
+            }
+
+            foreach ($candidates as $candidate) {
+                if (is_string($candidate) && file_exists($candidate)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $sliderMediaPool = [];
+        foreach (['sliderimages', 'newsimages'] as $folder) {
+            foreach (glob(public_path('storage/' . $folder . '/*')) ?: [] as $candidate) {
+                if (!is_file($candidate)) {
+                    continue;
+                }
+
+                $extension = strtolower((string) pathinfo($candidate, PATHINFO_EXTENSION));
+                if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true)) {
+                    continue;
+                }
+
+                $sliderMediaPool[] = [
+                    'mtime' => (int) (@filemtime($candidate) ?: 0),
+                    'path' => $candidate,
+                    'url' => asset('storage/' . $folder . '/' . basename($candidate)),
+                ];
+            }
+        }
+
+        usort($sliderMediaPool, function ($a, $b) {
+            return [$b['mtime'], $b['path']] <=> [$a['mtime'], $a['path']];
+        });
+
+        $sliderMediaPool = array_values(array_map(function ($item) {
+            return $item['url'];
+        }, $sliderMediaPool));
+
+        $resolveSliderMediaUrl = function ($path, $index = 0, $fallback = null) use ($localMediaExists, $sliderMediaPool, $sliderFallbackImage) {
+            $path = trim((string) $path);
+
+            if ($path !== '' && \Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+                return $path;
+            }
+
+            if ($path !== '' && $localMediaExists($path)) {
+                return asset('storage/' . ltrim($path, '/'));
+            }
+
+            if (array_key_exists((int) $index, $sliderMediaPool)) {
+                return $sliderMediaPool[(int) $index];
+            }
+
+            return $fallback ?: $sliderFallbackImage;
+        };
+    @endphp
     {{-- <div class="col" > --}}
-    <div class="card" style="direction:rtl; text-align:right;margin: 20px;">
+    <div class="card slider-page" style="direction:rtl; text-align:right;margin: 20px;">
 
         <!--@if (session()->has('success'))
     -->
@@ -129,10 +521,17 @@
 
 
                             <td>
-                                @if ($item->image)
-                                    <img src="{{ asset('storage/' . $item->image) }}" style="width: 150px;">
-                                @endif
-
+                                @php
+                                    $sliderImageUrl = $resolveSliderMediaUrl($item->image, $loop->index);
+                                    $sliderImageLabel = $item->header_ar ?: $item->header_en ?: 'Slider image';
+                                    $isPlaceholderSlider = \Illuminate\Support\Str::contains($sliderImageUrl, 'noimage.png');
+                                @endphp
+                                <div class="slider-thumb {{ $isPlaceholderSlider ? 'is-placeholder' : '' }}">
+                                    <img src="{{ $sliderImageUrl }}"
+                                        alt="{{ $sliderImageLabel }}"
+                                        loading="lazy"
+                                        onerror="this.onerror=null;this.src='{{ $sliderFallbackImage }}';this.parentElement.classList.add('is-placeholder');">
+                                </div>
                             </td>
 
 
@@ -147,7 +546,7 @@
                                 <a class="edit_news btn btn-success btn-sm" data-header_ar="{{ $item->header_ar }}"
                                     data-header_en="{{ $item->header_en }}" data-content_ar	="{{ $item->content_ar }}"
                                     data-content_en="{{ $item->content_en }}" data-key_word_ar="{{ $item->key_word_ar }}"
-                                    data-key_word_en="{{ $item->key_word_en }}" data-image="{{ $item->image }}"
+                                    data-key_word_en="{{ $item->key_word_en }}" data-image-url="{{ $resolveSliderMediaUrl($item->image, $loop->index) }}"
                                     data-id="{{ $item->id }}" href=".editNewsModal" data-toggle="modal">تعديل</i>
                                 </a>
 
@@ -180,8 +579,8 @@
 
 
 
-    <div class="modal fade editNewsModal"style="text-align: end;">
-        <div class="modal-dialog">
+    <div class="modal fade editNewsModal v2-dashboard-modal slider-modal" style="text-align: end;">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <form id="form_update" action="{{ route('slider.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -231,27 +630,36 @@
                         {{-- ----------------- --}}
 
 
-                        <div class="form-group">
-                            <label>الصورة </label>
-                            <br>
-                            <input type="hidden" class="del" name="del_img1" value="del_img1" disabled="disabled">
+                        <div class="form-group slider-media-row">
+                            <label>الصورة</label>
+                            <div class="slider-media-panel">
+                                <input type="hidden" class="del" name="del_img1" value="del_img1" disabled="disabled">
 
-                            <img src="" width="50px" height="50px" class="del_edit_img" id="image1"
-                                alt="Not found">
-                            <span class="close-btn del_icon" title="الغاء" id=""
-                                style ="display:inline;font-size: 44px; color:red;font-weigh:bold;cursor:pointerld">&times;</span>
+                                <input type="file" name="image" onchange="loadFile_edit(event)"
+                                    title=" size:	1350 × 500 px" class="form-control input_image" id="input_edit_image1"
+                                    lang="en">
+                                <label class="custom-file-label" for="customFileLang">Select file</label>
 
+                                <div class="slider-preview-shell">
+                                    <div class="slider-preview-frame is-empty" id="edit_slider_preview_frame">
+                                        <img src="" class="del_edit_img slider-media-preview" id="image1"
+                                            alt="Slider preview">
+                                        <div class="slider-preview-empty" id="edit_slider_empty_state">
+                                            <i class="fas fa-image"></i>
+                                            <span>لا توجد صورة</span>
+                                        </div>
+                                    </div>
+                                    <div class="slider-preview-actions">
+                                        <span class="close-btn del_icon" title="الغاء" id=""
+                                            style="display:inline-flex;font-size: 44px; color:red;font-weigh:bold;cursor:pointerld">&times;</span>
+                                        <span class="close-btn del_img" title="الغاء" id=""
+                                            style="display: none; font-weight:bold">&times;</span>
+                                    </div>
+                                </div>
 
-                            <input type="file" name="image" onchange="loadFile_edit(event)"
-                                title=" size:	1350 × 500 px" class="form-control input_image" id="input_edit_image1"
-                                lang="en">
-                            <label class="custom-file-label" for="customFileLang">Select file</label>
-
-
-                            <span class="close-btn del_img" title="الغاء" id=""
-                                style="display: none; font-weight:bold">&times;</span>
-                            <img id="output" class="output" style=" display: none"src="" width="200px"
-                                alt="">
+                                <img id="edit_slider_preview" class="output slider-media-preview" style="display: none" src=""
+                                    alt="">
+                            </div>
                         </div>
 
                         {{-- ================================= --}}
@@ -267,8 +675,8 @@
         </div>
     </div>
 
-    <div class="modal fade createNewsModal" style="text-align: end;">
-        <div class="modal-dialog">
+    <div class="modal fade createNewsModal v2-dashboard-modal slider-modal" style="text-align: end;">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <form id="form_update" action="{{ route('slider.store') }}" method="POST"
                     enctype="multipart/form-data">
@@ -318,17 +726,28 @@
 
 
 
-                        <div class="form-group">
+                        <div class="form-group slider-media-row">
                             <label>الصورة</label>
-                            <br>
-                            <input type="file" name="image" onchange="loadFile(event)" id="input_image1"
-                                title=" size:	1350 × 500 px" class="input_image form-control" required>
-                            <label class="custom-file-label" for="customFileLang">Select file</label>
+                            <div class="slider-media-panel">
+                                <input type="file" name="image" onchange="loadFile(event)" id="input_image1"
+                                    title=" size:	1350 × 500 px" class="input_image form-control" required>
+                                <label class="custom-file-label" for="customFileLang">Select file</label>
 
-                            <span class="close-btn del_img" title="الغاء" id="del_img"
-                                style="display: none; font-weight:bold">&times;</span>
-                            <img id="output" style=" display: none"src="" class="output" width="200px"
-                                alt="">
+                                <div class="slider-preview-shell">
+                                    <div class="slider-preview-frame is-empty" id="create_slider_preview_frame">
+                                        <img id="create_slider_preview" style="display: none" src="" class="output slider-media-preview"
+                                            alt="">
+                                        <div class="slider-preview-empty" id="create_slider_empty_state">
+                                            <i class="fas fa-image"></i>
+                                            <span>لم يتم اختيار صورة بعد</span>
+                                        </div>
+                                    </div>
+                                    <div class="slider-preview-actions">
+                                        <span class="close-btn del_img" title="الغاء" id="del_img"
+                                            style="display: none; font-weight:bold">&times;</span>
+                                    </div>
+                                </div>
+                            </div>
 
 
                         </div>
@@ -357,9 +776,9 @@
 
     <div class="col-md-4" class="delete_modal">
         {{-- <button type="button" class="btn btn-block btn-warning mb-3" data-toggle="modal" data-target="#modal-notification">Notification</button> --}}
-        <div class="modal fade active_result" id="modal-notification" tabindex="-1" role="dialog"
+        <div class="modal fade active_result v2-dashboard-modal" id="modal-notification" tabindex="-1" role="dialog"
             aria-labelledby="modal-notification" aria-hidden="true">
-            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+            <div class="modal-dialog modal-danger modal-dialog-scrollable" role="document">
                 <div class="modal-content bg-gradient-danger">
                     <form id="form_delete" method="POST">
                         @csrf
@@ -393,10 +812,13 @@
 
     </div>
 
-    <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
+
 
     <script>
         $('.alert-success').hide(5000);
+        $(function() {
+            $('.editNewsModal, .createNewsModal, .active_result').appendTo(document.body);
+        });
         $(document).ready(function() {
             $('#table_xx').DataTable({});
         })
@@ -448,7 +870,7 @@
             var id = $(this).data('id');
             e.preventDefault();
 
-            var image = $(this).data('image');
+            var imageUrl = $(this).data('imageUrl') || $(this).data('image-url') || '';
 
 
 
@@ -461,8 +883,14 @@
             $('#key_word_ar').val($(this).data('key_word_ar'));
 
 
-            if (image1 != "") {
-                $('#image1').attr('src', `{{ asset('storage/${image}') }}`);
+            if (imageUrl) {
+                $('#image1').attr('src', imageUrl).show();
+                $('#edit_slider_preview').attr('src', '').hide();
+                $('.editNewsModal .del_img').hide();
+                $('.editNewsModal .del_icon').show();
+            } else {
+                $('#image1').attr('src', '').hide();
+                $('.editNewsModal .del_icon').hide();
             }
 
 
@@ -473,43 +901,60 @@
 
     <script>
         var loadFile = function(event) {
-            var id = event.target.id;
-            var input_image = document.getElementById(id);
-            var output = input_image.nextElementSibling.nextElementSibling.nextElementSibling;
-            var del_img = input_image.nextElementSibling.nextElementSibling;
-            output.setAttribute('src', URL.createObjectURL(event.target.files[0]));
-            output.onload = function() {
+            var file = event.target.files && event.target.files[0];
+            if (!file) {
+                return;
+            }
 
-                output.setAttribute('style', 'display:inline');
+            var output = document.getElementById('create_slider_preview');
+            var del_img = document.getElementById('del_img');
+            var objectUrl = URL.createObjectURL(file);
+
+            output.src = objectUrl;
+            output.onload = function() {
+                output.style.display = 'block';
                 del_img.setAttribute('style',
-                    'display:inline;font-size: 44px; color:red;font-weigh:bold;cursor:pointer');
+                    'display:inline-flex;font-size: 44px; color:red;font-weigh:bold;cursor:pointer');
+                URL.revokeObjectURL(objectUrl);
             };
 
         };
 
 
         var loadFile_edit = function(event) {
-            var id = event.target.id;
-            var input_image = document.getElementById(id);
-            var output = input_image.nextElementSibling.nextElementSibling.nextElementSibling;
-            var del_img = input_image.nextElementSibling.nextElementSibling;
-            input_image.previousElementSibling.setAttribute('style', 'display:none');
-            input_image.previousElementSibling.previousElementSibling.setAttribute('style', 'display:none');
+            var file = event.target.files && event.target.files[0];
+            if (!file) {
+                return;
+            }
 
-            output.setAttribute('src', URL.createObjectURL(event.target.files[0]));
+            var output = document.getElementById('edit_slider_preview');
+            var del_img = document.querySelector('.editNewsModal .del_img');
+            var objectUrl = URL.createObjectURL(file);
+
+            $('#image1').hide();
+            $('.editNewsModal .del_icon').hide();
+
+            output.setAttribute('src', objectUrl);
             output.onload = function() {
 
-                output.setAttribute('style', 'display:inline');
+                output.setAttribute('style', 'display:block');
                 del_img.setAttribute('style',
-                    'display:inline;font-size: 44px; color:red;font-weigh:bold;cursor:pointer');
+                    'display:inline-flex;font-size: 44px; color:red;font-weigh:bold;cursor:pointer');
+                URL.revokeObjectURL(objectUrl);
             };
 
         };
 
 
         $(document).on('click', '.del_img', function() {
-            $(this).nextAll('.output').attr('style', 'display:none;');
-            $(this).prevAll('.input_image:first').val('');
+            var $modal = $(this).closest('.modal');
+            if ($modal.hasClass('createNewsModal')) {
+                $('#create_slider_preview').attr('style', 'display:none;').attr('src', '');
+                $('#input_image1').val('');
+            } else if ($modal.hasClass('editNewsModal')) {
+                $('#edit_slider_preview').attr('style', 'display:none;').attr('src', '');
+                $('#input_edit_image1').val('');
+            }
             $(this).hide();
 
         });
@@ -517,6 +962,7 @@
         $(document).on('click', '.del_icon', function() {
             $(this).prevAll('.del:first').attr('disabled', false);
             $(this).prevAll('.del_edit_img:first').hide();
+            $('#image1').hide();
             $(this).hide();
 
         });

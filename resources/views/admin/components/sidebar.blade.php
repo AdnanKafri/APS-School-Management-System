@@ -70,6 +70,18 @@
             @endcan
         </div>
 
+        <div class="v2-menu-title">القبول والتواصل</div>
+        <div class="v2-menu-group">
+            <a href="{{ route('studentadmission') }}" class="v2-menu-link {{ request()->routeIs('studentadmission*') ? 'active' : '' }}">
+                <i class="fas fa-clipboard-list"></i>
+                <span>القبول والتسجيل</span>
+            </a>
+            <a href="{{ route('admin.complaints.index') }}" class="v2-menu-link {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }}">
+                <i class="fas fa-comments"></i>
+                <span>الشكاوى والملاحظات</span>
+            </a>
+        </div>
+
         <div class="v2-menu-title">الإعدادات والإدارة</div>
         <div class="v2-menu-group">
             @can('user_permissions')

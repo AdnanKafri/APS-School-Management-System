@@ -426,6 +426,7 @@
                             <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
                             <li><a href="{{ Route('website.index') }}#Blog">{{ __('site.Blogs') }}</a></li>
                             <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
+                            <li><a href="{{ Route('website.complaints') }}">{{ __('complaints.nav') }}</a></li>
                             <li><a href="{{ Route('website.register') }}">{{ __('site.Signup') }}</a></li>
                             @if ($locale === 'en')
                                 <li><a href="{{ Route('Recruitment_competition') }}">Recruitment competition</a></li>
@@ -671,6 +672,7 @@
                                 <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
                                 <li><a href="{{ Route('website.index') }}#Blog">{{ __('site.Blogs') }}</a></li>
                                 <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
+                                <li><a href="{{ Route('website.complaints') }}">{{ __('complaints.nav') }}</a></li>
                             </ul>
                         </div>
                     </div>

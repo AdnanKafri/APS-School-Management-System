@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="{{ asset('assets/admin/css/style.css') }}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
     <link href="{{ asset('assets/admin/plugins/toastr/css/toastr.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/admin/plugins/datatables/css/jquery.dataTables.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/plugins/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
 
     <style>
         :root {
@@ -34,6 +36,10 @@
             --v2-hover: rgba(91, 75, 138, 0.08);
             --v2-active: rgba(91, 75, 138, 0.12);
             --v2-sidebar-w: 286px;
+            --v2-navbar-h: 70px;
+            --v2-modal-z: 1450;
+            --v2-modal-backdrop-z: 1440;
+            --v2-modal-top-gap: 4rem;
         }
 
         * {
@@ -585,6 +591,373 @@
             display: none;
         }
 
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 0 !important;
+        }
+
+        .modal {
+            z-index: var(--v2-modal-z) !important;
+        }
+
+        .modal-backdrop {
+            z-index: var(--v2-modal-backdrop-z) !important;
+        }
+
+        .v2-dashboard-modal.modal.show {
+            position: fixed !important;
+            inset: 0;
+            display: flex !important;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 1.25rem 1rem 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        .v2-dashboard-modal .modal-dialog {
+            margin: 0 auto;
+            width: min(720px, calc(100vw - 2rem));
+            max-width: 720px;
+            margin-top: 0;
+        }
+
+        .v2-dashboard-modal .modal-dialog.modal-dialog-centered {
+            min-height: 0;
+            display: block;
+        }
+
+        .v2-dashboard-modal .modal-content {
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(36, 30, 62, 0.18);
+            max-height: calc(100vh - 2.25rem);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .v2-dashboard-modal .modal-header,
+        .v2-dashboard-modal .modal-footer {
+            padding: 1rem 1.2rem;
+            border-color: #ebe7f5;
+            flex: 0 0 auto;
+        }
+
+        .v2-dashboard-modal .modal-body {
+            padding: 1.15rem 1.2rem 1.2rem;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        body.website-mgmt-v2 .v2-content-wrap {
+            padding-bottom: 1.5rem;
+        }
+
+        body.website-mgmt-v2 .content-body {
+            padding-top: 0;
+        }
+
+        body.website-mgmt-v2 .content-body > .card,
+        body.website-mgmt-v2 .content-body > .container-fluid > .card,
+        body.website-mgmt-v2 .content-body > .container > .card,
+        body.website-mgmt-v2 .content-body > .card.card-body {
+            margin: 0 0 1rem !important;
+            border: 1px solid var(--v2-border);
+            border-radius: 18px;
+            background: var(--v2-surface);
+            box-shadow: 0 12px 30px rgba(36, 30, 62, .06);
+            overflow: hidden;
+        }
+
+        body.website-mgmt-v2 .content-body > .card .card-header,
+        body.website-mgmt-v2 .content-body > .container-fluid > .card .card-header,
+        body.website-mgmt-v2 .content-body > .container > .card .card-header {
+            padding: 1rem 1.15rem .85rem;
+            border-bottom: 1px solid var(--v2-border);
+            background: rgba(246, 247, 250, .78);
+        }
+
+        body.website-mgmt-v2 .content-body .table-responsive {
+            padding: 0 1rem 1rem;
+            overflow-x: auto;
+        }
+
+        body.website-mgmt-v2 .content-body .table {
+            margin-bottom: 0;
+            min-width: 100%;
+        }
+
+        body.website-mgmt-v2 .content-body .table thead th {
+            white-space: nowrap;
+            font-weight: 800;
+            font-size: .86rem;
+            color: #4c4760;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        body.website-mgmt-v2 .content-body .table tbody td {
+            vertical-align: middle;
+        }
+
+        body.website-mgmt-v2 .content-body .pagination {
+            justify-content: center !important;
+        }
+
+        body.website-mgmt-v2 .content-body .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.website-mgmt-v2 .content-body .form-control,
+        body.website-mgmt-v2 .content-body select,
+        body.website-mgmt-v2 .content-body textarea {
+            border-radius: 12px;
+        }
+
+        body.website-mgmt-v2 .content-body .form-group label {
+            margin-bottom: .4rem;
+            font-weight: 700;
+            color: #3c3750;
+        }
+
+        body.website-mgmt-v2 .content-body .btn {
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        body.website-mgmt-v2 .content-body .btn:not(.btn-sm) {
+            min-height: 42px;
+            padding-inline: 1rem;
+        }
+
+        body.website-mgmt-v2 .content-body .alert {
+            border-radius: 14px;
+        }
+
+        body.website-mgmt-v2 .content-body .table-responsive {
+            border-radius: 0 0 18px 18px;
+        }
+
+        body.website-mgmt-v2 .content-body .table td,
+        body.website-mgmt-v2 .content-body .table th {
+            padding: .8rem .9rem;
+            vertical-align: middle;
+        }
+
+        body.website-mgmt-v2 .content-body .table td textarea {
+            display: block;
+            width: 100%;
+            min-width: 220px;
+            max-width: 340px;
+            min-height: 88px;
+            margin: 0;
+            padding: .7rem .85rem;
+            border: 1px solid var(--v2-border) !important;
+            border-radius: 12px;
+            background: #fafbfe;
+            color: var(--v2-text);
+            line-height: 1.75;
+            resize: vertical;
+            box-sizing: border-box;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        body.website-mgmt-v2 .content-body .table td img {
+            display: block;
+            max-width: 140px;
+            max-height: 96px;
+            width: auto;
+            height: auto;
+            object-fit: cover;
+            border-radius: 14px;
+            border: 1px solid var(--v2-border);
+            background: #fff;
+            padding: 4px;
+            box-shadow: 0 8px 20px rgba(36, 30, 62, .06);
+        }
+
+        body.website-mgmt-v2 .content-body input[type="file"].form-control,
+        body.website-mgmt-v2 .content-body input[type="file"].input_image,
+        body.website-mgmt-v2 .content-body input[type="file"].input_icon {
+            padding: .75rem .9rem;
+            background: #fbfbfe;
+            border: 1px dashed var(--v2-border);
+            min-height: 54px;
+            line-height: 1.4;
+        }
+
+        body.website-mgmt-v2 .content-body input[type="file"]::file-selector-button,
+        body.website-mgmt-v2 .content-body input[type="file"]::-webkit-file-upload-button {
+            border: 0;
+            background: rgba(91, 75, 138, .10);
+            color: var(--v2-primary);
+            border-radius: 10px;
+            padding: .55rem .85rem;
+            margin-inline-end: .75rem;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        body.website-mgmt-v2 .content-body .custom-file-label {
+            display: none !important;
+        }
+
+        body.website-mgmt-v2 .content-body .output,
+        body.website-mgmt-v2 .content-body .del_edit_img,
+        body.website-mgmt-v2 .content-body .del_edit_icon {
+            display: block;
+            max-width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: 14px;
+            border: 1px solid var(--v2-border);
+            background: #fff;
+            padding: 4px;
+            box-shadow: 0 8px 20px rgba(36, 30, 62, .08);
+        }
+
+        body.website-mgmt-v2 .content-body .close-btn.del_icon,
+        body.website-mgmt-v2 .content-body .close-btn.del_img {
+            width: 34px;
+            height: 34px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, .08);
+            color: #dc3545;
+            font-size: 1.4rem !important;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        body.website-mgmt-v2 .content-body .modal .form-group {
+            margin-bottom: 1rem;
+        }
+
+        body.website-mgmt-v2 .content-body .modal .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        body.website-mgmt-v2 .content-body .modal .form-control {
+            min-height: 46px;
+        }
+
+        body.website-mgmt-v2 .content-body .modal textarea.form-control {
+            min-height: 120px;
+        }
+
+        body.website-mgmt-v2 .content-body .modal .modal-title {
+            font-weight: 800;
+            color: #2f2b3a;
+        }
+
+        body.website-mgmt-v2 .content-body .modal .modal-body {
+            line-height: 1.85;
+        }
+
+        body.website-mgmt-v2 .content-body .ck-editor__editable,
+        body.website-mgmt-v2 .content-body .ck-content,
+        body.website-mgmt-v2 .content-body .note-editable {
+            border: 1px solid var(--v2-border);
+            border-radius: 14px;
+            background: #fff;
+            min-height: 180px;
+            padding: 1rem 1.05rem;
+            line-height: 1.85;
+        }
+
+        body.website-mgmt-v2 .content-body .modal {
+            z-index: var(--v2-modal-z) !important;
+        }
+
+        body.website-mgmt-v2 .content-body .modal-backdrop {
+            z-index: var(--v2-modal-backdrop-z) !important;
+        }
+
+        body.website-mgmt-v2 .content-body .modal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        body.website-mgmt-v2 .content-body .modal-dialog {
+            width: min(780px, calc(100vw - 2rem));
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        body.website-mgmt-v2 .content-body .modal-content {
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(36, 30, 62, .22);
+            overflow: hidden;
+            max-height: calc(100vh - 3rem);
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.website-mgmt-v2 .content-body .modal-header,
+        body.website-mgmt-v2 .content-body .modal-footer {
+            padding: 1rem 1.15rem;
+            flex: 0 0 auto;
+        }
+
+        body.website-mgmt-v2 .content-body .modal-body {
+            padding: 1.15rem;
+            overflow-y: auto;
+            min-height: 0;
+            flex: 1 1 auto;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --v2-navbar-h: 62px;
+                --v2-modal-top-gap: 1.5rem;
+            }
+
+            .v2-dashboard-modal.modal.show {
+                padding: .75rem .5rem .5rem;
+            }
+
+            .v2-dashboard-modal .modal-dialog {
+                width: min(720px, calc(100vw - 1rem));
+            }
+
+            .v2-dashboard-modal .modal-content {
+                max-height: calc(100vh - 1.5rem);
+            }
+
+            .v2-dashboard-modal .modal-header,
+            .v2-dashboard-modal .modal-footer,
+            .v2-dashboard-modal .modal-body {
+                padding-inline: 1rem;
+            }
+
+            body.website-mgmt-v2 .content-body > .card,
+            body.website-mgmt-v2 .content-body > .container-fluid > .card,
+            body.website-mgmt-v2 .content-body > .container > .card,
+            body.website-mgmt-v2 .content-body > .card.card-body {
+                border-radius: 16px;
+            }
+
+            body.website-mgmt-v2 .content-body .card-header,
+            body.website-mgmt-v2 .content-body .modal-header,
+            body.website-mgmt-v2 .content-body .modal-footer,
+            body.website-mgmt-v2 .content-body .modal-body {
+                padding-left: .95rem;
+                padding-right: .95rem;
+            }
+        }
+
         .v2-shell.sidebar-open .sidebar-backdrop {
             display: block;
         }
@@ -612,7 +985,7 @@
 
     @yield('style')
 </head>
-<body class="{{ $isRtl ? 'is-rtl' : 'is-ltr' }}">
+<body class="{{ $isRtl ? 'is-rtl' : 'is-ltr' }} @yield('body_class')">
     <div class="v2-shell" id="v2-shell">
         @include('admin.components.sidebar')
 
@@ -632,6 +1005,8 @@
     <script src="{{ asset('assets/admin/js/custom.min.js') }}"></script>
     <script src="{{ asset('assets/admin/plugins/toastr/js/toastr.min.js') }}"></script>
     <script src="{{ asset('assets/admin/plugins/toastr/js/toastr.init.js') }}"></script>
+    <script src="{{ asset('assets/admin/plugins/datatables/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 
     <script>
         (function() {

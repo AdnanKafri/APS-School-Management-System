@@ -84,6 +84,8 @@ Route::group([
   Route::get('/', 'websitecontroller@index')->name('website.index');
   Route::get('/faq', 'websitecontroller@faq')->name('website.faq');
   Route::get('/contact_us', 'websitecontroller@contact_us')->name('website.contact_us');
+  Route::get('/complaints', 'ComplaintController@create')->name('website.complaints');
+  Route::post('/complaints', 'ComplaintController@store')->name('website.complaints.store');
 
   Route::get('/contact', 'websitecontroller@contact')->name('website.contact');
 

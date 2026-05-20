@@ -249,6 +249,9 @@
                                                             href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a>
                                                     </li>
                                                     <li><a
+                                                            href="{{ Route('website.complaints') }}">{{ __('complaints.nav') }}</a>
+                                                    </li>
+                                                    <li><a
                                                             href="{{ Route('website.register') }}">{{ __('site.Signup') }}</a>
                                                     </li>
 
@@ -340,6 +343,7 @@
                                     <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
                                     <li><a href="{{ Route('website.index') }}#Blog">{{ __('site.Blogs') }}</a></li>
                                     <li><a href="{{ Route('website.contact_us') }}">{{ __('site.Contact Us') }}</a></li>
+                                    <li><a href="{{ Route('website.complaints') }}">{{ __('complaints.nav') }}</a></li>
                                 </ul>
                             </aside>
                         </div>

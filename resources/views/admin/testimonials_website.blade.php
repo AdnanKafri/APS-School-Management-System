@@ -1,19 +1,7 @@
-@extends('admin.master')
-@section('style')
-    <style>
-        .custom-file-label {
-            display: none !important;
-        }
-
-        .custom-file-label {
-            display: none;
-        }
-
-        .pagination {
-            justify-content: center !important;
-        }
-    </style>
-@endsection
+@extends('admin.layouts.v2')
+@section('body_class', 'website-mgmt-v2')
+@section('page_title', 'التوصيات')
+@section('page_subtitle', 'إدارة آراء وتجارب أولياء الأمور والزوار')
 @section('breadcrumbs')
     <nav class="breadcrumbs">
         <a class="breadcrumbs__item is-active">  التوصيات  </a>
@@ -314,7 +302,6 @@
 
     </div>
 
-    <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
 
     <script>
         $('.alert-success').hide(5000);
