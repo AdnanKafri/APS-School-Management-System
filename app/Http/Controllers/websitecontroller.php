@@ -41,6 +41,7 @@ use App\Teacher;
 use App\Group;
 use App\Student_register;
 use App\Employee;
+use App\Services\RegistrationWizardService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -470,8 +471,11 @@ class websitecontroller extends Controller
 
         $paymentQrPath = (string) ($paymentSettings['payment_qr'] ?? '');
         $paymentQrUrl = $this->resolveRegistrationPaymentQrUrl($paymentQrPath);
+        $wizardService = app(RegistrationWizardService::class);
+        $wizardToken = $wizardService->activeToken();
+        $wizardDraft = $wizardService->getDraft($wizardToken);
 
-        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms', 'paymentSettings', 'paymentQrUrl'));
+        return view('website.student_registration_wizard', compact('classes', 'countries_currencies', 'schoolTerms', 'transportTerms', 'paymentSettings', 'paymentQrUrl', 'wizardToken', 'wizardDraft'));
     }
 
     public function registration_payment_qr()

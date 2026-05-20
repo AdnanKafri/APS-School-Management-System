@@ -3452,14 +3452,14 @@ public function startQueueWorker()
         if ($statusFilter !== '' && $statusFilter !== 'all') {
             $baseQuery->where(function ($query) use ($statusFilter) {
                 if ($statusFilter === 'active') {
-                    $query->whereIn('admission_status', ['draft', 'pending_review', 'under_review'])
+                    $query->whereIn('admission_status', ['pending_review', 'under_review', 'converted_to_student'])
                         ->orWhere(function ($legacy) {
                             $legacy->whereNull('admission_status')
                                 ->where(function ($q) {
-                                    $q->whereNotNull('current_step')
-                                        ->orWhereNotNull('payment_receipt')
+                                    $q->whereNotNull('payment_receipt')
                                         ->orWhereNotNull('payment_date')
-                                        ->orWhereNotNull('payment_method');
+                                        ->orWhereNotNull('payment_method')
+                                        ->orWhereNotNull('admission_submitted_at');
                                 });
                         });
                     return;

@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\RegistrationWizardService;
-use App\Student_register;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
 class RegistrationWizardController extends Controller
@@ -21,6 +19,7 @@ class RegistrationWizardController extends Controller
     public function saveStep1Terms(Request $request)
     {
         $data = $request->validate([
+            'draft_token' => 'nullable|string|max:100',
             'accepted_terms' => 'required|boolean',
         ]);
 
@@ -31,17 +30,21 @@ class RegistrationWizardController extends Controller
             ], 422);
         }
 
+        $draft = $this->wizard->saveStep1Terms($data['draft_token'] ?? null);
+
         return response()->json([
             'success' => true,
+            'draft_token' => $this->wizard->activeToken(),
             'accepted_terms' => true,
             'next_step' => 2,
+            'current_step' => (int) ($draft['current_step'] ?? 2),
         ]);
     }
 
     public function saveStep2Form(Request $request)
     {
         $data = $request->validate([
-            'registration_id' => 'nullable|integer|exists:student_register,id',
+            'draft_token' => 'nullable|string|max:100',
             'form_data' => 'required|array',
             'form_data.first_name' => 'required|string|max:255',
             'form_data.last_name' => 'required|string|max:255',
@@ -78,18 +81,15 @@ class RegistrationWizardController extends Controller
         ]);
 
         $formData = $data['form_data'];
-        $existingRegistration = null;
-
-        if (!empty($data['registration_id'])) {
-            $existingRegistration = Student_register::find($data['registration_id']);
-        }
+        $draftToken = trim((string) ($data['draft_token'] ?? ''));
+        $existingDraft = $this->wizard->getDraft($draftToken);
 
         $requiredFiles = ['fourth_image', 'personal_image', 'certification', 'mather_page', 'father_page'];
         $missingFiles = [];
 
         foreach ($requiredFiles as $fileField) {
             $hasUploadedFile = $request->hasFile($fileField);
-            $hasExistingFile = $existingRegistration && !empty($existingRegistration->{$fileField});
+            $hasExistingFile = !empty($existingDraft['uploaded_files'][$fileField]['path'] ?? null);
 
             if (!$hasUploadedFile && !$hasExistingFile) {
                 $missingFiles[$fileField] = __('wizard.errors.required_file');
@@ -100,88 +100,104 @@ class RegistrationWizardController extends Controller
             throw ValidationException::withMessages($missingFiles);
         }
 
+        $uploadedFiles = [];
         foreach (['fourth_image', 'passbord', 'personal_image', 'certification', 'mather_page', 'father_page'] as $fileField) {
             if ($request->hasFile($fileField)) {
-                $formData[$fileField] = $this->storeRegistrationFile($request->file($fileField));
+                $uploadedFiles[$fileField] = $request->file($fileField);
             }
         }
 
-        $registration = $this->wizard->saveStep2Form($data['registration_id'] ?? null, $formData);
+        $draft = $this->wizard->saveStep2Form($draftToken ?: null, $formData, $uploadedFiles);
 
         return response()->json([
             'success' => true,
-            'registration_id' => $registration->id,
-            'current_step' => $registration->current_step,
-            'status' => $registration->status,
-            'admission_status' => $registration->admission_status,
+            'draft_token' => $this->wizard->activeToken(),
+            'current_step' => (int) ($draft['current_step'] ?? 3),
+            'status' => $draft['status'] ?? null,
+            'admission_status' => $draft['admission_status'] ?? null,
+        ]);
+    }
+
+    public function storeTempFile(Request $request)
+    {
+        $data = $request->validate([
+            'draft_token' => 'nullable|string|max:100',
+            'field' => 'required|in:fourth_image,passbord,personal_image,certification,mather_page,father_page',
+            'file' => 'required|file|max:4096',
+        ]);
+
+        $draftToken = trim((string) ($data['draft_token'] ?? ''));
+        $temp = $this->wizard->saveWizardTempFile($request->file('file'), $data['field'], $draftToken ?: null);
+
+        return response()->json([
+            'success' => true,
+            'draft_token' => $this->wizard->activeToken(),
+            'field' => $data['field'],
+            'temp_file' => $temp,
         ]);
     }
 
     public function saveStep3Transport(Request $request)
     {
         $data = $request->validate([
-            'registration_id' => 'required|integer|exists:student_register,id',
+            'draft_token' => 'required|string|max:100',
             'wants_transport' => 'required|boolean',
             'accepted_transport_terms' => 'nullable|boolean',
         ]);
 
         $registration = $this->wizard->saveStep3Transport(
-            $data['registration_id'],
+            $data['draft_token'],
             (bool) $data['wants_transport'],
             (bool) ($data['accepted_transport_terms'] ?? false)
         );
 
         return response()->json([
             'success' => true,
-            'registration_id' => $registration->id,
-            'current_step' => $registration->current_step,
-            'status' => $registration->status,
-            'admission_status' => $registration->admission_status,
+            'draft_token' => $this->wizard->activeToken(),
+            'current_step' => (int) ($registration['current_step'] ?? 4),
+            'status' => $registration['status'] ?? null,
+            'admission_status' => $registration['admission_status'] ?? null,
         ]);
     }
 
     public function preparePaymentSummary(Request $request)
     {
         $data = $request->validate([
-            'registration_id' => 'required|integer|exists:student_register,id',
+            'draft_token' => 'required|string|max:100',
         ]);
 
-        $registration = $this->wizard->preparePaymentSummary($data['registration_id']);
+        $registration = $this->wizard->preparePaymentSummary($data['draft_token']);
 
         return response()->json([
             'success' => true,
-            'registration_id' => $registration->id,
-            'current_step' => $registration->current_step,
-            'status' => $registration->status,
-            'admission_status' => $registration->admission_status,
+            'draft_token' => $this->wizard->activeToken(),
+            'current_step' => (int) ($registration['current_step'] ?? 5),
+            'status' => $registration['status'] ?? null,
+            'admission_status' => $registration['admission_status'] ?? null,
             'fees' => [
-                'registration_fee' => $registration->registration_fee,
-                'services_fee' => $registration->services_fee,
-                'transport_fee' => $registration->transport_fee,
-                'total_amount' => $registration->total_amount,
+                'registration_fee' => $registration['fees']['registration_fee'] ?? 0,
+                'services_fee' => $registration['fees']['services_fee'] ?? 0,
+                'transport_fee' => $registration['fees']['transport_fee'] ?? 0,
+                'total_amount' => $registration['fees']['total_amount'] ?? 0,
             ],
-            'payment' => [
-                'payment_method' => $registration->payment_method,
-                'payment_status' => $registration->payment_status,
-            ],
+            'payment' => $registration['payment'] ?? [],
         ]);
     }
 
     public function finalSubmit(Request $request)
     {
         $data = $request->validate([
-            'registration_id' => 'required|integer|exists:student_register,id',
+            'draft_token' => 'required|string|max:100',
             'payment_method' => 'nullable|in:manual,shamcash,0,1',
             'payment_receipt' => 'required|file|max:6144',
         ]);
 
-        $receiptPath = $this->storeRegistrationFile($request->file('payment_receipt'));
         $paymentMethod = $data['payment_method'] ?? 'manual';
 
         $registration = $this->wizard->submitRegistration(
-            (int) $data['registration_id'],
+            $data['draft_token'],
             $paymentMethod,
-            $receiptPath
+            $request->file('payment_receipt')
         );
 
         $request->session()->flash('registration_success', [
@@ -199,23 +215,5 @@ class RegistrationWizardController extends Controller
         ]);
     }
 
-    private function storeRegistrationFile(UploadedFile $file): string
-    {
-        $extension = strtolower((string) $file->getClientOriginalExtension());
-
-        if ($extension === '') {
-            $extension = 'bin';
-        }
-
-        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'pdf'], true)) {
-            throw ValidationException::withMessages([
-                'file' => __('wizard.errors.unsupported_file'),
-            ]);
-        }
-
-        $name = uniqid('reg_', true) . '.' . $extension;
-
-        return $file->storeAs('filesteachers', $name, 'public');
-    }
 }
 

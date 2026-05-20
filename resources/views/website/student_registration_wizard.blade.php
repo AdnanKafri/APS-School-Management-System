@@ -12,10 +12,12 @@
 
     .wizard-wrap.is-rtl {
         font-family: 'Cairo', sans-serif;
+        direction: rtl;
     }
 
     .wizard-wrap.is-ltr {
         font-family: inherit;
+        direction: ltr;
     }
 
     .wizard-card {
@@ -135,24 +137,38 @@
         min-height: 48px;
         border: 1px solid #d7d2e5;
         border-radius: 12px;
-        padding: 10px 14px;
+        padding: 14px 16px;
         font-family: inherit;
         background: #fff;
         color: #2f2b3a;
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
         text-align: start;
+        direction: inherit;
+        box-sizing: border-box;
+        display: block;
+    }
+
+    .wizard-field textarea {
+        min-height: 120px;
+        line-height: 1.9;
+        font-size: 14px;
+        resize: vertical;
     }
 
     .wizard-wrap.is-rtl .wizard-field input,
     .wizard-wrap.is-rtl .wizard-field select,
     .wizard-wrap.is-rtl .wizard-field textarea {
         font-family: 'Cairo', sans-serif;
+        direction: rtl;
+        text-align: right;
     }
 
     .wizard-wrap.is-ltr .wizard-field input,
     .wizard-wrap.is-ltr .wizard-field select,
     .wizard-wrap.is-ltr .wizard-field textarea {
         font-family: inherit;
+        direction: ltr;
+        text-align: left;
     }
 
     .wizard-field input:focus,
@@ -169,8 +185,13 @@
     }
 
     .wizard-field textarea {
-        min-height: 100px;
+        min-height: 120px;
+        padding: 14px 16px;
+        line-height: 1.9;
+        font-size: 14px;
         resize: vertical;
+        display: block;
+        vertical-align: top;
     }
 
     .wizard-field.is-invalid input,
@@ -280,6 +301,33 @@
 
     .wizard-agreement-consent .wizard-check {
         margin-top: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .wizard-toggle-card {
+        border: 1px solid #ece8f5;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfafe 100%);
+        padding: 12px 14px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .wizard-toggle-card .wizard-check {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        width: 100%;
     }
 
     .wizard-actions {
@@ -326,7 +374,7 @@
         -webkit-appearance: none;
         width: 22px;
         height: 22px;
-        margin: 0;
+        margin: 2px 0 0;
         border: 2px solid #8e86aa;
         border-radius: 999px;
         background: #fff;
@@ -462,6 +510,85 @@
         background: #f8f7fc;
     }
 
+    .wizard-summary-doc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px;
+    }
+
+    .wizard-summary-doc {
+        border: 1px solid #ece8f5;
+        border-radius: 16px;
+        background: #fff;
+        padding: 12px 14px;
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+        overflow: hidden;
+        align-content: start;
+    }
+
+    .wizard-summary-doc__head {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #2f2b3a;
+        min-width: 0;
+    }
+
+    .wizard-summary-doc__title {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.5;
+    }
+
+    .wizard-summary-doc__title[title] {
+        cursor: help;
+    }
+
+    .wizard-summary-doc__meta {
+        font-size: 12px;
+        line-height: 1.5;
+        color: #7f7891;
+        min-width: 0;
+        overflow: hidden;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .wizard-doc-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 26px;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        background: #f4f2f8;
+        color: #6f6787;
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .wizard-doc-pill.is-success {
+        background: #eefaf3;
+        color: #1f8f5f;
+    }
+
+    .wizard-doc-pill.is-muted {
+        background: #f4f2f8;
+        color: #6f6787;
+    }
+
     .wizard-error {
         display: none;
         color: #c53939;
@@ -548,14 +675,20 @@
     }
 
     .wizard-check {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #ece8f5;
+        border-radius: 16px;
+        background: #fff;
         margin-top: 14px;
         cursor: pointer;
         user-select: none;
         color: #3b354a;
         font-weight: 600;
+        box-sizing: border-box;
     }
 
     .wizard-check input[type="checkbox"] {
@@ -564,7 +697,7 @@
         width: 22px;
         height: 22px;
         margin: 0;
-        border: 2px solid #8e86aa;
+        border: 2px solid #5b4b8a;
         border-radius: 6px;
         background: #fff;
         flex-shrink: 0;
@@ -573,26 +706,10 @@
         transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .wizard-check input[type="checkbox"]::before {
-        content: "";
-        width: 10px;
-        height: 6px;
-        border-right: 2px solid #fff;
-        border-bottom: 2px solid #fff;
-        transform: rotate(45deg) scale(0);
-        transform-origin: center;
-        transition: transform 0.15s ease;
-        margin-top: -2px;
-    }
-
     .wizard-check input[type="checkbox"]:checked {
-        border-color: #5b4b8a;
         background: #5b4b8a;
+        border-color: #fff;
         box-shadow: 0 0 0 4px rgba(91, 75, 138, 0.12);
-    }
-
-    .wizard-check input[type="checkbox"]:checked::before {
-        transform: rotate(45deg) scale(1);
     }
 
     .wizard-check input[type="checkbox"]:focus-visible {
@@ -601,8 +718,18 @@
     }
 
     .wizard-check__text {
-        line-height: 1.7;
+        flex: 1;
+        line-height: 1.8;
         text-align: start;
+        min-width: 0;
+    }
+
+    .wizard-file-status {
+        margin-top: 6px;
+        min-height: 18px;
+        color: #7f7891;
+        font-size: 12px;
+        line-height: 1.5;
     }
 
     .wizard-subsection {
@@ -635,11 +762,28 @@
         direction: ltr;
     }
 
+    .wizard-wrap.is-rtl .wizard-check {
+        flex-direction: row-reverse;
+    }
+
     .wizard-wrap.is-rtl .wizard-check,
     .wizard-wrap.is-rtl .wizard-choice,
     .wizard-wrap.is-rtl .wizard-summary-row,
     .wizard-wrap.is-rtl .wizard-steps {
         direction: rtl;
+    }
+
+    .wizard-wrap.is-rtl .wizard-check input[type="checkbox"] {
+        order: 2;
+    }
+
+    .wizard-wrap.is-rtl .wizard-check__text {
+        order: 1;
+        text-align: right;
+    }
+
+    .wizard-wrap.is-ltr .wizard-check__text {
+        text-align: left;
     }
 
     @media (max-width: 768px) {
@@ -814,7 +958,7 @@
     </div>
 
     <div id="wizardAlert" class="wizard-alert"></div>
-    <input type="hidden" id="registrationId" value="">
+    <input type="hidden" id="wizardToken" value="{{ $wizardToken }}">
 
     <div class="wizard-card wizard-pane is-active" data-pane="1">
         <h3 class="wizard-section-title">{{ __('wizard.sections.school_terms') }}</h3>
@@ -940,17 +1084,43 @@
             <div class="wizard-field col-6"><label for="allergies">{{ __('wizard.fields.allergies') }}</label><textarea id="allergies"></textarea></div>
             <div class="wizard-field col-6"><label for="custody_notes">{{ __('wizard.fields.custody_notes') }}</label><textarea id="custody_notes"></textarea></div>
             <div class="wizard-field col-12">
-                <label class="wizard-check" for="fever_medicine_permission" style="margin-top: 6px;">
-                    <input type="checkbox" id="fever_medicine_permission">
-                    <span class="wizard-check__text">{{ __('wizard.fields.fever_medicine_permission') }}</span>
-                </label>
+                <div class="wizard-toggle-card">
+                    <label class="wizard-check" for="fever_medicine_permission">
+                        <input type="checkbox" id="fever_medicine_permission">
+                        <span class="wizard-check__text">{{ __('wizard.fields.fever_medicine_permission') }}</span>
+                    </label>
+                </div>
             </div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="fourth_image">{{ __('wizard.fields.birth_record') }}</label><input id="fourth_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="personal_image">{{ __('wizard.fields.personal_image') }}</label><input id="personal_image" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label for="passbord">{{ __('wizard.fields.passport_copy') }}</label><input id="passbord" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="certification">{{ __('wizard.fields.latest_certificate') }}</label><input id="certification" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="mather_page">{{ __('wizard.fields.mother_passport') }}</label><input id="mather_page" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
-            <div class="wizard-field col-6"><label class="wizard-label-required" for="father_page">{{ __('wizard.fields.father_passport') }}</label><input id="father_page" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
+            <div class="wizard-field col-6">
+                <label class="wizard-label-required" for="fourth_image">{{ __('wizard.fields.birth_record') }}</label>
+                <input id="fourth_image" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="fourth_image"></div>
+            </div>
+            <div class="wizard-field col-6">
+                <label class="wizard-label-required" for="personal_image">{{ __('wizard.fields.personal_image') }}</label>
+                <input id="personal_image" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="personal_image"></div>
+            </div>
+            <div class="wizard-field col-6">
+                <label for="passbord">{{ __('wizard.fields.passport_copy') }}</label>
+                <input id="passbord" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="passbord"></div>
+            </div>
+            <div class="wizard-field col-6">
+                <label class="wizard-label-required" for="certification">{{ __('wizard.fields.latest_certificate') }}</label>
+                <input id="certification" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="certification"></div>
+            </div>
+            <div class="wizard-field col-6">
+                <label class="wizard-label-required" for="mather_page">{{ __('wizard.fields.mother_passport') }}</label>
+                <input id="mather_page" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="mather_page"></div>
+            </div>
+            <div class="wizard-field col-6">
+                <label class="wizard-label-required" for="father_page">{{ __('wizard.fields.father_passport') }}</label>
+                <input id="father_page" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="father_page"></div>
+            </div>
         </div>
         <div class="wizard-error" id="step2Error">{{ __('wizard.errors.step2_required') }}</div>
         <div class="wizard-actions">
@@ -1030,6 +1200,7 @@
             <div class="wizard-field col-12" style="margin-top: 12px;">
                 <label class="wizard-label-required" for="payment_receipt">{{ __('wizard.payment.receipt_label') }}</label>
                 <input id="payment_receipt" type="file" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="wizard-file-status" data-file-status="payment_receipt"></div>
             </div>
             <div class="wizard-error" id="paymentReceiptError">{{ __('wizard.errors.required_file') }}</div>
             <div class="wizard-submit-note">{{ __('wizard.payment.submit_note') }}</div>
@@ -1045,19 +1216,37 @@
 document.addEventListener('DOMContentLoaded', function () {
     const state = {
         step: 1,
-        registrationId: '',
+        draftToken: @json($wizardToken),
         wantsTransport: null,
         formData: {},
-        uploadedFiles: {}
+        uploadedFiles: {},
+        tempFiles: {},
+        tempFileNames: {},
+        pendingFileUploads: {},
+        acceptedTerms: false,
+        acceptedTransportTerms: false,
+        fees: {},
+        payment: {}
     };
 
     const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
     const redirectAfterSubmit = @json(url($locale));
+    const storageKey = 'admissionWizardDraft:' + state.draftToken;
+    const serverDraft = {!! json_encode($wizardDraft ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     const leaveWarningMessage = @json($isRtl ? 'لديك بيانات قيد الإدخال. قد تفقد التغييرات غير المكتملة إذا غادرت الصفحة الآن.' : 'You have registration data in progress. You may lose unfinished changes if you leave this page now.');
+    const fileStatusLabels = {
+        temporaryUploaded: @json($isRtl ? 'مرفوع مؤقتاً' : 'Temporarily uploaded'),
+        pendingUpload: @json($isRtl ? 'بانتظار الرفع' : 'Pending upload'),
+        uploaded: @json($isRtl ? 'مرفوع' : 'Uploaded')
+    };
+    const paymentReferenceLabel = @json($paymentReference !== '' ? $paymentReference : __('wizard.payment.reference_value'));
+    const paymentMethodLabel = @json($paymentAccount !== '' ? $paymentAccount : __('wizard.payment.method_manual'));
+    const acceptanceSectionTitle = @json($isRtl ? 'الموافقة والقبول' : 'Acceptance');
     let allowSilentUnload = false;
     const urls = {
         step1: "{{ route('registration_wizard.step1') }}",
         step2: "{{ route('registration_wizard.step2') }}",
+        tempFile: "{{ route('registration_wizard.temp_file') }}",
         step3: "{{ route('registration_wizard.step3') }}",
         summary: "{{ route('registration_wizard.summary') }}",
         finalSubmit: "{{ route('registration_wizard.final_submit') }}"
@@ -1085,23 +1274,75 @@ document.addEventListener('DOMContentLoaded', function () {
             'finalSubmitHint' => __('wizard.success.final_submit_hint'),
         ],
         'fields' => [
+            'first_name' => __('wizard.fields.first_name'),
+            'last_name' => __('wizard.fields.last_name'),
+            'first_name_en' => __('wizard.fields.first_name_en'),
+            'last_name_en' => __('wizard.fields.last_name_en'),
+            'father_name' => __('wizard.fields.father_name'),
+            'mother_name' => __('wizard.fields.mother_name'),
+            'mother_last_name' => __('wizard.fields.mother_last_name'),
+            'date' => __('wizard.fields.date'),
+            'class' => __('wizard.fields.class'),
+            'gender' => __('wizard.fields.gender'),
+            'religion' => __('wizard.fields.religion'),
             'nationality' => __('wizard.fields.nationality'),
+            'country' => __('wizard.fields.country'),
+            'city' => __('wizard.fields.city'),
+            'id_number' => __('wizard.fields.id_number'),
+            'passport_number' => __('wizard.fields.passport_number'),
+            'place_of_birth' => __('wizard.fields.place_of_birth'),
+            'phone' => __('wizard.fields.phone'),
+            'father_phone' => __('wizard.fields.father_phone'),
+            'mother_phone' => __('wizard.fields.mother_phone'),
+            'father_job' => __('wizard.fields.father_job'),
+            'mother_job' => __('wizard.fields.mother_job'),
+            'other_phone' => __('wizard.fields.other_phone'),
+            'email' => __('wizard.fields.email'),
+            'previous_school' => __('wizard.fields.previous_school'),
+            'guardian_name' => __('wizard.fields.guardian_name'),
+            'guardian_relation' => __('wizard.fields.guardian_relation'),
+            'guardian_phone' => __('wizard.fields.guardian_phone'),
+            'permanent_address' => __('wizard.fields.permanent_address'),
+            'current_address' => __('wizard.fields.current_address'),
             'notes' => __('wizard.fields.notes'),
+            'medical_notes' => __('wizard.fields.medical_notes'),
+            'chronic_diseases' => __('wizard.fields.chronic_diseases'),
+            'allergies' => __('wizard.fields.allergies'),
+            'fever_medicine_permission' => __('wizard.fields.fever_medicine_permission'),
+            'custody_notes' => __('wizard.fields.custody_notes'),
+            'birth_record' => __('wizard.fields.birth_record'),
+            'personal_image' => __('wizard.fields.personal_image'),
+            'passport_copy' => __('wizard.fields.passport_copy'),
+            'latest_certificate' => __('wizard.fields.latest_certificate'),
+            'mother_passport' => __('wizard.fields.mother_passport'),
+            'father_passport' => __('wizard.fields.father_passport'),
         ],
         'sections' => [
             'guardian_contacts' => __('wizard.sections.guardian_contacts'),
             'address_health' => __('wizard.sections.address_health'),
+            'documents' => __('wizard.section_notes.documents'),
         ],
         'options' => [
             'allowed' => __('wizard.options.allowed'),
             'not_allowed' => __('wizard.options.not_allowed'),
+            'yes' => __('wizard.summary.yes'),
+            'no' => __('wizard.summary.no'),
         ],
         'summary' => [
             'studentSummary' => __('wizard.sections.student_summary'),
             'feesSummary' => __('wizard.sections.fees_summary'),
             'fullName' => __('wizard.summary.full_name'),
+            'firstNameEn' => __('wizard.fields.first_name_en'),
+            'lastNameEn' => __('wizard.fields.last_name_en'),
             'fatherName' => __('wizard.summary.father_name'),
             'motherName' => __('wizard.summary.mother_name'),
+            'motherLastName' => __('wizard.fields.mother_last_name'),
+            'gender' => __('wizard.fields.gender'),
+            'religion' => __('wizard.fields.religion'),
+            'nationality' => __('wizard.fields.nationality'),
+            'country' => __('wizard.fields.country'),
+            'date' => __('wizard.fields.date'),
+            'placeOfBirth' => __('wizard.fields.place_of_birth'),
             'fatherPhone' => __('wizard.summary.father_phone'),
             'motherPhone' => __('wizard.summary.mother_phone'),
             'fatherJob' => __('wizard.summary.father_job'),
@@ -1115,12 +1356,18 @@ document.addEventListener('DOMContentLoaded', function () {
             'currentAddress' => __('wizard.summary.current_address'),
             'emergencyPhone' => __('wizard.summary.emergency_phone'),
             'idNumber' => __('wizard.summary.id_number'),
+            'passportNumber' => __('wizard.fields.passport_number'),
             'transport' => __('wizard.summary.transport'),
             'medicalNotes' => __('wizard.summary.medical_notes'),
             'chronicDiseases' => __('wizard.summary.chronic_diseases'),
             'allergies' => __('wizard.summary.allergies'),
             'feverMedicinePermission' => __('wizard.summary.fever_medicine_permission'),
             'custodyNotes' => __('wizard.summary.custody_notes'),
+            'documents' => $isRtl ? 'الوثائق' : 'Documents',
+            'paymentReference' => $isRtl ? 'مرجع الدفع' : 'Payment reference',
+            'paymentMethod' => $isRtl ? 'طريقة الدفع' : 'Payment method',
+            'schoolAgreement' => __('wizard.terms.school_agree'),
+            'transportAgreement' => __('wizard.terms.transport_agree'),
             'registrationFee' => __('wizard.summary.registration_fee'),
             'servicesFee' => __('wizard.summary.services_fee'),
             'transportFee' => __('wizard.summary.transport_fee'),
@@ -1162,6 +1409,168 @@ document.addEventListener('DOMContentLoaded', function () {
             toast.classList.add('is-visible');
         });
         return toast;
+    }
+
+    function readStoredDraft() {
+        const candidates = [];
+        try {
+            candidates.push(sessionStorage.getItem(storageKey));
+        } catch (error) {}
+        try {
+            candidates.push(localStorage.getItem(storageKey));
+        } catch (error) {}
+        for (const candidate of candidates) {
+            if (!candidate) {
+                continue;
+            }
+            try {
+                const parsed = JSON.parse(candidate);
+                if (parsed && typeof parsed === 'object') {
+                    return parsed;
+                }
+            } catch (error) {}
+        }
+        return {};
+    }
+
+    function writeStoredDraft(draft) {
+        const payload = JSON.stringify(draft || {});
+        try {
+            sessionStorage.setItem(storageKey, payload);
+        } catch (error) {}
+        try {
+            localStorage.setItem(storageKey, payload);
+        } catch (error) {}
+    }
+
+    function clearStoredDraft() {
+        try {
+            sessionStorage.removeItem(storageKey);
+        } catch (error) {}
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (error) {}
+    }
+
+    function captureDraftSnapshot() {
+        return {
+            step: state.step,
+            draftToken: state.draftToken,
+            acceptedTerms: state.acceptedTerms ? 1 : 0,
+            acceptedTransportTerms: state.acceptedTransportTerms ? 1 : 0,
+            wantsTransport: state.wantsTransport,
+            formData: state.formData,
+            uploadedFiles: state.uploadedFiles,
+            tempFiles: state.tempFiles,
+            tempFileNames: state.tempFileNames,
+            fees: state.fees,
+            payment: state.payment
+        };
+    }
+
+    function persistWizardState() {
+        writeStoredDraft(captureDraftSnapshot());
+    }
+
+    function deepMerge(target, source) {
+        const output = Array.isArray(target) ? target.slice() : Object.assign({}, target || {});
+        Object.keys(source || {}).forEach(function (key) {
+            const value = source[key];
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                output[key] = deepMerge(output[key], value);
+                return;
+            }
+            output[key] = value;
+        });
+        return output;
+    }
+
+    function getActiveDraft() {
+        return deepMerge(serverDraft, readStoredDraft());
+    }
+
+    function setFileStatus(field, label, isSuccess) {
+        const statusNode = document.querySelector('[data-file-status="' + field + '"]');
+        if (!statusNode) {
+            return;
+        }
+        statusNode.textContent = label || '';
+        statusNode.style.color = isSuccess ? '#1f8f5f' : '#7f7891';
+    }
+
+    function setInputValue(id, value) {
+        const element = document.getElementById(id);
+        if (!element) {
+            return;
+        }
+        const tag = (element.tagName || '').toLowerCase();
+        const type = (element.type || '').toLowerCase();
+        if (type === 'checkbox') {
+            element.checked = !!Number(value);
+            return;
+        }
+        if (type === 'radio') {
+            element.checked = String(element.value) === String(value);
+            return;
+        }
+        if (tag === 'select' || type === 'text' || type === 'email' || type === 'date' || type === 'textarea' || tag === 'textarea') {
+            element.value = value == null ? '' : String(value);
+        }
+    }
+
+    function syncFormToState() {
+        state.formData = collectStep2Data();
+        state.acceptedTerms = document.getElementById('agreeTerms') ? document.getElementById('agreeTerms').checked : state.acceptedTerms;
+        state.acceptedTransportTerms = document.getElementById('agreeTransportTerms') ? document.getElementById('agreeTransportTerms').checked : state.acceptedTransportTerms;
+        persistWizardState();
+    }
+
+    function applyDraftToForm(draft) {
+        const data = (draft && draft.formData) || (draft && draft.form_data) || {};
+        state.step = Number(draft && draft.step ? draft.step : draft && draft.current_step ? draft.current_step : 1) || 1;
+        const draftTransportValue = draft && draft.wantsTransport !== undefined ? draft.wantsTransport : draft && draft.wants_transport !== undefined ? draft.wants_transport : state.wantsTransport;
+        state.wantsTransport = draftTransportValue === null || draftTransportValue === '' || draftTransportValue === undefined ? state.wantsTransport : Number(draftTransportValue);
+        state.acceptedTerms = !!Number(draft && (draft.acceptedTerms !== undefined ? draft.acceptedTerms : draft.accepted_terms));
+        state.acceptedTransportTerms = !!Number(draft && (draft.acceptedTransportTerms !== undefined ? draft.acceptedTransportTerms : draft.accepted_transport_terms));
+        state.formData = data;
+        state.uploadedFiles = (draft && (draft.uploadedFiles || draft.uploaded_files)) ? deepMerge({}, (draft.uploadedFiles || draft.uploaded_files)) : {};
+        state.tempFiles = (draft && draft.tempFiles) ? deepMerge({}, draft.tempFiles) : {};
+        state.tempFileNames = (draft && draft.tempFileNames) ? deepMerge({}, draft.tempFileNames) : {};
+        state.pendingFileUploads = {};
+        state.fees = (draft && draft.fees) ? deepMerge({}, draft.fees) : state.fees;
+        state.payment = (draft && draft.payment) ? deepMerge({}, draft.payment) : state.payment;
+
+        Object.keys(data || {}).forEach(function (key) {
+            setInputValue(key, data[key]);
+        });
+        if (document.getElementById('agreeTerms')) {
+            document.getElementById('agreeTerms').checked = state.acceptedTerms;
+        }
+        if (document.getElementById('agreeTransportTerms')) {
+            document.getElementById('agreeTransportTerms').checked = state.acceptedTransportTerms;
+        }
+        if (document.getElementById('fever_medicine_permission')) {
+            document.getElementById('fever_medicine_permission').checked = Number(data.fever_medicine_permission || 0) === 1;
+        }
+        ['fourth_image', 'passbord', 'personal_image', 'certification', 'mather_page', 'father_page'].forEach(function (field) {
+            const hasTemp = !!(state.tempFiles[field] || (state.uploadedFiles[field] && state.uploadedFiles[field].path));
+            setFileStatus(field, hasTemp ? (state.tempFileNames[field] || fileStatusLabels.temporaryUploaded) : fileStatusLabels.pendingUpload, hasTemp);
+        });
+        if (state.wantsTransport === 1) {
+            document.getElementById('choiceYes').classList.add('is-active');
+            document.getElementById('choiceNo').classList.remove('is-active');
+            document.querySelector('#choiceYes input[type="radio"]').checked = true;
+            document.querySelector('#choiceNo input[type="radio"]').checked = false;
+            document.getElementById('btnStep3Next').disabled = false;
+        } else if (state.wantsTransport === 0) {
+            document.getElementById('choiceNo').classList.add('is-active');
+            document.getElementById('choiceYes').classList.remove('is-active');
+            document.querySelector('#choiceNo input[type="radio"]').checked = true;
+            document.querySelector('#choiceYes input[type="radio"]').checked = false;
+            document.getElementById('btnStep3Next').disabled = false;
+        }
+        persistWizardState();
+        setStep(state.step);
     }
 
     function hasDirtyWizardState() {
@@ -1268,7 +1677,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return data;
     }
 
-    async function postFormData(url, formData) {
+    async function postFormData(url, formData, fallbackMessage) {
         console.log('[wizard] multipart', url);
         const response = await fetch(url, {
             method: 'POST',
@@ -1283,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         console.log('[wizard] multipart response', data);
         if (!response.ok || !data || data.success === false) {
-            throw new Error(extractErrorMessage(data, i18n.errors.studentSaveFailed));
+            throw new Error(extractErrorMessage(data, fallbackMessage || i18n.errors.studentSaveFailed));
         }
         return data;
     }
@@ -1306,8 +1715,11 @@ document.addEventListener('DOMContentLoaded', function () {
             class1: classSelect.value,
             class_name: classOption ? (classOption.text || '') : '',
             gender: document.getElementById('gender').value,
+            gender_label: document.getElementById('gender').selectedIndex >= 0 ? (document.getElementById('gender').options[document.getElementById('gender').selectedIndex].text || '') : '',
             religion: document.getElementById('religion').value,
+            religion_label: document.getElementById('religion').selectedIndex >= 0 ? (document.getElementById('religion').options[document.getElementById('religion').selectedIndex].text || '') : '',
             nationality: document.getElementById('nationality').value,
+            nationality_label: document.getElementById('nationality').selectedIndex >= 0 ? (document.getElementById('nationality').options[document.getElementById('nationality').selectedIndex].text || '') : '',
             the_ID_number: document.getElementById('the_ID_number').value.trim(),
             passport_number: document.getElementById('passport_number').value.trim(),
             place_of_birth: document.getElementById('place_of_birth').value.trim(),
@@ -1377,8 +1789,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function buildStep2Payload(data) {
         const formData = new FormData();
-        if (state.registrationId) {
-            formData.append('registration_id', state.registrationId);
+        if (state.draftToken) {
+            formData.append('draft_token', state.draftToken);
         }
         Object.keys(data).forEach(function (key) {
             if (key === 'country_label') {
@@ -1387,6 +1799,9 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('form_data[' + key + ']', data[key]);
         });
         ['fourth_image', 'passbord', 'personal_image', 'certification', 'mather_page', 'father_page'].forEach(function (field) {
+            if (state.tempFiles[field]) {
+                return;
+            }
             const input = document.getElementById(field);
             if (input && input.files && input.files[0]) {
                 formData.append(field, input.files[0]);
@@ -1400,70 +1815,156 @@ document.addEventListener('DOMContentLoaded', function () {
             return value === null || value === undefined || value === '' ? i18n.summary.dash : String(value);
         }
 
-        function displayBoolean(value) {
-            if (value === null || value === undefined || value === '') {
-                return i18n.summary.dash;
-            }
-            return Number(value) === 1 ? i18n.options.allowed : i18n.options.not_allowed;
+        function row(label, value, variant) {
+            return '<div class="wizard-summary-row' + (variant ? ' ' + variant : '') + '"><span>' + escapeHtml(label) + '</span><span>' + escapeHtml(value) + '</span></div>';
         }
 
-        const transportLabel = state.wantsTransport === 1 ? i18n.summary.yes : i18n.summary.no;
-        const fullName = ((state.formData.first_name || '') + ' ' + (state.formData.last_name || '')).trim();
-        const fees = data && data.fees ? data.fees : {};
+        function section(title, rows) {
+            return '<div class="wizard-summary-section">' +
+                '<h4 class="wizard-summary-heading">' + escapeHtml(title) + '</h4>' +
+                '<div class="wizard-summary-grid">' + rows.join('') + '</div>' +
+            '</div>';
+        }
 
-        document.getElementById('summaryBox').innerHTML =
-            '<div class="wizard-summary-section">' +
-                '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.summary.studentSummary) + '</h4>' +
-                '<div class="wizard-summary-grid">' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fullName) + '</span><span>' + escapeHtml(displayValue(fullName)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fatherName) + '</span><span>' + escapeHtml(displayValue(state.formData.father_name)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherName) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_name)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.phone) + '</span><span>' + escapeHtml(displayValue(state.formData.phone)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.class) + '</span><span>' + escapeHtml(displayValue(state.formData.class_name)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.idNumber) + '</span><span>' + escapeHtml(displayValue(state.formData.the_ID_number)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.transport) + '</span><span>' + escapeHtml(displayValue(transportLabel)) + '</span></div>' +
+        const draft = data && typeof data === 'object' ? (data.draft || {}) : {};
+        const fees = data && data.fees ? data.fees : (draft.fees || state.fees || {});
+        const payment = data && data.payment ? data.payment : (draft.payment || state.payment || {});
+        const formData = deepMerge({}, state.formData || draft.form_data || draft.formData || {});
+        const transportEnabled = Number(state.wantsTransport || draft.wants_transport || 0) === 1;
+        const fullName = ((formData.first_name || '') + ' ' + (formData.last_name || '')).trim();
+        const genderLabel = formData.gender_label || (String(formData.gender) === '1' ? i18n.options.male : String(formData.gender) === '0' ? i18n.options.female : '');
+        const religionLabel = formData.religion_label || (String(formData.religion) === '0' ? i18n.options.muslim : String(formData.religion) === '1' ? i18n.options.christian : '');
+        const schoolAgreementLabel = state.acceptedTerms ? i18n.options.yes : i18n.options.no;
+        const transportAgreementLabel = transportEnabled ? (state.acceptedTransportTerms ? i18n.options.yes : i18n.options.no) : @json($isRtl ? 'غير مطلوب' : 'Not required');
+        const documents = [
+            ['fourth_image', i18n.fields.birth_record],
+            ['personal_image', i18n.fields.personal_image],
+            ['passbord', i18n.fields.passport_copy],
+            ['certification', i18n.fields.latest_certificate],
+            ['mather_page', i18n.fields.mother_passport],
+            ['father_page', i18n.fields.father_passport]
+        ];
+
+        state.formData = formData;
+        state.fees = deepMerge({}, fees);
+        state.payment = deepMerge({}, payment);
+
+        const studentRows = [
+            row(i18n.summary.fullName, displayValue(fullName)),
+            row(i18n.summary.firstNameEn, displayValue(formData.first_name_en)),
+            row(i18n.summary.lastNameEn, displayValue(formData.last_name_en)),
+            row(i18n.summary.fatherName, displayValue(formData.father_name)),
+            row(i18n.summary.motherName, displayValue(formData.mather_name)),
+            row(i18n.summary.motherLastName, displayValue(formData.last_mother_name)),
+            row(i18n.summary.date, displayValue(formData.date)),
+            row(i18n.summary.class, displayValue(formData.class_name)),
+            row(i18n.summary.gender, displayValue(genderLabel)),
+            row(i18n.summary.religion, displayValue(religionLabel)),
+            row(i18n.summary.nationality, displayValue(formData.nationality_label || formData.nationality)),
+            row(i18n.summary.country, displayValue(formData.country_label || formData.country)),
+            row(i18n.summary.placeOfBirth, displayValue(formData.place_of_birth)),
+            row(i18n.summary.idNumber, displayValue(formData.the_ID_number)),
+            row(i18n.summary.passportNumber, displayValue(formData.passport_number)),
+            row(i18n.summary.phone, displayValue(formData.phone)),
+            row(i18n.fields.email, displayValue(formData.email)),
+            row(i18n.fields.previous_school, displayValue(formData.the_previous_school)),
+            row(i18n.summary.transport, displayValue(transportEnabled ? i18n.summary.yes : i18n.summary.no))
+        ];
+
+        const guardianRows = [
+            row(i18n.summary.fatherPhone, displayValue(formData.father_phone)),
+            row(i18n.summary.motherPhone, displayValue(formData.mather_phone)),
+            row(i18n.summary.fatherJob, displayValue(formData.father_job)),
+            row(i18n.summary.motherJob, displayValue(formData.mather_job)),
+            row(i18n.summary.guardianName, displayValue(formData.guardian_name)),
+            row(i18n.summary.guardianRelation, displayValue(formData.guardian_relation)),
+            row(i18n.summary.guardianPhone, displayValue(formData.guardian_phone)),
+            row(i18n.summary.emergencyPhone, displayValue(formData.other_phone))
+        ];
+
+        const addressRows = [
+            row(i18n.summary.permanentAddress, displayValue(formData.permanent_address)),
+            row(i18n.summary.currentAddress, displayValue(formData.current_address)),
+            row(i18n.summary.medicalNotes, displayValue(formData.medical_notes)),
+            row(i18n.summary.chronicDiseases, displayValue(formData.chronic_diseases)),
+            row(i18n.summary.allergies, displayValue(formData.allergies)),
+            row(i18n.summary.feverMedicinePermission, displayValue(String(formData.fever_medicine_permission) === '1' ? i18n.options.allowed : i18n.options.not_allowed)),
+            row(i18n.summary.custodyNotes, displayValue(formData.custody_notes)),
+            row(i18n.fields.notes, displayValue(formData.con_sch))
+        ];
+
+        const documentRows = documents.map(function (entry) {
+            const field = entry[0];
+            const label = entry[1];
+            const hasTemp = !!(state.tempFiles[field] || state.uploadedFiles[field]);
+            const badge = hasTemp ? (state.tempFileNames[field] || fileStatusLabels.temporaryUploaded) : fileStatusLabels.pendingUpload;
+            const fileName = state.tempFileNames[field] || fileStatusLabels.pendingUpload;
+            const fileTitle = state.tempFileNames[field] || label;
+            return '<div class="wizard-summary-doc">' +
+                '<div class="wizard-summary-doc__head">' +
+                    '<span class="wizard-summary-doc__title" title="' + escapeHtml(fileTitle) + '">' + escapeHtml(label) + '</span>' +
+                    '<span class="wizard-doc-pill ' + (hasTemp ? 'is-success' : 'is-muted') + '" title="' + escapeHtml(fileName) + '">' + escapeHtml(badge) + '</span>' +
                 '</div>' +
-            '</div>' +
-            '<div class="wizard-summary-section">' +
-                '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.sections.guardian_contacts) + '</h4>' +
-                '<div class="wizard-summary-grid">' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fatherPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.father_phone)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_phone)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.fatherJob) + '</span><span>' + escapeHtml(displayValue(state.formData.father_job)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.motherJob) + '</span><span>' + escapeHtml(displayValue(state.formData.mather_job)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.guardianName) + '</span><span>' + escapeHtml(displayValue(state.formData.guardian_name)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.guardianRelation) + '</span><span>' + escapeHtml(displayValue(state.formData.guardian_relation)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.guardianPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.guardian_phone)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.emergencyPhone) + '</span><span>' + escapeHtml(displayValue(state.formData.other_phone)) + '</span></div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="wizard-summary-section">' +
-                '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.sections.address_health) + '</h4>' +
-                '<div class="wizard-summary-grid">' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.fields.nationality) + '</span><span>' + escapeHtml(displayValue(state.formData.nationality)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.permanentAddress) + '</span><span>' + escapeHtml(displayValue(state.formData.permanent_address)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.currentAddress) + '</span><span>' + escapeHtml(displayValue(state.formData.current_address)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.medicalNotes) + '</span><span>' + escapeHtml(displayValue(state.formData.medical_notes)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.chronicDiseases) + '</span><span>' + escapeHtml(displayValue(state.formData.chronic_diseases)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.allergies) + '</span><span>' + escapeHtml(displayValue(state.formData.allergies)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.feverMedicinePermission) + '</span><span>' + escapeHtml(displayBoolean(state.formData.fever_medicine_permission)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.custodyNotes) + '</span><span>' + escapeHtml(displayValue(state.formData.custody_notes)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.fields.notes) + '</span><span>' + escapeHtml(displayValue(state.formData.con_sch)) + '</span></div>' +
-                '</div>' +
-            '</div>' +
+                '<div class="wizard-summary-doc__meta" title="' + escapeHtml(fileName) + '">' + escapeHtml(hasTemp ? fileName : fileStatusLabels.pendingUpload) + '</div>' +
+            '</div>';
+        });
+
+        const summaryBox = document.getElementById('summaryBox');
+        if (!summaryBox) {
+            return;
+        }
+
+        summaryBox.innerHTML =
+            section(i18n.sections.student_info, studentRows) +
+            section(i18n.sections.guardian_contacts, guardianRows) +
+            section(i18n.sections.address_health, addressRows) +
             '<div class="wizard-summary-section">' +
                 '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.summary.feesSummary) + '</h4>' +
                 '<div class="wizard-summary-grid">' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.registrationFee) + '</span><span>' + escapeHtml(displayValue(fees.registration_fee)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.servicesFee) + '</span><span>' + escapeHtml(displayValue(fees.services_fee)) + '</span></div>' +
-                    '<div class="wizard-summary-row"><span>' + escapeHtml(i18n.summary.transportFee) + '</span><span>' + escapeHtml(displayValue(fees.transport_fee)) + '</span></div>' +
-                    '<div class="wizard-summary-row total"><span>' + escapeHtml(i18n.summary.total) + '</span><span>' + escapeHtml(displayValue(fees.total_amount)) + '</span></div>' +
+                    row(i18n.summary.registrationFee, displayValue(fees.registration_fee)) +
+                    row(i18n.summary.servicesFee, displayValue(fees.services_fee)) +
+                    row(i18n.summary.transportFee, displayValue(fees.transport_fee)) +
+                    row(i18n.summary.total, displayValue(fees.total_amount), 'total') +
+                '</div>' +
+            '</div>' +
+            '<div class="wizard-summary-section">' +
+                '<h4 class="wizard-summary-heading">' + escapeHtml(i18n.summary.documents || fileStatusLabels.uploaded) + '</h4>' +
+                '<div class="wizard-summary-doc-grid">' + documentRows.join('') + '</div>' +
+            '</div>' +
+            '<div class="wizard-summary-section">' +
+                '<h4 class="wizard-summary-heading">' + escapeHtml(acceptanceSectionTitle) + '</h4>' +
+                '<div class="wizard-summary-grid">' +
+                    row(i18n.summary.schoolAgreement, schoolAgreementLabel) +
+                    row(i18n.summary.transportAgreement, transportAgreementLabel) +
+                    row(i18n.summary.paymentReference, displayValue(paymentReferenceLabel)) +
+                    row(i18n.summary.paymentMethod, displayValue(paymentMethodLabel)) +
                 '</div>' +
             '</div>';
     }
 
+    async function uploadTemporaryWizardFile(field, file) {
+        if (!file) {
+            return;
+        }
+        const payload = new FormData();
+        payload.append('draft_token', state.draftToken);
+        payload.append('field', field);
+        payload.append('file', file);
+        const response = await postFormData(urls.tempFile, payload, i18n.errors.requestFailed);
+        if (response && response.temp_file && response.temp_file.path) {
+            state.tempFiles[field] = response.temp_file.path;
+            state.tempFileNames[field] = response.temp_file.original_name || file.name || fileStatusLabels.temporaryUploaded;
+            state.uploadedFiles[field] = response.temp_file;
+            setFileStatus(field, state.tempFileNames[field], true);
+            persistWizardState();
+        }
+        return response;
+    }
+
     document.getElementById('agreeTerms').addEventListener('change', function () {
         document.getElementById('agreeTermsError').classList.remove('show');
+        state.acceptedTerms = this.checked;
+        persistWizardState();
     });
 
     document.getElementById('btnStep1Next').addEventListener('click', async function () {
@@ -1474,7 +1975,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const button = this;
         button.disabled = true;
         try {
-            await postUrlEncoded(urls.step1, { accepted_terms: 1 });
+            state.acceptedTerms = true;
+            persistWizardState();
+            const response = await postUrlEncoded(urls.step1, {
+                draft_token: state.draftToken,
+                accepted_terms: 1
+            });
+            if (response && response.draft_token) {
+                state.draftToken = String(response.draft_token);
+                document.getElementById('wizardToken').value = state.draftToken;
+            }
             setStep(2);
         } catch (error) {
             showAlert(error.message || i18n.errors.termsRequired);
@@ -1491,16 +2001,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const button = this;
         button.disabled = true;
         try {
+            const pendingUploads = Object.values(state.pendingFileUploads || {});
+            if (pendingUploads.length > 0) {
+                await Promise.allSettled(pendingUploads);
+            }
             const payload = buildStep2Payload(state.formData);
-            const response = await postFormData(urls.step2, payload);
-            state.registrationId = String(response.registration_id || '');
-            document.getElementById('registrationId').value = state.registrationId;
+            const response = await postFormData(urls.step2, payload, i18n.errors.studentSaveFailed);
+            if (response && response.draft_token) {
+                state.draftToken = String(response.draft_token);
+                document.getElementById('wizardToken').value = state.draftToken;
+            }
             requiredStep2Files.forEach(function (field) {
                 const input = document.getElementById(field);
-                if (input && input.files && input.files.length > 0) {
+                if (input && input.files && input.files.length > 0 && !state.tempFiles[field]) {
                     state.uploadedFiles[field] = true;
+                    state.tempFileNames[field] = input.files[0].name || fileStatusLabels.temporaryUploaded;
+                    setFileStatus(field, state.tempFileNames[field], true);
                 }
             });
+            state.formData = collectStep2Data();
+            persistWizardState();
             setStep(3);
         } catch (error) {
             showAlert(error.message || i18n.errors.studentSaveFailed);
@@ -1516,6 +2036,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('choiceYes').classList.add('is-active');
         document.getElementById('choiceNo').classList.remove('is-active');
         document.getElementById('btnStep3Next').disabled = false;
+        persistWizardState();
     });
 
     document.getElementById('choiceNo').addEventListener('click', function () {
@@ -1525,27 +2046,27 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('choiceNo').classList.add('is-active');
         document.getElementById('choiceYes').classList.remove('is-active');
         document.getElementById('btnStep3Next').disabled = false;
+        persistWizardState();
     });
 
     document.getElementById('btnStep3Next').addEventListener('click', async function () {
-        if (!state.registrationId) {
-            showAlert(i18n.errors.completeStudentFirst);
-            return;
-        }
         const button = this;
         button.disabled = true;
         try {
             await postUrlEncoded(urls.step3, {
-                registration_id: state.registrationId,
+                draft_token: state.draftToken,
                 wants_transport: state.wantsTransport,
                 accepted_transport_terms: 0
             });
+            state.acceptedTransportTerms = false;
             if (state.wantsTransport === 1) {
+                persistWizardState();
                 setStep(4);
                 return;
             }
-            const summary = await postUrlEncoded(urls.summary, { registration_id: state.registrationId });
+            const summary = await postUrlEncoded(urls.summary, { draft_token: state.draftToken });
             renderSummary(summary);
+            persistWizardState();
             setStep(5);
         } catch (error) {
             showAlert(error.message || i18n.errors.transportSaveFailed);
@@ -1556,6 +2077,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('agreeTransportTerms').addEventListener('change', function (event) {
         document.getElementById('btnStep4Next').disabled = !event.target.checked;
+        state.acceptedTransportTerms = !!event.target.checked;
+        persistWizardState();
     });
 
     document.getElementById('btnStep4Next').addEventListener('click', async function () {
@@ -1563,12 +2086,14 @@ document.addEventListener('DOMContentLoaded', function () {
         button.disabled = true;
         try {
             await postUrlEncoded(urls.step3, {
-                registration_id: state.registrationId,
+                draft_token: state.draftToken,
                 wants_transport: 1,
                 accepted_transport_terms: 1
             });
-            const summary = await postUrlEncoded(urls.summary, { registration_id: state.registrationId });
+            state.acceptedTransportTerms = true;
+            const summary = await postUrlEncoded(urls.summary, { draft_token: state.draftToken });
             renderSummary(summary);
+            persistWizardState();
             setStep(5);
         } catch (error) {
             showAlert(error.message || i18n.errors.transportTermsFailed);
@@ -1591,6 +2116,25 @@ document.addEventListener('DOMContentLoaded', function () {
         const eventName = element.type === 'file' || element.tagName === 'SELECT' ? 'change' : 'input';
         element.addEventListener(eventName, function () {
             setFieldValidity(field, true);
+            if (element.type === 'file') {
+                const file = element.files && element.files[0] ? element.files[0] : null;
+                if (file) {
+                    const uploadTask = uploadTemporaryWizardFile(field, file).catch(function (error) {
+                        showAlert(error.message || i18n.errors.requestFailed);
+                    });
+                    state.pendingFileUploads[field] = uploadTask;
+                    uploadTask.finally(function () {
+                        delete state.pendingFileUploads[field];
+                    });
+                } else {
+                    setFileStatus(field, fileStatusLabels.pendingUpload, false);
+                    state.tempFiles[field] = '';
+                    state.tempFileNames[field] = '';
+                    state.uploadedFiles[field] = false;
+                    persistWizardState();
+                }
+            }
+            syncFormToState();
             if (requiredStep2.every(function (item) {
                 const target = document.getElementById(item);
                 return target && String(target.value || '').trim() !== '';
@@ -1611,10 +2155,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const valid = this.files && this.files.length > 0;
         setFieldValidity('payment_receipt', valid);
         document.getElementById('paymentReceiptError').classList.toggle('show', !valid);
+        setFileStatus('payment_receipt', valid && this.files[0] ? this.files[0].name : fileStatusLabels.pendingUpload, valid);
+        persistWizardState();
     });
 
     document.getElementById('btnFinalSubmit').addEventListener('click', async function () {
-        if (!state.registrationId) {
+        if (!state.draftToken) {
             showAlert(i18n.errors.completeStudentFirst);
             return;
         }
@@ -1633,11 +2179,11 @@ document.addEventListener('DOMContentLoaded', function () {
         button.disabled = true;
         try {
             const payload = new FormData();
-            payload.append('registration_id', state.registrationId);
+            payload.append('draft_token', state.draftToken);
             payload.append('payment_method', 'manual');
             payload.append('payment_receipt', receiptInput.files[0]);
 
-            const response = await postFormData(urls.finalSubmit, payload);
+            const response = await postFormData(urls.finalSubmit, payload, i18n.errors.finalSubmitFailed);
             const successTitle = (response && response.message) ? response.message : i18n.success.finalSubmit;
             showSuccessToast(successTitle, i18n.success.finalSubmitHint);
             button.textContent = i18n.buttons.submitted;
@@ -1646,6 +2192,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitNote.textContent = i18n.success.finalSubmitHint;
             }
             allowSilentUnload = true;
+            clearStoredDraft();
             window.setTimeout(function () {
                 window.location.href = redirectAfterSubmit;
             }, 1700);
@@ -1654,6 +2201,16 @@ document.addEventListener('DOMContentLoaded', function () {
             button.disabled = false;
         }
     });
+
+    const initialDraft = getActiveDraft();
+    if (initialDraft && Object.keys(initialDraft).length > 0) {
+        applyDraftToForm(initialDraft);
+        if (Number(state.step) === 5) {
+            renderSummary({ draft: initialDraft, fees: initialDraft.fees || {}, payment: initialDraft.payment || {} });
+        }
+    } else {
+        persistWizardState();
+    }
 });
 </script>
 @endsection
