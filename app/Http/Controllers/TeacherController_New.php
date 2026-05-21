@@ -80,6 +80,34 @@ class TeacherController_New extends Controller
             return $next($request);
         });
     }
+
+    private function uniqueModels($items)
+    {
+        return collect($items)->filter()->unique(function ($item) {
+            if (is_object($item)) {
+                if (isset($item->id)) {
+                    return get_class($item) . ':' . $item->id;
+                }
+
+                return \spl_object_hash($item);
+            }
+
+            if (is_array($item) && array_key_exists('id', $item)) {
+                return 'array:' . $item['id'];
+            }
+
+            if (is_scalar($item)) {
+                return (string) $item;
+            }
+
+            return md5(serialize($item));
+        })->values();
+    }
+
+    private function resolveRoomClassId($room)
+    {
+        return optional(optional($room)->classes)->id ?? optional($room)->class_id;
+    }
      //functions for exams
     public function questions($class_id, $room_id, $lecture_id, $lesson_id)
     {
@@ -1140,7 +1168,7 @@ class TeacherController_New extends Controller
             $classes[] = $item->classes;
         }
 
-        $classes = array_unique($classes);
+        $classes = $this->uniqueModels($classes);
         $events = Teacher_event::where('teacher_id', auth()->user()->teacher_id)->get();
 
         $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('view', 0)->count();
@@ -1170,14 +1198,14 @@ class TeacherController_New extends Controller
         $teacher_name = Auth::user()->name;
         $teacher = Teacher::find($teacher_id);
         //$lessons = $teacher->lessons;
-        $room_lessons = [];
-        $teacher_room_lessons = Teacher_room_lesson::where('room_id', $room_id)->where('teacher_id', $teacher_id)->get();
-        $teacher_lessons = [];
-
-        foreach ($teacher_room_lessons as $teacher_room_lesson) {
-            $teacher_lessons[] = Lesson::find($teacher_room_lesson->lesson_id);
-        }
-        $teacher_lessons = array_unique($teacher_lessons);
+        $teacher_lessons = Teacher_room_lesson::with('lesson')
+            ->where('room_id', $room_id)
+            ->where('teacher_id', $teacher_id)
+            ->get()
+            ->pluck('lesson')
+            ->filter()
+            ->unique('id')
+            ->values();
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
         $room = Room::find($room_id);
@@ -1414,7 +1442,7 @@ class TeacherController_New extends Controller
             $classes[] = $item->classes;
         }
 
-        $classes = array_unique($classes);
+        $classes = $this->uniqueModels($classes);
         $events = Teacher_event::where('teacher_id', auth()->user()->teacher_id)->get();
 
         $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('view', 0)->count();
@@ -1568,7 +1596,7 @@ class TeacherController_New extends Controller
             $classes[] = $item->classes;
         }
 
-         $classes = array_unique($classes);
+         $classes = $this->uniqueModels($classes);
 
         $year = Year::where('current_year', '1')->first();
 
@@ -1684,12 +1712,12 @@ class TeacherController_New extends Controller
                 $rooms1[] = $a;
             }
         }
-        $rooms1 = array_unique($rooms1);
+        $rooms1 = $this->uniqueModels($rooms1);
         $rooms2 = [];
         foreach ($rooms1 as $room1) {
             $rooms2[] = Room::find($room1->room_id);
         }
-        $rooms2 = array_unique($rooms2);
+        $rooms2 = $this->uniqueModels($rooms2);
         $lessons = [];
         foreach ($rooms as $item) {
             if (count($item->teachers) > 0) {
@@ -1700,7 +1728,7 @@ class TeacherController_New extends Controller
                 }
             }
         }
-        $lessons = array_unique($lessons);
+        $lessons = $this->uniqueModels($lessons);
         $teacher = Teacher::find($teacher_id);
         $rooms = $teacher->rooms;
         $class_rooms = [];
@@ -1708,7 +1736,7 @@ class TeacherController_New extends Controller
 
             $class_rooms[] = $room->where('class_id', $class_id)->get();
         }
-        $class_rooms = array_unique($class_rooms);
+        $class_rooms = $this->uniqueModels($class_rooms);
 
 
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
@@ -2114,7 +2142,41 @@ class TeacherController_New extends Controller
         $terms = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $teacher = Teacher::find($teacher_id);
         $lesson = Lesson::find($lesson_id);
-        $lesson->books = json_decode($lesson->books);
+        $bookItems = collect();
+        if ($lesson && !empty($lesson->books)) {
+            $decodedBooks = json_decode($lesson->books);
+            if (is_array($decodedBooks) || $decodedBooks instanceof \Traversable) {
+                $bookItems = collect($decodedBooks);
+            }
+        }
+        if ($bookItems->isEmpty() && $lesson) {
+            $legacyBooks = [];
+            $legacyMap = [
+                ['column' => 'book1', 'title_ar' => 'name_book1_ar', 'title_en' => 'name_book1_en'],
+                ['column' => 'book2', 'title_ar' => 'name_book2_ar', 'title_en' => 'name_book2_en'],
+                ['column' => 'book3', 'title_ar' => 'name_book3_ar', 'title_en' => 'name_book3_en'],
+                ['column' => 'book4', 'title_ar' => 'name_book4_ar', 'title_en' => 'name_book4_en'],
+            ];
+
+            foreach ($legacyMap as $index => $map) {
+                $value = $lesson->{$map['column']} ?? null;
+                if (empty($value)) {
+                    continue;
+                }
+
+                $legacyBooks[] = (object) [
+                    'id' => $index + 1,
+                    'type' => preg_match('/^https?:\\/\\//i', (string) $value) ? 'link' : 'file',
+                    'value' => $value,
+                    'name_ar' => $lesson->{$map['title_ar']} ?? $lesson->name,
+                    'name_en' => $lesson->{$map['title_en']} ?? $lesson->name_en ?? $lesson->name,
+                ];
+            }
+
+            if (!empty($legacyBooks)) {
+                $bookItems = collect($legacyBooks);
+            }
+        }
         $lectures = Lecture::with('teacher')->where('active', 0)->whereHas('term_years', function ($q) use ($year) {
         $q->where('year_id', $year->id);
               })->where('lesson_id', $lesson->id)->where('room_id', $room_id)->get();
@@ -2127,6 +2189,7 @@ class TeacherController_New extends Controller
             'objection',
             'lectures',
             'lesson',
+            'bookItems',
             'class',
             'room',
             'message',
@@ -2246,6 +2309,9 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $teacher = Teacher::with(['rooms.student' => fn ($q1) => $q1->where('room_student.year_id', $year->id)])->find($teacher_id);
+        if (!$teacher) {
+            return redirect()->route('dashboard.teacher')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
+        }
 
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
@@ -2258,7 +2324,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
             $classes[] = $item->classes;
         }
 
-        $classes = array_unique($classes);
+        $classes = $this->uniqueModels($classes);
         $events = Teacher_event::where('teacher_id', auth()->user()->teacher_id)->get();
 
         $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('view', 0)->count();
@@ -2273,6 +2339,10 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
     {
         $teacher_name = Auth::user()->name;
         $teacher = Teacher::find($teacher_id);
+        $room = Room::find($room_id);
+        if (!$teacher || !$room) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'الرابط المطلوب غير متاح حالياً');
+        }
         //$lessons = $teacher->lessons;
         $room_lessons = [];
         $teacher_room_lessons = Teacher_room_lesson::where('room_id', $room_id)->where('teacher_id', $teacher_id)->get();
@@ -2281,12 +2351,11 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         foreach ($teacher_room_lessons as $teacher_room_lesson) {
             $teacher_lessons[] = Lesson::find($teacher_room_lesson->lesson_id);
         }
-        $teacher_lessons = array_unique($teacher_lessons);
+        $teacher_lessons = $this->uniqueModels($teacher_lessons);
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
-        $room = Room::find($room_id);
         $room_name = Room::find($room_id)->name;
-        $class = Classe::where('id', $room->class_id);
+        $class = Classe::find($room->class_id);
         $count2 = Supervisor_teacher_item::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count2 = $count2->count();
         $message = Message::where('teacher_id', Auth::user()->teacher_id)->where('type', 1)->where('view', 0)->count();
@@ -2446,7 +2515,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         if ($exam_result) {
             $exam_result->result = $request->mark;
             $exam_result->status = '1';
-            $exam_result->class_id = $room->classes->id;
+            $exam_result->class_id = $this->resolveRoomClassId($room);
             $exam_result->room_id = $request->room_id;
             $exam_result->exam_id = $request->exam_id;
             $exam_result->user_id = $request->user_id;
@@ -2459,7 +2528,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
             $exam_result->save();
         } else {
             $exam_result1 = new Exam_result();
-            $exam_result1->class_id = $room->classes->id;
+            $exam_result1->class_id = $this->resolveRoomClassId($room);
             $exam_result1->result = $request->mark;
             $exam_result1->status = '1';
             $exam_result1->class_id = $request->class_id;
@@ -2510,7 +2579,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
 
             $exam_result->result = $request->mark;
             $exam_result->status = '1';
-            $exam_result->class_id = $room->classes->id;
+            $exam_result->class_id = $this->resolveRoomClassId($room);
             $exam_result->room_id = $request->room_id;
             $exam_result->exam_id = $request->exam_id;
             $exam_result->user_id = $request->user_id;
@@ -2523,7 +2592,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
             $exam_result->save();
         } else {
             $exam_result1 = new Exam_result();
-            $exam_result1->class_id = $room->classes->id;
+            $exam_result1->class_id = $this->resolveRoomClassId($room);
             $exam_result1->result = $request->mark;
             $exam_result1->status = '1';
             $exam_result1->class_id = $request->class_id;
@@ -2660,7 +2729,7 @@ $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('v
         $teacher = Teacher::find($teacher_id);
 
         $room = Room::find($room_id);
-        $class_id = Classe:: find($room->classes->id);
+        $class_id = Classe::find($this->resolveRoomClassId($room));
         $students = $room->student;
         $students = Room::with(['student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)])->find($room_id);
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
@@ -2685,7 +2754,7 @@ $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('v
         $teacher = Teacher::find($teacher_id);
 
         $room = Room::find($room_id);
-        $class_id = Classe:: find($room->classes->id);
+        $class_id = Classe::find($this->resolveRoomClassId($room));
         $students = $room->student;
         $students1 = $room->student;
         $students = Room::with(['student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)])->find($room_id);
@@ -3433,12 +3502,13 @@ public function class_rooms($class_id, $teacher_id)
        $quize1 = Exams2::where('term_id', $term->id)->where('room_id', $room_id)->where('lesson_id', $lesson_id)->where('type', '2')->where('is_file','0')->get();
         $lesson = Lesson::find($lesson_id);
         $teacher = Teacher::find($teacher_id);
-
-        $room = Room::find($room_id);
-        $class_id = Classe:: find($room->classes->id);
+        $room = Room::with(['student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)])->find($room_id);
+        if (!$lesson || !$teacher || !$room) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
+        }
+        $class_id = Classe::find($this->resolveRoomClassId($room));
         $students = $room->student;
-               $students1 = $room->student;
-        $students = Room::with(['student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)])->find($room_id);
+        $students1 = $room->student;
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
         $date = new DateTime();
@@ -3926,7 +3996,7 @@ public function class_rooms($class_id, $teacher_id)
         }
 }
      // صفحة علامات المذاكرات
-    public function teacher_quize_students($room_id, $teacher_id, $lesson_id, $exam_id)
+   public function teacher_quize_students($room_id, $teacher_id, $lesson_id, $exam_id)
     {
  
     $year = Year::where('current_year', '1')->first();
@@ -3935,15 +4005,20 @@ public function class_rooms($class_id, $teacher_id)
 
         $lesson = Lesson::find($lesson_id);
         $teacher = Teacher::find($teacher_id);
-
-        $room = Room::find($room_id);
+        $room = Room::with(['student.exams_files', 'student.exam_result2'])->find($room_id);
+        if (!$lesson || !$teacher || !$room) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
+        }
         $exam = Exam_result2::where('exam_id',$exam_id)->where('room_id',$room_id)->get();
         foreach($exam as $item){
             $student[]= $item->user_id;
         }
-        $students = $room->with('student.exams_files')->with('student.exam_result2')->get();
+        $students = $room->student;
 
         $exam1 = Exams2::find($exam_id);
+        if (!$exam1) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'الاختبار المطلوب غير متاح حالياً');
+        }
     //   $quize_result = Room::with(['student.exam_result2' => function ($q) {
     //         $q->where('id', '<>', null)->orderBy('type');
     //     }])->where('id', $room_id)->get();
@@ -3989,7 +4064,7 @@ public function class_rooms($class_id, $teacher_id)
 
             $exam_result->result = $request->mark;
             $exam_result->status = '1';
-            $exam_result->class_id = $room->classes->id;
+            $exam_result->class_id = $this->resolveRoomClassId($room);
             $exam_result->room_id = $request->room_id;
             $exam_result->exam_id = $request->exam_id;
             $exam_result->user_id = $request->user_id;
@@ -4015,7 +4090,7 @@ public function class_rooms($class_id, $teacher_id)
 
         } else {
             $exam_result1 = new Exam_result2();
-            $exam_result1->class_id = $room->classes->id;
+            $exam_result1->class_id = $this->resolveRoomClassId($room);
             $exam_result1->result = $request->mark;
             $exam_result1->status = '1';
             $exam_result1->class_id = $request->class_id;
@@ -4060,7 +4135,7 @@ public function student_save_mark_quize(Request $request)
 
             $exam_result->result = $request->mark;
             $exam_result->status = '1';
-            $exam_result->class_id = $room->classes->id;
+            $exam_result->class_id = $this->resolveRoomClassId($room);
             $exam_result->room_id = $request->room_id;
             $exam_result->exam_id = $request->exam_id;
             $exam_result->user_id = $request->user_id;
@@ -4087,7 +4162,7 @@ public function student_save_mark_quize(Request $request)
 
         } else {
             $exam_result1 = new Exam_result2();
-            $exam_result1->class_id = $room->classes->id;
+            $exam_result1->class_id = $this->resolveRoomClassId($room);
             $exam_result1->result = $request->mark;
             $exam_result1->status = '1';
             $exam_result1->class_id = $request->class_id;
@@ -4398,7 +4473,7 @@ public function student_save_mark_quize(Request $request)
         }
             $exam_result->result = $request->mark;
             $exam_result->status = '1';
-            $exam_result->class_id = $room->classes->id;
+            $exam_result->class_id = $this->resolveRoomClassId($room);
             $exam_result->room_id = $request->room_id;
             $exam_result->exam_id = $request->exam_id;
             $exam_result->user_id = $request->user_id;
@@ -4411,7 +4486,7 @@ public function student_save_mark_quize(Request $request)
         } else {
 
             $exam_result1 = new Exam_result2();
-            $exam_result1->class_id = $room->classes->id;
+            $exam_result1->class_id = $this->resolveRoomClassId($room);
             $exam_result1->result = $request->mark;
             $exam_result1->status = '1';
             $exam_result1->class_id = $request->class_id;
@@ -4482,7 +4557,7 @@ public function student_save_mark_quize(Request $request)
         return  redirect()->back();
     }
     //عرض جميع الامتحانات
-    public function teacher_exam_mark($room_id, $teacher_id, $lesson_id)
+   public function teacher_exam_mark($room_id, $teacher_id, $lesson_id)
     {
        $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
@@ -4490,13 +4565,13 @@ public function student_save_mark_quize(Request $request)
         $quize1 = Exams2::where('term_id', $term->id)->where('room_id', $room_id)->where('lesson_id', $lesson_id)->where('type', '1')->where('is_file','0')->get();
         $lesson = Lesson::find($lesson_id);
         $teacher = Teacher::find($teacher_id);
+        $room = Room::with(['student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)])->find($room_id);
+        if (!$lesson || !$teacher || !$room) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
+        }
 
-        $room = Room::find($room_id);
-
-          $class_id = Classe:: find($room->classes->id);
+          $class_id = Classe::find($this->resolveRoomClassId($room));
         $students = $room->student;
-
-        $students = Room::with(['student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)])->find($room_id);
 
         $date = new DateTime();
         $now = $date->format('Y-m-d H:i:s');
@@ -4515,9 +4590,15 @@ public function student_save_mark_quize(Request $request)
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $lesson = Lesson::find($lesson_id);
         $teacher = Teacher::find($teacher_id);
-        $room = Room::find($room_id);
-        $students = $room->with('student.exams_files')->with('student.exam_result2')->get();
+        $room = Room::with(['student.exams_files', 'student.exam_result2'])->find($room_id);
+        if (!$lesson || !$teacher || !$room) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
+        }
+        $students = $room->student;
         $exam = Exams2::find($exam_id);
+        if (!$exam) {
+            return redirect()->route('teacher.exams_quizes')->with('error', 'الاختبار المطلوب غير متاح حالياً');
+        }
         $quize_result = Room::with(['student.exam_result2' => function ($q) {
             $q->where('id', '<>', null)->orderBy('type');
         }])->where('id', $room_id)->get();
@@ -4562,7 +4643,7 @@ public function student_save_mark_quize(Request $request)
             $exam_result->term_id = $term->id;
             $exam_result->result = $request->mark;
             $exam_result->status = '1';
-            $exam_result->class_id = $room->classes->id;
+            $exam_result->class_id = $this->resolveRoomClassId($room);
             $exam_result->room_id = $request->room_id;
             $exam_result->exam_id = $request->exam_id;
             $exam_result->user_id = $request->user_id;
@@ -4575,7 +4656,7 @@ public function student_save_mark_quize(Request $request)
             $exam_result->save();
         } else {
             $exam_result1 = new Exam_result();
-            $exam_result1->class_id = $room->classes->id;
+            $exam_result1->class_id = $this->resolveRoomClassId($room);
             $exam_result1->result = $request->mark;
             $exam_result1->status = '1';
             $exam_result1->class_id = $request->class_id;
@@ -4634,7 +4715,7 @@ public function student_save_mark_quize(Request $request)
             $classes[] = $item->classes;
         }
 
-        $classes = array_unique($classes);
+        $classes = $this->uniqueModels($classes);
         $events = Teacher_event::where('teacher_id', auth()->user()->teacher_id)->get();
 
         $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('view', 0)->count();
@@ -4656,7 +4737,7 @@ public function student_save_mark_quize(Request $request)
         foreach ($teacher_room_lessons as $teacher_room_lesson) {
             $teacher_lessons[] = Lesson::find($teacher_room_lesson->lesson_id);
         }
-        $teacher_lessons = array_unique($teacher_lessons);
+        $teacher_lessons = $this->uniqueModels($teacher_lessons);
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
         $room = Room::find($room_id);
@@ -5731,7 +5812,7 @@ public function student_save_mark_quize(Request $request)
             $classes[] = $item->classes;
         }
 
-        $classes = array_unique($classes);
+        $classes = $this->uniqueModels($classes);
         $events = Teacher_event::where('teacher_id', auth()->user()->teacher_id)->get();
 
         $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('view', 0)->count();
@@ -5765,7 +5846,7 @@ public function student_save_mark_quize(Request $request)
         foreach ($teacher_room_lessons as $teacher_room_lesson) {
             $teacher_lessons[] = Lesson::find($teacher_room_lesson->lesson_id);
         }
-        $teacher_lessons = array_unique($teacher_lessons);
+        $teacher_lessons = $this->uniqueModels($teacher_lessons);
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
         $room = Room::find($room_id);

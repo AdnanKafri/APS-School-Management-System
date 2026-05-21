@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 
@@ -73,9 +73,9 @@ Route::post('dashboard/medal_delete','TeacherController_New@medal_delete')->name
 Route::get('dashboard/teacher/edit_home/{home_id}','TeacherController_New@edit_home')->name('dashboard.edit_home');
 //mark homework
 Route::get('dashboard/teacher/StudentsRoomLesson_homeworke/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_homeworke')->name('dashboard.StudentsRoomLesson_homeworke');
-//عرض وظائف الطلاب
+//Ø¹Ø±Ø¶ ÙˆØ¸Ø§Ø¦Ù Ø§Ù„Ø·Ù„Ø§Ø¨
 Route::get('dashboard/teacher/StudentsRoomLesson/{room_id}/{teacher_id}/{lesson_id}/{exam_id}', 'TeacherController_New@StudentsRoomLesson')->name('dashboard.StudentsRoomLesson');
-//علامة وظيفة الطالب
+//Ø¹Ù„Ø§Ù…Ø© ÙˆØ¸ÙŠÙØ© Ø§Ù„Ø·Ø§Ù„Ø¨
 Route::post('dashboard/teacher/student_save_mark', 'TeacherController_New@student_save_mark')->name('dashboard.teacher.student_save_mark');
 Route::get('dashboard/exam/quest_exam/{id}', 'TeacherController_New@quest_exam')->name('dashboard.quest_exam');
 Route::get('dashboard/addition/delete','TeacherController_New@addition_delete')->name('dashboard.addition.delete');
@@ -90,7 +90,7 @@ Route::post('dashboard/teacher/event_delete', 'TeacherController_New@event_delet
 Route::get('dashboard/teacher/class/rooms/{class_id}/{teacher_id}', 'TeacherController_New@class_rooms')->name('dashboard.class.rooms');
 Route::get('dashboard/teacher/homeworkestudent/{lec_id}/{home}/{room_id}', 'TeacherController_New@homeworkestudent')->name('dashboard.teacher.homeworkestudent');
 Route::get('dashboard/teacher/download_zip/{room_id}/{exam_id}', 'TeacherController_New@download_zip')->name('dashboard.teacher.download_zip');
-//تجميع الملفات بمجلد واحد للمذاكرات
+//ØªØ¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ù„ÙØ§Øª Ø¨Ù…Ø¬Ù„Ø¯ ÙˆØ§Ø­Ø¯ Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø§Øª
 Route::get('dashboard/teacher/quize_zip/{room_id}/{exam_id}', 'TeacherController_New@quize_zip')->name('dashboard.teacher.quize_zip');
 
 Route::get('dashboard/teacher/teacher_quize/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@teacher_quize_mark')->name('teacher_quize');
@@ -98,14 +98,14 @@ Route::post('dashboard/teacher/exams/exam_update123','TeacherController_New@exam
 Route::get('dashboard/teacher/detexam', 'TeacherController_New@detexam')->name('dashboard.detexam');
 Route::get('dashboard/teacher/studentselect/{exam}/{room}', 'TeacherController_New@studentselect')->name('dashboard.teacher.studentselect');
 Route::post('dashboard/teacher/quize_student', 'TeacherController_New@quize_student')->name('quize_student');
-//اضافة الطلاب للمذاكرة
+//Ø§Ø¶Ø§ÙØ© Ø§Ù„Ø·Ù„Ø§Ø¨ Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø©
 Route::post('dashboard/teacher/add_quize_student', 'TeacherController_New@add_quize_student')->name('add_quize_student');
-//دفتر العلامات
+//Ø¯ÙØªØ± Ø§Ù„Ø¹Ù„Ø§Ù…Ø§Øª
 Route::post('classroom/lesson/teacher/student_mark','admincontroller@student_mark')->name('admin.teacher_student_mark');
 Route::get('dashboard/teacher/StudentsRoomLessontotal/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLessontotal')->name('dashboard.StudentsRoomLessontotal');
 Route::get('dashboard/teacher/StudentsRoomLessontotal_pdf/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLessontotal_pdf')->name('dashboard.StudentsRoomLessontotal_pdf');
 Route::get('dashboard/teacher/StudentsRoomLessontotal_excel/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLessontotal_excel')->name('dashboard.StudentsRoomLessontotal_excel');
-//نهاية دفتر العلامات
+//Ù†Ù‡Ø§ÙŠØ© Ø¯ÙØªØ± Ø§Ù„Ø¹Ù„Ø§Ù…Ø§Øª
 Route::get('dashboard/teacher/search_eaxm', 'TeacherController_New@search_eaxm')->name('search_eaxm');
 Route::get('dashboard/teacher/search_test', 'TeacherController_New@search_test')->name('search_test');
 
@@ -113,44 +113,44 @@ Route::get('dashboard/teacher/search_test', 'TeacherController_New@search_test')
 
 
 
-//صفحة علامات المذكرات
+//ØµÙØ­Ø© Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù„Ù…Ø°ÙƒØ±Ø§Øª
 Route::get('dashboard/teacher/teacher_quize_students/{room_id}/{teacher_id}/{lesson_id}/{exam_id}', 'TeacherController_New@teacher_quize_students')->name('teacher_quize_students');
-// حفظ علامة الطالب للمذاكرة او الامتحان
+// Ø­ÙØ¸ Ø¹Ù„Ø§Ù…Ø© Ø§Ù„Ø·Ø§Ù„Ø¨ Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø© Ø§Ùˆ Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†
 Route::post('dashboard/teacher/student_save_mark_quize', 'TeacherController_New@student_save_mark_quize')->name('dashboard.teacher.student_save_mark_quize');
-//فلترة للمذاكرات المقدم من غيره
+//ÙÙ„ØªØ±Ø© Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø§Øª Ø§Ù„Ù…Ù‚Ø¯Ù… Ù…Ù† ØºÙŠØ±Ù‡
 Route::get('dashboard/teacher/quizestudent/{lec_id}/{home}/{room_id}', 'TeacherController_New@quizestudent')->name('dashboard.teacher.quizestudent');
-//اضافة علامة للمذاكرة بعد الajax
 Route::get('dashboard/teacher/student_save_mark3', 'TeacherController_New@student_save_mark3')->name('dashboard.teacher.student_save_mark3');
-//عرض صفحة جميع  الامتحانات
+//Ø§Ø¶Ø§ÙØ© Ø¹Ù„Ø§Ù…Ø© Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø© Ø¨Ø¹Ø¯ Ø§Ù„ajax
+//Ø¹Ø±Ø¶ ØµÙØ­Ø© Ø¬Ù…ÙŠØ¹  Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª
 Route::get('dashboard/teacher/teacher_exam/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@teacher_exam_mark')->name('teacher_exam');
-//اظهار صفحة علامات الطلاب
+//Ø§Ø¸Ù‡Ø§Ø± ØµÙØ­Ø© Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù„Ø·Ù„Ø§Ø¨
 Route::get('dashboard/teacher/teacher_exam_students/{room_id}/{teacher_id}/{lesson_id}/{exam_id}', 'TeacherController_New@teacher_exam_students')->name('teacher_exam_students');
-//اضافة علامة للوظيفة بعد ال ajax
+//Ø§Ø¶Ø§ÙØ© Ø¹Ù„Ø§Ù…Ø© Ù„Ù„ÙˆØ¸ÙŠÙØ© Ø¨Ø¹Ø¯ Ø§Ù„ ajax
 Route::get('dashboard/teacher/student_save_mark_homework', 'TeacherController_New@student_save_mark_homework')->name('dashboard.teacher.student_save_mark_homework');
 
-//صفحة اضافة محتوى مؤتمت
+//ØµÙØ­Ø© Ø§Ø¶Ø§ÙØ© Ù…Ø­ØªÙˆÙ‰ Ù…Ø¤ØªÙ…Øª
 Route::get('dashboard/teacher/questions/{class_id}/{room_id}/{lecture_id}/{lesson_id}/','TeacherController_New@questions')->name('dashboard.teacher.questions');
 Route::post('dashboard/teacher/questions/delete','TeacherController_New@question_delete')->name('dashboard.question.delete');
 Route::get('dashboard/teacher/examstudent2/{lec_id}/{home}/{room_id}', 'TeacherController_New@examstudent2')->name('dashboard.teacher.examstudent2');
 Route::get('dashboard/teacher/exams/{class_id}/{lecture_id}/{room_id}','TeacherController_New@exams')->name('dashboard.teacher.exams');
 Route::get('dashboard/teacher/sections/{class_id}/{room_id}/{lecture_id}/{lesson_id}','TeacherController_New@sections')->name('dashboard.teacher.sections');
 Route::get('dashboard/teacher/add_questions/{class_id}/{room_id}/{lecture_id}/{lesson_id}','TeacherController_New@add_questions')->name('dashboard.teacher.add_questions');
-//صفحة اضافة سؤال
+//ØµÙØ­Ø© Ø§Ø¶Ø§ÙØ© Ø³Ø¤Ø§Ù„
 Route::post('dashboard/teacher/add_questions/store','TeacherController_New@question_store')->name('tofel_exam.question.store');
-//تخزين فقرة
+//ØªØ®Ø²ÙŠÙ† ÙÙ‚Ø±Ø©
 Route::post('dashboard/teacher/sections/store','TeacherController_New@section_store')->name('dashboard.section.store');
 Route::post('dashboard/teacher/sections/update','TeacherController_New@section_update')->name('dashboard.section.update');
-//حذف امتحان
+//Ø­Ø°Ù Ø§Ù…ØªØ­Ø§Ù†
 Route::post('dashboard/teacher/exams/exam_delete', 'TeacherController_New@exam_delete')->name('dashboard.exam.delete');
-//اضافة اختبار
+//Ø§Ø¶Ø§ÙØ© Ø§Ø®ØªØ¨Ø§Ø±
 Route::post('dashboard/teacher/exams/exam_store', 'TeacherController_New@exam_store')->name('dashboard.exam.store');
-//تعديل اختبار
+//ØªØ¹Ø¯ÙŠÙ„ Ø§Ø®ØªØ¨Ø§Ø±
 Route::post('dashboard/teacher/exams/exam_update','TeacherController_New@exam_update')->name('dashboard.exam.update');
 Route::get('dashboard/teacher/exams_addquestion/{exam_id}/{lecture_id}/{room_id}', 'TeacherController_New@exams_addquestion')->name('dashboard.exams_addquestion');
 Route::get('dashboard/teacher/questions/edit/{question_id}/{room_id}','TeacherController_New@question_edit')->name('dashboard.question.edit');
 Route::post('dashboard/teacher/questions/update/{question_id}','TeacherController_New@question_update')->name('dashboard.question.update');
 Route::get('dashboard/teacher/file_answers/{file_id}/{lesson_id}/{teacher_id}/{room_id}', 'TeacherController_New@file_answers')->name('dashboard.teacher.file_answers');
-//صفحة بنك الاسئلة
+//ØµÙØ­Ø© Ø¨Ù†Ùƒ Ø§Ù„Ø§Ø³Ø¦Ù„Ø©
 
 Route::post('dashboard/teacher/exams/myquestions', 'TeacherController_New@myquestions')->name('dashboard.exams.myquestions');
 Route::post('dashboard/teacher/exams/myquestions1', 'TeacherController_New@myquestions1')->name('dashboard.exams.myquestions1');
@@ -165,7 +165,6 @@ Route::get('dashboard/teacher/export_exam1/{exam_id}/{room_id}/{lesson_id}', 'Te
 Route::get('dashboard/teacher/teacher_quize_mark/{room_id}/{teacher_id}/{lesson_id}/{exam_id}', 'TeacherController_New@teacher_quize_mark')->name('teacher_quize_mark');
 Route::get('dashboard/teacher/StudentsRoomLesson_quize/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_quize')->name('dashboard.StudentsRoomLesson_quize');
 Route::get('dashboard/teacher/StudentsRoomLesson_quize1/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_quize1')->name('dashboard.StudentsRoomLesson_quize1');
-Route::get('dashboard/teacher/student_save_mark3', 'TeacherController_New@student_save_mark3')->name('dashboard.teacher.student_save_mark3');
 Route::post('dashboard/teacher/student_save_mark2', 'TeacherController_New@student_save_mark2')->name('dashboard.teacher.student_save_mark2');
 Route::get('dashboard/teacher/student_save_mark1', 'TeacherController_New@student_save_mark1')->name('dashboard.teacher.student_save_mark1');
 Route::post('dashboard/exam/update_result1', 'TeacherController_New@update_result1')->name('dashboard.update_result1');
@@ -173,12 +172,12 @@ Route::get('dashboard/teacher/lecquestion/{lec_id}/{exam}', 'TeacherController_N
 Route::get('dashboard/teacher/lecquestion1/{lec_id}/{exam}', 'TeacherController_New@lecquestion1')->name('dashboard.teacher.lecquestion1');
 Route::get('dashboard/teacher/examstudent/{lec_id}/{home}', 'TeacherController_New@examstudent')->name('dashboard.teacher.examstudent');
 Route::post('dashboard/exam/update_result', 'TeacherController_New@update_result')->name('dashboard.update_result');
-// صفحة صفوف دفتر العلامات
+// ØµÙØ­Ø© ØµÙÙˆÙ Ø¯ÙØªØ± Ø§Ù„Ø¹Ù„Ø§Ù…Ø§Øª
 
 Route::get('dashboard/teacher/mark_class', 'TeacherController_New@mark_class')->name('teacher.mark_class');
 Route::get('dashboard/teacher/mark_room/{room_id}/{teacher_id}', 'TeacherController_New@mark_room')->name('teacher.mark_room');
 
-//  المكافات والعقوبات
+//  Ø§Ù„Ù…ÙƒØ§ÙØ§Øª ÙˆØ§Ù„Ø¹Ù‚ÙˆØ¨Ø§Øª
 Route::get('dashboard/teacher/teacher_rewads_and_sanction_class', 'TeacherController_New@teacher_rewads_and_sanction_class')->name('teacher.teacher_rewads_and_sanction_class');
 Route::get('dashboard/teacher/teacher_rewads_and_sanction_subject{room_id}/{teacher_id}', 'TeacherController_New@teacher_rewads_and_sanction_subject')->name('teacher_rewads_and_sanction_subject');
 Route::get('dashboard/teacher/teacher_rewads_students{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@teacher_rewads_students')->name('teacher_rewads_students');
@@ -378,7 +377,7 @@ Route::get('dashboard/teacher/class/lessons/{class_id}', 'studentscontroller@cla
 
 
 
-////// تعديلاتي
+////// ØªØ¹Ø¯ÙŠÙ„Ø§ØªÙŠ
 Route::get('dashboard/teacher/profile', 'TeacherController_New@profile')->name('dashboard.teacher.profile');
 Route::put('dashboard/teacher/update_profile1/{teacher_id}', 'TeacherController_New@update_profile1')->name('dashboard.teacher.update_profile');
 //route for live class

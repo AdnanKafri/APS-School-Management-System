@@ -1,776 +1,700 @@
 @extends('teachers2.layouts.app')
-@section('title')
-School
+
+@section('teacher_page_title')
+{{ app()->getLocale() === 'en' ? 'Teacher Schedule' : 'جدول الدوام' }}
 @endsection
+
+@section('teacher_page_subtitle')
+{{ app()->getLocale() === 'en' ? 'A simple weekly planner for your lessons, streams, and attendance states.' : 'مخطط أسبوعي بسيط للدروس وروابط البث وحالات الحضور.' }}
+@endsection
+
 @section('css')
 <style>
-table th, table td {
-    padding: 7px !important;
-    text-align: center !important;
-}
-      table {
-    border: 1px solid #ccc ;
-    border-collapse: collapse !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    margin-top:10px !important;
-  }
-  table caption {
-    font-size: 1.5em !important;
-    margin: .25em 0 .75em !important;
-  }
-
-  table tr {
-    background: #f8f8f8 !important;
-    border: 1px solid #ddd ;
-    padding: .35em !important;
-  }
-  table th {
-    font-size: 20px !important;
-
-  }
-
-  table td img { text-align: center; }
-  @media screen and (max-width: 1000px) {
-
-  table { border: none !important; }
-
-
-  table thead { display: none !important; }
-
-  table tr {
-    border-bottom: 3px solid #ddd!important ;
-    border-bottom: none !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    display: block!important;
-    margin-bottom: .625em !important;
-  }
-
-  table td {
-    padding: 10px !important;
-    padding-bottom: 25px !important;
-    border-top: 1px solid #ddd !important;
-    border-bottom: none !important;
-    display: block !important;
-    font-size: .8em !important;
-    text-align: left !important;
-  }
-
-  table td:before {
-    content: attr(data-label) !important;
-    float: right !important;
-    font-weight: bold !important;
-
-  }
-
-  table td:last-child {
-  border-bottom: 1px solid #ddd !important;
-  border-right: 1px solid #ddd;
-   }
-  }
-
- .layout {
-   display: grid;
-   height: 100%;
-   width: 100%;
-   overflow: hidden;
-   /*grid-template-rows: 50px 1fr;
-   grid-template-columns: 1fr 1fr 1fr;*/
- }
- input[type="radio"] {
-   display: none;
- }
- label.nav {
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   cursor: pointer;
-   border-bottom: 2px solid #8e44ad;
-   background: #ecf0f1;
-   user-select: none;
-   transition: background 0.4s, padding-left 0.2s;
-  /* padding-left: 0;*/
-    padding: 10px;
- }
- @media (min-width:200px) and (max-width:1000px){
-  .layout{
-   overflow: scroll;
-   width: 100% ;
-  }
- }
- /*css for table*/
- div.table-title {
-   display: block;
-   margin: auto;
-   max-width: 600px;
-   padding:5px;
-   width: 100%;
-   direction: rtl !important;
- }
-
- .table-title h3 {
-    color: #fafafa;
-    font-size: 30px;
-    font-weight: 400;
-    font-style:normal;
-    font-family: "Roboto", helvetica, arial, sans-serif;
-    text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
-    text-transform:uppercase;
- }
- table{
-   border-collapse: collapse;
-   border-spacing: 0;
-    width: 100%;
-    margin: 0 auto;
-    direction: rtl;
- }
-
- @media (min-width:200px) and (max-width:1000px){
-   table{
-     width: 100% !important;
-   }
- }
- @media(min-width:200px) and (max-width:1000px){
-     th{
-         width:700px !important;
-     }
- }
- th {
-   color:#FFFFFF;;
-   background:#173D64 !important;
-   border-bottom:4px solid #9ea7af;
-   border-right: 2px solid #C1C3D1;
-   border-left: 2px solid #C1C3D1;
-   font-size:23px;
-   font-weight: 100;
-   padding:11px;
-   text-align:center;
-   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-   vertical-align:middle;
- }
- th:first-child {
-   border-top-left-radius:1px;
- }
- th:last-child {
-   border-top-right-radius:1px;
-   border-right:none;
- }
- tr {
-   border-top: 1px solid #C1C3D1;
-   border-bottom-: 1px solid #C1C3D1;
-   border-right: 1px solid #C1C3D1;
-   border-left: 1px solid #C1C3D1;
-   color:#666B85;
-   font-size:16px;
-   font-weight:normal;
-   text-shadow: 0 1px 1px rgba(256, 256, 256, 0.1);
- }
- tr:hover td {
-   /*background:#9ea7af;*/
-   color:#9ea7af;
-   border-top: 1px solid #9ea7af;
- }
- tr:first-child {
-   border-top:none;
- }
- tr:last-child {
-   border-bottom:none;
- }
- tr:nth-child(odd) td {
-   /*background:#EBEBEB;*/
- }
- tr:nth-child(odd):hover td {
-   /*background:#9ea7af;*/
- }
- tr:last-child td:first-child {
-   border-bottom-left-radius:3px;
- }
-
- tr:last-child td:last-child {
-   border-bottom-right-radius:1px;
- }
-
- td {
-   background:#FFFFFF;
-   padding: 4px;
-   text-align: center;
-   vertical-align:middle;
-   font-weight:300;
-   font-size:18px;
-   text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
-   border-right: 1px solid #C1C3D1;
-   border-left: 1px solid #C1C3D1;
-   border-bottom:1px solid #9ea7af;
- }
-
- td:last-child {
-   border-right: 0px;
- }
-
- th.text-left {
-   text-align: left;
- }
-
- th.text-center {
-   text-align: center;
- }
-
- th.text-right {
-   text-align: right;
- }
-
- td.text-left {
-   text-align: left;
- }
-
- td.text-center {
-   text-align: center;
- }
-
- td.text-right {
-   text-align: right;
- }
- /*end css for table*/
-
- @media (min-width:200px) and (max-width:500px){
-     .new{
-      position: relative;
-     /* right: 51%;*/
-     left: 13px;
-     }
-     .newcol{
-      position: relative;
-      margin-bottom: 10px;
-     }
- }
- @media (min-width:501px) and (max-width:1000px){
-  .newcol{
-      position: relative;
-      margin-bottom: 10px;
-      left: 18px;
-     }
- }
- .btn{
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
-  margin-bottom: 5px;
- }
- .btn-primary {
-    display: inline-block;
-    font-weight: 400;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    border: 1px solid transparent;
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border-radius: 0.25rem;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-.btn-info{
-    padding-left: 13px !important;
-    padding-right: 13px !important;
-
-}
-
-.btn-primary{
-    padding-left: 13px !important;
-    padding-right: 13px !important;
-
-}
-
-.btn-success{
-    padding-left: 13px !important;
-    padding-right: 13px !important;
-
-}
-
-.btn-danger{
-    padding-left: 13px !important;
-    padding-right: 13px !important;
-
-}
-/* تعديلاتي  */
-.uuu1{
-    padding-left: 35px !important;
-    padding-right: 35px !important;
-    width: max-content;
-    font-weight: bolder;
-
-}
-
-.uuu3{
-    padding-left: 35px !important;
-    padding-right: 35px !important;
-    width: max-content;
-    font-weight: bolder;
-
-}
-
-.uuu2{
-    padding-left: 35px !important;
-    padding-right: 35px !important;
-    width: max-content;
-    font-weight: bolder;
-
-}
-
-.uuu6{
-    padding-left: 35px !important;
-    padding-right: 35px !important;
-    width: max-content;
-    font-weight: bolder;
-
-}
-.uuu5{
-    padding-left: 35px !important;
-    padding-right: 35px !important;
-    width: max-content;
-    font-weight: bolder;
-
-}
-.uuu1 > p{
-   font-weight: bold;
-
-}
-
-.uuu3 > p{
-   font-weight: bold;
-
-}
-
-.uuu2 > p{
-   font-weight: bold;
-
-}
-
-.uuu6 > p{
-   font-weight: bold;
-
-}
-.uuu5 > p{
-   font-weight: bold;
-
-}
-font-weight: bold;
-  table th {
-    font-size: 30px !important;
-}
-@media (min-width:700px) and (max-width:1500px){
-  table th {
-    font-size: 20px !important;
-}
- }
-   /* Add print styles */
-  @media print {
-  table th, table td {
-    padding: 7px !important;
-    text-align: center !important;
-}
-      table {
-    border: 1px solid #ccc ;
-    border-collapse: collapse !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    margin-top:10px !important;
-  }
-  table caption {
-    font-size: 1.5em !important;
-    margin: .25em 0 .75em !important;
-  }
-
-  table tr {
-    background: #f8f8f8 !important;
-    border: 1px solid #ddd !important;
-    padding: .35em !important;
-  }
-  table th {
-    font-size: 20px !important;
-
-  }
-  
-  }
-  
-   .print-styles table th,
-    .print-styles table td {
-        padding: 7px;
-        text-align: center;
+    body.teacher-portal-body .teacher-schedule-page {
+        padding: 1.25rem;
     }
 
-    .print-styles table {
-        border: 1px solid #ccc;
-        border-collapse: collapse;
-        margin: 0;
-        padding: 0;
+    body.teacher-portal-body .teacher-schedule-shell {
+        display: grid;
+        gap: 1rem;
         width: 100%;
-        margin-top: 10px;
+        min-width: 0;
     }
 
-    .print-styles table caption {
-        font-size: 1.5em;
-        margin: .25em 0 .75em;
+    body.teacher-portal-body .teacher-schedule-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(280px, 380px);
+        gap: .9rem;
+        align-items: stretch;
+        padding: 1.2rem 1.35rem;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e40af 58%, #6d28d9 100%);
+        color: #fff;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
     }
 
-    .print-styles table tr {
-        background: #f8f8f8;
-        border: 1px solid #ddd;
-        padding: .35em;
+    body.teacher-portal-body .teacher-schedule-hero__copy {
+        display: grid;
+        gap: .55rem;
+        min-width: 0;
+        align-content: center;
     }
 
-    .print-styles table th {
-        font-size: 20px;
+    body.teacher-portal-body .teacher-schedule-hero__eyebrow,
+    body.teacher-portal-body .teacher-schedule-panel__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .42rem;
+        width: fit-content;
+        padding: .38rem .75rem;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: .02em;
     }
-  
+
+    body.teacher-portal-body .teacher-schedule-hero__eyebrow {
+        background: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel__eyebrow {
+        background: #eef2ff;
+        color: #4338ca;
+    }
+
+    body.teacher-portal-body .teacher-schedule-hero__title {
+        margin: 0;
+        font-size: 1.65rem;
+        line-height: 1.25;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    body.teacher-portal-body .teacher-schedule-hero__subtitle {
+        margin: 0;
+        max-width: 58rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: .93rem;
+        line-height: 1.75;
+    }
+
+    body.teacher-portal-body .teacher-schedule-hero__meta {
+        display: grid;
+        gap: .75rem;
+        align-content: center;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        min-width: 0;
+    }
+
+    body.teacher-portal-body .teacher-schedule-stat {
+        display: grid;
+        gap: .25rem;
+        padding: .85rem .9rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    body.teacher-portal-body .teacher-schedule-stat strong {
+        font-size: 1.15rem;
+        line-height: 1.2;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    body.teacher-portal-body .teacher-schedule-stat span {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: .78rem;
+        line-height: 1.35;
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel {
+        display: grid;
+        gap: .9rem;
+        padding: 1.1rem;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .9rem;
+        flex-wrap: wrap;
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel__copy {
+        min-width: 0;
+        display: grid;
+        gap: .28rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel__copy h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.08rem;
+        line-height: 1.35;
+        font-weight: 800;
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel__copy p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.7;
+        font-size: .88rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-panel__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    body.teacher-portal-body .teacher-schedule-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .5rem .75rem;
+        border-radius: 999px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #334155;
+        font-size: .8rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    body.teacher-portal-body .teacher-schedule-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-legend__item {
+        display: inline-flex;
+        align-items: center;
+        gap: .42rem;
+        padding: .45rem .7rem;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: .77rem;
+        font-weight: 700;
+    }
+
+    body.teacher-portal-body .teacher-schedule-legend__dot {
+        width: .72rem;
+        height: .72rem;
+        border-radius: 999px;
+        flex: 0 0 auto;
+    }
+
+    body.teacher-portal-body .teacher-schedule-legend__item.is-default .teacher-schedule-legend__dot { background: #cbd5e1; }
+    body.teacher-portal-body .teacher-schedule-legend__item.is-info .teacher-schedule-legend__dot { background: #38bdf8; }
+    body.teacher-portal-body .teacher-schedule-legend__item.is-success .teacher-schedule-legend__dot { background: #22c55e; }
+    body.teacher-portal-body .teacher-schedule-legend__item.is-danger .teacher-schedule-legend__dot { background: #ef4444; }
+    body.teacher-portal-body .teacher-schedule-legend__item.is-warning .teacher-schedule-legend__dot { background: #f59e0b; }
+
+    body.teacher-portal-body .teacher-schedule-day-stack {
+        display: grid;
+        gap: .85rem;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    body.teacher-portal-body .teacher-schedule-day-card {
+        display: grid;
+        gap: .7rem;
+        padding: .85rem .85rem .9rem;
+        border-radius: 18px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(248,250,252,.94) 100%);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+        backdrop-filter: blur(8px);
+        min-width: 0;
+    }
+
+    body.teacher-portal-body .teacher-schedule-day-card__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .55rem;
+        flex-wrap: wrap;
+        position: sticky;
+        top: .35rem;
+        z-index: 1;
+    }
+
+    body.teacher-portal-body .teacher-schedule-day-card__title {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        margin: 0;
+        padding: .38rem .7rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.82);
+        color: #1e40af;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+        font-size: .8rem;
+        font-weight: 800;
+    }
+
+    body.teacher-portal-body .teacher-schedule-day-card__title i {
+        color: #1d4ed8;
+        opacity: .9;
+    }
+
+    body.teacher-portal-body .teacher-schedule-day-card__today {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .34rem .62rem;
+        border-radius: 999px;
+        background: #ecfeff;
+        color: #0f766e;
+        font-size: .74rem;
+        font-weight: 700;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-list {
+        display: grid;
+        gap: .55rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item {
+        display: grid;
+        gap: .55rem;
+        padding: .78rem .8rem;
+        border-radius: 15px;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+        transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-default { background: #fff; }
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-info { background: #f8fbff; border-color: #dbeafe; }
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-success { background: #f5fbf7; border-color: #dcfce7; }
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-danger { background: #fff7f7; border-color: #fee2e2; }
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-warning { background: #fffaf3; border-color: #fde68a; }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__top {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__time {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .3rem .55rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.08);
+        color: #0f172a;
+        font-size: .75rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .3rem .56rem;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-default .teacher-schedule-lesson-item__badge {
+        background: rgba(148, 163, 184, .16);
+        color: #475569;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-info .teacher-schedule-lesson-item__badge {
+        background: rgba(56, 189, 248, .16);
+        color: #0369a1;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-success .teacher-schedule-lesson-item__badge {
+        background: rgba(34, 197, 94, .16);
+        color: #15803d;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-danger .teacher-schedule-lesson-item__badge {
+        background: rgba(239, 68, 68, .16);
+        color: #b91c1c;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item.is-warning .teacher-schedule-lesson-item__badge {
+        background: rgba(245, 158, 11, .16);
+        color: #b45309;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__title {
+        margin: 0;
+        font-size: .94rem;
+        line-height: 1.4;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__meta {
+        display: grid;
+        gap: .24rem;
+        color: #475569;
+        font-size: .79rem;
+        line-height: 1.55;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__meta strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        width: fit-content;
+        padding: .42rem .72rem;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff;
+        font-size: .75rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+    }
+
+    body.teacher-portal-body .teacher-schedule-empty {
+        display: grid;
+        place-items: center;
+        text-align: center;
+        gap: .3rem;
+        min-height: 120px;
+        border-radius: 16px;
+        border: 1px dashed #cbd5e1;
+        background: #f8fafc;
+        color: #94a3b8;
+        padding: 1rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-empty i {
+        font-size: 1.5rem;
+    }
+
+    @media (max-width: 1199.98px) {
+        body.teacher-portal-body .teacher-schedule-hero {
+            grid-template-columns: 1fr;
+        }
+
+        body.teacher-portal-body .teacher-schedule-day-stack {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        body.teacher-portal-body .teacher-schedule-page {
+            padding: 1rem;
+        }
+
+        body.teacher-portal-body .teacher-schedule-panel,
+        body.teacher-portal-body .teacher-schedule-hero {
+            border-radius: 20px;
+        }
+
+        body.teacher-portal-body .teacher-schedule-hero {
+            padding: 1.15rem;
+        }
+
+        body.teacher-portal-body .teacher-schedule-panel {
+            padding: 1rem;
+        }
+
+        body.teacher-portal-body .teacher-schedule-hero__title {
+            font-size: 1.45rem;
+        }
+
+        body.teacher-portal-body .teacher-schedule-hero__meta {
+            grid-template-columns: 1fr;
+        }
+
+        body.teacher-portal-body .teacher-schedule-day-stack {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        body.teacher-portal-body .teacher-schedule-hero__subtitle {
+            font-size: .92rem;
+        }
+    }
 </style>
 @endsection
+
 @section('content')
+@php
+    $isRtl = app()->getLocale() !== 'en';
+    $teacherName = trim(($teacher->first_name ?? '') . ' ' . ($teacher->last_name ?? ''));
+    $teacherName = $teacherName !== ''
+        ? ($isRtl ? 'أ. ' . $teacherName : $teacherName)
+        : ($isRtl ? 'الأستاذ' : 'Teacher');
 
+    $dayCollection = collect($days)->sortBy('id')->values();
+    $boardDays = $dayCollection->take(5)->values();
+    $lessonsByDay = collect($schedule)
+        ->sortBy(function ($entry) {
+            return optional($entry->lecture_time)->start_time ?: '23:59:59';
+        })
+        ->groupBy('day_id');
 
+    $todayDayId = (int) $today + 1;
+    $todaySessions = collect($schedule)->where('day_id', $todayDayId);
+    $totalSessions = collect($schedule)->count();
+    $liveSessions = $todaySessions->filter(fn ($entry) => !empty($entry->inter))->count();
+    $joinableSessions = $todaySessions->filter(fn ($entry) => !empty($entry->meeting_link))->count();
+    $attendedSessions = $todaySessions->filter(fn ($entry) => !empty($entry->attendance))->count();
+    $currentDayName = optional($dayCollection->firstWhere('id', $todayDayId))->name ?: ($isRtl ? 'اليوم الحالي' : 'Today');
+    $todayDate = \Carbon\Carbon::now()->locale($isRtl ? 'ar' : 'en')->translatedFormat($isRtl ? 'l، j F Y' : 'l, j F Y');
+    $roomCount = collect($teacher->rooms ?? [])->count();
 
-<div  id="bell1" style="display:none">
+    $labels = [
+        'dashboard' => $isRtl ? 'لوحة الدوام' : 'Schedule Dashboard',
+        'summary' => $isRtl ? 'ملخص سريع' : 'Quick Summary',
+        'today_sessions' => $isRtl ? 'حصص اليوم' : 'Today Sessions',
+        'live_sessions' => $isRtl ? 'حصص مباشرة' : 'Live Sessions',
+        'lesson_list' => $isRtl ? 'دروس هذا اليوم' : 'Lessons for this day',
+        'lesson_count' => $isRtl ? 'عدد الدروس' : 'Lesson count',
+        'legend' => $isRtl ? 'دليل الألوان' : 'Color Legend',
+        'no_lessons' => $isRtl ? 'لا توجد حصص مجدولة بعد' : 'No scheduled lessons yet',
+        'no_lessons_text' => $isRtl ? 'سيظهر الجدول هنا بمجرد ربط الشعب والحصص بالمعلم.' : 'The schedule will appear here once rooms and lessons are assigned to you.',
+        'empty_day' => $isRtl ? 'لا توجد حصص في هذا اليوم' : 'No lessons on this day',
+        'today' => $isRtl ? 'اليوم' : 'Today',
+        'scheduled' => $isRtl ? 'مجدولة' : 'Scheduled',
+        'available_link' => $isRtl ? 'الرابط متاح' : 'Link available',
+        'join_lesson' => $isRtl ? 'الدخول إلى الحصة' : 'Join lesson',
+        'attended' => $isRtl ? 'تم الحضور' : 'Attended',
+        'no_link' => $isRtl ? 'لا يوجد رابط' : 'No link',
+        'room_label' => $isRtl ? 'الشعبة' : 'Room',
+        'time_label' => $isRtl ? 'الوقت' : 'Time',
+        'period_label' => $isRtl ? 'الحصة' : 'Slot',
+        'open' => $isRtl ? 'فتح الحصة' : 'Open lesson',
+    ];
+@endphp
 
-    <span class="bell fa fa-bell"></span>
-  </div>
-  <!-- start new-->
+<div class="main-panel teacher-schedule-page">
+    <div class="content-wrapper">
+        <div class="teacher-schedule-shell">
+            <section class="teacher-schedule-hero">
+                <div class="teacher-schedule-hero__copy">
+                    <span class="teacher-schedule-hero__eyebrow">
+                        <i class="mdi mdi-calendar-clock" aria-hidden="true"></i>
+                        {{ $labels['dashboard'] }}
+                    </span>
+                    <h2 class="teacher-schedule-hero__title">
+                        {{ $isRtl ? 'جدول الدوام' : 'Teacher Schedule' }}
+                    </h2>
+                    <p class="teacher-schedule-hero__subtitle">
+                        {{ $isRtl ? 'هذه الصفحة تعرض الجدول الأسبوعي بصيغة بسيطة وواضحة: كل يوم على حدة مع الدروس الفعلية فقط، مع حالات الدخول والحضور وروابط البث عند توفرها.' : 'This page shows a simple weekly planner: one day at a time with the real lessons only, plus access states and stream links when available.' }}
+                    </p>
+                    <p class="teacher-schedule-hero__subtitle">
+                        {{ $isRtl ? 'مرحباً،' : 'Hello,' }} {{ $teacherName }} · {{ $todayDate }}
+                    </p>
+                </div>
 
-<div class="col-md-10 " style="margin: auto; direction: rtl; text-align:center">
-    @if (session()->has('success'))
+                <div class="teacher-schedule-hero__meta">
+                    <div class="teacher-schedule-stat">
+                        <strong>{{ $roomCount }}</strong>
+                        <span>{{ $isRtl ? 'الشعب المرتبطة بك' : 'Rooms linked to you' }}</span>
+                    </div>
+                    <div class="teacher-schedule-stat">
+                        <strong>{{ $totalSessions }}</strong>
+                        <span>{{ $labels['lesson_count'] }}</span>
+                    </div>
+                    <div class="teacher-schedule-stat">
+                        <strong>{{ $todaySessions->count() }}</strong>
+                        <span>{{ $labels['today_sessions'] }}</span>
+                    </div>
+                    <div class="teacher-schedule-stat">
+                        <strong>{{ $liveSessions }}</strong>
+                        <span>{{ $labels['live_sessions'] }}</span>
+                    </div>
+                </div>
+            </section>
 
-    <script>
-        window.onload = function() {
-            notif({
-                msg: " {{ Session::get('success') }} ",
-                type: "success"
-            })
-        }
+            <section class="teacher-schedule-panel">
+                <div class="teacher-schedule-panel__head">
+                    <div class="teacher-schedule-panel__copy">
+                        <span class="teacher-schedule-panel__eyebrow">
+                            <i class="mdi mdi-view-week-outline" aria-hidden="true"></i>
+                            {{ $labels['summary'] }}
+                        </span>
+                        <h3>{{ $isRtl ? 'الجدول الأسبوعي المبسط' : 'Simple Weekly Planner' }}</h3>
+                        <p>{{ $isRtl ? 'يتم ترتيب الدروس تحت كل يوم بشكل مباشر مع الحفاظ على ترتيبها الزمني، بدون خلايا فارغة أو أعمدة متكررة.' : 'Lessons are grouped directly under each day in chronological order, without empty cells or repeated columns.' }}</p>
+                    </div>
 
-    </script>
-@endif
-    @if (session()->has('error'))
+                    <div class="teacher-schedule-panel__actions">
+                        <span class="teacher-schedule-chip">
+                            <i class="mdi mdi-calendar-today" aria-hidden="true"></i>
+                            {{ $currentDayName }}
+                        </span>
+                        <span class="teacher-schedule-chip">
+                            <i class="mdi mdi-link-variant" aria-hidden="true"></i>
+                            {{ $joinableSessions }} {{ $isRtl ? 'رابط' : 'links' }}
+                        </span>
+                        <span class="teacher-schedule-chip">
+                            <i class="mdi mdi-check-circle-outline" aria-hidden="true"></i>
+                            {{ $attendedSessions }} {{ $isRtl ? 'حضور' : 'attended' }}
+                        </span>
+                    </div>
+                </div>
 
-    <script>
-        window.onload = function() {
-            notif({
-                msg: "{{ Session::get('error') }}",
-                type: "error"
-            })
-        }
+                <div class="teacher-schedule-legend" aria-label="{{ $labels['legend'] }}">
+                    <span class="teacher-schedule-legend__item is-default"><span class="teacher-schedule-legend__dot"></span>{{ $labels['scheduled'] }}</span>
+                    <span class="teacher-schedule-legend__item is-info"><span class="teacher-schedule-legend__dot"></span>{{ $labels['available_link'] }}</span>
+                    <span class="teacher-schedule-legend__item is-success"><span class="teacher-schedule-legend__dot"></span>{{ $labels['join_lesson'] }}</span>
+                    <span class="teacher-schedule-legend__item is-danger"><span class="teacher-schedule-legend__dot"></span>{{ $labels['attended'] }}</span>
+                    <span class="teacher-schedule-legend__item is-warning"><span class="teacher-schedule-legend__dot"></span>{{ $labels['no_link'] }}</span>
+                </div>
 
-    </script>
-@endif
-    @if (session()->has('othertime'))
-
-    <script>
-        window.onload = function() {
-            notif({
-                msg: " {{  Session::get('othertime')  }} ",
-                type: "warning"
-            })
-        }
-
-    </script>
-@endif
-@if ($errors->any())
-
-        @foreach ($errors->all() as $error)
-        {{-- <li>{{ $error }}</li> --}}
-        <script>
-            window.onload = function() {
-                notif({
-                    msg: `{{  $error }}`  ,
-                    type: "error"
-                })
-            }
-
-        </script>
-        @endforeach
-
-@endif
-<div class="main-panel" style="background: #f8f9fb;">
-    <ul class="breadcrumbs" style="padding-bottom: 7px;
-    padding-top: 11px;">
-
-      <li class="li"><a href="{{ route('dashboard.teacher') }}">الصفحة الرئيسية</a></li>
-      <li class="li"><a href="#">جدول الدوام</a></li>
-
-   </ul>
-<!--<div class="row">-->
-<!--    <div class="col-md-4" >-->
-<!--        <button class="accept print" style="width: 140px;-->
-<!--        padding-top: 10px;-->
-<!--        padding-bottom: 10px;">طباعة</button>-->
-<!--      </div>-->
-<!--</div>-->
-
-
-    <div class="content-wrapper pb-0">
-
-        <!-- <div class="row" style="margin-right: 1px;float:left ">-->
-        <!--        <div class="col3 mx-2 btn-success p-1">يمكن الدخول للدرس</div>-->
-        <!--        <div class="col3 mx-2 btn-danger p-1">تم حضورالدرس   </div>-->
-        <!--        <div class="col3 mx-2 btn-warning p-1">الدرس لا يحوي رابط غوغل</div>-->
-        <!--        <div class="col3 mx-2 btn-primary2 p-1 text-light">اللون الافتراضي</div>-->
-        <!--</div>-->
-        {{-- <a class=" aaa btn btn-success" href="{{ route('teacher.google_meets',$teacher->id) }}"> Goolge Meets</a> --}}
-        <h1  class="title text-center w-100" style="padding-bottom:20px;padding-top:20px"> برنامج الدوام  </h1>
-
-        <div class="row w-100" style="margin-right: 1px;margin-bottom:15px ">
-             <div class="col-sm-2 mx-2 btn-primary p-1 text-light">اللون الافتراضي</div>
-            <div class="col-sm-2 mx-2 btn-info p-1 text-light">اليوم الحالي </div>
-                <div class="col-sm-2 mx-2 btn-success p-1">يمكن الدخول للدرس</div>
-                <div class="col-sm-2 mx-2 btn-danger p-1">تم حضورالدرس   </div>
-
-                <div class="col-sm-3 mx-2 btn-warning p-1">الدرس لا يحوي رابط</div>
-
-        </div>
-        <div class="container" style="padding-bottom: 50px;">
-            <div class="row">
-              <div class="col-md-12">
-               <div>
-                 <table  id="dvContainer">
-        <tbody style="border: 2px solid;">
-          <?php
-             $i = 1;
-            ?>
-            @foreach ($days as $key => $day)
-
-                <tr style="border: 2px solid;">
-                    <th scope="row" style="border: 2px solid;">{{ $day->name }}</th>
-                        @php
-                        $lesson_name2 =  '' ;
-                        $title =  ' حصة اسبوعية' ;
-                        $google_meeting_link =  '' ;
-                        $lesson_time_id =  -1 ;
-                        $room_id = "";
-                        $class_and_room  =    '';
-                        $background =    'btn-primary';
-                        $my_href = '#';
-                        $passToStream  = true ;
-                        $go_to_google = false ;
-
-
-                        @endphp
-
-                        @foreach ($schedule as $key3 => $lesson_time )
-                            @if ($day->id == $lesson_time->day_id )
-                                @php
-                                $lesson_name2 =   '';
-                                $class_name =    $lesson_time->room->classes->name;
-                                $room_name =    $lesson_time->room->name;
-                                $room_id =    $lesson_time->room->id;
-                                $class_and_room = " $class_name / $room_name" ;
-                                $lesson_name2 =    $lesson_time->lesson->name ;
-                                $lesson_time_id = $lesson_time->id ;
-                                $meeting_link = $lesson_time->meeting_link ;
-
-                                if( $today == $day->id - 1 && $lesson_time->attendance == false &&  $lesson_time->inter == false && $lesson_time->meeting_link != null){
-                                    $background = 'btn-info';
-                                    // $title = 'لم يحن الوقت بعد';
-                                }
-                                else if($today == $day->id - 1 && $lesson_time->attendance == true  &&  $lesson_time->inter == true && isset($lesson_time->meeting_link )){
-                                    $background = 'btn-danger';
-                                    $title = ' الدخول للحصة';
-                                    $google_meeting_link = $lesson_time->meeting_link ;
-                                    $go_to_google = true;
-                                    // $title = 'لقد زرت هذا الرابط من قبل   ';
-
-                                }
-                                else if($today == $day->id - 1  &&  $lesson_time->inter == true && isset($lesson_time->meeting_link )){
-                                    $background = 'btn-success';
-                                    $title = ' الدخول للحصة';
-                                    $google_meeting_link = $lesson_time->meeting_link ;
-                                    $go_to_google = true;
-                                }
-                                else if($today == $day->id - 1 && $lesson_time->meeting_link == null){
-                                    $background = 'btn-warning';
-                                    $title = 'لا يوجد درس مجدول';
-                                }
-                                else if($today == $day->id - 1 && $lesson_time->attendance == true){
-                                    $background = 'btn-danger';
-                                    // $title = 'لقد زرت هذا الرابط من قبل   ';
-
-                                }
-                                else
-                                    $background = 'btn-primary';
-
-
-                                @endphp
-                                <td  style="border: 2px solid;">
-                                    <a  style="display: block" target="_blank"
-                                        class="aaa
-                                        {{ $background }}
-                                        btn-sm add_time "
-                                        @if( $passToStream && $room_id != "" &&  $go_to_google)
-                                            href="{{ route('dashboard.teacher.room.go_to_stream',['scheduler_id' => $lesson_time_id,'day_id' => $day->id,'lecture_time_id' =>$lesson_time->lecture_time->id ,'room_id' =>$room_id,'teacher_id' => $teacher_id]) }}"
-                                        @endif
-                                        title="{{ $title }}">
-                                        <p class="lesson_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }}" style="margin:0;font-weight:bold"> {{ $lesson_time->lesson->name }}</p>
-                                        <p class="teacher_name-schedule{{  $day->id .''. $lesson_time->lecture_time->id }}" style="margin:0;font-size:14px"> {{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }} </p>
-                                        <p  style="margin:0;font-size:14px"> {{ Carbon\Carbon::parse($lesson_time->lecture_time->start_time)->format('H:i')." - ".
-
-                                      Carbon\Carbon::parse($lesson_time->lecture_time->end_time)->format('H:i')
-                                         }} </p>
-                                        <input class="time" hidden value="$lesson_time->lecture_time->end_time">
-                                        <p  style="margin:0;font-size:14px"> {{ $lesson_time->lecture_time->name }} </p>
-                                    </a>
-                                    @if( $lesson_time_id > 0)
-                                    {{-- <a class="aaa btn  btn-warning btn-sm add_time"
-                                        data-toggle="modal" data-target="#add_schedule" data-day_id = '{{ $day->id  }}'
-                                        data-day = '{{ $day->name  }}'
-                                        data-time = "{{ $lesson_time->lecture_time->name }}"
-                                         data-lesson_name = "{{ $lesson_name2 }}"
-                                        data-lesson_time_id = "{{ $lesson_time_id }}"
-                                        data-meeting_link = "{{  $meeting_link  }}"
-
-                                        title="إضافة رابط ">
-                                    </a> --}}
+                @if ($boardDays->isEmpty())
+                    <div class="teacher-schedule-empty">
+                        <i class="mdi mdi-calendar-remove-outline" aria-hidden="true"></i>
+                        <strong>{{ $labels['no_lessons'] }}</strong>
+                        <span>{{ $labels['no_lessons_text'] }}</span>
+                    </div>
+                @else
+                <div class="teacher-schedule-day-stack">
+                        @foreach ($boardDays as $day)
+                            @php
+                                $dayLessons = collect($lessonsByDay->get($day->id, []));
+                            @endphp
+                            <section class="teacher-schedule-day-card">
+                                <div class="teacher-schedule-day-card__head">
+                                    <h4 class="teacher-schedule-day-card__title">
+                                        <i class="mdi mdi-calendar-range" aria-hidden="true"></i>
+                                        {{ $day->name }}
+                                    </h4>
+                                    @if ((int) $day->id === (int) $todayDayId)
+                                        <span class="teacher-schedule-day-card__today">
+                                            <i class="mdi mdi-calendar-star" aria-hidden="true"></i>
+                                            {{ $labels['today'] }}
+                                        </span>
                                     @endif
-                                </td>
-                            @endif
+                                </div>
+
+                                @if ($dayLessons->isEmpty())
+                                    <div class="teacher-schedule-empty" style="min-height: 130px;">
+                                        <i class="mdi mdi-calendar-remove-outline" aria-hidden="true"></i>
+                                        <strong>{{ $labels['empty_day'] }}</strong>
+                                    </div>
+                                @else
+                                    <div class="teacher-schedule-lesson-list">
+                                        @foreach ($dayLessons as $entry)
+                                            @php
+                                                $hasLink = !blank($entry->meeting_link);
+                                                $attendance = (bool) $entry->attendance;
+                                                $inter = (bool) $entry->inter;
+                                                $stateClass = 'is-default';
+                                                $stateLabel = $labels['scheduled'];
+                                                $actionable = false;
+                                                $joinUrl = null;
+
+                                                if ((int) $day->id === (int) $todayDayId) {
+                                                    if (!$hasLink) {
+                                                        $stateClass = 'is-warning';
+                                                        $stateLabel = $labels['no_link'];
+                                                    } elseif ($attendance && $inter) {
+                                                        $stateClass = 'is-danger';
+                                                        $stateLabel = $labels['attended'];
+                                                        $actionable = true;
+                                                    } elseif ($inter) {
+                                                        $stateClass = 'is-success';
+                                                        $stateLabel = $labels['join_lesson'];
+                                                        $actionable = true;
+                                                    } elseif ($hasLink) {
+                                                        $stateClass = 'is-info';
+                                                        $stateLabel = $labels['available_link'];
+                                                    }
+                                                } elseif (!$hasLink) {
+                                                    $stateClass = 'is-warning';
+                                                    $stateLabel = $labels['no_link'];
+                                                }
+
+                                                if ($actionable && optional($entry->room)->id) {
+                                                    $joinUrl = route('dashboard.teacher.room.go_to_stream', [
+                                                        'scheduler_id' => $entry->id,
+                                                        'day_id' => $day->id,
+                                                        'lecture_time_id' => $entry->lecture_time->id,
+                                                        'room_id' => $entry->room->id,
+                                                        'teacher_id' => $teacher_id,
+                                                    ]);
+                                                }
+                                            @endphp
+
+                                            <article class="teacher-schedule-lesson-item {{ $stateClass }}">
+                                                <div class="teacher-schedule-lesson-item__top">
+                                                    <span class="teacher-schedule-lesson-item__badge">{{ $stateLabel }}</span>
+                                                    <span class="teacher-schedule-lesson-item__time">
+                                                        <i class="mdi mdi-clock-outline" aria-hidden="true"></i>
+                                                        {{ \Carbon\Carbon::parse($entry->lecture_time->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($entry->lecture_time->end_time)->format('H:i') }}
+                                                    </span>
+                                                </div>
+
+                                                <h4 class="teacher-schedule-lesson-item__title">{{ $entry->lesson->name }}</h4>
+
+                                                <div class="teacher-schedule-lesson-item__meta">
+                                                    <span><strong>{{ $labels['room_label'] }}:</strong> {{ $entry->room->classes->name }} / {{ $entry->room->name }}</span>
+                                                    <span><strong>{{ $labels['period_label'] }}:</strong> {{ $entry->lecture_time->name }}</span>
+                                                </div>
+
+                                                @if ($joinUrl)
+                                                    <a href="{{ $joinUrl }}" target="_blank" rel="noopener noreferrer" class="teacher-schedule-lesson-item__action">
+                                                        <i class="mdi mdi-arrow-top-right-thin" aria-hidden="true"></i>
+                                                        {{ $labels['open'] }}
+                                                    </a>
+                                                @endif
+                                            </article>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </section>
                         @endforeach
-                </tr>
-            @endforeach
-
-    </tbody>
-    </table>
-    </div>
-
-</div>
-</div>
-<!-- end new-->
-
-<audio id="MyAudioElement" >
-    <source src="{{asset('teachers/schoolbell.mp3')}}" >
-
-
-  </audio>
-  <button id="btn" hidden></button>
-
-{{-- add lesson time --}}
-
-{{--<div class="modal fade" id="add_schedule">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="direction: rtl; text-align:right">
-            <div class="modal-header ">
-                <h5 class="modal-title" id="exampleModalLongTitle">  إضافة رابط غوغل   </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="display: inline-block;margin: 0px;padding: 0px;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-            <form  action="" method="post" class="w-100">
-                @csrf
-                {{-- <input type="hidden" name="room_id" id="room_id" value=" {{ $room_id }}" class="room_id">
-                <input type="hidden" name="lesson_time_id" id="lesson_time_id"  class="lesson_time_id">
-
-
-                <div class="form-group row">
-                    <label for="courseCost" class="col-sm-2 col-form-label"> اليوم : </label>
-                    <div class="col-sm-10">
-                        <input type="text" readonly class="form-control day">
-                        <input type="hidden" name="day_id"  class="form-control day_id">
                     </div>
-                </div>
-                <div class="form-group row">
-                    <label for="courseCost" class="col-sm-2 col-form-label"> الحصة : </label>
-                    <div class="col-sm-10">
-                        <input type="text" readonly class="form-control time">
-                        <input type="hidden" name="time_id"  class="form-control time_id">
-
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="courseCost" class="col-sm-2 col-form-label"> المادة : </label>
-                    <div class="col-sm-10">
-                        <input type="text" readonly class="form-control lesson">
-                        <input type="hidden" name="lesson_id"  class="form-control time_id">
-
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="courseCost" class="col-sm-2 col-form-label"> الرابط : </label>
-                    <div class="col-sm-10">
-                        <input type="text"  class="form-control meeting_link" name="meeting_link">
-                    </div>
-                </div>
-
-                <div class="form-group modal-footer row justify-content-around px-3">
-                      <button class="btn btn-success save_lecture_time" type="submit" style="width: 35%">تأكيد </button>
-                    <button  class="btn btn-light btn-info" data-dismiss="modal" style="width: 35%">خروج</button>
-                </div>
-
-                <!-- end submit-->
-
-
-            </form>
-            </div>
+                @endif
+            </section>
         </div>
     </div>
-</div>--}}
-        {{-- end add lesson time --}}
-        <input type="text" hidden id="name_share" value="{{ $teacher->first_name }} {{ $teacher->last_name }} ">
+</div>
+@endsection
 
-	@endsection
-    @section('js')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>-->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.js"></script>-->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.min.js"></script>-->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>-->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>-->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/PrintArea/2.4.1/jquery.PrintArea.js" integrity="sha512-GhQdBWSddrd8ijiuwA0LZ7ppPcPrJOZAtGMOmgO/371vPNUNm/mKdNc13T/2UWLp5vLIcaDvh/9NwCRZAdxgFw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+@section('js')
 <script>
-    $(document).ready(function() {
-        $('.sh11').addClass('active');
-        $('.print').on('click', function(e) {
-            // Apply print styles
-            $('#dvContainer').addClass('print-styles');
-
-            // Remove button styles temporarily
-            $('.btn-info').removeClass('btn-info').addClass('uuu1');
-            $('.btn-success').removeClass('btn-success').addClass('uuu2');
-            $('.btn-primary').removeClass('btn-primary').addClass('uuu3');
-            $('.btn-danger').removeClass('btn-danger').addClass('uuu6');
-            $('.btn-warning').removeClass('btn-warning').addClass('uuu5');
-
-            // Set the viewport width to a large value for printing
-            var originalViewportWidth = window.innerWidth;
-            window.innerWidth = 1920; // Set the desired width (e.g., 1920px)
-
-            html2canvas(document.querySelector("#dvContainer")).then(canvas => {
-                a = document.createElement('a');
-                document.body.appendChild(a);
-                a.download = $('#name_share').val() + ".png";
-                a.href = canvas.toDataURL();
-                a.click();
-
-                // Restore button styles
-                $('.uuu1').removeClass('uuu1').addClass('btn-info');
-                $('.uuu2').removeClass('uuu2').addClass('btn-success');
-                $('.uuu3').removeClass('uuu3').addClass('btn-primary');
-                $('.uuu6').removeClass('uuu6').addClass('btn-danger');
-                $('.uuu5').removeClass('uuu5').addClass('btn-warning');
-
-                // Remove print styles
-                $('#dvContainer').removeClass('print-styles');
-
-                // Restore the original viewport width
-                window.innerWidth = originalViewportWidth;
-            });
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        var activeNav = document.querySelector('.sh11');
+        if (activeNav) {
+            activeNav.classList.add('active');
+        }
     });
 </script>
-
-
-
-    @endsection
+@endsection

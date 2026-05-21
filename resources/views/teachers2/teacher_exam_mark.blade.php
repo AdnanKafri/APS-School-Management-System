@@ -549,7 +549,246 @@ border-right: 1px solid #ddd;
             font-weight: 900;
         }
     </style>
-    @if (session()->has('success'))
+    
+    <style>
+        .teacher-workflow-page {
+            background: #f6f8fc !important;
+        }
+
+        .teacher-workflow-shell {
+            padding-top: 0;
+        }
+
+        .teacher-workflow-container {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .teacher-workflow-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 0 0 16px;
+            padding: 18px 20px;
+            border: 1px solid #e6edf6;
+            border-radius: 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+        }
+
+        .teacher-workflow-hero h4 {
+            margin: 0;
+            color: #0f172a !important;
+            font-size: 1.35rem !important;
+            line-height: 1.3;
+            font-weight: 800;
+            padding-bottom: 0 !important;
+        }
+
+        .teacher-workflow-hero__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .teacher-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: #eef3fb;
+            color: #41506a;
+            font-size: 0.92rem;
+            font-weight: 700;
+            border: 1px solid #dbe4f0;
+        }
+
+        .teacher-workflow-card {
+            overflow: hidden;
+            border: 1px solid #e6edf6 !important;
+            border-radius: 24px !important;
+            background: #fff;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+        }
+
+        .teacher-workflow-card .card-header {
+            background: transparent !important;
+            border: 0 !important;
+            padding: 12px 16px 0 !important;
+        }
+
+        .teacher-workflow-card .card-body {
+            padding: 12px 16px 18px !important;
+        }
+
+        .teacher-workflow-card .nav-tabs {
+            border: 0 !important;
+            padding: 0 !important;
+            gap: 8px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .teacher-workflow-card .nav-tabs .nav-link {
+            border: 1px solid #dbe4f0 !important;
+            border-radius: 999px !important;
+            padding: 0.6rem 1rem !important;
+            background: #f5f8fd !important;
+            color: #5b6b84 !important;
+            font-weight: 700 !important;
+            box-shadow: none !important;
+        }
+
+        .teacher-workflow-card .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, #14315c, #1f4b8c) !important;
+            color: #fff !important;
+            box-shadow: 0 10px 26px rgba(20, 49, 92, 0.18);
+        }
+
+        .teacher-workflow-surface {
+            border-radius: 20px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .teacher-workflow-page table {
+            margin: 0 !important;
+            border: 0 !important;
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0;
+        }
+
+        .teacher-workflow-page .table-responsive {
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        .teacher-workflow-page table thead th {
+            background: #f4f7fb !important;
+            color: #41506a;
+            border-bottom: 1px solid #e4ebf4 !important;
+            font-size: 0.95rem !important;
+            padding: 14px 12px !important;
+            white-space: nowrap;
+        }
+
+        .teacher-workflow-page table tbody tr {
+            background: #fff !important;
+            border: 0 !important;
+            transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .teacher-workflow-page table tbody tr:hover {
+            background: #f9fbff !important;
+        }
+
+        .teacher-workflow-page table td {
+            border-bottom: 1px solid #edf2f7 !important;
+            padding: 12px 12px !important;
+            vertical-align: middle;
+        }
+
+        .teacher-workflow-page table th,
+        .teacher-workflow-page table td {
+            text-align: center !important;
+        }
+
+        .teacher-workflow-page .home,
+        .teacher-workflow-page .showstate,
+        .teacher-workflow-page .bu,
+        .teacher-workflow-page .Btn,
+        .teacher-workflow-page .addquestion {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            border-radius: 999px;
+            padding-inline: 1rem;
+        }
+
+        .teacher-workflow-page .home {
+            width: auto;
+            min-width: 108px;
+            height: auto;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            background-color: #14315c;
+            box-shadow: none;
+        }
+
+        .teacher-workflow-page .showstate {
+            min-width: 108px;
+            padding: 0.6rem 0.95rem;
+            border: 1px solid #d6e0ed;
+            color: #274059;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .teacher-workflow-page .bu,
+        .teacher-workflow-page .Btn {
+            width: 42px;
+            height: 42px;
+            background: #fff;
+            border: 1px solid #d6e0ed;
+            box-shadow: none;
+        }
+
+        .teacher-workflow-page .addquestion {
+            height: 40px;
+            padding: 0 0.95rem;
+            border: 0;
+            background: #14315c;
+            color: #fff;
+        }
+
+        .teacher-workflow-page .modal-content {
+            border: 0;
+            border-radius: 22px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.15);
+        }
+
+        .teacher-workflow-page .modal-header,
+        .teacher-workflow-page .modal-footer {
+            border: 0;
+        }
+
+        .teacher-workflow-page .modal-footer {
+            padding-top: 0;
+        }
+
+        .teacher-workflow-page .tab-content {
+            text-align: right !important;
+        }
+
+        @media (max-width: 991px) {
+            .teacher-workflow-hero {
+                flex-direction: column;
+            }
+
+            .teacher-workflow-card .nav-tabs {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .teacher-workflow-card .card-header,
+            .teacher-workflow-card .card-body {
+                padding-inline: 12px !important;
+            }
+
+            .teacher-workflow-page table th,
+            .teacher-workflow-page table td {
+                padding: 10px 8px !important;
+            }
+        }
+    </style>
+
+@if (session()->has('success'))
         <script>
             window.onload = function() {
                 notif({
@@ -580,7 +819,7 @@ border-right: 1px solid #ddd;
         </script>
     @endif
 
-    <div class="main-panel" style="background: #f8f9fb;">
+    <div class="main-panel teacher-workflow-page" style="background: #f6f8fc;">
         <ul class="breadcrumbs" style="padding-bottom: 7px;
         padding-top: 11px;">
             <li class="li"><a href="{{ route('dashboard.teacher') }}">الصفحة الرئيسية</a></li>
@@ -591,15 +830,26 @@ border-right: 1px solid #ddd;
             <li class="li"><a href="#">جميع الامتحانات </a></li>
         </ul>
         <input hidden value="{{ $room_id }}" id="room_id">
-        <div class="content-wrapper pb-0">
+        <div class="content-wrapper pb-0 teacher-workflow-shell">
             <!--start content-->
-            <div class="container" style="direction: rtl;position: relative;">
+            <div class="container teacher-workflow-container" style="direction: rtl;position: relative;">
 
-                <!--nav tablist-->
+                
+                <div class="teacher-workflow-hero">
+                    <div>
+                        <h4>??????????</h4>
+                        <div class="teacher-workflow-hero__meta">
+                            <span class="teacher-pill">{{ $room->name }}</span>
+                            <span class="teacher-pill">{{ $lesson->name }}</span>
+                        </div>
+                    </div>
+                </div>
+
+<!--nav tablist-->
                 <div class="row">
                     <div class="col-md-12  mr-auto">
                         <!-- Nav tabs -->
-                        <div class="card">
+                        <div class="card teacher-workflow-card">
                             <div class="card-header">
                                 <ul class="nav nav-tabs justify-content-center" role="tablist">
 
@@ -750,7 +1000,7 @@ border-right: 1px solid #ddd;
                                             <div class="row">
                                                 <div class="col-md-12">
 
-                                                    <div class="table-responsive">
+                                                    <div class="table-responsive teacher-workflow-surface">
                                                         <table class="table table-striped">
                                                             <thead>
                                                                 <tr>
@@ -986,16 +1236,6 @@ border-right: 1px solid #ddd;
 
 
 @section('js')
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
-    </script>
-    <script src="https://code.jquery.com/jquery-2.2.4.min.js" type="text/javascript"></script>
     <script>
         $(".addstudent").on("click", function(e) {
             $('.stud').empty();

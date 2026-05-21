@@ -38,7 +38,7 @@
 
                 <div class="container teacher-subjects-container">
                     <div class="row teacher-subjects-grid">
-                        @foreach ($teacher_lessons as $item)
+                        @forelse ($teacher_lessons as $item)
                             <div class="col-xl-4 col-md-6">
                                 <article class="cookie-card teacher-subject-card">
                                     <div class="teacher-subject-card__visual">
@@ -50,7 +50,7 @@
 
                                     <div class="teacher-subject-card__body">
                                         <span class="teacher-subject-card__eyebrow">مادة دراسية</span>
-                                        <h3 class="teacher-subject-card__title">{{ $item->name }}</h3>
+                                        <h3 class="teacher-subject-card__title">{{ $item->name ?? '—' }}</h3>
                                         <p class="teacher-subject-card__text">يمكنك الانتقال إلى الدروس أو استعراض الكتب المنهجية الخاصة بهذه المادة مباشرة.</p>
                                     </div>
 
@@ -66,7 +66,15 @@
                                     </div>
                                 </article>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="col-12">
+                                <div class="teacher-dashboard-empty">
+                                    <i class="mdi mdi-book-open-page-variant"></i>
+                                    <strong>لا توجد مواد مرتبطة بهذه الشعبة حالياً</strong>
+                                    <span>عند ربط مادة دراسية بهذه الشعبة ستظهر هنا تلقائياً.</span>
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
