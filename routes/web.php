@@ -70,6 +70,7 @@ Route::get('adh-login', function () {
 });
 
 Route::post('/stu_register2', 'websitecontroller@stu_register')->name('website.stu_register');
+Route::get('/gallery/media', 'websitecontroller@gallery_media')->name('gallery.media');
 Route::get('redirectTo404', function () {
   return view('errors.404');
 });

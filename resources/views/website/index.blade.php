@@ -665,7 +665,7 @@
                     <div class="sch-gallery-coverflow-stage" data-gallery-stage>
                         @foreach($galleryItems as $item)
                             @php
-                                $galleryImage = $makeMediaUrl($item->image, $fallbackSquare);
+                                $galleryImage = $item->image_url ?? $makeMediaUrl($item->image, $fallbackSquare);
                             @endphp
                             <a
                                 class="sch-gallery-coverflow-slide @if($loop->first) is-active @endif"

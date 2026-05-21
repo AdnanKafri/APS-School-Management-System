@@ -489,6 +489,16 @@ class websitecontroller extends Controller
         return $this->streamPublicStoragePath($normalized);
     }
 
+    public function gallery_media(Request $request)
+    {
+        $normalized = $this->normalizePublicStoragePath($request->query('path'));
+        if ($normalized === null) {
+            abort(404);
+        }
+
+        return $this->streamPublicStoragePath($normalized);
+    }
+
     protected function resolveRegistrationPaymentQrUrl(?string $path): ?string
     {
         $normalized = $this->normalizePublicStoragePath($path);

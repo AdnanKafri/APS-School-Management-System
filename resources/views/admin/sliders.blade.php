@@ -89,12 +89,12 @@
 
         .slider-preview-shell {
             display: grid;
-            gap: .55rem;
+            gap: .75rem;
         }
 
         .slider-preview-frame {
             width: 100%;
-            max-width: 320px;
+            max-width: 100%;
             aspect-ratio: 16 / 9;
             border-radius: 18px;
             border: 1px solid var(--v2-border);
@@ -114,7 +114,7 @@
 
         .slider-preview-frame img {
             display: block;
-            object-fit: cover;
+            object-fit: contain;
             background: #fff;
         }
 
@@ -161,7 +161,7 @@
         .slider-media-preview {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             border-radius: 0;
             border: 0;
             background: transparent;
@@ -642,7 +642,7 @@
 
                                 <div class="slider-preview-shell">
                                     <div class="slider-preview-frame is-empty" id="edit_slider_preview_frame">
-                                        <img src="" class="del_edit_img slider-media-preview" id="image1"
+                                        <img src="" class="del_edit_img slider-media-preview" id="edit_slider_preview"
                                             alt="Slider preview">
                                         <div class="slider-preview-empty" id="edit_slider_empty_state">
                                             <i class="fas fa-image"></i>
@@ -656,9 +656,6 @@
                                             style="display: none; font-weight:bold">&times;</span>
                                     </div>
                                 </div>
-
-                                <img id="edit_slider_preview" class="output slider-media-preview" style="display: none" src=""
-                                    alt="">
                             </div>
                         </div>
 
@@ -735,8 +732,8 @@
 
                                 <div class="slider-preview-shell">
                                     <div class="slider-preview-frame is-empty" id="create_slider_preview_frame">
-                                        <img id="create_slider_preview" style="display: none" src="" class="output slider-media-preview"
-                                            alt="">
+                                        <img id="create_slider_preview" style="display: none" src=""
+                                            class="output slider-media-preview" alt="">
                                         <div class="slider-preview-empty" id="create_slider_empty_state">
                                             <i class="fas fa-image"></i>
                                             <span>لم يتم اختيار صورة بعد</span>
@@ -883,13 +880,20 @@
             $('#key_word_ar').val($(this).data('key_word_ar'));
 
 
+            var $editFrame = $('#edit_slider_preview_frame');
+            var $editEmpty = $('#edit_slider_empty_state');
+            var $editPreview = $('#edit_slider_preview');
+
             if (imageUrl) {
-                $('#image1').attr('src', imageUrl).show();
-                $('#edit_slider_preview').attr('src', '').hide();
+                $editPreview.attr('src', imageUrl).show();
+                $editFrame.removeClass('is-empty');
+                $editEmpty.hide();
                 $('.editNewsModal .del_img').hide();
                 $('.editNewsModal .del_icon').show();
             } else {
-                $('#image1').attr('src', '').hide();
+                $editPreview.attr('src', '').hide();
+                $editFrame.addClass('is-empty');
+                $editEmpty.show();
                 $('.editNewsModal .del_icon').hide();
             }
 
@@ -906,6 +910,8 @@
                 return;
             }
 
+            var frame = document.getElementById('create_slider_preview_frame');
+            var emptyState = document.getElementById('create_slider_empty_state');
             var output = document.getElementById('create_slider_preview');
             var del_img = document.getElementById('del_img');
             var objectUrl = URL.createObjectURL(file);
@@ -913,6 +919,12 @@
             output.src = objectUrl;
             output.onload = function() {
                 output.style.display = 'block';
+                if (frame) {
+                    frame.classList.remove('is-empty');
+                }
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
                 del_img.setAttribute('style',
                     'display:inline-flex;font-size: 44px; color:red;font-weigh:bold;cursor:pointer');
                 URL.revokeObjectURL(objectUrl);
@@ -927,11 +939,18 @@
                 return;
             }
 
+            var frame = document.getElementById('edit_slider_preview_frame');
+            var emptyState = document.getElementById('edit_slider_empty_state');
             var output = document.getElementById('edit_slider_preview');
             var del_img = document.querySelector('.editNewsModal .del_img');
             var objectUrl = URL.createObjectURL(file);
 
-            $('#image1').hide();
+            if (frame) {
+                frame.classList.remove('is-empty');
+            }
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
             $('.editNewsModal .del_icon').hide();
 
             output.setAttribute('src', objectUrl);
@@ -951,9 +970,13 @@
             if ($modal.hasClass('createNewsModal')) {
                 $('#create_slider_preview').attr('style', 'display:none;').attr('src', '');
                 $('#input_image1').val('');
+                $('#create_slider_preview_frame').addClass('is-empty');
+                $('#create_slider_empty_state').show();
             } else if ($modal.hasClass('editNewsModal')) {
                 $('#edit_slider_preview').attr('style', 'display:none;').attr('src', '');
                 $('#input_edit_image1').val('');
+                $('#edit_slider_preview_frame').addClass('is-empty');
+                $('#edit_slider_empty_state').show();
             }
             $(this).hide();
 
@@ -962,7 +985,9 @@
         $(document).on('click', '.del_icon', function() {
             $(this).prevAll('.del:first').attr('disabled', false);
             $(this).prevAll('.del_edit_img:first').hide();
-            $('#image1').hide();
+            $('#edit_slider_preview').hide().attr('src', '');
+            $('#edit_slider_preview_frame').addClass('is-empty');
+            $('#edit_slider_empty_state').show();
             $(this).hide();
 
         });
