@@ -18,6 +18,9 @@ return [
         'empty_title' => 'No rooms are linked to this class yet',
         'empty_text' => 'Once a room is assigned to you, it will appear here automatically.',
         'card_text' => 'A teaching room connected to this class, ready for lessons and content.',
+        'exams_title' => 'Exams',
+        'quizzes_title' => 'Quizzes',
+        'tests_title' => 'Tests',
     ],
     'marks' => [
         'title' => 'Marks & Assessments',
@@ -34,5 +37,16 @@ return [
         'quizzes' => 'Quizzes',
         'tests' => 'Tests',
         'open' => 'Open',
+        'exams_title' => 'Exams',
+        'quizzes_title' => 'Quizzes',
+        'tests_title' => 'Tests',
+    ],
+
+    'grading' => [
+        'total_students' => 'Students',
+        'graded_students' => 'Graded',
+        'remaining_students' => 'Remaining',
+        'save_all' => 'Save All',
+        'empty_marks' => 'There are no marks ready to save.',
     ],
 ];

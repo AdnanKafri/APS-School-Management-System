@@ -174,24 +174,6 @@
             box-shadow: inset 0 0 0 10em #152C4F;
         }
 
-        .nav-tabs {
-            border: 0 !important;
-            padding: 40px 0.7rem !important;
-        }
-
-        div .card .card-header {
-            background: transparent !important;
-            border-bottom: 0 !important;
-            border-radius: 0 !important;
-            padding: 0 !important;
-        }
-
-        .nav-tabs>.nav-item>.nav-link.active {
-            background-color: #152c4fc7 !important;
-            border-radius: 30px !important;
-            color: #FFFFFF !important;
-        }
-
         form div span {
             position: absolute;
             z-index: 5;
@@ -548,11 +530,6 @@ border-right: 1px solid #ddd;
 .Btn:active {
   transform: translate(2px ,2px);
 }
-.nav-tabs .nav-item .nav-link {
-            border: 0 !important;
-            color: #485a76 !important;
-            font-weight: 900;
-        }
     </style>
     
     <style>
@@ -574,8 +551,8 @@ border-right: 1px solid #ddd;
             align-items: flex-start;
             justify-content: space-between;
             gap: 16px;
-            margin: 0 0 16px;
-            padding: 18px 20px;
+            margin: 0 0 12px;
+            padding: 14px 18px;
             border: 1px solid #e6edf6;
             border-radius: 24px;
             background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
@@ -612,7 +589,7 @@ border-right: 1px solid #ddd;
         }
 
         .teacher-workflow-card {
-            overflow: hidden;
+            overflow: visible !important;
             border: 1px solid #e6edf6 !important;
             border-radius: 24px !important;
             background: #fff;
@@ -622,7 +599,7 @@ border-right: 1px solid #ddd;
         .teacher-workflow-card .card-header {
             background: transparent !important;
             border: 0 !important;
-            padding: 12px 16px 0 !important;
+            padding: 12px 16px 12px !important;
         }
 
         .teacher-workflow-card .card-body {
@@ -842,7 +819,7 @@ border-right: 1px solid #ddd;
                 
                 <div class="teacher-workflow-hero">
                     <div>
-                        <h4>?????????</h4>
+                        <h4>{{ __('teacher_portal.exams_quizzes.quizzes_title') }}</h4>
                         <div class="teacher-workflow-hero__meta">
                             <span class="teacher-pill">{{ $room->name }}</span>
                             <span class="teacher-pill">{{ $lesson->name }}</span>
@@ -879,15 +856,7 @@ border-right: 1px solid #ddd;
                       <div class="tab-content text-center ">
                         <div class="tab-pane active" id="profile" role="tabpanel">
                          <div class="container animated bounceInLeft">
-                          <div class="row" style="justify-content: center;padding-bottom: 20px;padding-right: 66px;">
-                            <div class="col-md-3">
-                               <!--start add question-->
-                               <!--<a  href="#modal" class="addquestion">-->
-                               <!--  انشاء سؤال-->
-                               <!--</a>-->
-                               <!--end add question-->
-                            </div>
-                          </div>
+                          <!-- compact spacer removed -->
                           <div>
                             <table>
                               <thead>

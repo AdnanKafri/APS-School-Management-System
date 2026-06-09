@@ -18,6 +18,9 @@ return [
         'empty_title' => "لا توجد شعب مربوطة بهذا الصف حالياً",
         'empty_text' => "عند إسناد شعبة إليك ستظهر هنا تلقائياً.",
         'card_text' => "شعبة تدريسية مرتبطة بهذا الصف للوصول إلى الدروس والمحتوى.",
+        'exams_title' => 'الامتحانات',
+        'quizzes_title' => 'المذاكرات',
+        'tests_title' => 'اختبارات',
     ],
     'marks' => [
         'title' => "الامتحانات والعلامات",
@@ -34,5 +37,16 @@ return [
         'quizzes' => "المذاكرات",
         'tests' => "اختبارات",
         'open' => "افتح",
+        'exams_title' => 'الامتحانات',
+        'quizzes_title' => 'المذاكرات',
+        'tests_title' => 'اختبارات',
+    ],
+
+    'grading' => [
+        'total_students' => 'الطلاب',
+        'graded_students' => 'المصححة',
+        'remaining_students' => 'المتبقي',
+        'save_all' => 'حفظ الكل',
+        'empty_marks' => 'لا توجد علامات جاهزة للحفظ',
     ],
 ];

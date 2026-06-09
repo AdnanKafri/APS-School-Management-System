@@ -139,18 +139,6 @@
 </nav>
 @endsection
 @section('content')
-@if (session()->has('success'))
-
-<script>
-    window.onload = function() {
-        notif({
-            msg: "   تم التخزين بنجاح  ",
-            type: "success"
-        })
-    }
-
-</script>
-@endif
 @if ($errors->any())
 
     @foreach ($errors->all() as $error)

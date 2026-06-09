@@ -188,8 +188,8 @@ transform: translate(50%, 0) scale(1.1);
             align-items: flex-start;
             justify-content: space-between;
             gap: 16px;
-            margin: 0 0 16px;
-            padding: 18px 20px;
+            margin: 0 0 12px;
+            padding: 14px 18px;
             border: 1px solid #e6edf6;
             border-radius: 24px;
             background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
@@ -226,7 +226,7 @@ transform: translate(50%, 0) scale(1.1);
         }
 
         .teacher-workflow-card {
-            overflow: hidden;
+            overflow: visible !important;
             border: 1px solid #e6edf6 !important;
             border-radius: 24px !important;
             background: #fff;
@@ -236,7 +236,7 @@ transform: translate(50%, 0) scale(1.1);
         .teacher-workflow-card .card-header {
             background: transparent !important;
             border: 0 !important;
-            padding: 12px 16px 0 !important;
+            padding: 12px 16px 12px !important;
         }
 
         .teacher-workflow-card .card-body {
@@ -427,7 +427,7 @@ transform: translate(50%, 0) scale(1.1);
         <div class="container teacher-workflow-container" style="direction: rtl;">
            <div class="teacher-workflow-hero">
                 <div>
-                    <h4>??????????</h4>
+                    <h4>{{ __('teacher_portal.exams_quizzes.tests_title') }}</h4>
                     <div class="teacher-workflow-hero__meta">
                         <span class="teacher-pill">{{ $room->name }}</span>
                         <span class="teacher-pill">{{ $lesson->name }}</span>

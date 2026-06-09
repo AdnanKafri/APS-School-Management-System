@@ -167,6 +167,7 @@ Route::get('dashboard/teacher/StudentsRoomLesson_quize/{room_id}/{teacher_id}/{l
 Route::get('dashboard/teacher/StudentsRoomLesson_quize1/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_quize1')->name('dashboard.StudentsRoomLesson_quize1');
 Route::post('dashboard/teacher/student_save_mark2', 'TeacherController_New@student_save_mark2')->name('dashboard.teacher.student_save_mark2');
 Route::get('dashboard/teacher/student_save_mark1', 'TeacherController_New@student_save_mark1')->name('dashboard.teacher.student_save_mark1');
+Route::post('dashboard/teacher/student_save_mark_bulk', 'TeacherController_New@student_save_mark_bulk')->name('dashboard.teacher.student_save_mark_bulk');
 Route::post('dashboard/exam/update_result1', 'TeacherController_New@update_result1')->name('dashboard.update_result1');
 Route::get('dashboard/teacher/lecquestion/{lec_id}/{exam}', 'TeacherController_New@lecquestion')->name('dashboard.teacher.lecquestion');
 Route::get('dashboard/teacher/lecquestion1/{lec_id}/{exam}', 'TeacherController_New@lecquestion1')->name('dashboard.teacher.lecquestion1');

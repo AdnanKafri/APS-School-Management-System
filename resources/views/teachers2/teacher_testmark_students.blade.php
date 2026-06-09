@@ -253,6 +253,15 @@
                     <div class="card-body">
                         <h4 style="text-align: center;padding-bottom: 20px;color: #152C4F;font-size: 28px;">الاختبارات
                         </h4>
+                        <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="home js-bulk-save" data-kind="exam" onclick="return teacherBulkSave(this);" style="width:auto;min-width:145px;height:auto;padding:.6em 1.1em;font-size:15px;">{{ __('teacher_portal.grading.save_all') }}</button>
+    </div>
+    <form class="bulk-mark-form" action="{{ route('dashboard.teacher.student_save_mark_bulk') }}" method="post" style="display:none;">
+        @csrf
+        <input type="hidden" name="kind" class="bulk-mark-kind" value="exam">
+        <input type="hidden" name="rows" class="bulk-mark-rows" value="">
+    </form>
+
                         <div class="table-responsive">
                             <table class="table1">
                                 <thead>
@@ -499,6 +508,17 @@
     <br>
     <br>
 <!-- marks of homework -->
+      <div class="teacher-bulk-panel px-3 pb-3">
+          <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="home js-bulk-save" data-kind="exam" onclick="return teacherBulkSave(this);" style="width:auto;min-width:145px;height:auto;padding:.6em 1.1em;font-size:15px;">{{ __('teacher_portal.grading.save_all') }}</button>
+    </div>
+    <form class="bulk-mark-form" action="{{ route('dashboard.teacher.student_save_mark_bulk') }}" method="post" style="display:none;">
+        @csrf
+        <input type="hidden" name="kind" class="bulk-mark-kind" value="exam">
+        <input type="hidden" name="rows" class="bulk-mark-rows" value="">
+    </form>
+
+
       <table class="table1" >
         <thead>
             <tr>
@@ -639,20 +659,64 @@
            @endforeach
            @endforeach
         </tbody>
-    </table> --}}
+    </table>
+      </div> --}}
 @endsection
 @section('js')
     <script>
-        $(document).ready(function() {
-            $.each($('.input1'), function(key, value) {
-                var z = value.value;
-                $(this).parent().find('.input2').val(z);
-            })
+        window.teacherBulkSave = function (button) {
+            console.log('bulk save clicked', button);
+            var panel = button.closest('.teacher-bulk-panel');
+            if (!panel) {
+                console.warn('bulk save panel not found');
+                return false;
+            }
 
+            var rows = [];
+            panel.querySelectorAll('.table1 tbody tr').forEach(function (row) {
+                var visibleMark = Array.from(row.querySelectorAll('input[name="mark"]')).find(function (input) {
+                    return input.offsetParent !== null;
+                });
 
+                if (!visibleMark) {
+                    return;
+                }
 
+                var mark = (visibleMark.value || '').toString().trim();
+                if (!mark) {
+                    return;
+                }
 
-        })
+                rows.push({
+                    exam_result_id: row.querySelector('input[name="exam_result_id"]') ? row.querySelector('input[name="exam_result_id"]').value : '',
+                    room_id: row.querySelector('input[name="room_id"]') ? row.querySelector('input[name="room_id"]').value : '',
+                    exam_id: row.querySelector('input[name="exam_id"]') ? row.querySelector('input[name="exam_id"]').value : '',
+                    lesson_id: row.querySelector('input[name="lesson_id"]') ? row.querySelector('input[name="lesson_id"]').value : '',
+                    user_id: row.querySelector('input[name="user_id"]') ? row.querySelector('input[name="user_id"]').value : '',
+                    mark: mark
+                });
+            });
+
+            if (!rows.length) {
+                alert(@json(__('teacher_portal.grading.empty_marks')));
+                return false;
+            }
+
+            var kindInput = panel.querySelector('.bulk-mark-kind');
+            var rowsInput = panel.querySelector('.bulk-mark-rows');
+            var form = panel.querySelector('.bulk-mark-form');
+
+            if (!kindInput || !rowsInput || !form) {
+                console.warn('bulk save form fields missing');
+                return false;
+            }
+
+            kindInput.value = button.dataset.kind || 'exam';
+            rowsInput.value = JSON.stringify(rows);
+            form.submit();
+            return false;
+        };
+
         $(document).on('change', '.choice', function() {
 
             var lect = $(this).val();
