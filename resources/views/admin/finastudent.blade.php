@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'الأقساط المالية')
 @section('page_subtitle', 'متابعة الحسابات المالية للطلاب وإضافة الفواتير من واجهة منظمة ومتسقة مع نظام الإدارة')

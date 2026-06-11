@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'مدرسو الشعبة')
 @section('page_subtitle', 'عرض المدرسين المكلّفين بهذه الشعبة')

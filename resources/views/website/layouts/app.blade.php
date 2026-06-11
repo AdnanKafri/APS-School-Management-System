@@ -1,4 +1,4 @@
-﻿@php
+@php
     $locale = LaravelLocalization::setLocale();
     if (empty($locale)) {
         $locale = app()->getLocale();

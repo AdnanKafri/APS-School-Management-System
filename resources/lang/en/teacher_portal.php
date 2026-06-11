@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'common' => [
@@ -48,5 +48,13 @@ return [
         'remaining_students' => 'Remaining',
         'save_all' => 'Save All',
         'empty_marks' => 'There are no marks ready to save.',
+    ],
+    'notifications' => [
+        'operation_success' => 'Operation completed successfully.',
+        'created_successfully' => 'Created successfully.',
+        'updated_successfully' => 'Updated successfully.',
+        'deleted_successfully' => 'Deleted successfully.',
+        'operation_failed' => 'An error occurred while completing the operation.',
+        'no_selected_questions' => 'No questions were selected for this exam.',
     ],
 ];

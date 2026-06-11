@@ -1,4 +1,4 @@
-﻿@php
+@php
     $hidePageHeader = in_array(trim($__env->yieldContent('hide_page_header')), ['1', 'true'], true);
     $pageTitle = trim($__env->yieldContent('page_title')) ?: 'لوحة التحكم';
     $pageSubtitle = trim($__env->yieldContent('page_subtitle')) ?: 'نظام إدارة المدرسة';

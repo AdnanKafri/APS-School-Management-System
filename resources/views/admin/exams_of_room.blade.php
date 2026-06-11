@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'امتحانات الشعبة')
 @section('page_subtitle', 'إدارة الامتحانات الخاصة بالشعبة مع الحفاظ على منطق الصفحة الحالي بالكامل')

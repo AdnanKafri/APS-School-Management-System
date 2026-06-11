@@ -1,4 +1,4 @@
-﻿@extends('teachers2.layouts.app')
+@extends('teachers2.layouts.app')
 
 @section('teacher_page_title')
 {{ app()->getLocale() === 'en' ? 'Dashboard' : 'لوحة التحكم' }}

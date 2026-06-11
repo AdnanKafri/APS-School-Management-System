@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'قسم الاختبارات')
 @section('page_subtitle', 'اختيار الصف للانتقال إلى الشعب والامتحانات والمذاكرات المرتبطة به')

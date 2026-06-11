@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'الشعب المرتبطة بالاختبارات')
 @section('page_subtitle', 'إدارة الشعب والانتقال إلى صفحات المذاكرات والامتحانات الخاصة بكل شعبة')

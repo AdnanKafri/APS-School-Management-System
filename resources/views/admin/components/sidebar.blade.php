@@ -1,4 +1,4 @@
-﻿@php
+@php
     $current = optional(request()->route())->getName();
     $school = \App\School_data::first();
     $brandLogo = asset('assets/images/school/adham_black.png');

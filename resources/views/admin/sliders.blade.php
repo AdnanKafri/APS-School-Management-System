@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 @section('body_class', 'website-mgmt-v2')
 @section('page_title', 'السلايدر')
 @section('page_subtitle', 'إدارة شرائح الصفحة الرئيسية ومحتواها')

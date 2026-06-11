@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'الفصول الدراسية')
 @section('page_subtitle', 'إدارة الفصول المرتبطة بكل سنة دراسية مع الحفاظ على جدول واضح للحالة والتعديل')

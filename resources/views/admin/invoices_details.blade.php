@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'تفاصيل الفواتير')
 @section('page_subtitle', 'عرض جميع الفواتير المرتبطة بالطالب مع إمكانية فتح نسخة الطباعة لكل فاتورة')

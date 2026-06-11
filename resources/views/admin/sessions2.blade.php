@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'حصص الصف')
 @section('page_subtitle', 'إدارة الحصص الدراسية والاستراحات المرتبطة بالصف والشعب')

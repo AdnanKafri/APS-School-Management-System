@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 @section('hide_page_header', 'true')
 
 @section('style')

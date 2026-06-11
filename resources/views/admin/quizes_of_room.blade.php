@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'مذاكرات الشعبة')
 @section('page_subtitle', 'إدارة المذاكرات والاختبارات القصيرة الخاصة بالشعبة مع الحفاظ على نفس سير العمل الحالي')

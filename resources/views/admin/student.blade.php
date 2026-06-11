@@ -1572,7 +1572,7 @@ $about = \App\Other::find(1);
         <div class="student-panel__filters">
 
             {{-- <select class="form-control col-12 col-lg-3" id="stage_id_filter">
-                <option value="0">???? ??????? </option>
+                <option value="0">اختر المرحلة </option>
                 @foreach ($stages as $stage)
                 <option value="{{ $stage->id }}">{{ $stage->name }}</option>
                 @endforeach
@@ -1596,15 +1596,15 @@ $about = \App\Other::find(1);
         <a  class="btn  btn-success" data-toggle="modal" data-target=".createStudentModal"
             >إضافة طالب</a>
             {{-- <a   target="_blank" href="{{ route('st_import') }}" class="btn  btn-success"
-            > ????? ?????? </a> --}}
+            > استيراد الطلاب </a> --}}
            @endcan
 
              {{-- @can('export_student')
-            <a class="btn btn-success" data-target="#selectexport" data-toggle="modal"> ????? ??????
+            <a class="btn btn-success" data-target="#selectexport" data-toggle="modal"> تصدير الطلاب
             </a>
              @endcan --}}
                {{-- @can('student_details_department')
-             <a class="btn btn-success"   href="{{ route('student_details_department') }}"    >   ????? ??? ???????
+             <a class="btn btn-success"   href="{{ route('student_details_department') }}"    >   تفاصيل حسب الأقسام
              </a>
               @endcan --}}
         </div>

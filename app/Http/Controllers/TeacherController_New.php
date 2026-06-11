@@ -175,7 +175,7 @@ class TeacherController_New extends Controller
         $question->option->delete();
         }
         $question->delete();
-        return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        return redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
     //Ã˜ÂµÃ™ÂÃ˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª
     public function exams($class_id, $lecture_id, $room_id)
@@ -203,7 +203,7 @@ class TeacherController_New extends Controller
          Exam_question::where('test_id',$id)->delete() ;
         Lesson_teacher_room_term_exam::find($id)->delete();
         Exam_result::where('exam_id', $request->exam_id)->delete();
-        return redirect()->back()->with('delete', 'Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        return redirect()->back()->with('delete', 'تم حذف الامتحان بنجاح');
     }
     //Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â±
     public function exam_store(Request $request)
@@ -213,8 +213,8 @@ class TeacherController_New extends Controller
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
             if ($request->type == 3) {
             if($request->start_time > $request->end_time){
-            session()->flash('error', 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™Ë†Ã™â€šÃ˜Âª');
-            return redirect()->back()->with('error', 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™Ë†Ã™â€šÃ˜Âª!!');
+            session()->flash('error', 'يرجى تعديل الوقت');
+            return redirect()->back()->with('error', 'يرجى تعديل الوقت!!');
         }
             $item =  new Lesson_teacher_room_term_exam();
             $item->class_id = $request->class_id;
@@ -245,7 +245,7 @@ class TeacherController_New extends Controller
             $item2->type ='8';
             $item2->save();
         }
-        return redirect()->back()->with('Add', 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        return redirect()->back()->with('Add', 'تم اضافة الامتحان بنجاح ');
     }
     //Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â±
     public function exam_update(Request $request)
@@ -255,8 +255,8 @@ class TeacherController_New extends Controller
             'end_time' => 'required',
         ], [
             // 'admin_id.required' => '',
-            'start_time.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ',
-            'end_time.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ',
+            'start_time.required' => 'يرجى ادخال بداية الامتحان',
+            'end_time.required' => 'يرجى ادخال نهاية الامتحان',
         ]);
         
         
@@ -304,7 +304,7 @@ class TeacherController_New extends Controller
                 // $item2->end_time = $request->end_time;
                 $item2->save();
             }
-            return redirect()->back()->with('update', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            return redirect()->back()->with('update', 'تم تعديل الامتحان بنجاح ');
         }
         
       
@@ -316,7 +316,7 @@ class TeacherController_New extends Controller
                 'type' => $request->type,
             ]);
         }
-        return redirect()->back()->with('update', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        return redirect()->back()->with('update', 'تم تعديل الامتحان بنجاح ');
     }
 
     //Ã˜ÂµÃ™ÂÃ˜Â­Ã˜Â© Ã˜Â¨Ã™â€ Ã™Æ’ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜Â¦Ã™â€žÃ˜Â©
@@ -405,12 +405,12 @@ class TeacherController_New extends Controller
         // $validatedData = $request->validate([
         //     'selected_ques' => 'required'
         // ],[
-        //     'selected_ques.required' => 'Ã™â€šÃ™â€¦ Ã˜Â¨Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â¦Ã™â€žÃ˜Â© Ã™â€¦Ã™â€  Ã™ÂÃ˜Â¶Ã™â€žÃ™Æ’'
+        //     'selected_ques.required' => 'قم باختيار الأسئلة من فضلك'
         // ]);
 
         if ($request->selected_ques1 == null) {
-            session()->flash('error', 'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã™Ë†Ã˜Â¶Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž   ');
-            return redirect()->back()->with('error', 'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â£Ã™Å  Ã˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž !! ');
+            session()->flash('error', 'لم يتم وضع السؤال   ');
+            return redirect()->back()->with('error', 'لم يتم اختيار أي سؤال !! ');
         };
            $selected_ques = $request->selected_ques1;
         $show_result = 1;
@@ -457,19 +457,19 @@ class TeacherController_New extends Controller
         foreach (json_decode($exam->selected_ques) as $x) {
             $studivs[] = $x;
         }
-        session()->flash('success', 'Ã˜ÂªÃ™â€¦ Ã™Ë†Ã˜Â¶Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­   ');
-        return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        session()->flash('success', 'تم وضع السؤال بنجاح   ');
+        return redirect()->back()->with('success', '! تمت العملية بنجاح');
 
     }
     public function myquestions1(Request $request)
     {
         if(!$request->room_id){
-            session()->flash('error1', 'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã™Ë†Ã˜Â¶Ã˜Â¹  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â¹Ã˜Â¨Ã˜Â©    ');
-        return redirect()->back()->with('error1', 'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â£Ã™Å  Ã˜Â´Ã˜Â¹Ã˜Â¨Ã˜Â© !! ');
+            session()->flash('error1', 'لم يتم وضع  الشعبة    ');
+        return redirect()->back()->with('error1', 'لم يتم اختيار أي شعبة !! ');
     }
     if ($request->selected_ques1 == null) {
-        session()->flash('error', 'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã™Ë†Ã˜Â¶Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž   ');
-        return redirect()->back()->with('error', 'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â£Ã™Å  Ã˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž !! ');
+        session()->flash('error', 'لم يتم وضع السؤال   ');
+        return redirect()->back()->with('error', 'لم يتم اختيار أي سؤال !! ');
     }
 
     $selected_ques = $request->selected_ques1;
@@ -527,8 +527,8 @@ class TeacherController_New extends Controller
     }
     
 
-    session()->flash('success', 'Ã˜ÂªÃ™â€¦ Ã™Ë†Ã˜Â¶Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­   ');
-    return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+    session()->flash('success', 'تم وضع السؤال بنجاح   ');
+    return redirect()->back()->with('success', '! تمت العملية بنجاح');
 
     }
 
@@ -764,8 +764,8 @@ class TeacherController_New extends Controller
         $section->save();
     
         // Flash success message and redirect back
-        session()->flash('update', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        return redirect()->back()->with('update', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        session()->flash('update', 'تم تعديل السؤال بنجاح');
+        return redirect()->back()->with('update', '! تمت العملية بنجاح');
     }
     
     
@@ -779,8 +779,8 @@ class TeacherController_New extends Controller
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         if( $request->type!='0' &&  $request->type!='3' && $request->type!='2' ){
-            session()->flash('error', 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
-            return redirect()->back()->with('error', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            session()->flash('error', 'تم اضافة السؤال بنجاح ');
+            return redirect()->back()->with('error', '! تمت العملية بنجاح ');
         }
             $item = new Section;
             $item->term_id = $term->id;
@@ -804,8 +804,8 @@ class TeacherController_New extends Controller
                 }
             }
             $item->save();
-            session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
-            return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            session()->flash('Add', 'تم اضافة السؤال بنجاح ');
+            return redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
 
 
@@ -872,11 +872,11 @@ class TeacherController_New extends Controller
             //     'option' => 'required',
             //     'Lecture_id' => 'required'
             // ], [
-            //     'question_form.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜ÂµÃ™Å Ã˜ÂºÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
-            //     'answer.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â¥Ã˜Â¬Ã˜Â§Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
-            //     'mark.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
+            //     'question_form.required' => 'يرجي ادخال صيغة السؤال',
+            //     'answer.required' => 'يرجي ادخال إجابة السؤال',
+            //     'mark.required' => 'يرجي ادخال علامة السؤال',
 
-            //     'ques_type.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã™â€ Ã™Ë†Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
+            //     'ques_type.required' => 'يرجي ادخال نوع السؤال',
             // ]);
 
             $question =  new  question();
@@ -903,8 +903,8 @@ class TeacherController_New extends Controller
                 'myOptions' =>  json_encode($request->option),
             ]);
         }
-        session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
-        return redirect($request->back)->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        session()->flash('Add', 'تم اضافة السؤال بنجاح ');
+        return redirect($request->back)->with('success', '! تمت العملية بنجاح ');
     }
 
     public function question_edit($id,$room_id)
@@ -950,10 +950,10 @@ class TeacherController_New extends Controller
 
             //     ],
             //     [
-            //         'question_form.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜ÂµÃ™Å Ã˜ÂºÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
-            //         'answer.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â¥Ã˜Â¬Ã˜Â§Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
-            //         'mark.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
-            //         'class_id.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€šÃ˜Â³Ã™â€¦',
+            //         'question_form.required' => 'يرجي ادخال صيغة السؤال',
+            //         'answer.required' => 'يرجي ادخال إجابة السؤال',
+            //         'mark.required' => 'يرجي ادخال علامة السؤال',
+            //         'class_id.required' => 'يرجي ادخال اسم القسم',
 
             //     ]
             // );
@@ -1002,11 +1002,11 @@ class TeacherController_New extends Controller
             //         'option' => 'required',
             //     ],
             //     [
-            //         'question_form.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â¥Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜ÂµÃ™Å Ã˜ÂºÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã™â€ž',
-            //         'answer.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â¥Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¬Ã˜Â§Ã˜Â¨Ã˜Â©',
-            //         'class_id.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â¥Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€šÃ˜Â³Ã™â€¦',
-            //         'option.required' =>  ' Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â¥Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â®Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª ',
-            //         'mark.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™Å  Ã˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž',
+            //         'question_form.required' => 'يرجى إدخال صيغة السؤل',
+            //         'answer.required' => 'يرجى إدخال الإجابة',
+            //         'class_id.required' => 'يرجى إدخال القسم',
+            //         'option.required' =>  ' يرجى إدخال الخيارات ',
+            //         'mark.required' => 'يرجي ادخال علامة السؤال',
 
             //     ]
             // );
@@ -1059,8 +1059,8 @@ class TeacherController_New extends Controller
                 'myOptions' => json_encode($request->option),
             ]);
         }
-        session()->flash('update', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        session()->flash('update', 'تم تعديل السؤال بنجاح');
+        return redirect()->back()->with('success', '! تمت العملية بنجاح');
     }
     //Ã™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â±
     public function quest_exam($exam_id) {
@@ -1093,7 +1093,7 @@ class TeacherController_New extends Controller
 
         return view('teachers2.teacher_testfile',compact('teacher','message','selected_ques1','selected_ques','teacher','exam','class','room','term','lesson','class1','year'));
     }
-        session()->flash('noSelectedQuestions', ' Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â£Ã™Å  Ã˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  !! ');
+        session()->flash('noSelectedQuestions', ' لم يتم اختيار أي سؤال لهذا الامتحان !! ');
         return redirect()->back();
     }
 
@@ -1383,7 +1383,7 @@ class TeacherController_New extends Controller
                 $noti->student_id = $student->id;
                 $noti->room_id = $request->room_id;
                 $noti->lecture_id = $item->id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â¯Ã˜Â±Ã˜Â³ ";
+                $noti->title ="تم اضافة درس ";
                 $noti->body = $item->name;
                 $noti->term_id = $terms->id;
                 $noti->type = 1;
@@ -1399,7 +1399,7 @@ class TeacherController_New extends Controller
 
             }
             }
-        return  redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        return  redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
     //for update name and date of lesson
     public function update_lecture(Request $request)
@@ -1416,7 +1416,7 @@ class TeacherController_New extends Controller
         $item->name = $request->name;
         $item->term_id = $terms->id;
         $item->save();
-        return  redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        return  redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
 
     /*public function search_lecture(Request $request){
@@ -1450,7 +1450,7 @@ class TeacherController_New extends Controller
                 $noti->student_id = $student->id;
                 $noti->room_id = $lectures->room_id;
                 $noti->lecture_id = $lectures->id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â¯Ã˜Â±Ã˜Â³ ";
+                $noti->title ="تم حذف درس ";
                 $noti->body = $lectures->name;
                 $noti->term_id = $lectures->term_id;
                 $noti->type = 6;
@@ -1469,8 +1469,8 @@ class TeacherController_New extends Controller
             $lectures->active=1;
              $lectures->save();
         // $lectures->delete();
-        session()->flash('success', 'Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        session()->flash('success', 'تمت العملية بنجاح');
+        return redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
 
     //for send messages page
@@ -1520,7 +1520,7 @@ class TeacherController_New extends Controller
                 $noti->user_id = Auth::user()->id;
                 $noti->teacher_id = $teacher->id;
                 $noti->student_id = $request->student_id;
-                $noti->title ="Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€žÃ˜Â©";
+                $noti->title ="يوجد رسالة";
                 $noti->body = $teacher->first_name . ' ' . $teacher->last_name;
                 $noti->term_id = $term->id;
                 $noti->type = 10;
@@ -1536,8 +1536,8 @@ class TeacherController_New extends Controller
 
                  $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,'null',$noti->teacher_id,'null',$devices);
 
-        // session()->flash('success', 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        // return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        // session()->flash('success', 'تم ارسال بنجاح');
+        // return redirect()->back()->with('success', '! تم ارسال بنجاح ');
     }
     //send message for all students
     public function send_group_message(Request $request)
@@ -1559,7 +1559,7 @@ class TeacherController_New extends Controller
                 $noti->teacher_id = $teacher->id;
                 $noti->student_id = $item->id;
                 $noti->room_id = $room->id;
-                $noti->title ="Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€žÃ˜Â©";
+                $noti->title ="يوجد رسالة";
                 $noti->body = $teacher->first_name . ' ' . $teacher->last_name;
                 $noti->term_id = $term->id;
                 $noti->type = 10;
@@ -1709,7 +1709,7 @@ class TeacherController_New extends Controller
 
         $teacher_events->save();
 
-        Session::flash('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        Session::flash('success', '! تمت العملية بنجاح ');
         return redirect()->back();
     }
 
@@ -1737,7 +1737,7 @@ class TeacherController_New extends Controller
         $teacher_events->date = $request->date;
 
         $teacher_events->save();
-        Session::flash('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        Session::flash('success', '! تمت العملية بنجاح ');
         return redirect()->back();
     }
 
@@ -1746,8 +1746,8 @@ class TeacherController_New extends Controller
     {
         $event_delete = Teacher_event::find($request->question_id);
         $event_delete->delete();
-        session()->flash('success', 'Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        session()->flash('success', 'تمت العملية بنجاح');
+        return redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
 
     //add_content for lessons
@@ -1818,10 +1818,10 @@ class TeacherController_New extends Controller
         $item->term_id = $term->id;
         $item->type = $request->type;
         if ($request->name_video == null && $request->name_audio == null &&  $request->namehomework == null &&  $request->name_quize == null  &&  $request->name_quize1 == null && $request->test == null && $request->name_addition == null &&  $request->name_exam == null) {
-            return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+            return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
         }
        // if ($request->video == null && $request->video_in == null && $request->quize_link1 == null && $request->quize1 == null && $request->audio_file == null && $request->voice == null && $request->audio_link == null && $request->test == null && $request->quize == null && $request->exam == null && $request->test_link == null && $request->quize_link == null && $request->exam_link == null && $request->addition == null  &&  $request->addition_link == null) {
-       //     return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+       //     return redirect()->back()->with('message', 'المحتوى فارغ يرجى اعادة تعبئة البيانات من جديد');
        // }
          //item for test
         if ($item->type == 1) {
@@ -1835,7 +1835,7 @@ class TeacherController_New extends Controller
             if ($request->test == null && $request->test_link == null) {
 
 
-                return redirect()->back()->with('message', 'Ã™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ˜Â© Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª');
+                return redirect()->back()->with('message', 'محتوى الوظيفة فارغ يرجى تعبئة البيانات');
 
             }
             if ($request->test_link != null) {
@@ -1844,20 +1844,20 @@ class TeacherController_New extends Controller
                 $item->end_time = $request->test_end_time;
                 $item->type_file =  '1';
                 if ($request->namehomework == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ˜Â© Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª');
+                    return redirect()->back()->with('message', 'اسم الوظيفة فارغ يرجى تعبئة البيانات');
                 }
                 $item->namehomework = $request->namehomework;
             }
 
             if ($request->test && $request->hasFile('test')) {
                 if( !$request->test->extension()){
-               return redirect()->back()->with('message', 'Ã™â€¡Ã™â€ Ã˜Â§Ã™Æ’ Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â¨Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â®Ã™â€ž ');
+               return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
                 }
                 $item->test = $request->test->store('filesteachers', 'public');
                 $item->start_time = $request->test_start_time;
                 $item->end_time = $request->test_end_time;
                 if ($request->namehomework == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
                 }
                 $item->namehomework = $request->namehomework;
 
@@ -1877,7 +1877,7 @@ class TeacherController_New extends Controller
                 $noti->student_id = $student->id;
                 $noti->room_id = $request->room_id;
                 $noti->lecture_id = $request->lecture_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ˜Â©";
+                $noti->title ="تم اضافة وظيفة";
                 $noti->body = $request->namehomework;
                 $noti->term_id = $term->id;
                 $noti->type = 1;
@@ -1896,8 +1896,8 @@ class TeacherController_New extends Controller
 
 
 
-            session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-            return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            session()->flash('Add', 'تم تعديل  بنجاح');
+            return redirect()->back()->with('Add', '! تمت العملية بنجاح ');
 
         //item for video
         }
@@ -1911,23 +1911,23 @@ class TeacherController_New extends Controller
             $item->type = $request->type;
             if ($request->video == null && $request->video_in == null) {
 
-                return redirect()->back()->with('message', 'Ã™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ™ÂÃ™Å Ã˜Â¯Ã™Å Ã™Ë† Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                return redirect()->back()->with('message', 'محتوى الفيديو فارغ يرجى تعبئة البيانات من جديد');
             }
             if ($request->video_in && $request->hasFile('video_in')) {
                  $this->validate($request, [
                      'video_in' => 'required|mimetypes:video/mp4,video/avi,video/mpeg|max:50000'
                 ], [
-                    'file.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€°  Ã˜ÂªÃ˜Â±Ã™ÂÃ™Å Ã˜Â¹  Ã˜Â¨Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â· Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©  ',
+                    'file.required' => 'يرجى  ترفيع  بالشروط المحددة  ',
 
                 ]);
                  if( !$request->video_in->extension()){
-                     return redirect()->back()->with('message', 'Ã™â€¡Ã™â€ Ã˜Â§Ã™Æ’ Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â¨Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â®Ã™â€ž ');
+                     return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
                 }
                 $item->video = $request->video_in->store('filesteachers', 'public');
                 $item->type_video = '0';
 
                 if ($request->name_video == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™ÂÃ™Å Ã˜Â¯Ã™Å Ã™Ë† Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'اسم الفيديو فارغ يرجى تعبئة البيانات من جديد');
                 }
 
                 $item->name_video = $request->name_video;
@@ -1938,7 +1938,7 @@ class TeacherController_New extends Controller
             if ($request->video != null) {
                 $item->video_link = $request->video;
                 if ($request->name_video == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™ÂÃ™Å Ã˜Â¯Ã™Å Ã™Ë† Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'اسم الفيديو فارغ يرجى تعبئة البيانات من جديد');
                 }
                 $item->name_video = $request->name_video;
 
@@ -1956,7 +1956,7 @@ class TeacherController_New extends Controller
                 $noti->student_id = $student->id;
                 $noti->lecture_id = $request->lecture_id;
                 $noti->room_id = $request->room_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã™ÂÃ™Å Ã˜Â¯Ã™Å Ã™Ë†";
+                $noti->title ="تم اضافة فيديو";
                 $noti->body = $request->name_video;
                 $noti->term_id = $term->id;
                 $noti->type = 1;
@@ -1974,9 +1974,9 @@ class TeacherController_New extends Controller
             }
 
 
-            session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+            session()->flash('Add', 'تم تعديل  بنجاح');
 
-            return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            return redirect()->back()->with('Add', '! تمت العملية بنجاح ');
 
             //item for audio
         } else if ($item->type == 6) {
@@ -1989,17 +1989,17 @@ class TeacherController_New extends Controller
             $item->type = $request->type;
             if ($request->audio_file == null &&  $request->audio_link == null) {
 
-                return redirect()->back()->with('message', 'Ã™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã™â€¦Ã™â€šÃ˜Â·Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜ÂµÃ™Ë†Ã˜Âª Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                return redirect()->back()->with('message', 'محتوى مقطع الصوت فارغ يرجى تعبئة البيانات من جديد');
             }
 
             if ($request->audio_file && $request->hasFile('audio_file')) {
                 $item->audio_file = $request->audio_file->store('filesteachers', 'public');
                 $item->type_voice = '0';
                 if ($request->name_audio == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã™â€¦Ã™â€šÃ˜Â·Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜ÂµÃ™Ë†Ã˜Âª Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'اسم مقطع الصوت فارغ يرجى تعبئة البيانات من جديد');
                 }
                 if( !$request->audio_file->extension()){
-                     return redirect()->back()->with('message', 'Ã™â€¡Ã™â€ Ã˜Â§Ã™Æ’ Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â¨Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â®Ã™â€ž ');
+                     return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
                 }
                 $item->name_audio = $request->name_audio;
 
@@ -2010,7 +2010,7 @@ class TeacherController_New extends Controller
             if ($request->audio_link  != null) {
                 $item->audio_link = $request->audio_link;
                 if ($request->name_audio == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã™â€¦Ã™â€šÃ˜Â·Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜ÂµÃ™Ë†Ã˜Âª Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'اسم مقطع الصوت فارغ يرجى تعبئة البيانات من جديد');
                 }
                 $item->name_audio = $request->name_audio;
 
@@ -2028,7 +2028,7 @@ class TeacherController_New extends Controller
                 $noti->student_id = $student->id;
                 $noti->lecture_id = $request->lecture_id;
                 $noti->room_id = $request->room_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã™â€¦Ã™â€šÃ˜Â·Ã˜Â¹ Ã˜ÂµÃ™Ë†Ã˜Âª";
+                $noti->title ="تم اضافة مقطع صوت";
                 $noti->body = $request->name_audio;
                 $noti->term_id = $term->id;
                 $noti->type = 1;
@@ -2045,10 +2045,10 @@ class TeacherController_New extends Controller
             }
             }
 
-            session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+            session()->flash('Add', 'تم تعديل  بنجاح');
 
 
-            return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            return redirect()->back()->with('Add', '! تمت العملية بنجاح ');
             //item for file
         } else if ($item->type == 4) {
 
@@ -2061,16 +2061,16 @@ class TeacherController_New extends Controller
             $item->type = $request->type;
             if ($request->addition == null  &&  $request->addition_link == null) {
 
-                return redirect()->back()->with('message', 'Ã™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                return redirect()->back()->with('message', 'محتوى الملف فارغ يرجى تعبئة البيانات من جديد');
             }
             if ($request->addition && $request->hasFile('addition')) {
                 $item->addition =  $request->addition->store('filesteachers', 'public');
                 if ($request->name_addition == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'اسم الملف فارغ يرجى تعبئة البيانات من جديد');
                 }
                 $item->name_addition = $request->name_addition;
                 if( !$request->addition->extension()){
-                     return redirect()->back()->with('message', 'Ã™â€¡Ã™â€ Ã˜Â§Ã™Æ’ Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â¨Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â®Ã™â€ž ');
+                     return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
                 }
                 $item->extension =  $request->addition->extension();
                 $item->save();
@@ -2080,7 +2080,7 @@ class TeacherController_New extends Controller
                 $item->addition_link = $request->addition_link;
 
                 if ($request->name_addition == null) {
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'اسم الملف فارغ يرجى تعبئة البيانات من جديد');
                 }
                 $item->name_addition = $request->name_addition;
                 $item->save();
@@ -2098,7 +2098,7 @@ class TeacherController_New extends Controller
                 $noti->student_id = $student->id;
                 $noti->lecture_id = $request->lecture_id;
                 $noti->room_id = $request->room_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã™â€¦Ã™â€žÃ™ÂÃ˜Â§Ã˜Âª Ã™â€žÃ™â€žÃ˜Â¯Ã˜Â±Ã˜Â³";
+                $noti->title ="تم اضافة ملفات للدرس";
                 $noti->body = $request->name_addition;
                 $noti->term_id = $term->id;
                 $noti->type = 1;
@@ -2114,10 +2114,10 @@ class TeacherController_New extends Controller
             }
         }
 
-            session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+            session()->flash('Add', 'تم تعديل  بنجاح');
 
 
-            return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            return redirect()->back()->with('Add', '! تمت العملية بنجاح ');
         }
 
 
@@ -2326,14 +2326,14 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         // $hourMin = $hourMin->addMinute(60)->format("H:i");
         $end = $lecture_time->end_time;
         if ($hourMin < $lecture_time->start_time || $hourMin > $lecture_time->end_time) {
-            return redirect()->back()->with('othertime', 'Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž Ã™â€žÃ˜Â­Ã˜ÂµÃ˜Â© Ã™ÂÃ™Å  Ã˜ÂºÃ™Å Ã˜Â±  Ã˜ÂªÃ™Ë†Ã™â€šÃ™Å Ã˜ÂªÃ™â€¡Ã˜Â§');
+            return redirect()->back()->with('othertime', 'لايمكنك الدخول لحصة في غير  توقيتها');
         }
 
         $timestamp = strtotime(now());
         $today = date('l', $timestamp);
         $today = $this->getDay($today);
         if ($today != $day->id - 1) {
-            return redirect()->back()->with('otherday', 'Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž Ã™â€žÃ˜Â­Ã˜ÂµÃ˜Â© Ã™ÂÃ™Å  Ã˜ÂºÃ™Å Ã˜Â± Ã˜Â§Ã™â€žÃ™Å Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å ');
+            return redirect()->back()->with('otherday', 'لايمكنك الدخول لحصة في غير اليوم الحالي');
         }
         $student_schedule_tracer = new Student_schedule_tracer();
         $student_schedule_tracer->user_id = $user_id;
@@ -2362,7 +2362,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $teacher = Teacher::with(['rooms.student' => fn ($q1) => $q1->where('room_student.year_id', $year->id)])->find($teacher_id);
         if (!$teacher) {
-            return redirect()->route('dashboard.teacher')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â© Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('dashboard.teacher')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
         }
 
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
@@ -2393,7 +2393,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         $teacher = Teacher::find($teacher_id);
         $room = Room::find($room_id);
         if (!$teacher || !$room) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â§Ã˜Â¨Ã˜Â· Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨ Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­ Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'الرابط المطلوب غير متاح حالياً');
         }
         //$lessons = $teacher->lessons;
         $room_lessons = [];
@@ -2451,13 +2451,13 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         $noti->user_id = Auth::user()->id;
         $noti->student_id = $request->student_id;
         $noti->room_id = $request->room_id;
-        $noti->title ="Ã˜ÂªÃ™â€¦ Ã™â€¦Ã™â€ Ã˜Â­Ã™Æ’ Ã™Ë†Ã˜Â³Ã˜Â§Ã™â€¦";
+        $noti->title ="تم منحك وسام";
         if ($request->medal == 1) {
-            $noti->body = "Ã˜Â°Ã™â€¡Ã˜Â¨Ã™Å ";
+            $noti->body = "ذهبي";
         } else if ($request->medal == 2) {
-            $noti->body = "Ã™ÂÃ˜Â¶Ã™Å ";
+            $noti->body = "فضي";
         } else {
-            $noti->body = "Ã˜Â¨Ã˜Â±Ã™Ë†Ã™â€ Ã˜Â²Ã™Å ";
+            $noti->body = "برونزي";
         }
 
         $noti->term_id = $term->id;
@@ -2471,16 +2471,16 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
         //array_push($devices['p_id'], $t['p_fk']);
             }
         $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,$noti->room_id,'null', 'null',$devices);
-        session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        session()->flash('Add', 'تم تعديل  بنجاح');
+        return redirect()->back()->with('Add', '! تمت العملية بنجاح');
 
     }
     public function medal_delete(Request $request)
     {
     $id = $request->exam_id;
     Medal::findOrFail($id)->delete();
-    session()->flash('error', 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â°Ã™Â  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-    return redirect()->back()->with('error', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+    session()->flash('error', 'تم الحذف  بنجاح');
+    return redirect()->back()->with('error', '! تمت العملية بنجاح');
     }
 
     //edit homework
@@ -2607,7 +2607,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
                 $noti->student_id = $request->user_id;
                 $noti->room_id = $request->room_id;
                 $noti->lecture_id =  $home->lecture_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ˜Â©  ";
+                $noti->title ="تمت اضافة علامة وظيفة  ";
                 $noti->body = $home->namehomework;
                 $noti->term_id = $term->id;
                 $noti->type = 7;
@@ -2747,11 +2747,11 @@ $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('v
 
             $user->save();
         } else {
-            session()->flash('warning', 'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â®Ã˜Â§Ã˜Â·Ã˜Â¦Ã˜Â©   ');
-            return redirect()->back()->with('warning', '! Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ™â€šÃ˜Â¯Ã™Å Ã™â€¦Ã˜Â© Ã˜Â®Ã˜Â§Ã˜Â·Ã˜Â¦Ã˜Â©');
+            session()->flash('warning', 'كلمة المرور خاطئة   ');
+            return redirect()->back()->with('warning', '! كلمة المرور القديمة خاطئة');
         }
-        session()->flash('success', '   Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­   ');
-        return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+        session()->flash('success', '   تمت العملية بنجاح   ');
+        return redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
 
     public function exams1_addquestion($exam_id,$room_id,$class_id,$lesson_id)
@@ -2878,7 +2878,7 @@ $file->delete();
     $item->delete();
     }
     $file->delete();
-    return redirect()->back()->with('success','! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+    return redirect()->back()->with('success','! تمت العملية بنجاح ');
 
 }
 public function file_update($file_id, Request $request)
@@ -2887,18 +2887,18 @@ public function file_update($file_id, Request $request)
     $item = Lesson_teacher_room_term_exam::find($file_id);
     if (($request->test == null && $item->test == null) &&  $request->test_link == null ){
 
-        return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€°   Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+        return redirect()->back()->with('message', 'المحتوى   فارغ يرجى اعادة تعبئة البيانات من جديد');
     }
     $item->success_mark = $request->mark;
     if ( $request->hasFile('test')) {
         if( !$request->test->extension()){
-                    return redirect()->back()->with('message', 'Ã™â€¡Ã™â€ Ã˜Â§Ã™Æ’ Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â¨Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â®Ã™â€ž ');
+                    return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
             }
         $item->test = $request->test->store('filesteachers', 'public');
         $item->start_time = $request->test_start_time;
         $item->end_time = $request->test_end_time;
         if ($request->namehomework == null){
-            return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€°   Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+            return redirect()->back()->with('message', 'المحتوى   فارغ يرجى اعادة تعبئة البيانات من جديد');
         }
         $item->namehomework = $request->namehomework;
 
@@ -2916,7 +2916,7 @@ public function file_update($file_id, Request $request)
         $item->type_file =  '1';
         $item->type = '1';
         if ($request->namehomework == null){
-            return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+            return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
         }
 
         $item->namehomework = $request->namehomework;
@@ -2926,7 +2926,7 @@ public function file_update($file_id, Request $request)
              $item->test_link = $request->test_link;
             $item->test = $item->test ;
          if ($request->namehomework == null){
-            return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€°   Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+            return redirect()->back()->with('message', 'المحتوى   فارغ يرجى اعادة تعبئة البيانات من جديد');
         }
         $item->namehomework = $request->namehomework;
           $item->start_time = $request->test_start_time;
@@ -2937,7 +2937,7 @@ public function file_update($file_id, Request $request)
 
 
     $item->save();
-    return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+    return redirect()->back()->with('success', '! تمت العملية بنجاح ');
 }
 public function file_answers($file_id, $lesson_id, $teacher_id, $room_id)
 {
@@ -2959,9 +2959,9 @@ public function delete_event(Request $request)
     $answer->delete();
     return response()->json([
         'status' => true,
-        'msg' => 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â°Ã™Â Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ',
+        'msg' => 'تم الحذف بنجاح ',
     ]);
-    // return redirect()->back()->with('success','Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ !');
+    // return redirect()->back()->with('success','تم حذف الملف بنجاح !');
 }
 
 public function audio_update($file_id, Request $request)
@@ -2969,7 +2969,7 @@ public function audio_update($file_id, Request $request)
 
     $item = Lesson_teacher_room_term_exam::find($file_id);
     if ($request->audio_file == null &&  $request->audio_link == null && $item->audio_file== Null && $item->audio_link== Null ){
-        return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+        return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
     }
     $item->name_audio = $request->name_audio;
         if ($request->audio_file && $request->hasFile('audio_file')) {
@@ -2977,7 +2977,7 @@ public function audio_update($file_id, Request $request)
             $item->type_voice = '0';
 
                 if ($request->name_audio == null){
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
                 }
 
             $item->name_audio = $request->name_audio;
@@ -2986,7 +2986,7 @@ public function audio_update($file_id, Request $request)
         if ($request->audio_link != null) {
             $item->audio_link = $request->audio_link;
             if ($request->name_audio == null){
-                return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
             }
             $item->name_audio = $request->name_audio;
 
@@ -2996,7 +2996,7 @@ public function audio_update($file_id, Request $request)
 
 
     $item->save();
-    return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+    return redirect()->back()->with('success', '! تمت العملية بنجاح ');
 }
 public function correct_exam($exam_id, $student_id)
 {
@@ -3070,7 +3070,7 @@ $year = Year::where('current_year', '1')->first()->name;
     }
     $year = Year::where('current_year', '1')->first()->name;
     // if ($exam_result->status == '0') {
-    //   return redirect()->back()->with('warning','Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  ');
+    //   return redirect()->back()->with('warning','لا يوجد امتحان ');
     // }
  
     $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
@@ -3084,19 +3084,19 @@ public function video_update($file_id, Request $request)
 
     $item = Lesson_teacher_room_term_exam::find($file_id);
     if ($request->video == null &&  $request->video_link == null && $item->video== Null && $item->video_link== Null ){
-        return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+        return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
     }
 
 
   $item->name_video = $request->name_video;
          if ($request->name_video == null){
-                    return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                    return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
                 }
         if ($request->video && $request->hasFile('video')) {
              $this->validate($request, [
                      'video' => 'required|mimetypes:video/mp4,video/avi,video/mpeg|max:50000'
                 ], [
-                    'file.required' => 'Ã™Å Ã˜Â±Ã˜Â¬Ã™â€°  Ã˜ÂªÃ˜Â±Ã™ÂÃ™Å Ã˜Â¹  Ã˜Â¨Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â· Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©  ',
+                    'file.required' => 'يرجى  ترفيع  بالشروط المحددة  ',
 
                 ]);
             Storage::disk('public')->delete($item->video);
@@ -3113,7 +3113,7 @@ public function video_update($file_id, Request $request)
         if ($request->video_link != null) {
             $item->video_link = $request->video_link;
             if ($request->name_video == null){
-                return redirect()->back()->with('message', 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã™â€¦  Ã™ÂÃ˜Â§Ã˜Â±Ã˜Âº Ã™Å Ã˜Â±Ã˜Â¬Ã™â€° Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â¹Ã˜Â¨Ã˜Â¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯');
+                return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
             }
             $item->name_video = $request->name_video;
 
@@ -3123,7 +3123,7 @@ public function video_update($file_id, Request $request)
 
 
     $item->save();
-    return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+    return redirect()->back()->with('success', '! تمت العملية بنجاح ');
 }
 
 public function update_result1(Request $request)
@@ -3202,7 +3202,7 @@ public function update_result1(Request $request)
 
 session()->flash('success', '  ');
 
-    return redirect()->back()->with('success', 'Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+    return redirect()->back()->with('success', 'تمت العملية بنجاح');
 }
 public function update_result(Request $request)
     {
@@ -3257,7 +3257,7 @@ if($request->traditional_result){
         $exam_result->save();
 
          session()->flash('success', '  ');
-        return redirect()->back()->with('success', 'Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        return redirect()->back()->with('success', 'تمت العملية بنجاح');
     }
 
 
@@ -3297,7 +3297,7 @@ public function event_store(Request $request)
                 $noti->user_id = Auth::user()->id;
                 $noti->student_id = $student->id;
                 $noti->room_id = $request->room_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â­Ã˜Â¯Ã˜Â«";
+                $noti->title ="تم اضافة  حدث";
                 $noti->body = $request->title;
                 $noti->term_id = $term->id;
                 $noti->type = 2;
@@ -3315,7 +3315,7 @@ public function event_store(Request $request)
 
             }
 
-    return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+    return redirect()->back()->with('success', '! تمت العملية بنجاح ');
 }
 public function class_rooms($class_id, $teacher_id)
 {
@@ -3479,7 +3479,7 @@ public function class_rooms($class_id, $teacher_id)
     }
 
      if($exam_title->isEmpty()){
-       Session::flash('success', '! Ã™â€žÃ˜Â§Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â§Ã™Å  Ã™â€¦Ã™â€žÃ™Â Ã™â€¦Ã˜Â®Ã˜Â²Ã™â€  Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â§Ã˜Â¨  ');
+       Session::flash('success', '! لايوجد اي ملف مخزن من الطلاب  ');
           return redirect()->back();
      }
 
@@ -3510,7 +3510,7 @@ public function class_rooms($class_id, $teacher_id)
     }
 
     }
-    //Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž Ã™â€¦Ã™â€žÃ™ÂÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â©
+    //تنزيل ملفات المذاكرة
 
      public function quize_zip($room_id, $exam_id)
     {
@@ -3575,7 +3575,7 @@ public function class_rooms($class_id, $teacher_id)
             'student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
         ])->find($room_id);
         if (!$lesson || !$teacher || !$room) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â© Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
         }
         $class_id = Classe::find($this->resolveRoomClassId($room));
         $students = $room->student;
@@ -3595,8 +3595,8 @@ public function class_rooms($class_id, $teacher_id)
     public function exam_update123(Request $request){
         if(!$request->room_id ){
 
-            session()->flash('error', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-            return redirect()->back()->with('error', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+            session()->flash('error', 'تم تعديل  بنجاح');
+            return redirect()->back()->with('error', '! تمت العملية بنجاح');
         }
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
@@ -3618,8 +3618,8 @@ public function class_rooms($class_id, $teacher_id)
 
 
 
-            session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-            return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+            session()->flash('Add', 'تم تعديل  بنجاح');
+            return redirect()->back()->with('Add', '! تمت العملية بنجاح');
 
 
     }
@@ -3717,7 +3717,7 @@ public function class_rooms($class_id, $teacher_id)
           
          if (!$students) {
 
-             return redirect()->back()->with('error', '! Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â·Ã™â€žÃ˜Â§Ã˜Â¨');
+             return redirect()->back()->with('error', '! لا يوجد طلاب');
          }
 
          $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
@@ -3805,7 +3805,7 @@ public function class_rooms($class_id, $teacher_id)
 
         if (!$students->count() > 0) {
 
-            return redirect()->back()->with('warning', '! Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â·Ã™â€žÃ˜Â§Ã˜Â¨');
+            return redirect()->back()->with('warning', '! لا يوجد طلاب');
         }
 
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
@@ -3892,7 +3892,7 @@ public function class_rooms($class_id, $teacher_id)
 
         if (!$students->count() > 0) {
 
-            return redirect()->back()->with('warning', '! Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â·Ã™â€žÃ˜Â§Ã˜Â¨');
+            return redirect()->back()->with('warning', '! لا يوجد طلاب');
         }
 
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
@@ -3948,7 +3948,7 @@ public function class_rooms($class_id, $teacher_id)
                     $noti->student_id = $student->id;
                     $noti->lesson_id = $request->lesson_id;
                     $noti->room_id = $request->room_id;
-                    $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â©";
+                    $noti->title ="تم اضافة  مذاكرة";
                     $noti->body = $exam11->name;
                     $noti->term_id = $term->id;
                     $noti->type = 4;
@@ -3968,7 +3968,7 @@ public function class_rooms($class_id, $teacher_id)
                     $noti->student_id = $student->id;
                     $noti->lesson_id = $request->lesson_id;
                     $noti->room_id = $request->room_id;
-                    $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ";
+                    $noti->title ="تم اضافة  امتحان";
                     $noti->body = $exam11->name;
                     $noti->term_id = $term->id;
                     $noti->type = 5;
@@ -4008,7 +4008,7 @@ public function class_rooms($class_id, $teacher_id)
                     $noti->student_id = $student->id;
                     $noti->lesson_id = $request->lesson_id;
                     $noti->room_id = $request->room_id;
-                    $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â©";
+                    $noti->title ="تم اضافة  مذاكرة";
                     $noti->body = $exam11->name;
                     $noti->term_id = $term->id;
                     $noti->type = 4;
@@ -4028,7 +4028,7 @@ public function class_rooms($class_id, $teacher_id)
                     $noti->student_id = $student->id;
                     $noti->lesson_id = $request->lesson_id;
                     $noti->room_id = $request->room_id;
-                    $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ";
+                    $noti->title ="تم اضافة  امتحان";
                     $noti->body = $exam11->name;
                     $noti->term_id = $term->id;
                     $noti->type = 5;
@@ -4051,7 +4051,7 @@ public function class_rooms($class_id, $teacher_id)
         }
        
 
-            return  redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ ');
+            return  redirect()->back()->with('success', '! تمت العملية بنجاح ');
     }
     public function quest_exam1($exam_id,$class_id,$lesson_id) {
 
@@ -4077,7 +4077,7 @@ public function class_rooms($class_id, $teacher_id)
         return view('teachers2.teacher_examfile1',compact( 'message','selected_ques1','selected_ques','exam','teacher','class','room','term','lesson','class1','year'));
         }
         else{
-            session()->flash('noSelectedQuestions', ' Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â£Ã™Å  Ã˜Â³Ã˜Â¤Ã˜Â§Ã™â€ž Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  !! ');
+            session()->flash('noSelectedQuestions', ' لم يتم اختيار أي سؤال لهذا الامتحان !! ');
         return redirect()->back();;
         }
 }
@@ -4099,7 +4099,7 @@ public function class_rooms($class_id, $teacher_id)
             'student.exam_result2'
         ])->find($room_id);
         if (!$lesson || !$teacher || !$room) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â© Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
         }
         $exam = Exam_result2::where('exam_id',$exam_id)->where('room_id',$room_id)->get();
         foreach($exam as $item){
@@ -4109,7 +4109,7 @@ public function class_rooms($class_id, $teacher_id)
 
         $exam1 = Exams2::find($exam_id);
         if (!$exam1) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨ Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­ Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'الاختبار المطلوب غير متاح حالياً');
         }
     //   $quize_result = Room::with(['student.exam_result2' => function ($q) {
     //         $q->where('id', '<>', null)->orderBy('type');
@@ -4317,7 +4317,7 @@ public function student_save_mark_quize(Request $request)
         $noti->student_id = $request->user_id;
 
         $noti->room_id = $request->room_id;
-        $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã™â€žÃ™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â©";
+        $noti->title ="تم اضافة  علامة للمذاكرة";
         $noti->body = $exam->name;
         $noti->term_id = $term->id;
         $noti->type = 4;
@@ -4337,7 +4337,7 @@ public function student_save_mark_quize(Request $request)
         $noti->student_id = $request->user_id;
 
         $noti->room_id = $request->room_id;
-        $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ";
+        $noti->title ="تم اضافة  علامة للامتحان";
         $noti->body = $exam->name;
         $noti->term_id = $term->id;
         $noti->type = 5;
@@ -4794,7 +4794,7 @@ public function student_save_mark_quize(Request $request)
         $noti->student_id = $request->user_id;
 
         $noti->room_id = $request->room_id;
-        $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã™â€žÃ™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â©";
+        $noti->title ="تم اضافة  علامة للمذاكرة";
         $noti->body = $exam2->name;
         $noti->term_id = $term->id;
         $noti->type = 4;
@@ -4814,7 +4814,7 @@ public function student_save_mark_quize(Request $request)
         $noti->student_id = $request->user_id;
 
         $noti->room_id = $request->room_id;
-        $noti->title ="Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©  Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ";
+        $noti->title ="تم اضافة  علامة للامتحان";
         $noti->body = $exam2->name;
         $noti->term_id = $term->id;
         $noti->type = 5;
@@ -4847,7 +4847,7 @@ public function student_save_mark_quize(Request $request)
             'student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
         ])->find($room_id);
         if (!$lesson || !$teacher || !$room) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â© Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
         }
 
           $class_id = Classe::find($this->resolveRoomClassId($room));
@@ -4878,12 +4878,12 @@ public function student_save_mark_quize(Request $request)
             'student.exam_result2'
         ])->find($room_id);
         if (!$lesson || !$teacher || !$room) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â© Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
         }
         $students = $room->student;
         $exam = Exams2::find($exam_id);
         if (!$exam) {
-            return redirect()->route('teacher.exams_quizes')->with('error', 'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨ Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­ Ã˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â§Ã™â€¹');
+            return redirect()->route('teacher.exams_quizes')->with('error', 'الاختبار المطلوب غير متاح حالياً');
         }
         $quize_result = Room::with(['student.exam_result2' => function ($q) {
             $q->where('id', '<>', null)->orderBy('type');
@@ -4967,7 +4967,7 @@ public function student_save_mark_quize(Request $request)
                 $noti->student_id = $request->user_id;
                 $noti->room_id = $request->room_id;
                 $noti->lecture_id =  $home->lecture_id;
-                $noti->title ="Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ˜Â©  ";
+                $noti->title ="تمت اضافة علامة وظيفة  ";
                 $noti->body = $home->namehomework;
                 $noti->term_id = $term->id;
                 $noti->type = 7;
@@ -5065,12 +5065,12 @@ public function student_save_mark_quize(Request $request)
                        
                     $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
                     if (isset($report_card) && $report_card->adjustable != 0){
-                            session()->flash('error',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜ÂµÃ˜Â¯Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡  ' ) ;
-                        return redirect()->back()->with('error','  Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜ÂµÃ˜Â¯Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡ !  ') ;
+                            session()->flash('error',' لا يمكن التعديل بعد استصدار الجلاء  ' ) ;
+                        return redirect()->back()->with('error','  لا يمكن تعديل العلامات بعد استصدار الجلاء !  ') ;
                     }
                     if (auth()->user()->type == 1 && $item->adjustable != 0){
-                            session()->flash('error',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©  ' ) ;
-                        return redirect()->back()->with('error','Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž   Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©   !  ') ;
+                            session()->flash('error',' لا يمكن التعديل تم تثبيت العلامات من قبل الإدارة  ' ) ;
+                        return redirect()->back()->with('error','لا يمكن التعديل   تم تثبيت العلامات من قبل الإدارة   !  ') ;
                     }
                     
                        
@@ -5082,9 +5082,9 @@ public function student_save_mark_quize(Request $request)
                             }else{
                                 if($item1->result > ($lesson->max_mark *0.2) ){
                                      
-               session()->flash('error', ' Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© ');
+               session()->flash('error', ' لايمكن الادخال العلامة اكبر من القيمة ');
 
-           return redirect()->back()->with('error', '!   Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž  Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©');
+           return redirect()->back()->with('error', '!   لايمكن الادخال  العلامة اكبر من القيمة المحددة');
                                     
                                 }
                                 else{
@@ -5167,25 +5167,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = json_decode($item->estimation1, true);
                 if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 0 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 41 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 71 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 81 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation1 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 91 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 }
@@ -5193,25 +5193,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = new stdClass;
                 if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= "0" && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 40) {
 
-                    $stc->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc->{$lesson_id} = "ضعيف";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 41 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 70) {
-                    $stc->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc->{$lesson_id} = "وسط";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 71 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 80) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc->{$lesson_id} = "جيد";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 81 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 90) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc->{$lesson_id} = "جيد جداًً";
                     $item->estimation1 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 91 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 100) {
 
-                    $stc->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc->{$lesson_id} = "ممتاز";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 }
@@ -5249,25 +5249,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = json_decode($item->estimation, true);
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation = json_encode($stc);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 }
@@ -5275,25 +5275,25 @@ public function student_save_mark_quize(Request $request)
                 $stc1 = new stdClass;
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc1->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc1->{$lesson_id} = "ضعيف";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc1->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc1->{$lesson_id} = "وسط";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc1->{$lesson_id} = "جيد";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc1->{$lesson_id} = "جيد جداًً";
                     $item->estimation = json_encode($stc1);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc1->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc1->{$lesson_id} = "ممتاز";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 }
@@ -5313,12 +5313,12 @@ public function student_save_mark_quize(Request $request)
                        
                         $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
                        if (isset($report_card) && $report_card->adjustable != 1){
-                session()->flash('error22',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡ ' ) ;
-                return redirect()->back()->with('error','  Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡    !  ') ;
+                session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
+                return redirect()->back()->with('error','  لا يمكن التعديل تأكد من حالة الجلاء    !  ') ;
             }
             if (auth()->user()->type == 1 && $item->adjustable != 1){
-                        session()->flash('error22',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡ ' ) ;
-                return redirect()->back()->with('error','   Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž   Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©    !  ') ;
+                        session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
+                return redirect()->back()->with('error','   لا يمكن التعديل   تم تثبيت العلامات من قبل الإدارة    !  ') ;
             }
 
           
@@ -5331,9 +5331,9 @@ public function student_save_mark_quize(Request $request)
                             }else{
                                 if($item1->result > ($lesson->max_mark *0.2) ){
                                      
-                        session()->flash('error', ' Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© ');
+                        session()->flash('error', ' لايمكن الادخال العلامة اكبر من القيمة ');
 
-                        return redirect()->back()->with('error', '!   Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž  Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©');
+                        return redirect()->back()->with('error', '!   لايمكن الادخال  العلامة اكبر من القيمة المحددة');
                                     
                                 }
                                 else{
@@ -5413,25 +5413,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = json_decode($item->estimation2, true);
                 if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= "0" && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 41 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 71 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 81 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation2 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 91 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 }
@@ -5439,25 +5439,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = new stdClass;
                 if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= "0" && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 40) {
 
-                    $stc->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc->{$lesson_id} = "ضعيف";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 41 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 70) {
-                    $stc->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc->{$lesson_id} = "وسط";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 71 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 80) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc->{$lesson_id} = "جيد";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 81 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 90) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc->{$lesson_id} = "جيد جداًً";
                     $item->estimation2 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 91 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 100) {
 
-                    $stc->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc->{$lesson_id} = "ممتاز";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 }
@@ -5489,31 +5489,31 @@ public function student_save_mark_quize(Request $request)
             ]);
 
             // return response()->json([
-            //     'success'=>'! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­'
+            //     'success'=>'! تمت العملية بنجاح'
             // ]);
             if ($item->estimation) {
                 $stc = json_decode($item->estimation, true);
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation = json_encode($stc);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 }
@@ -5521,25 +5521,25 @@ public function student_save_mark_quize(Request $request)
                 $stc1 = new stdClass;
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc1->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc1->{$lesson_id} = "ضعيف";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc1->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc1->{$lesson_id} = "وسط";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc1->{$lesson_id} = "جيد";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc1->{$lesson_id} = "جيد جداًً";
                     $item->estimation = json_encode($stc1);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc1->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc1->{$lesson_id} = "ممتاز";
                     $item->estimation = json_encode($stc1);
                     $student_mark->save();
                 }
@@ -5548,13 +5548,13 @@ public function student_save_mark_quize(Request $request)
                    }
                }
               
-               session()->flash('success', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+               session()->flash('success', 'تم تعديل  بنجاح');
 
-           return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+           return redirect()->back()->with('success', '! تمت العملية بنجاح');
 }          
-               session()->flash('success', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+               session()->flash('success', 'تم تعديل  بنجاح');
 
-           return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+           return redirect()->back()->with('success', '! تمت العملية بنجاح');
               
    
         
@@ -5582,12 +5582,12 @@ public function student_save_mark_quize(Request $request)
                        
                     $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
                     if (isset($report_card) && $report_card->adjustable != 0){
-                            session()->flash('error',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜ÂµÃ˜Â¯Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡  ' ) ;
-                        return redirect()->back()->with('error','  Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜ÂµÃ˜Â¯Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡ !  ') ;
+                            session()->flash('error',' لا يمكن التعديل بعد استصدار الجلاء  ' ) ;
+                        return redirect()->back()->with('error','  لا يمكن تعديل العلامات بعد استصدار الجلاء !  ') ;
                     }
                     if (auth()->user()->type == 1 && $item->adjustable != 0){
-                            session()->flash('error',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©  ' ) ;
-                        return redirect()->back()->with('error','Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž   Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©   !  ') ;
+                            session()->flash('error',' لا يمكن التعديل تم تثبيت العلامات من قبل الإدارة  ' ) ;
+                        return redirect()->back()->with('error','لا يمكن التعديل   تم تثبيت العلامات من قبل الإدارة   !  ') ;
                     }
                     
                        
@@ -5599,9 +5599,9 @@ public function student_save_mark_quize(Request $request)
                             }else{
                                 if($item1->result > ($lesson->max_mark *0.4) ){
                                                              
-                                       session()->flash('error', ' Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© ');
+                                       session()->flash('error', ' لايمكن الادخال العلامة اكبر من القيمة ');
                         
-                                   return redirect()->back()->with('error', '!   Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž  Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©');
+                                   return redirect()->back()->with('error', '!   لايمكن الادخال  العلامة اكبر من القيمة المحددة');
                                                             
                                 }
                                 else{
@@ -5680,25 +5680,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = json_decode($item->estimation1, true);
                 if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 0 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 41 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 71 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 81 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation1 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 91 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 }
@@ -5706,25 +5706,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = new stdClass;
                 if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= "0" && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 40) {
 
-                    $stc->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc->{$lesson_id} = "ضعيف";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 41 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 70) {
-                    $stc->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc->{$lesson_id} = "وسط";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 71 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 80) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc->{$lesson_id} = "جيد";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 81 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 90) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc->{$lesson_id} = "جيد جداًً";
                     $item->estimation1 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result1, true)[$lesson_id]['term1_result'] >= 91 && json_decode($item->result1, true)[$lesson_id]['term1_result'] <= 100) {
 
-                    $stc->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc->{$lesson_id} = "ممتاز";
                     $item->estimation1 = json_encode($stc);
                     $item->save();
                 }
@@ -5762,25 +5762,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = json_decode($item->estimation, true);
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation = json_encode($stc);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 }
@@ -5788,25 +5788,25 @@ public function student_save_mark_quize(Request $request)
                 $stc1 = new stdClass;
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc1->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc1->{$lesson_id} = "ضعيف";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc1->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc1->{$lesson_id} = "وسط";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc1->{$lesson_id} = "جيد";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc1->{$lesson_id} = "جيد جداًً";
                     $item->estimation = json_encode($stc1);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc1->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc1->{$lesson_id} = "ممتاز";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 }
@@ -5826,12 +5826,12 @@ public function student_save_mark_quize(Request $request)
                        
                         $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
                        if (isset($report_card) && $report_card->adjustable != 1){
-                session()->flash('error22',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡ ' ) ;
-                return redirect()->back()->with('error','  Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡    !  ') ;
+                session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
+                return redirect()->back()->with('error','  لا يمكن التعديل تأكد من حالة الجلاء    !  ') ;
             }
             if (auth()->user()->type == 1 && $item->adjustable != 1){
-                        session()->flash('error22',' Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â§Ã˜Â¡ ' ) ;
-                return redirect()->back()->with('error','   Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž   Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©    !  ') ;
+                        session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
+                return redirect()->back()->with('error','   لا يمكن التعديل   تم تثبيت العلامات من قبل الإدارة    !  ') ;
             }
 
           
@@ -5844,9 +5844,9 @@ public function student_save_mark_quize(Request $request)
                             }else{
                                 if($item1->result > ($lesson->max_mark *0.4) ){
                                      
-                        session()->flash('error', ' Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© ');
+                        session()->flash('error', ' لايمكن الادخال العلامة اكبر من القيمة ');
 
-                        return redirect()->back()->with('error', '!   Ã™â€žÃ˜Â§Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â®Ã˜Â§Ã™â€ž  Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â© Ã˜Â§Ã™Æ’Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€šÃ™Å Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©');
+                        return redirect()->back()->with('error', '!   لايمكن الادخال  العلامة اكبر من القيمة المحددة');
                                     
                                 }
                                 else{
@@ -5932,25 +5932,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = json_decode($item->estimation2, true);
                 if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= "0" && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 41 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 71 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 81 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation2 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 91 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 }
@@ -5958,25 +5958,25 @@ public function student_save_mark_quize(Request $request)
                 $stc = new stdClass;
                 if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= "0" && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 40) {
 
-                    $stc->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc->{$lesson_id} = "ضعيف";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 41 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 70) {
-                    $stc->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc->{$lesson_id} = "وسط";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 71 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 80) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc->{$lesson_id} = "جيد";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 81 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 90) {
-                    $stc->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc->{$lesson_id} = "جيد جداًً";
                     $item->estimation2 = json_encode($stc);
 
                     $item->save();
                 } else if (json_decode($item->result2, true)[$lesson_id]['term2_result'] >= 91 && json_decode($item->result2, true)[$lesson_id]['term2_result'] <= 100) {
 
-                    $stc->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc->{$lesson_id} = "ممتاز";
                     $item->estimation2 = json_encode($stc);
                     $item->save();
                 }
@@ -6008,31 +6008,31 @@ public function student_save_mark_quize(Request $request)
             ]);
 
             // return response()->json([
-            //     'success'=>'! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­'
+            //     'success'=>'! تمت العملية بنجاح'
             // ]);
             if ($item->estimation) {
                 $stc = json_decode($item->estimation, true);
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc[$lesson_id] = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc[$lesson_id] = "ضعيف";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc[$lesson_id] = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc[$lesson_id] = "وسط";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc[$lesson_id] = "جيد";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc[$lesson_id] = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc[$lesson_id] = "جيد جداًً";
                     $item->estimation = json_encode($stc);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc[$lesson_id] = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc[$lesson_id] = "ممتاز";
                     $item->estimation = json_encode($stc);
                     $item->save();
                 }
@@ -6040,25 +6040,25 @@ public function student_save_mark_quize(Request $request)
                 $stc1 = new stdClass;
                 if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= "0" && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 40) {
 
-                    $stc1->{$lesson_id} = "Ã˜Â¶Ã˜Â¹Ã™Å Ã™Â";
+                    $stc1->{$lesson_id} = "ضعيف";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 41 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 70) {
-                    $stc1->{$lesson_id} = "Ã™Ë†Ã˜Â³Ã˜Â·";
+                    $stc1->{$lesson_id} = "وسط";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 71 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 80) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯";
+                    $stc1->{$lesson_id} = "جيد";
                     $item->estimation = json_encode($stc1);
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 81 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 90) {
-                    $stc1->{$lesson_id} = "Ã˜Â¬Ã™Å Ã˜Â¯ Ã˜Â¬Ã˜Â¯Ã˜Â§Ã™â€¹Ã™â€¹";
+                    $stc1->{$lesson_id} = "جيد جداًً";
                     $item->estimation = json_encode($stc1);
 
                     $item->save();
                 } else if (ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) >= 91 && ceil(json_decode($item->result,true)[$lesson_id]['year_result'] /2) <= 100) {
 
-                    $stc1->{$lesson_id} = "Ã™â€¦Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â²";
+                    $stc1->{$lesson_id} = "ممتاز";
                     $item->estimation = json_encode($stc1);
                     $student_mark->save();
                 }
@@ -6068,9 +6068,9 @@ public function student_save_mark_quize(Request $request)
                }
           }
               
-               session()->flash('success', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+               session()->flash('success', 'تم تعديل  بنجاح');
 
-           return redirect()->back()->with('success', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+           return redirect()->back()->with('success', '! تمت العملية بنجاح');
               
    
         
@@ -6186,7 +6186,7 @@ public function student_save_mark_quize(Request $request)
         $noti->user_id = Auth::user()->id;
         $noti->student_id = $request->student_id;
         $noti->room_id = $request->room_id;
-        $noti->title ="Ã˜ÂªÃ™â€¦ Ã™â€¦Ã™â€ Ã˜Â­Ã™Æ’ Ã™Ë†Ã˜Â³Ã˜Â§Ã™â€¦";
+        $noti->title ="تم منحك وسام";
         $noti->body = $rewad_and_sanction_id->name;
         $noti->term_id = $term->id;
         $noti->type = 3;
@@ -6199,8 +6199,8 @@ public function student_save_mark_quize(Request $request)
         //array_push($devices['p_id'], $t['p_fk']);
             }
         $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,$noti->room_id,'null', 'null',$devices);
-        session()->flash('Add', 'Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž  Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
-        return redirect()->back()->with('Add', '! Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        session()->flash('Add', 'تم تعديل  بنجاح');
+        return redirect()->back()->with('Add', '! تمت العملية بنجاح');
 
     }
 
@@ -6208,7 +6208,7 @@ public function student_save_mark_quize(Request $request)
 
         $rewards_and_sanction= Rewad_and_sanction_student::find($request->id);
         $rewards_and_sanction->delete();
-        session()->flash('success', ' Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â°Ã™Â Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­');
+        session()->flash('success', ' تم الحذف بنجاح');
         return redirect()->back();
     }
     public function teacher_sanction_students($room_id, $teacher_id, $lesson_id)

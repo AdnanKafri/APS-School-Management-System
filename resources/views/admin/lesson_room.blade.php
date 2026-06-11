@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.v2')
+@extends('admin.layouts.v2')
 
 @section('page_title', 'مواد الشعبة')
 @section('page_subtitle', 'إدارة مواد الشعبة وروابط علامات الطلاب')
