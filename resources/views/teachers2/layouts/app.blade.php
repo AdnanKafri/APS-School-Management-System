@@ -35,7 +35,7 @@
 
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/x-icon" href="{{ $schoolLogo ? asset('storage/' . $schoolLogo) : asset('teachers_2/icons/teacher.png') }}">
     <title>{{ $schoolName }}</title>
 
@@ -173,6 +173,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('teachers_2/assets/css/teacher-responsive.css') }}">
 </head>
 
 <body class="teacher-portal-body {{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -236,6 +237,7 @@
                 </li>
             </ul>
         </nav>
+        <button type="button" class="teacher-sidebar-backdrop" aria-label="{{ $labels['toggle_sidebar'] }}" tabindex="-1"></button>
 
         <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div class="navbar-menu-wrapper d-flex align-items-center">
@@ -293,6 +295,52 @@
     <script src="{{ asset('teachers_2/assets/js/settings.js') }}"></script>
     <script src="{{ asset('teachers_2/assets/js/todolist.js') }}"></script>
     <script src="{{ asset('teachers_2/assets/js/dashboard.js') }}"></script>
+    <script>
+        (function ($) {
+            'use strict';
+
+            var mobileBreakpoint = 992;
+            var $body = $('body.teacher-portal-body');
+            var $sidebar = $('#sidebar');
+            var $backdrop = $('.teacher-sidebar-backdrop');
+
+            function syncMobileSidebar() {
+                var isOpen = window.innerWidth < mobileBreakpoint && $sidebar.hasClass('active');
+                $body.toggleClass('teacher-sidebar-open', isOpen);
+                $backdrop.attr('tabindex', isOpen ? '0' : '-1');
+            }
+
+            function closeMobileSidebar() {
+                $sidebar.removeClass('active');
+                syncMobileSidebar();
+            }
+
+            $(document).on('click', '[data-toggle="offcanvas"]', function () {
+                window.setTimeout(syncMobileSidebar, 0);
+            });
+
+            $backdrop.on('click', closeMobileSidebar);
+            $sidebar.on('click', 'a[href]', function () {
+                if (window.innerWidth < mobileBreakpoint) {
+                    closeMobileSidebar();
+                }
+            });
+
+            $(document).on('keydown', function (event) {
+                if (event.key === 'Escape' && $body.hasClass('teacher-sidebar-open')) {
+                    closeMobileSidebar();
+                }
+            });
+
+            $(window).on('resize', function () {
+                if (window.innerWidth >= mobileBreakpoint) {
+                    closeMobileSidebar();
+                    return;
+                }
+                syncMobileSidebar();
+            });
+        })(jQuery);
+    </script>
     <script>
         $(window).on('load', function () {
             if ("{{ Session::has('success') }}") {

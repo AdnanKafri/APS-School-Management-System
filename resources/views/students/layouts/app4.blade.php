@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="{{ asset('student/notify/css/notifIt.css') }}" />
     <script src="{{ asset('student/notify/js/notifIt.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/style.css') }}" />
+    <link rel="stylesheet" href="{{ asset('student/assets/css/student-sidebar.css') }}" />
     <!-- End layout styles -->
     <link rel="shortcut icon" href="{{asset("storage/")}}/{{$school_data->logo}}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
@@ -160,7 +161,7 @@
     $school_data = \App\School_data::first();
 @endphp
 
-<body style="background: #f8f9fb;">
+<body class="student-portal-body" style="background: #f8f9fb;">
     <input id="student_id52" type="hidden" value="{{ $student->id }}">
     <div class="container-scroller">
         <!-- partial:partials/_sidebar.html -->
@@ -261,6 +262,7 @@
 
             </ul>
         </nav>
+        <button type="button" class="student-sidebar-backdrop" aria-label="Close menu" tabindex="-1"></button>
 
 
         <!--start header-->
@@ -840,8 +842,9 @@
                     </li>
 
                 </ul>
-                <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button"
-                    data-toggle="offcanvas">
+                <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center student-sidebar-toggle"
+                    type="button" data-toggle="offcanvas" aria-controls="sidebar" aria-expanded="false"
+                    aria-label="Toggle menu">
                     <span class="mdi mdi-menu"></span>
                 </button>
             </div>
@@ -1081,7 +1084,7 @@
     <script src="{{ asset('student/assets/vendors/flot/jquery.flot.stack.js') }}"></script>
     <!-- End plugin js for this page -->
     <!-- inject:js -->
-    <script src="{{ asset('student/assets/js/off-canvas.jss') }}"></script>
+    <script src="{{ asset('student/assets/js/student-sidebar.js') }}"></script>
     <script src="{{ asset('student/assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('student/assets/js/misc.js') }}"></script>
     <script src="{{ asset('student/assets/js/settings.js') }}"></script>
@@ -1466,16 +1469,6 @@
             $.each($('.nav-item'), function(key1, value) {
                 $(value).removeClass('active');
             })
-            $('.navbar-toggler').on('click', function(e) {
-                if ($('.sidebar-offcanvas').hasClass("active")) {
-                    $('.sidebar-offcanvas').removeClass('active');
-                } else {
-                    $('.sidebar-offcanvas').addClass('active');
-                }
-
-            })
-
-
         })
     </script>
     @yield('js')

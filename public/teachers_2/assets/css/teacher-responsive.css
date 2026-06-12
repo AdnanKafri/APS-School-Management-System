@@ -1,0 +1,980 @@
+/*
+ * Shared responsive guardrails for the teachers2 portal.
+ * Page-specific visuals remain in their original views and stylesheets.
+ */
+
+html,
+body.teacher-portal-body {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.teacher-portal-body {
+  overflow-x: hidden;
+  --teacher-ui-radius-lg: 20px;
+  --teacher-ui-radius-md: 14px;
+  --teacher-ui-border: rgba(148, 163, 184, 0.2);
+  --teacher-ui-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+  --teacher-ui-shadow-hover: 0 18px 38px rgba(15, 23, 42, 0.09);
+  --teacher-ui-gap: 1rem;
+}
+
+body.teacher-portal-body *,
+body.teacher-portal-body *::before,
+body.teacher-portal-body *::after {
+  box-sizing: border-box;
+}
+
+body.teacher-portal-body .teacher-shell,
+body.teacher-portal-body .main-panel,
+body.teacher-portal-body .content-wrapper,
+body.teacher-portal-body .teacher-dashboard-inner,
+body.teacher-portal-body .container,
+body.teacher-portal-body .container-fluid,
+body.teacher-portal-body .row,
+body.teacher-portal-body [class*="col-"],
+body.teacher-portal-body .card,
+body.teacher-portal-body .card-body,
+body.teacher-portal-body form,
+body.teacher-portal-body fieldset,
+body.teacher-portal-body .tab-content,
+body.teacher-portal-body .tab-pane {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.teacher-portal-body img,
+body.teacher-portal-body video,
+body.teacher-portal-body canvas,
+body.teacher-portal-body svg {
+  max-width: 100%;
+}
+
+body.teacher-portal-body img,
+body.teacher-portal-body video {
+  height: auto;
+}
+
+body.teacher-portal-body input,
+body.teacher-portal-body select,
+body.teacher-portal-body textarea,
+body.teacher-portal-body button {
+  max-width: 100%;
+}
+
+body.teacher-portal-body .teacher-sidebar-backdrop {
+  position: fixed;
+  inset: 64px 0 0;
+  z-index: 1035;
+  display: block;
+  width: 100%;
+  height: calc(100dvh - 64px);
+  padding: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.46);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .2s ease, visibility .2s ease;
+}
+
+body.teacher-portal-body .table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
+body.teacher-portal-body .table-responsive > table {
+  margin-bottom: 0;
+}
+
+body.teacher-portal-body .breadcrumbs,
+body.teacher-portal-body .teacher-breadcrumbs {
+  max-width: 100%;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+body.teacher-portal-body .breadcrumbs a,
+body.teacher-portal-body .teacher-breadcrumbs a {
+  white-space: normal;
+}
+
+body.teacher-portal-body .modal-dialog {
+  width: auto;
+  max-width: min(94vw, 760px);
+  margin-inline: auto;
+}
+
+body.teacher-portal-body .modal-content,
+body.teacher-portal-body .modal-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.teacher-portal-body .modal-body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* The two lesson-card actions must always own separate hit areas. */
+body.teacher-portal-body .teacher-subject-card {
+  position: relative;
+  isolation: isolate;
+}
+
+body.teacher-portal-body .teacher-subject-card__visual {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+
+body.teacher-portal-body .teacher-subject-card__body {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+body.teacher-portal-body .teacher-subject-card__actions,
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions {
+  position: relative;
+  inset: auto;
+  z-index: 5;
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  pointer-events: auto;
+}
+
+body.teacher-portal-body .teacher-subject-card__link,
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__link {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  min-width: 0;
+  margin: 0;
+  transform: none;
+  pointer-events: auto;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+body.teacher-portal-body .teacher-subject-card__link::before,
+body.teacher-portal-body .teacher-subject-card__link::after {
+  pointer-events: none;
+}
+
+/* Grid cards must be allowed to shrink below their legacy desktop minimums. */
+body.teacher-portal-body .teacher-room-grid,
+body.teacher-portal-body .teacher-assessment-lesson-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+body.teacher-portal-body .teacher-workflow-stats,
+body.teacher-portal-body .teacher-assessment-stats,
+body.teacher-portal-body .teacher-schedule-hero__meta {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.teacher-portal-body .teacher-room-card,
+body.teacher-portal-body .teacher-assessment-card,
+body.teacher-portal-body .teacher-schedule-day-card,
+body.teacher-portal-body .teacher-schedule-lesson-item {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Shared assessment workflow rhythm. */
+body.teacher-portal-body .teacher-assessment-shell,
+body.teacher-portal-body .teacher-workflow-container {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+body.teacher-portal-body .teacher-assessment-shell {
+  gap: var(--teacher-ui-gap);
+}
+
+body.teacher-portal-body .teacher-assessment-hero,
+body.teacher-portal-body .teacher-assessment-panel,
+body.teacher-portal-body .teacher-assessment-card,
+body.teacher-portal-body .teacher-workflow-hero,
+body.teacher-portal-body .teacher-workflow-card,
+body.teacher-portal-body .teacher-workflow-surface {
+  border-color: var(--teacher-ui-border) !important;
+  box-shadow: var(--teacher-ui-shadow) !important;
+}
+
+body.teacher-portal-body .teacher-assessment-hero,
+body.teacher-portal-body .teacher-assessment-panel,
+body.teacher-portal-body .teacher-workflow-hero,
+body.teacher-portal-body .teacher-workflow-card {
+  border-radius: var(--teacher-ui-radius-lg) !important;
+}
+
+body.teacher-portal-body .teacher-assessment-hero {
+  padding: 1.1rem 1.2rem;
+}
+
+body.teacher-portal-body .teacher-assessment-panel__head {
+  padding: 1rem 1.1rem;
+}
+
+body.teacher-portal-body .teacher-assessment-panel__head p {
+  max-width: 68ch;
+}
+
+body.teacher-portal-body .teacher-assessment-lesson-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  align-items: stretch;
+  gap: .85rem;
+  padding: 1rem;
+}
+
+body.teacher-portal-body .teacher-assessment-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+body.teacher-portal-body .teacher-assessment-card:hover {
+  box-shadow: var(--teacher-ui-shadow-hover) !important;
+}
+
+body.teacher-portal-body .teacher-assessment-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: .55rem;
+  padding: .95rem;
+}
+
+body.teacher-portal-body .teacher-assessment-card__title {
+  min-height: 1.35em;
+}
+
+body.teacher-portal-body .teacher-assessment-card__meta {
+  margin-bottom: .15rem;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions {
+  width: 100%;
+  margin-top: auto;
+  padding-top: .45rem;
+  gap: .5rem;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn {
+  min-width: 0;
+  min-height: 42px;
+  padding: .55rem .7rem;
+  border-radius: 12px;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+body.teacher-portal-body .teacher-assessment-stat {
+  min-width: 0;
+  border-radius: var(--teacher-ui-radius-md);
+  padding: .8rem .85rem;
+  box-shadow: none;
+}
+
+body.teacher-portal-body .teacher-workflow-page .breadcrumbs {
+  margin: 0 auto;
+  padding-inline: clamp(.75rem, 3vw, 1.5rem);
+}
+
+body.teacher-portal-body .teacher-workflow-shell {
+  padding-inline: clamp(.75rem, 2.5vw, 1.5rem);
+}
+
+body.teacher-portal-body .teacher-workflow-hero {
+  margin-bottom: .85rem;
+  padding: 1rem 1.15rem;
+}
+
+body.teacher-portal-body .teacher-workflow-hero h4 {
+  font-size: clamp(1.15rem, 2vw, 1.4rem) !important;
+}
+
+body.teacher-portal-body .teacher-workflow-card .card-header {
+  padding: .85rem 1rem !important;
+}
+
+body.teacher-portal-body .teacher-workflow-card .card-body {
+  padding: .9rem 1rem 1rem !important;
+}
+
+body.teacher-portal-body .teacher-workflow-card .nav-tabs {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  justify-content: center;
+}
+
+body.teacher-portal-body .teacher-workflow-card .nav-tabs .nav-link {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .55rem .95rem !important;
+}
+
+body.teacher-portal-body .teacher-workflow-surface {
+  border-radius: var(--teacher-ui-radius-md);
+  padding: .15rem .7rem .7rem;
+  background: #f8fafc;
+}
+
+body.teacher-portal-body .teacher-workflow-page table td,
+body.teacher-portal-body .teacher-workflow-page table th {
+  line-height: 1.45;
+}
+
+/* Separate assessment records without changing their table markup. */
+body.teacher-portal-body .teacher-workflow-surface table,
+body.teacher-portal-body .teacher-workflow-card .tab-pane table {
+  border-collapse: separate !important;
+  border-spacing: 0 .65rem !important;
+  background: transparent !important;
+}
+
+body.teacher-portal-body .teacher-workflow-surface table thead th,
+body.teacher-portal-body .teacher-workflow-card .tab-pane table thead th {
+  border-bottom: 0 !important;
+}
+
+body.teacher-portal-body .teacher-workflow-surface table tbody tr,
+body.teacher-portal-body .teacher-workflow-card .tab-pane table tbody tr {
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, .05);
+}
+
+body.teacher-portal-body .teacher-workflow-surface table tbody tr:nth-child(even),
+body.teacher-portal-body .teacher-workflow-card .tab-pane table tbody tr:nth-child(even) {
+  background: #fbfdff !important;
+}
+
+body.teacher-portal-body .teacher-workflow-surface table tbody td,
+body.teacher-portal-body .teacher-workflow-card .tab-pane table tbody td {
+  border-top: 1px solid rgba(226, 232, 240, .9) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, .9) !important;
+}
+
+body.teacher-portal-body .teacher-workflow-surface table tbody td:first-child,
+body.teacher-portal-body .teacher-workflow-card .tab-pane table tbody td:first-child {
+  border-inline-start: 1px solid rgba(226, 232, 240, .9) !important;
+  border-start-start-radius: 12px;
+  border-end-start-radius: 12px;
+}
+
+body.teacher-portal-body .teacher-workflow-surface table tbody td:last-child,
+body.teacher-portal-body .teacher-workflow-card .tab-pane table tbody td:last-child {
+  border-inline-end: 1px solid rgba(226, 232, 240, .9) !important;
+  border-start-end-radius: 12px;
+  border-end-end-radius: 12px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.teacher-portal-body .teacher-workflow-surface table tbody tr:hover,
+  body.teacher-portal-body .teacher-workflow-card .tab-pane table tbody tr:hover,
+  body.teacher-portal-body .table1 tbody tr:hover {
+    background: #f4f8ff !important;
+    box-shadow: 0 10px 24px rgba(20, 49, 92, .09);
+  }
+}
+
+body.teacher-portal-body .teacher-workflow-page table td > a,
+body.teacher-portal-body .teacher-workflow-page table td > button {
+  margin-inline: auto;
+}
+
+/* Grading screens: remove legacy negative positioning and align controls. */
+body.teacher-portal-body .teacher-bulk-panel {
+  width: 100%;
+  padding: 0 1rem 1rem !important;
+}
+
+body.teacher-portal-body .teacher-bulk-panel > .d-flex {
+  justify-content: center !important;
+  margin-bottom: .75rem !important;
+}
+
+body.teacher-portal-body .teacher-bulk-panel .js-bulk-save {
+  min-width: 150px !important;
+  min-height: 42px;
+  border-radius: 12px;
+  white-space: nowrap !important;
+}
+
+/* Legacy grading buttons animated to a narrow icon-only width. */
+body.teacher-portal-body .teacher-bulk-panel .table1 .Btn,
+body.teacher-portal-body .teacher-bulk-panel .table1 .btn11,
+body.teacher-portal-body .table1 button[type="submit"].Btn {
+  position: relative;
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 88px !important;
+  max-width: 100%;
+  min-height: 40px;
+  height: auto !important;
+  padding: .55rem .8rem !important;
+  align-items: center;
+  justify-content: center !important;
+  gap: .45rem;
+  border-radius: 10px;
+  color: #fff !important;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap !important;
+  word-break: keep-all;
+  overflow-wrap: normal !important;
+  box-shadow: none !important;
+}
+
+body.teacher-portal-body .teacher-bulk-panel .table1 .Btn:hover,
+body.teacher-portal-body .teacher-bulk-panel .table1 .btn11:hover,
+body.teacher-portal-body .table1 button[type="submit"].Btn:hover {
+  width: auto !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+body.teacher-portal-body .teacher-bulk-panel .table1 .Btn .svg,
+body.teacher-portal-body .teacher-bulk-panel .table1 .btn11 .svg,
+body.teacher-portal-body .table1 button[type="submit"].Btn .svg {
+  position: static !important;
+  inset: auto !important;
+  flex: 0 0 auto;
+  width: 13px;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Desktop grading rows need stronger visual rhythm than the legacy grid. */
+body.teacher-portal-body .table1 {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+body.teacher-portal-body .table1 tbody tr {
+  background: #fff !important;
+  transition: background-color .18s ease, box-shadow .18s ease;
+}
+
+body.teacher-portal-body .table1 tbody tr:nth-child(even) {
+  background: #f8fafc !important;
+}
+
+body.teacher-portal-body .table1 tbody td {
+  border-bottom: 1px solid #e4eaf2 !important;
+  padding-top: .85rem !important;
+  padding-bottom: .85rem !important;
+  vertical-align: middle;
+}
+
+body.teacher-portal-body .selectrow {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 0 1rem !important;
+  align-items: end;
+}
+
+body.teacher-portal-body .selectrow > [class*="col-"] {
+  height: auto !important;
+}
+
+body.teacher-portal-body .selectrow .newselect {
+  width: min(100%, 360px) !important;
+  margin-inline: auto;
+}
+
+body.teacher-portal-body .table1 input.form-control,
+body.teacher-portal-body .table1 input.common-input {
+  width: min(100%, 96px) !important;
+  min-width: 72px;
+  height: 42px !important;
+  margin-inline: auto;
+  padding: .45rem .55rem;
+  text-align: center;
+  border-radius: 10px;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions,
+body.teacher-portal-body .teacher-schedule-panel__actions,
+body.teacher-portal-body .teacher-workflow-actions,
+body.teacher-portal-body .grading-toolbar {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn,
+body.teacher-portal-body .teacher-schedule-panel__actions .btn,
+body.teacher-portal-body .grading-toolbar .btn {
+  min-width: 0;
+  white-space: normal;
+}
+
+@media (max-width: 991.98px) {
+  body.teacher-portal-body.teacher-sidebar-open {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  body.teacher-portal-body.teacher-sidebar-open .teacher-sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  body.teacher-portal-body #sidebar.sidebar.sidebar-offcanvas {
+    right: 0;
+    left: auto;
+    z-index: 1040;
+    max-width: min(86vw, 300px);
+    max-height: calc(100dvh - 64px);
+    overscroll-behavior: contain;
+    transform: translateX(100%);
+    transition: transform .22s ease, box-shadow .22s ease;
+  }
+
+  body.teacher-portal-body.ltr #sidebar.sidebar.sidebar-offcanvas {
+    right: auto;
+    left: 0;
+    transform: translateX(-100%);
+  }
+
+  body.teacher-portal-body #sidebar.sidebar.sidebar-offcanvas.active,
+  body.teacher-portal-body.ltr #sidebar.sidebar.sidebar-offcanvas.active {
+    transform: translateX(0);
+  }
+
+  body.teacher-portal-body .main-panel,
+  body.teacher-portal-body.ltr .main-panel {
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    overflow: visible;
+  }
+
+  body.teacher-portal-body .navbar .navbar-menu-wrapper {
+    min-width: 0;
+  }
+
+  body.teacher-portal-body .teacher-topbar__start {
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  body.teacher-portal-body .teacher-topbar__heading {
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  body.teacher-portal-body .teacher-topbar__heading h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.teacher-portal-body .teacher-topbar__actions {
+    flex: 0 0 auto;
+  }
+
+  body.teacher-portal-body .teacher-schedule-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .teacher-schedule-day-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.teacher-portal-body table:not(.table-calendar) {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.teacher-portal-body table:not(.table-calendar) thead,
+  body.teacher-portal-body table:not(.table-calendar) tbody,
+  body.teacher-portal-body table:not(.table-calendar) tfoot {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  body.teacher-portal-body table:not(.table-calendar) th,
+  body.teacher-portal-body table:not(.table-calendar) td {
+    overflow-wrap: anywhere;
+  }
+
+  /* These tables intentionally become row cards on mobile. */
+  body.teacher-portal-body .teacher-workflow-page table,
+  body.teacher-portal-body .teacher-workflow-page table tbody,
+  body.teacher-portal-body .teacher-workflow-page table tfoot,
+  body.teacher-portal-body .teacher-bulk-panel table,
+  body.teacher-portal-body .teacher-bulk-panel table tbody,
+  body.teacher-portal-body .teacher-bulk-panel table tfoot {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tr,
+  body.teacher-portal-body .teacher-bulk-panel table tr {
+    display: block !important;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody tr,
+  body.teacher-portal-body .teacher-bulk-panel table tbody tr {
+    margin: 0 0 .9rem !important;
+    padding: .2rem .75rem !important;
+    border: 1px solid var(--teacher-ui-border) !important;
+    border-radius: var(--teacher-ui-radius-md);
+    background: #fff !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+    overflow: hidden;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody td,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 44px;
+    padding: .65rem 0 !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    text-align: start !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(226, 232, 240, .85) !important;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody td:last-child,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody td::before,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td::before {
+    position: static !important;
+    flex: 0 0 min(42%, 145px);
+    float: none !important;
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: start;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody td > *,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td > * {
+    min-width: 0;
+    max-width: 58%;
+    margin-inline: 0;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody td > button,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td > button,
+  body.teacher-portal-body .teacher-workflow-page table tbody td > a,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td > a {
+    flex: 0 0 auto;
+    max-width: min(58%, 190px);
+  }
+
+  body.teacher-portal-body .teacher-workflow-surface {
+    padding: .35rem;
+    background: transparent;
+  }
+
+  body.teacher-portal-body .teacher-workflow-surface table {
+    border-spacing: 0 !important;
+  }
+
+  body.teacher-portal-body .teacher-workflow-surface table tbody td {
+    border-top: 0 !important;
+    border-inline: 0 !important;
+    border-radius: 0 !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body.teacher-portal-body .content-wrapper,
+  body.teacher-portal-body .teacher-schedule-page,
+  body.teacher-portal-body .teacher-subjects-page .teacher-dashboard-content {
+    padding: 1rem;
+  }
+
+  body.teacher-portal-body .row {
+    margin-inline: 0;
+  }
+
+  body.teacher-portal-body .row > [class*="col-"] {
+    padding-inline: .5rem;
+  }
+
+  body.teacher-portal-body .card-header,
+  body.teacher-portal-body .card-body,
+  body.teacher-portal-body .card-footer {
+    max-width: 100%;
+  }
+
+  body.teacher-portal-body .card-header {
+    margin-inline: 0;
+  }
+
+  body.teacher-portal-body .nav-tabs,
+  body.teacher-portal-body .nav-pills {
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: .35rem;
+  }
+
+  body.teacher-portal-body .nav-tabs .nav-item,
+  body.teacher-portal-body .nav-pills .nav-item {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  body.teacher-portal-body .nav-tabs .nav-link,
+  body.teacher-portal-body .nav-pills .nav-link {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  body.teacher-portal-body .teacher-schedule-day-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.teacher-portal-body .teacher-workflow-hero__grid,
+  body.teacher-portal-body .teacher-assessment-hero__grid,
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .teacher-workflow-stats,
+  body.teacher-portal-body .teacher-assessment-stats {
+    width: 100%;
+  }
+
+  body.teacher-portal-body .modal-dialog {
+    max-width: calc(100vw - 1rem);
+    margin: .5rem;
+  }
+
+}
+
+@media (max-width: 575.98px) {
+  body.teacher-portal-body .navbar.default-layout-navbar {
+    height: 60px;
+  }
+
+  body.teacher-portal-body .navbar .navbar-menu-wrapper {
+    min-height: 60px;
+    padding-inline: .65rem;
+    gap: .45rem;
+  }
+
+  body.teacher-portal-body .teacher-topbar__start,
+  body.teacher-portal-body .teacher-topbar__actions {
+    gap: .4rem;
+  }
+
+  body.teacher-portal-body .teacher-topbar__toggle,
+  body.teacher-portal-body .teacher-topbar__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  body.teacher-portal-body .teacher-topbar__heading h1 {
+    font-size: .92rem;
+  }
+
+  body.teacher-portal-body .main-panel,
+  body.teacher-portal-body.ltr .main-panel {
+    padding-top: 60px;
+  }
+
+  body.teacher-portal-body #sidebar.sidebar.sidebar-offcanvas {
+    top: 60px;
+    width: min(86vw, 280px) !important;
+    min-width: 0 !important;
+    max-height: calc(100dvh - 60px);
+  }
+
+  body.teacher-portal-body .teacher-sidebar-backdrop {
+    inset-block-start: 60px;
+    height: calc(100dvh - 60px);
+  }
+
+  body.teacher-portal-body .content-wrapper,
+  body.teacher-portal-body .teacher-schedule-page,
+  body.teacher-portal-body .teacher-subjects-page .teacher-dashboard-content {
+    padding: .75rem;
+  }
+
+  body.teacher-portal-body .teacher-dashboard-banner,
+  body.teacher-portal-body .teacher-workflow-hero,
+  body.teacher-portal-body .teacher-assessment-hero,
+  body.teacher-portal-body .teacher-schedule-hero,
+  body.teacher-portal-body .teacher-dashboard-panel,
+  body.teacher-portal-body .teacher-assessment-panel,
+  body.teacher-portal-body .teacher-schedule-panel {
+    border-radius: 16px;
+  }
+
+  body.teacher-portal-body .teacher-assessment-hero {
+    padding: .9rem;
+  }
+
+  body.teacher-portal-body .teacher-assessment-hero__text {
+    margin-top: .4rem;
+    line-height: 1.55;
+  }
+
+  body.teacher-portal-body .teacher-assessment-panel__head,
+  body.teacher-portal-body .teacher-assessment-lesson-grid {
+    padding: .75rem;
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__body {
+    padding: .85rem;
+  }
+
+  body.teacher-portal-body .teacher-workflow-stats,
+  body.teacher-portal-body .teacher-assessment-stats,
+  body.teacher-portal-body .teacher-schedule-hero__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.teacher-portal-body .teacher-subject-card__actions,
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .teacher-subject-card__link,
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__link {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .teacher-workflow-shell {
+    padding-inline: .625rem;
+  }
+
+  body.teacher-portal-body .teacher-workflow-container {
+    padding-inline: 0;
+  }
+
+  body.teacher-portal-body .teacher-workflow-hero {
+    padding: .85rem;
+  }
+
+  body.teacher-portal-body .teacher-workflow-card .card-header,
+  body.teacher-portal-body .teacher-workflow-card .card-body {
+    padding-inline: .75rem !important;
+  }
+
+  body.teacher-portal-body .teacher-workflow-card .nav-tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.teacher-portal-body .teacher-workflow-card .nav-tabs .nav-item,
+  body.teacher-portal-body .teacher-workflow-card .nav-tabs .nav-link {
+    width: 100%;
+  }
+
+  body.teacher-portal-body .teacher-workflow-card .nav-tabs .nav-link {
+    padding-inline: .55rem !important;
+    text-align: center;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page table tbody td,
+  body.teacher-portal-body .teacher-bulk-panel table tbody td {
+    gap: .5rem;
+  }
+
+  body.teacher-portal-body .teacher-workflow-page .home,
+  body.teacher-portal-body .teacher-workflow-page .showstate,
+  body.teacher-portal-body .teacher-workflow-page .addquestion,
+  body.teacher-portal-body .teacher-bulk-panel .home {
+    min-width: 0;
+    min-height: 40px;
+    padding: .55rem .75rem;
+    font-size: .86rem;
+  }
+
+  body.teacher-portal-body .teacher-bulk-panel .table1 .Btn,
+  body.teacher-portal-body .teacher-bulk-panel .table1 .btn11,
+  body.teacher-portal-body .table1 button[type="submit"].Btn {
+    min-width: 82px !important;
+    padding-inline: .65rem !important;
+    font-size: .84rem;
+  }
+
+  body.teacher-portal-body .btn,
+  body.teacher-portal-body button,
+  body.teacher-portal-body [role="button"] {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  body.teacher-portal-body .teacher-subject-card:hover,
+  body.teacher-portal-body .teacher-room-card:hover,
+  body.teacher-portal-body .teacher-assessment-card:hover,
+  body.teacher-portal-body .teacher-schedule-lesson-item:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 359.98px) {
+  body.teacher-portal-body .teacher-topbar__heading {
+    display: none;
+  }
+
+  body.teacher-portal-body .teacher-topbar__start {
+    flex: 0 0 auto;
+  }
+
+  body.teacher-portal-body .teacher-workflow-stats,
+  body.teacher-portal-body .teacher-assessment-stats,
+  body.teacher-portal-body .teacher-schedule-hero__meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .content-wrapper,
+  body.teacher-portal-body .teacher-schedule-page,
+  body.teacher-portal-body .teacher-subjects-page .teacher-dashboard-content {
+    padding: .625rem;
+  }
+}

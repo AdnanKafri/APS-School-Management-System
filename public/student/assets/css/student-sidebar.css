@@ -1,0 +1,97 @@
+/*
+ * Mobile sidebar lifecycle for the current student portal.
+ * Desktop sidebar geometry remains owned by the existing theme.
+ */
+
+.student-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  body.student-portal-body.student-sidebar-open {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  body.student-portal-body .navbar.default-layout-navbar {
+    z-index: 1045;
+  }
+
+  body.student-portal-body .student-sidebar-toggle {
+    position: relative;
+    z-index: 1046;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+  }
+
+  body.student-portal-body #sidebar.sidebar-offcanvas {
+    top: 60px;
+    right: 0 !important;
+    left: auto !important;
+    bottom: 0;
+    z-index: 1040 !important;
+    width: min(82vw, 280px) !important;
+    max-width: 280px;
+    height: calc(100vh - 60px) !important;
+    height: calc(100dvh - 60px) !important;
+    max-height: none !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate3d(100%, 0, 0);
+    transition: transform .24s ease, visibility .24s ease, box-shadow .24s ease;
+    will-change: transform;
+  }
+
+  body.student-portal-body #sidebar.sidebar-offcanvas.active {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+    box-shadow: -18px 0 42px rgba(15, 23, 42, .2);
+  }
+
+  body.student-portal-body .student-sidebar-backdrop {
+    position: fixed;
+    inset: 60px 0 0;
+    z-index: 1035;
+    display: block;
+    width: 100%;
+    height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
+    padding: 0;
+    border: 0;
+    background: rgba(15, 23, 42, .42);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .2s ease, visibility .2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body.student-portal-body.student-sidebar-open .student-sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+@media (min-width: 992px) {
+  body.student-portal-body .student-sidebar-backdrop {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.student-portal-body #sidebar.sidebar-offcanvas,
+  body.student-portal-body .student-sidebar-backdrop {
+    transition-duration: .01ms !important;
+  }
+}

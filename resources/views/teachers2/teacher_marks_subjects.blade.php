@@ -324,40 +324,42 @@
                     </div>
                 </div>
 
-                @forelse ($teacher_lessons as $lesson)
-                    <article class="teacher-assessment-card">
-                        <span class="teacher-assessment-card__accent" aria-hidden="true"></span>
-                        <div class="teacher-assessment-card__body">
-                            <span class="teacher-assessment-card__eyebrow">{{ $labels['lesson_title'] }}</span>
-                            <h4 class="teacher-assessment-card__title">{{ $lesson->name }}</h4>
-                            <div class="teacher-assessment-card__meta">
-                                <span><i class="mdi mdi-google-classroom"></i>{{ $labels['class'] }}: {{ $class->name ?? '' }}</span>
-                                <span><i class="mdi mdi-door-closed"></i>{{ $labels['room'] }}: {{ $room_name }}</span>
-                            </div>
+                <div class="teacher-assessment-lesson-grid">
+                    @forelse ($teacher_lessons as $lesson)
+                        <article class="teacher-assessment-card">
+                            <span class="teacher-assessment-card__accent" aria-hidden="true"></span>
+                            <div class="teacher-assessment-card__body">
+                                <span class="teacher-assessment-card__eyebrow">{{ $labels['lesson_title'] }}</span>
+                                <h4 class="teacher-assessment-card__title">{{ $lesson->name }}</h4>
+                                <div class="teacher-assessment-card__meta">
+                                    <span><i class="mdi mdi-google-classroom"></i>{{ $labels['class'] }}: {{ $class->name ?? '' }}</span>
+                                    <span><i class="mdi mdi-door-closed"></i>{{ $labels['room'] }}: {{ $room_name }}</span>
+                                </div>
 
-                            <div class="teacher-assessment-card__actions">
-                                <a href="{{ route('teacher_exam', [$room_id, $teacher->id, $lesson->id]) }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="mdi mdi-clipboard-text-outline"></i>
-                                    {{ $labels['exams'] }}
-                                </a>
-                                <a href="{{ route('teacher_quize', [$room_id, $teacher->id, $lesson->id]) }}" class="btn btn-outline-success btn-sm">
-                                    <i class="mdi mdi-book-open-variant"></i>
-                                    {{ $labels['quizzes'] }}
-                                </a>
-                                <a href="{{ route('dashboard.StudentsRoomLesson_quize1', [$room_id, $teacher->id, $lesson->id]) }}" class="btn btn-light btn-sm">
-                                    <i class="mdi mdi-badge-account-horizontal-outline"></i>
-                                    {{ $labels['tests'] }}
-                                </a>
+                                <div class="teacher-assessment-card__actions">
+                                    <a href="{{ route('teacher_exam', [$room_id, $teacher->id, $lesson->id]) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="mdi mdi-clipboard-text-outline"></i>
+                                        {{ $labels['exams'] }}
+                                    </a>
+                                    <a href="{{ route('teacher_quize', [$room_id, $teacher->id, $lesson->id]) }}" class="btn btn-outline-success btn-sm">
+                                        <i class="mdi mdi-book-open-variant"></i>
+                                        {{ $labels['quizzes'] }}
+                                    </a>
+                                    <a href="{{ route('dashboard.StudentsRoomLesson_quize1', [$room_id, $teacher->id, $lesson->id]) }}" class="btn btn-light btn-sm">
+                                        <i class="mdi mdi-badge-account-horizontal-outline"></i>
+                                        {{ $labels['tests'] }}
+                                    </a>
+                                </div>
                             </div>
+                        </article>
+                    @empty
+                        <div class="teacher-workflow-empty">
+                            <i class="mdi mdi-book-open-page-variant-outline"></i>
+                            <strong>{{ $labels['empty_title'] }}</strong>
+                            <span>{{ $labels['empty_text'] }}</span>
                         </div>
-                    </article>
-                @empty
-                    <div class="teacher-workflow-empty">
-                        <i class="mdi mdi-book-open-page-variant-outline"></i>
-                        <strong>{{ $labels['empty_title'] }}</strong>
-                        <span>{{ $labels['empty_text'] }}</span>
-                    </div>
-                @endforelse
+                    @endforelse
+                </div>
             </section>
         </div>
     </div>
