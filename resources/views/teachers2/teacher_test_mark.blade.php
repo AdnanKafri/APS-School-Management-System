@@ -194,15 +194,15 @@
 
                     <input  style="width:80px; height: 45px;display: inline-block;"  hidden name="exam_result_id"  value="{{ $item3->id }}" type="text">
 
-                       <input  hidden  style="width:80px; height: 45px;display: inline-block;" name="mark" value="{{ $item3->result!=null ?$item3->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control input1"  type="text">
+                       <input inputmode="decimal"  hidden  style="width:80px; height: 45px;display: inline-block;" name="mark" value="{{ $item3->result!=null ?$item3->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control input1"  type="text">
 
                        @endif
 
 
                     @endforeach
-                    <input  style="width:80px; height: 45px;display: inline-block;" name="mark" value="" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control input2"  type="text">
+                    <input inputmode="decimal"  style="width:80px; height: 45px;display: inline-block;" name="mark" value="" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control input2"  type="text">
                     @else
-                    <input  style="width:80px; height: 45px;display: inline-block;" name="mark" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text">
+                    <input inputmode="decimal"  style="width:80px; height: 45px;display: inline-block;" name="mark" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control" required="" type="text">
                     @endif
 
                      <input  style="width:80px; height: 45px;display: inline-block;"  hidden name="class_id"  value="{{ $room_id }}" type="text">
@@ -327,7 +327,7 @@
       $.each(value.exam_result, function (key1, value1) {
           if(value1.exam_id==home){
               d=`<input  style="width:80px; height: 45px;display: inline-block;"  hidden name="exam_result_id"  value="${value1.id}" type="text">
-      <input   style="height: 50px; width:60px;    margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
+      <input inputmode="decimal"   style="height: 50px; width:60px;    margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
     if(value1.medal=="1"){
            medal=` <td style="height: 86px">
   
@@ -383,7 +383,7 @@
       $.each(data, function (key, value) {
            medal=`<td style="height: 86px"> </td>`
             d=`<input  style="width:80px; height: 45px;display: inline-block;"  hidden name="exam_result_id"  value="" type="text">
-      <input    style="width:80px; height: 45px;display: inline-block;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text">`
+      <input inputmode="decimal"    style="width:80px; height: 45px;display: inline-block;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text">`
           if(value.exam_result){
   
           if(value.exam_result.length>0){
@@ -392,7 +392,7 @@
           if(value1.exam_id==home){
               if(value1.result != null){
               d=`<input  style="width:80px; height: 45px;display: inline-block;"  hidden name="exam_result_id"  value="${value1.id}" type="text">
-      <input   style="height: 50px; width:60px;    margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
+      <input inputmode="decimal"   style="height: 50px; width:60px;    margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
               }
                 if(value1.medal=="1"){
            medal=` <td style="height: 86px">
@@ -416,7 +416,7 @@
   }
   else{
       d=`<input  style="width:80px; height: 45px;display: inline-block;"  hidden name="exam_result_id"  value="" type="text">
-      <input   style="height: 50px; width:60px;    margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
+      <input inputmode="decimal"   style="height: 50px; width:60px;    margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
   
   }
   })
@@ -441,7 +441,7 @@
   
   else{
        d=`<input  style="width:80px; height: 45px;display: inline-block;"  hidden name="exam_result_id"  value="" type="text">
-      <input    style="width:80px; height: 45px;display: inline-block;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
+      <input inputmode="decimal"    style="width:80px; height: 45px;display: inline-block;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
       if(value.id==room_id){
             $.each(value.student, function (key, value2) {
   

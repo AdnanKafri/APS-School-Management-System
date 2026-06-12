@@ -169,6 +169,51 @@ body.teacher-portal-body .teacher-subject-card__link::after {
   pointer-events: none;
 }
 
+/* Lessons page: keep the hero and subject cards fluid at every viewport. */
+body.teacher-portal-body .teacher-subjects-page .teacher-dashboard-inner,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta,
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content h2,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content p,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__date span,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__tag span {
+  min-width: 0;
+  max-width: 100%;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__date,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__tag {
+  min-width: 0;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__date i,
+body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__tag i {
+  flex: 0 0 auto;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__body {
+  flex: 1 1 auto;
+}
+
+body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions {
+  margin-top: auto;
+}
+
 /* Grid cards must be allowed to shrink below their legacy desktop minimums. */
 body.teacher-portal-body .teacher-room-grid,
 body.teacher-portal-body .teacher-assessment-lesson-grid {
@@ -273,12 +318,79 @@ body.teacher-portal-body .teacher-assessment-card__actions {
 }
 
 body.teacher-portal-body .teacher-assessment-card__actions .btn {
+  position: relative;
+  isolation: isolate;
   min-width: 0;
-  min-height: 42px;
-  padding: .55rem .7rem;
-  border-radius: 12px;
-  line-height: 1.2;
+  min-height: 52px;
+  padding: .7rem .75rem;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  line-height: 1.25;
   white-space: normal;
+  font-weight: 750;
+  box-shadow: 0 7px 18px rgba(15, 23, 42, .055) !important;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease,
+    background-color .18s ease, color .18s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn i {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn:nth-child(1) {
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, .22);
+  background: linear-gradient(180deg, #eff6ff, #ffffff);
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn:nth-child(2) {
+  color: #047857;
+  border-color: rgba(16, 185, 129, .22);
+  background: linear-gradient(180deg, #ecfdf5, #ffffff);
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn:nth-child(3) {
+  color: #92400e;
+  border-color: rgba(245, 158, 11, .24);
+  background: linear-gradient(180deg, #fffbeb, #ffffff);
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .22);
+  outline-offset: 2px;
+}
+
+body.teacher-portal-body .teacher-assessment-card__actions .btn:active {
+  transform: translateY(1px) scale(.985);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, .06) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.teacher-portal-body .teacher-assessment-card__actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 24px rgba(15, 23, 42, .1) !important;
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__actions .btn:nth-child(1):hover {
+    color: #1e40af;
+    border-color: rgba(37, 99, 235, .38);
+    background: #eff6ff;
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__actions .btn:nth-child(2):hover {
+    color: #065f46;
+    border-color: rgba(5, 150, 105, .38);
+    background: #ecfdf5;
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__actions .btn:nth-child(3):hover {
+    color: #78350f;
+    border-color: rgba(217, 119, 6, .38);
+    background: #fffbeb;
+  }
 }
 
 body.teacher-portal-body .teacher-assessment-stat {
@@ -774,6 +886,67 @@ body.teacher-portal-body .grading-toolbar .btn {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner {
+    width: 100%;
+    gap: .9rem;
+    padding: 1rem;
+    overflow: hidden;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content {
+    width: 100%;
+    gap: .35rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content h2 {
+    font-size: clamp(1.3rem, 5vw, 1.55rem);
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__content p {
+    font-size: .88rem;
+    line-height: 1.6;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__date,
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__tag {
+    min-height: 46px;
+    padding: .7rem .75rem;
+    gap: .5rem;
+    font-size: .82rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subjects-grid.row {
+    gap: .85rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__visual {
+    height: 118px;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 17px;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__body {
+    padding: .9rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__text {
+    font-size: .86rem;
+    line-height: 1.55;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__actions {
+    padding: 0 .9rem .9rem;
+  }
+
   body.teacher-portal-body .teacher-workflow-stats,
   body.teacher-portal-body .teacher-assessment-stats {
     width: 100%;
@@ -883,6 +1056,17 @@ body.teacher-portal-body .grading-toolbar .btn {
 
   body.teacher-portal-body .teacher-assessment-card__actions {
     grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 360px);
+    margin-inline: auto;
+    justify-items: center;
+  }
+
+  body.teacher-portal-body .teacher-assessment-card__actions .btn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    padding-inline: .9rem;
+    text-align: center;
   }
 
   body.teacher-portal-body .teacher-workflow-shell {
@@ -976,5 +1160,19 @@ body.teacher-portal-body .grading-toolbar .btn {
   body.teacher-portal-body .teacher-schedule-page,
   body.teacher-portal-body .teacher-subjects-page .teacher-dashboard-content {
     padding: .625rem;
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.teacher-portal-body .teacher-subjects-page .teacher-subject-card__visual {
+    height: 104px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body.teacher-portal-body .teacher-subjects-page .teacher-welcome-banner__meta {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

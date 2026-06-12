@@ -540,7 +540,7 @@ border-right: 1px solid #ddd;
                                                                 
                     <input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="{{ $item->id }}" type="number">
 
-                       <input  style="height: 50px; width:94px;" name="mark" min="0.0" max="{{$exam->mark}}" value="{{ $item->result!=null ?$item->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="number_mark common-input mb-20 form-control input2"  type="number">
+                       <input inputmode="decimal"  style="height: 50px; width:94px;" name="mark" min="0.0" max="{{$exam->mark}}" value="{{ $item->result!=null ?$item->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="number_mark common-input mb-20 form-control input2"  type="number">
 
 
 
@@ -809,7 +809,7 @@ if(lect==1){
     $.each(data, function (key, value) {
          medal=`<td style="height: 86px"> </td>`
          c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">`
-             d=`<input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">> `
+             d=`<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">> `
              if(value.exam_result2.length>0){
     $.each(value.exam_result2, function (key1, value1) {
          if(value1.exam_id == home){
@@ -817,7 +817,7 @@ if(lect==1){
             
        c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">`     
   d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">
-  <input style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
    
         if(value1.medal=="1"){
          medal=` <td style="height: 86px">
@@ -845,7 +845,7 @@ if(lect==1){
         else{
          
      d=`   <input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id" value="${value1.id}" type="text">
-     <input style="height: 50px; width:94px" name="mark" value="" data-id="${ value.id }"  class="common-input mb-20 form-control input1"  type="number" min="0" max="${mark}"> `
+     <input inputmode="decimal" style="height: 50px; width:94px" name="mark" value="" data-id="${ value.id }"  class="common-input mb-20 form-control input1"  type="number" min="0" max="${mark}"> `
 }
              
          }
@@ -854,7 +854,7 @@ if(lect==1){
 
 else{
      d=`
-     <input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+     <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
 }
 
 var b=[];
@@ -964,7 +964,7 @@ else if(lect==2){
          c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">` 
          medal=`<td style="height: 86px"> </td>`
          d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  id="exam_result_id" value=""  type="text">
-   <input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+   <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
    
         if(value.exam_result2.length>0){
             
@@ -973,7 +973,7 @@ else if(lect==2){
        if(value1.result != null){  
             c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">` 
   d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  id="exam_result_id" value="${value1.id}" type="text">
-   <input style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+   <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
   
   if(value1.medal=="1"){
          medal=` <td style="height: 86px">
@@ -1004,7 +1004,7 @@ else if(lect==2){
        }
 else{
     d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id" value="${value1.id}" type="text">
-    <input style="height: 50px; width:94px;" name="mark"    data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+    <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"    data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
   
 
 }
@@ -1018,7 +1018,7 @@ else{
 
 else{
      d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  id="exam_result_id" value=""  type="text">
-  <input style="height: 50px; width:94px;" name="mark"     data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"     data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
   
 }
 
@@ -1056,7 +1056,7 @@ ${c}
     $.each(data, function (key, value) {
     
          c=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">`
-             d=`<input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number"> `
+             d=`<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number"> `
              if(value.exam_result2.length>0){
     $.each(value.exam_result2, function (key1, value1) {
          if(value1.exam_id == home){
@@ -1064,7 +1064,7 @@ ${c}
 
        c=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">`
   d=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">
-  <input style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
 
 
 
@@ -1073,7 +1073,7 @@ ${c}
         else{
 
      d=`   <input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id" value="${value1.id}" type="text">
-     <input style="height: 50px; width:94px" name="mark" value="" data-id="${ value.id }"  class="common-input mb-20 form-control input1"  type="number" min="0" max="${mark}"> `
+     <input inputmode="decimal" style="height: 50px; width:94px" name="mark" value="" data-id="${ value.id }"  class="common-input mb-20 form-control input1"  type="number" min="0" max="${mark}"> `
 }
 
          }
@@ -1082,7 +1082,7 @@ ${c}
 
 else{
      d=`
-     <input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+     <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
 }
 
 var b=[];

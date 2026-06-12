@@ -546,7 +546,7 @@ border-right: 1px solid #ddd;
 
                                                         <input   hidden name="exam_result_id"  value="{{ $item->id }}" type="text">
 
-                                                           <input   style="height: 50px; width:93px;margin:auto" name="mark" value="{{ $item->result!=null ?$item->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control "  type="text">
+                                                           <input inputmode="decimal"   style="height: 50px; width:93px;margin:auto" name="mark" value="{{ $item->result!=null ?$item->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="common-input mb-20 form-control "  type="text">
 
 
 
@@ -745,7 +745,7 @@ if(lect==1){
     $.each(value.exam_result2, function (key1, value1) {
         if(value1.exam_id==home){
             d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="${value1.id}" type="text">
-    <input   style="height: 50px; width:90px; margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
+    <input inputmode="decimal"   style="height: 50px; width:90px; margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
             if(value1.medal=="1"){
          medal=` <td style="height: 86px">
 
@@ -796,7 +796,7 @@ else if(lect==2){
     $.each(data, function (key, value) {
           medal=`<td style="height: 86px"> </td>`
           d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="" type="text">
-    <input   style="height: 50px; width:90px; margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text">`
+    <input inputmode="decimal"   style="height: 50px; width:90px; margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text">`
         if(value.exam_result2){
 
         if(value.exam_result2.length>0){
@@ -805,7 +805,7 @@ else if(lect==2){
         if(value1.exam_id==home){
             if(value1.result2 != null){
             d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="${value1.id}" type="text">
-    <input   style="height: 50px; width:90px; margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
+    <input inputmode="decimal"   style="height: 50px; width:90px; margin: auto;" name="mark" value="${value1.result}"  class="common-input mb-20 form-control input1"  type="text">`
           if(value1.medal=="1"){
          medal=` <td style="height: 86px">
 
@@ -832,7 +832,7 @@ else if(lect==2){
 }
 else{
     d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="" type="text">
-    <input   style="height: 50px; width:90px; margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
+    <input inputmode="decimal"   style="height: 50px; width:90px; margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
 
 }
 })
@@ -855,7 +855,7 @@ else{
 
 else{
      d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="" type="text">
-    <input   style="height: 50px; width:90px; margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
+    <input inputmode="decimal"   style="height: 50px; width:90px; margin: auto;" name="mark" value=""  class="common-input mb-20 form-control input1"  type="text"> `
     if(value.id==room_id){
           $.each(value.student, function (key, value2) {
 

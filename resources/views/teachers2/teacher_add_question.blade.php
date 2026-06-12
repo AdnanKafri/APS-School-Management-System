@@ -574,7 +574,7 @@ background-image: linear-gradient(43deg, #4158D0 0%, #a5c9ff 46%, #152c4f 100%);
           <div class="row">
               <div class="col-md-10">
                   <label for="" class="col-form-label"> العلامة </label>
-                  <input type="number" required min="0" class="form-control" step="0.01" name="mark" id="mark"
+                  <input type="number" inputmode="decimal" required min="0" class="form-control" step="0.01" name="mark" id="mark"
                       placeholder="ادخل علامة السؤال">
               </div>
           </div>

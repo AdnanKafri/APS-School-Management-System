@@ -407,7 +407,7 @@
 @endsection
 @section('content')
     <div class="main-panel" style="background: #f8f9fb;">
-       
+
         <ul class="breadcrumbs" style="padding-bottom: 7px;
         padding-top: 11px;">
 
@@ -422,7 +422,7 @@
             <li class="li"><a
                 href="{{ route('dashboard.student.lessons.book_details',[$lesson->id,$teacher->id,$room->id ,$exam1->lecture->id]) }}">{{ $exam1->lecture->name }}
             </a></li>
-      
+
         <li class="li"><a href="#">
             @if ($exam1->type == 1)
                 {{ $exam1->namehomework }}
@@ -449,7 +449,7 @@
                                         <p style="color: #9ea7af;
                                         text-align: right;">العلامة  : {{ $exam1->success_mark }}</</p>
                                         <input type="hidden" id="success_mark" value="{{$exam1->success_mark}}">
-                                 
+
                                 </div>
                                     <div class="col-md-4">
                                 <h4 style="text-align: center;padding-bottom: 20px;color: #152C4F;font-size: 28px;">علامات
@@ -520,7 +520,7 @@
                                                                 {{ $item2->id }}</td>
                                                             <td data-label="اسم الطالب" class="py-1">
                                                                 {{ $item2->first_name }} {{ $item2->last_name }} </td>
-                                                                
+
                                                               <td>
                                                                    @if($item2->student_lesson_teacher_room_term_exam)
                                                                 @if($item2->student_lesson_teacher_room_term_exam->last())
@@ -528,7 +528,7 @@
                                                                     @endif
                                                                      @endif
                                                                 </td>
-                                                               
+
                                                             <td style="padding-bottom:20px"  data-label="العلامة" class="py-1">
                                                                 @if ($item2->exam_result->count() > 0)
                                                                     @foreach ($item2->exam_result as $item3)
@@ -539,7 +539,7 @@
                                                                             <input style="height: 50px; width:94px;" hidden
                                                                                 name="exam_result_id"
                                                                                 value="{{ $item3->id }}" type="text">
-                                                                            <input hidden style="height: 50px; width:94px;"
+                                                                            <input inputmode="decimal" hidden style="height: 50px; width:94px;"
                                                                                 name="mark"
                                                                                 value="{{ $item3->result != null ? $item3->result : '' }}"
                                                                                 onfocus="this.placeholder = ''"
@@ -548,13 +548,13 @@
                                                                                 type="text">
                                                                         @endif
                                                                     @endforeach
-                                                                    <input style="height: 50px; width:94px;" name="mark"
+                                                                    <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"
                                                                         value="" onfocus="this.placeholder = ''"
                                                                         onblur="this.placeholder = ''"
                                                                         class="number_mark common-input mb-20 form-control input2"
                                                                         type="number"min="0.0" max="{{ $exam1->success_mark }}" >
                                                                 @else
-                                                                    <input style="height: 50px; width:94px;" name="mark"
+                                                                    <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"
                                                                         onfocus="this.placeholder = ''"
                                                                         onblur="this.placeholder = ''"
                                                                         class="number_mark common-input mb-20 form-control"
@@ -673,14 +673,14 @@
                 $(this).parent().find('.input2').val(z);
             })
             $(document).on('keyup', '.number_mark', function () {
-    
+
     if(parseInt($(this).val())>parseInt($('#success_mark').val())){
         alert('لايمكن وضع القيمة');
         $(this).val("");
     }
-    
-    
-    
+
+
+
 })
 
 
@@ -745,23 +745,23 @@ $(document).on('click', '.btn11', function() {
                         if (lect == 1) {
                             $('.table1 tbody').empty();
                             $.each(data, function(key, value) {
-                                d = `<input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="{{ $exam1->success_mark }}" min="0.0"  type="number"> `
+                                d = `<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="{{ $exam1->success_mark }}" min="0.0"  type="number"> `
                                 if (value.exam_result.length > 0) {
                                     $.each(value.exam_result, function(key1, value1) {
                                         if (value1.exam_id == home) {
                                             if (value1.result != null) {
                                                 d = `<input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value="${value1.id}" type="number" min="0.0" max="{{ $exam1->success_mark }}">
-                                                    <input   style="height: 50px; width:94px;" name="mark" value="${value1.result}"  data-id="${ value.id }"  min="0.0"  max="{{ $exam1->success_mark }}" class="number_mark common-input mb-20 form-control input1"  type="number">`
+                                                    <input inputmode="decimal"   style="height: 50px; width:94px;" name="mark" value="${value1.result}"  data-id="${ value.id }"  min="0.0"  max="{{ $exam1->success_mark }}" class="number_mark common-input mb-20 form-control input1"  type="number">`
                                             } else {
 
                                                 d = `   <input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value="${value1.id}" type="number" min="0.0" max="{{ $exam1->success_mark }}">
-                                                        <input style="height: 50px; width:94px;" name="mark" value="" data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
+                                                        <input inputmode="decimal" style="height: 50px; width:94px;" name="mark" value="" data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
                                             }
 
                                         }
                                     })
                                 } else {
-                                    d = `<input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
+                                    d = `<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
                                 }
 
                                 var b = [];
@@ -825,13 +825,13 @@ $(document).on('click', '.btn11', function() {
                                             var number = value.student_lesson_teacher_room_term_exam.length - 1;
                                             var timestamp = value.student_lesson_teacher_room_term_exam[number].updated_at;
                                             var date = new Date(timestamp);
-                                           
+
                                             date = `<p>${formatDate(date)}</p>`;
                                         }
-                                        
-                                        
-                                  
-                                  
+
+
+
+
                                 $('.table1 tbody').append(`
                                     <tr  id="st">
                                     <input style="height: 50px; width:60px"  hidden name="class_id"  value="${ class_id }" type="text">
@@ -842,7 +842,7 @@ $(document).on('click', '.btn11', function() {
                                     <td data-label="الرقم التسلسلي"class="py-1">${ value.id }</td>
                                     <td data-label="اسم الطالب" class="py-1">${ value.first_name } ${ value.last_name}</td>
                                      <td>
-                                       ${date}  
+                                       ${date}
                                      </td>
                                     <td data-label="العلامة" class="py-1">${d}</td>
                                     <td data-label="تحميل وظيفة" class="py-1" style="padding-bottom: 60px !important;">${b}</td>
@@ -857,25 +857,25 @@ $(document).on('click', '.btn11', function() {
                                     </button>
                                     </td>
                                     </tr> `)
-                            });       
-                        } else if (lect == 2) {   
-                               
+                            });
+                        } else if (lect == 2) {
+
                             $('.table1 tbody').empty();
                             $.each(data, function(key, value) {
                             d = `<input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value=""  type="text">
-                                <input   style="height: 50px; width:94px;" name="mark" value=""  data-id="${ value.id }"   class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
+                                <input inputmode="decimal"   style="height: 50px; width:94px;" name="mark" value=""  data-id="${ value.id }"   class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
                                 if (value.exam_result.length > 0) {
-                                    $.each(value.exam_result, function(key1, value1) {  
+                                    $.each(value.exam_result, function(key1, value1) {
                                         if (value1.exam_id == home && value1
                                             .user_id == value.id) {
                                             d = `<input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value="${value1.id}" type="number" min="0.0" max="{{ $exam1->success_mark }}">
-                                                <input   style="height: 50px; width:94px;" name="mark" value="${value1.result}"  data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}">`
+                                                <input inputmode="decimal"   style="height: 50px; width:94px;" name="mark" value="${value1.result}"  data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}">`
 
                                         }
                                     })
                                 } else {
                                     d = `<input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value=""  type="text">
-                                        <input   style="height: 50px; width:94px;" name="mark" value=""  data-id="${ value.id }"   class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
+                                        <input inputmode="decimal"   style="height: 50px; width:94px;" name="mark" value=""  data-id="${ value.id }"   class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
                                 }
                                 $('.table1 tbody').append(`<tr  id="st">
                                     <td data-label="الرقم التسلسلي"class="py-1">${ value.id }</td>
@@ -899,23 +899,23 @@ $(document).on('click', '.btn11', function() {
                         else{
                                  $('.table1 tbody').empty();
                             $.each(data, function(key, value) {
-                                d = `<input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="{{ $exam1->success_mark }}" min="0.0"  type="number"> `
+                                d = `<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="{{ $exam1->success_mark }}" min="0.0"  type="number"> `
                                 if (value.exam_result.length > 0) {
                                     $.each(value.exam_result, function(key1, value1) {
                                         if (value1.exam_id == home) {
                                             if (value1.result != null) {
                                                 d = `<input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value="${value1.id}" type="number" min="0.0" max="{{ $exam1->success_mark }}">
-                                                    <input   style="height: 50px; width:94px;" name="mark" value="${value1.result}"  data-id="${ value.id }"  min="0.0"  max="{{ $exam1->success_mark }}" class="number_mark common-input mb-20 form-control input1"  type="number">`
+                                                    <input inputmode="decimal"   style="height: 50px; width:94px;" name="mark" value="${value1.result}"  data-id="${ value.id }"  min="0.0"  max="{{ $exam1->success_mark }}" class="number_mark common-input mb-20 form-control input1"  type="number">`
                                             } else {
 
                                                 d = `   <input style="height: 50px; width:94px;"  hidden name="exam_result_id"  value="${value1.id}" type="number" min="0.0" max="{{ $exam1->success_mark }}">
-                                                        <input style="height: 50px; width:94px;" name="mark" value="" data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
+                                                        <input inputmode="decimal" style="height: 50px; width:94px;" name="mark" value="" data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
                                             }
 
                                         }
                                     })
                                 } else {
-                                    d = `<input style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
+                                    d = `<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  class="number_mark common-input mb-20 form-control input1"  type="number" min="0.0" max="{{ $exam1->success_mark }}"> `
                                 }
 
                                 var b = [];
@@ -980,18 +980,18 @@ $(document).on('click', '.btn11', function() {
                                             if(value.student_lesson_teacher_room_term_exam[number]){
                                                  var timestamp = value.student_lesson_teacher_room_term_exam[number].updated_at;
                                                 var date = new Date(timestamp);
-                                           
+
                                                  date = `<p>${formatDate(date)}</p>`;
                                             }
                                             else{
                                                 var date= `<p> </p>`;
                                             }
-                                           
+
                                         }
-                                        
-                                        
-                                  
-                                  
+
+
+
+
                                 $('.table1 tbody').append(`
                                     <tr  id="st">
                                     <input style="height: 50px; width:60px"  hidden name="class_id"  value="${ class_id }" type="text">
@@ -1002,7 +1002,7 @@ $(document).on('click', '.btn11', function() {
                                     <td data-label="الرقم التسلسلي"class="py-1">${ value.id }</td>
                                     <td data-label="اسم الطالب" class="py-1">${ value.first_name } ${ value.last_name}</td>
                                      <td>
-                                       ${date}  
+                                       ${date}
                                      </td>
                                     <td data-label="العلامة" class="py-1">${d}</td>
                                     <td data-label="تحميل وظيفة" class="py-1" style="padding-bottom: 60px !important;">${b}</td>
@@ -1017,7 +1017,7 @@ $(document).on('click', '.btn11', function() {
                                     </button>
                                     </td>
                                     </tr> `)
-                            });    
+                            });
                         }
                     },
                     error: function(xhr) {

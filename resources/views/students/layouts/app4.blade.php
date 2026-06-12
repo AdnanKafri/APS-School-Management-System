@@ -261,6 +261,15 @@
           </li>
 
             </ul>
+            <div class="student-sidebar-logout d-lg-none">
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="button" class="student-logout-trigger" title="تسجيل خروج">
+                        <i class="mdi mdi-export" aria-hidden="true"></i>
+                        <span>تسجيل خروج</span>
+                    </button>
+                </form>
+            </div>
         </nav>
         <button type="button" class="student-sidebar-backdrop" aria-label="Close menu" tabindex="-1"></button>
 
@@ -831,7 +840,7 @@
                     <li class="nav-item nav-logout d-none d-lg-block">
                         <form action="{{ route('logout') }}" title="تسجيل خروج" method="POST">
                             @csrf
-                            <a id="deletekey" title="تسجيل خروج"
+                            <a id="deletekey" class="student-logout-trigger" title="تسجيل خروج"
                                 style="background: #ffdead00;
                    border: none;">
                                 <i class="mdi mdi-export" title="تسجيل خروج"
@@ -1126,9 +1135,10 @@
 
 
 
-            $(document).on('click', '#deletekey', function() {
+            $(document).on('click', '.student-logout-trigger', function(event) {
+                event.preventDefault();
+                var $trigger = $(this);
 
-                var id = $(this).data('id');
                 var url = "{{ URL::to('SMARMANger/dashboard/student/deletekey_notification') }}";
                 $.ajax({
                     url: url,
@@ -1145,7 +1155,7 @@
 
 
                 });
-                $('#deletekey').closest('form').submit();
+                $trigger.closest('form').submit();
             });
 
             $(document).on('click', '.noti_href', function() {

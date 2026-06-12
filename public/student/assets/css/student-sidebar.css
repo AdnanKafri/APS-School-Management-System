@@ -30,6 +30,8 @@
   }
 
   body.student-portal-body #sidebar.sidebar-offcanvas {
+    display: flex;
+    flex-direction: column;
     top: 60px;
     right: 0 !important;
     left: auto !important;
@@ -41,7 +43,7 @@
     height: calc(100dvh - 60px) !important;
     max-height: none !important;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     visibility: hidden;
@@ -49,6 +51,53 @@
     transform: translate3d(100%, 0, 0);
     transition: transform .24s ease, visibility .24s ease, box-shadow .24s ease;
     will-change: transform;
+  }
+
+  body.student-portal-body #sidebar.sidebar-offcanvas > .nav {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    margin-bottom: 0;
+    padding-bottom: .75rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.student-portal-body .student-sidebar-logout {
+    flex: 0 0 auto;
+    z-index: 2;
+    padding: .5rem .75rem max(.5rem, env(safe-area-inset-bottom));
+    border-top: 1px solid #e4e9f0;
+    background: #fff;
+  }
+
+  body.student-portal-body .student-sidebar-logout form,
+  body.student-portal-body .student-sidebar-logout .student-logout-trigger {
+    width: 100%;
+  }
+
+  body.student-portal-body .student-sidebar-logout .student-logout-trigger {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-height: 48px;
+    padding: .75rem 1rem;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #6a6b83;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  body.student-portal-body .student-sidebar-logout .student-logout-trigger i {
+    flex: 0 0 auto;
+    font-size: 1.35rem;
   }
 
   body.student-portal-body #sidebar.sidebar-offcanvas.active {

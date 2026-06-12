@@ -428,7 +428,7 @@
                                 <span style="color: #444bba;text-align: center;"></span>
                                <div class="Group" style="justify-content: right;">
                                   <label style="text-align: right;">علامة الوظيفة  </label>
-                                  <input name="mark" type="number" class="form-control" placeholder="علامة الوظيفة ">
+                                  <input name="mark" type="number" inputmode="decimal" class="form-control" placeholder="علامة الوظيفة ">
                                </div>
                              </div>
 
