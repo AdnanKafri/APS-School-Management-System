@@ -1027,7 +1027,7 @@ $student_detail->save();
 $user=User::where('student_id',$student->id)->first();
 $user->email=$request->email;
 $user->save();
-return redirect()->back()->with('success','! تمت العملية بنجاح');
+return redirect()->back()->with('success', __('admin.students.notifications.updated'));
 
 }
 
