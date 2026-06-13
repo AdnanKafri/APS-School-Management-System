@@ -88,10 +88,10 @@
                             </td>
                             <td style="vertical-align: initial;">
 
-                                <a class="edit_news btn btn-success btn-sm" data-title_ar="{{ $item->title_ar }}"
+                                <button type="button" class="edit_news btn btn-success btn-sm" data-title_ar="{{ $item->title_ar }}"
                                     data-title_en="{{ $item->title_en }}" data-id="{{ $item->id }}"
-                                    href=".editNewsModal" data-toggle="modal">تعديل</i>
-                                </a>
+                                    >تعديل
+                                </button>
 
                             </td>
 
@@ -122,10 +122,11 @@
 
 
 
-    <div class="modal fade editNewsModal"style="text-align: end;">
-        <div class="modal-dialog">
+    <div class="modal fade editNewsModal v2-dashboard-modal" id="visionEditModal" tabindex="-1"
+        role="dialog" aria-hidden="true" style="text-align: end;">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="form_update" action="{{ route('vision_mission_website.update') }}" method="POST"
+                <form id="vision_update_form" action="{{ route('vision_mission_website.update') }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
 
@@ -135,7 +136,7 @@
                         <h4 class="modal-title">تعديل الرؤية </h4>
                     </div>
                     <div class="modal-body" style="direction:ltr">
-                        <input type="hidden" name="id" id="news_id" value="">
+                        <input type="hidden" name="vision_id" id="vision_id" value="">
 
                         <div class="form-group">
                             <label>العنوان بالعربية</label>
@@ -167,10 +168,11 @@
         </div>
     </div>
 
-    <div class="modal fade createNewsModal" style="text-align: end;">
-        <div class="modal-dialog">
+    <div class="modal fade createNewsModal v2-dashboard-modal" id="visionCreateModal" tabindex="-1"
+        role="dialog" aria-hidden="true" style="text-align: end;">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="form_update" action="{{ route('vision_mission_website.store') }}" method="POST"
+                <form id="vision_create_form" action="{{ route('vision_mission_website.store') }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
 
@@ -255,16 +257,20 @@
 
 
 
+@endsection
+
+@section('js')
     <script>
         $('.alert-success').hide(5000);
+        $(function() {
+            $('.editNewsModal, .createNewsModal, .active_result').appendTo(document.body);
+        });
         $(document).ready(function() {
             $('#table_xx').DataTable({});
         })
         $(document).on('click', '.one', function() {
 
             var id = $(this).data('id');
-            $('.delete_event').attr('href', `{{ route('admin.news.delete') }}`);
-
             $('.delete_event').data('id', id);
 
         });
@@ -287,8 +293,8 @@
 
                     $(`#news_${id}`).remove();
                     $('#success2').show();
-                    document.getElementById('success2').innerText = "Deleted Successfully !";
-                    $('.close').click();
+                    document.getElementById('success2').innerText = @json(__('admin.vision.notifications.deleted'));
+                    $('.active_result').modal('hide');
 
                     $('#success2').hide(5000);
 
@@ -301,27 +307,18 @@
 
 
         });
-
-
-
         $(document).on('click', '.edit_news', function(e) {
-            var id = $(this).data('id');
             e.preventDefault();
 
-            var image = $(this).data('image');
+            var id = this.getAttribute('data-id');
+            if (!id) {
+                return;
+            }
 
-
-
-            $('#news_id').val(id);
-            $('#title_ar').val($(this).data('title_ar'));
-            $('#title_en').val($(this).data('title_en'));
-
-
-
-
-
-
-
+            $('#vision_id').val(id);
+            $('#title_ar').val(this.getAttribute('data-title_ar') || '');
+            $('#title_en').val(this.getAttribute('data-title_en') || '');
+            $('#visionEditModal').modal('show');
         });
     </script>
 

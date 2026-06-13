@@ -226,7 +226,8 @@ class websitecontroller extends Controller
         $video=Video::first();
         $sliders=Slider::
         select('id','header_'.LaravelLocalization::setLocale().
-        ' as header','image','content_'.LaravelLocalization::setLocale().' as content','key_word_'.LaravelLocalization::setLocale().' as key_word')->get();
+        ' as header','image','content_'.LaravelLocalization::setLocale().' as content','key_word_'.LaravelLocalization::setLocale().' as key_word')
+        ->orderBy('id', 'desc')->get();
         $vision=Vision::
         select('id','title_'.LaravelLocalization::setLocale().
         ' as title',)->get();

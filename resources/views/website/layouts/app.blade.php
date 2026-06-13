@@ -67,44 +67,14 @@
 
         return $localMediaExists($cleanPath) ? asset('storage/' . $cleanPath) : $defaultFallback;
     };
-    $sliderImagePool = [];
-    foreach (glob(public_path('storage/sliderimages/*')) ?: [] as $candidate) {
-        if (!is_file($candidate)) {
-            continue;
-        }
-
-        $extension = strtolower((string) pathinfo($candidate, PATHINFO_EXTENSION));
-        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true)) {
-            continue;
-        }
-
-        $sliderImagePool[] = [
-            'mtime' => (int) (@filemtime($candidate) ?: 0),
-            'path' => $candidate,
-            'url' => asset('storage/sliderimages/' . basename($candidate)),
-        ];
-    }
-
-    usort($sliderImagePool, function ($a, $b) {
-        return [$b['mtime'], $b['path']] <=> [$a['mtime'], $a['path']];
-    });
-
-    $sliderImagePool = array_values(array_map(function ($item) {
-        return $item['url'];
-    }, $sliderImagePool));
-
-    $resolveHeroImage = function ($path, $index = 0, $fallback = null) use ($localMediaExists, $resolveImage, $sliderImagePool) {
+    $resolveHeroImage = function ($path, $index = 0, $fallback = null) use ($localMediaExists, $resolveImage) {
         $path = trim((string) $path);
 
         if ($path !== '' && (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://']) || $localMediaExists($path))) {
             return $resolveImage($path, $fallback);
         }
 
-        if (array_key_exists((int) $index, $sliderImagePool)) {
-            return $sliderImagePool[(int) $index];
-        }
-
-        return $resolveImage($path, $fallback);
+        return $fallback ?: $resolveImage('', $fallback);
     };
     $normalizeHeroVideo = function ($url) use ($localMediaExists) {
         $url = trim((string) $url);

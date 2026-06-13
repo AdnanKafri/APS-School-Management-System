@@ -183,13 +183,23 @@
             border-radius: 22px;
             box-shadow: 0 28px 70px rgba(36, 30, 62, .22);
             max-height: calc(100vh - 2.25rem);
+            max-height: calc(100dvh - 2.25rem);
             background: #fff;
+        }
+
+        .slider-modal .modal-content > form {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            max-height: inherit;
+            overflow: hidden;
         }
 
         .slider-modal.v2-dashboard-modal .modal-header,
         .slider-modal.v2-dashboard-modal .modal-footer {
             padding: 1.05rem 1.35rem;
             background: #fafbfe;
+            flex: 0 0 auto;
         }
 
         .slider-modal.v2-dashboard-modal .modal-body {
@@ -197,6 +207,12 @@
             display: flex;
             flex-direction: column;
             gap: .15rem;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
         }
 
         .slider-modal .form-group {
@@ -255,6 +271,19 @@
         }
 
         @media (max-width: 768px) {
+            .slider-modal.v2-dashboard-modal.modal.show {
+                padding: .5rem;
+            }
+
+            .slider-modal.v2-dashboard-modal .modal-dialog {
+                width: calc(100vw - 1rem);
+            }
+
+            .slider-modal.v2-dashboard-modal .modal-content {
+                max-height: calc(100vh - 1rem);
+                max-height: calc(100dvh - 1rem);
+            }
+
             .slider-modal.v2-dashboard-modal .modal-body {
                 padding: 1rem;
             }
@@ -369,35 +398,7 @@
             return false;
         };
 
-        $sliderMediaPool = [];
-        foreach (['sliderimages', 'newsimages'] as $folder) {
-            foreach (glob(public_path('storage/' . $folder . '/*')) ?: [] as $candidate) {
-                if (!is_file($candidate)) {
-                    continue;
-                }
-
-                $extension = strtolower((string) pathinfo($candidate, PATHINFO_EXTENSION));
-                if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true)) {
-                    continue;
-                }
-
-                $sliderMediaPool[] = [
-                    'mtime' => (int) (@filemtime($candidate) ?: 0),
-                    'path' => $candidate,
-                    'url' => asset('storage/' . $folder . '/' . basename($candidate)),
-                ];
-            }
-        }
-
-        usort($sliderMediaPool, function ($a, $b) {
-            return [$b['mtime'], $b['path']] <=> [$a['mtime'], $a['path']];
-        });
-
-        $sliderMediaPool = array_values(array_map(function ($item) {
-            return $item['url'];
-        }, $sliderMediaPool));
-
-        $resolveSliderMediaUrl = function ($path, $index = 0, $fallback = null) use ($localMediaExists, $sliderMediaPool, $sliderFallbackImage) {
+        $resolveSliderMediaUrl = function ($path, $fallback = null) use ($localMediaExists, $sliderFallbackImage) {
             $path = trim((string) $path);
 
             if ($path !== '' && \Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
@@ -405,11 +406,11 @@
             }
 
             if ($path !== '' && $localMediaExists($path)) {
-                return asset('storage/' . ltrim($path, '/'));
-            }
+                if (\Illuminate\Support\Str::startsWith(ltrim($path, '/'), 'storage/')) {
+                    return asset(ltrim($path, '/'));
+                }
 
-            if (array_key_exists((int) $index, $sliderMediaPool)) {
-                return $sliderMediaPool[(int) $index];
+                return asset('storage/' . ltrim($path, '/'));
             }
 
             return $fallback ?: $sliderFallbackImage;
@@ -439,40 +440,28 @@
 
 
         <div class="card-header border-0">
-            <h3 class="mb-0">جدول السلايدر</h3>
+            <h3 class="mb-0">{{ __('admin.slider.title') }}</h3>
         </div>
 
         <div class="table-responsive">
-            <a href=".createNewsModal" class=" btn btn-success" data-toggle="modal" data-id=""><i class="material-icons"
-                    data-toggle="tooltip">إنشاء سلايدر جديد</i></a>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#sliderCreateModal">
+                <i class="material-icons" data-toggle="tooltip">{{ __('admin.slider.create') }}</i>
+            </button>
 
 
             <table class="table align-items-center table-bordered" id="table_xx" style="color: black; text-align:center">
                 <thead class="thead-light">
                     <tr>
                         <!--<th scope="col" class="sort" data-sort="name">Id</th>-->
-                        <th style="text-align: center;
-                    color: black;"> العنوان بالعربي </th>
-                        <th style="text-align: center;
-            color: black;"> العنوان بالانكليزي </th>
-                        <th style="text-align: center;
-                    color: black;"> المحتوى بالعربي </th>
-                        <th style="text-align: center;
-            color: black;"> المحتوى بالانكليزي </th>
-                        <th style="text-align: center;
-                    color: black;"> االكلمة المفتاحية بالعربي </th>
-                        <th style="text-align: center;
-            color: black;"> الكملة المفتاحية بالانكليزي </th>
-
-
-                        <th style="text-align: center;
-                    color: black;"> صورة </th>
-
-                        <th style="text-align: center;
-                    color: black;"> حذف </th>
-
-                        <th style="text-align: center;
-                    color: black;"> تعديل </th>
+                        <th>{{ __('admin.slider.header_ar') }}</th>
+                        <th>{{ __('admin.slider.header_en') }}</th>
+                        <th>{{ __('admin.slider.content_ar') }}</th>
+                        <th>{{ __('admin.slider.content_en') }}</th>
+                        <th>{{ __('admin.slider.keyword_ar') }}</th>
+                        <th>{{ __('admin.slider.keyword_en') }}</th>
+                        <th>{{ __('admin.slider.image') }}</th>
+                        <th>{{ __('admin.slider.delete') }}</th>
+                        <th>{{ __('admin.slider.edit_action') }}</th>
 
                     </tr>
                 </thead>
@@ -522,7 +511,7 @@
 
                             <td>
                                 @php
-                                    $sliderImageUrl = $resolveSliderMediaUrl($item->image, $loop->index);
+                                    $sliderImageUrl = $resolveSliderMediaUrl($item->image);
                                     $sliderImageLabel = $item->header_ar ?: $item->header_en ?: 'Slider image';
                                     $isPlaceholderSlider = \Illuminate\Support\Str::contains($sliderImageUrl, 'noimage.png');
                                 @endphp
@@ -537,18 +526,18 @@
 
                             <td class="delete" style="vertical-align: initial;"> <a
                                     class="delete_news one  btn-sm btn-danger" data-id="{{ $item->id }}"
-                                    href=".active_result" data-toggle="modal"> حذف
+                                    href=".active_result" data-toggle="modal">{{ __('admin.slider.delete') }}
                                 </a>
 
                             </td>
                             <td style="vertical-align: initial;">
 
-                                <a class="edit_news btn btn-success btn-sm" data-header_ar="{{ $item->header_ar }}"
-                                    data-header_en="{{ $item->header_en }}" data-content_ar	="{{ $item->content_ar }}"
+                                <button class="edit_news btn btn-success btn-sm" data-header_ar="{{ $item->header_ar }}"
+                                    data-header_en="{{ $item->header_en }}" data-content_ar="{{ $item->content_ar }}"
                                     data-content_en="{{ $item->content_en }}" data-key_word_ar="{{ $item->key_word_ar }}"
-                                    data-key_word_en="{{ $item->key_word_en }}" data-image-url="{{ $resolveSliderMediaUrl($item->image, $loop->index) }}"
-                                    data-id="{{ $item->id }}" href=".editNewsModal" data-toggle="modal">تعديل</i>
-                                </a>
+                                    data-key_word_en="{{ $item->key_word_en }}" data-image-url="{{ $resolveSliderMediaUrl($item->image) }}"
+                                    data-id="{{ $item->id }}" type="button">{{ __('admin.slider.edit_action') }}
+                                </button>
 
                             </td>
 
@@ -579,50 +568,51 @@
 
 
 
-    <div class="modal fade editNewsModal v2-dashboard-modal slider-modal" style="text-align: end;">
+    <div class="modal fade editNewsModal v2-dashboard-modal slider-modal" id="sliderEditModal" tabindex="-1"
+        role="dialog" aria-hidden="true" style="text-align: end;">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="form_update" action="{{ route('slider.update') }}" method="POST" enctype="multipart/form-data">
+                <form id="slider_update_form" action="{{ route('slider.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="modal-header">
 
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title">تعديل السلايدر </h4>
+                        <h4 class="modal-title">{{ __('admin.slider.edit') }}</h4>
                     </div>
                     <div class="modal-body" style="direction:ltr">
-                        <input type="hidden" name="id" id="news_id" value="">
+                        <input type="hidden" name="slider_id" id="slider_id" value="">
 
                         <div class="form-group">
-                            <label>العنوان بالعربية</label>
+                            <label>{{ __('admin.slider.header_ar') }}</label>
                             <input type="text" id="header_ar" name="header_ar" class="form-control" value=""
                                 maxlength="100" style="direction: rtl" placeholder="">
                         </div>
 
                         <div class="form-group">
-                            <label>العنوان بالإنكليزية</label>
+                            <label>{{ __('admin.slider.header_en') }}</label>
                             <input type="text" id="header_en" name="header_en" class="form-control" value=""
                                 maxlength="100" style="direction: rtl" placeholder="">
                         </div>
                         <div class="form-group">
-                            <label>المحتوى بالعربية</label>
+                            <label>{{ __('admin.slider.content_ar') }}</label>
                             <input type="text" id="content_ar" name="content_ar" class="form-control" value=""
                                 maxlength="100" style="direction: rtl" placeholder="">
                         </div>
 
                         <div class="form-group">
-                            <label>المحتوى بالإنكليزية</label>
+                            <label>{{ __('admin.slider.content_en') }}</label>
                             <input type="text" id="content_en" name="content_en" class="form-control" value=""
                                 maxlength="100" style="direction: rtl" placeholder="">
                         </div>
                         <div class="form-group">
-                            <label>الكلمة المفتاحية بالعربية</label>
+                            <label>{{ __('admin.slider.keyword_ar') }}</label>
                             <input type="text" id="key_word_ar" name="key_word_ar" class="form-control"
                                 value="" maxlength="100" style="direction: rtl" placeholder="">
                         </div>
 
                         <div class="form-group">
-                            <label>الكلمة المفتاحية بالإنكليزية</label>
+                            <label>{{ __('admin.slider.keyword_en') }}</label>
                             <input type="text" id="key_word_en" name="key_word_en" class="form-control"
                                 value="" maxlength="100" style="direction: rtl" placeholder="">
                         </div>
@@ -631,14 +621,14 @@
 
 
                         <div class="form-group slider-media-row">
-                            <label>الصورة</label>
+                            <label>{{ __('admin.slider.image') }}</label>
                             <div class="slider-media-panel">
                                 <input type="hidden" class="del" name="del_img1" value="del_img1" disabled="disabled">
 
                                 <input type="file" name="image" onchange="loadFile_edit(event)"
                                     title=" size:	1350 × 500 px" class="form-control input_image" id="input_edit_image1"
                                     lang="en">
-                                <label class="custom-file-label" for="customFileLang">Select file</label>
+                                <label class="custom-file-label" for="input_edit_image1">{{ __('admin.slider.choose_file') }}</label>
 
                                 <div class="slider-preview-shell">
                                     <div class="slider-preview-frame is-empty" id="edit_slider_preview_frame">
@@ -646,7 +636,7 @@
                                             alt="Slider preview">
                                         <div class="slider-preview-empty" id="edit_slider_empty_state">
                                             <i class="fas fa-image"></i>
-                                            <span>لا توجد صورة</span>
+                                            <span>{{ __('admin.slider.no_image') }}</span>
                                         </div>
                                     </div>
                                     <div class="slider-preview-actions">
@@ -664,57 +654,58 @@
                     </div>
 
                     <div class="modal-footer">
-                        <a class="btn btn-default" data-dismiss="modal">إالغاء</a>
-                        <button class="btn btn-info">تحديث</button>
+                        <a class="btn btn-default" data-dismiss="modal">{{ __('admin.slider.cancel') }}</a>
+                        <button class="btn btn-info">{{ __('admin.slider.update') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade createNewsModal v2-dashboard-modal slider-modal" style="text-align: end;">
+    <div class="modal fade createNewsModal v2-dashboard-modal slider-modal" id="sliderCreateModal" tabindex="-1"
+        role="dialog" aria-hidden="true" style="text-align: end;">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="form_update" action="{{ route('slider.store') }}" method="POST"
+                <form id="slider_create_form" action="{{ route('slider.store') }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
 
                     <div class="modal-header">
 
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title">إنشاء سلايدر جديد</h4>
+                        <h4 class="modal-title">{{ __('admin.slider.create') }}</h4>
                     </div>
                     <div class="modal-body" style="direction:ltr">
                         <div class="form-group">
-                            <label>العنوان بالعربية</label>
+                            <label>{{ __('admin.slider.header_ar') }}</label>
                             <input type="text" name="header_ar" class="form-control" value="" maxlength="100"
                                 style="direction: rtl" placeholder="" required>
                         </div>
 
                         <div class="form-group">
-                            <label>العنوان بالانكليزية</label>
+                            <label>{{ __('admin.slider.header_en') }}</label>
                             <input type="text" name="header_en" class="form-control" value="" maxlength="100"
                                 placeholder="" required>
                         </div>
                         <div class="form-group">
-                            <label>المحتوى بالعربية</label>
+                            <label>{{ __('admin.slider.content_ar') }}</label>
                             <input type="text" name="content_ar" class="form-control" value="" maxlength="100"
                                 style="direction: rtl" placeholder="" required>
                         </div>
 
                         <div class="form-group">
-                            <label>المحتوى بالانكليزية</label>
+                            <label>{{ __('admin.slider.content_en') }}</label>
                             <input type="text" name="content_en" class="form-control" value="" maxlength="100"
                                 placeholder="" required>
                         </div>
                         <div class="form-group">
-                            <label>الكلمة المفتاحية بالعربية</label>
+                            <label>{{ __('admin.slider.keyword_ar') }}</label>
                             <input type="text" name="key_word_ar" class="form-control" value=""
                                 maxlength="100" style="direction: rtl" placeholder="" required>
                         </div>
 
                         <div class="form-group">
-                            <label>الكلمة المفتاحية بالانكليزية</label>
+                            <label>{{ __('admin.slider.keyword_en') }}</label>
                             <input type="text" name="key_word_en" class="form-control" value=""
                                 maxlength="100" placeholder="" required>
                         </div>
@@ -724,11 +715,11 @@
 
 
                         <div class="form-group slider-media-row">
-                            <label>الصورة</label>
+                            <label>{{ __('admin.slider.image') }}</label>
                             <div class="slider-media-panel">
                                 <input type="file" name="image" onchange="loadFile(event)" id="input_image1"
                                     title=" size:	1350 × 500 px" class="input_image form-control" required>
-                                <label class="custom-file-label" for="customFileLang">Select file</label>
+                                <label class="custom-file-label" for="input_image1">{{ __('admin.slider.choose_file') }}</label>
 
                                 <div class="slider-preview-shell">
                                     <div class="slider-preview-frame is-empty" id="create_slider_preview_frame">
@@ -736,7 +727,7 @@
                                             class="output slider-media-preview" alt="">
                                         <div class="slider-preview-empty" id="create_slider_empty_state">
                                             <i class="fas fa-image"></i>
-                                            <span>لم يتم اختيار صورة بعد</span>
+                                            <span>{{ __('admin.slider.no_image_selected') }}</span>
                                         </div>
                                     </div>
                                     <div class="slider-preview-actions">
@@ -756,8 +747,8 @@
                         <br>
                     </div>
                     <div class="modal-footer">
-                        <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                        <button class="btn btn-info">حفظ</button>
+                        <a class="btn btn-default" data-dismiss="modal">{{ __('admin.slider.cancel') }}</a>
+                        <button class="btn btn-info">{{ __('admin.slider.save') }}</button>
                     </div>
 
                 </form>
@@ -781,7 +772,7 @@
                         @csrf
                         @method('delete')
                         <div class="modal-header">
-                            <h6 class="modal-title" id="modal-title-notification">Your attention is required</h6>
+                            <h6 class="modal-title" id="modal-title-notification">{{ __('admin.slider.delete_confirmation_title') }}</h6>
                             <a type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true" class="close">×</span>
                             </a>
@@ -791,16 +782,14 @@
 
                             <div class="py-3 text-center">
                                 <i class="ni ni-bell-55 ni-3x"></i>
-                                <h4 class="heading mt-4">You should read this!</h4>
-                                <p>Are you sure you want to delete the item ?</p>
+                                <p>{{ __('admin.slider.delete_confirmation_text') }}</p>
                             </div>
 
                         </div>
 
                         <div class="modal-footer">
-                            <a class="btn btn-white delete_event" id="delete_event" data-id="" href="">Ok,
-                                Got it</a>
-                            <a class="btn btn-link text-white ml-auto" data-dismiss="modal">Close</a>
+                            <a class="btn btn-white delete_event" id="delete_event" data-id="" href="">{{ __('admin.slider.confirm') }}</a>
+                            <a class="btn btn-link text-white ml-auto" data-dismiss="modal">{{ __('admin.slider.cancel') }}</a>
                         </div>
                     </form>
                 </div>
@@ -811,6 +800,9 @@
 
 
 
+@endsection
+
+@section('js')
     <script>
         $('.alert-success').hide(5000);
         $(function() {
@@ -822,8 +814,6 @@
         $(document).on('click', '.one', function() {
 
             var id = $(this).data('id');
-            $('.delete_event').attr('href', `{{ route('admin.news.delete') }}`);
-
             $('.delete_event').data('id', id);
 
         });
@@ -846,8 +836,8 @@
 
                     $(`#news_${id}`).remove();
                     $('#success2').show();
-                    document.getElementById('success2').innerText = "Deleted Successfully !";
-                    $('.close').click();
+                    document.getElementById('success2').innerText = @json(__('admin.slider.notifications.deleted'));
+                    $('.active_result').modal('hide');
 
                     $('#success2').hide(5000);
 
@@ -864,20 +854,24 @@
 
 
         $(document).on('click', '.edit_news', function(e) {
-            var id = $(this).data('id');
             e.preventDefault();
 
-            var imageUrl = $(this).data('imageUrl') || $(this).data('image-url') || '';
+            var id = this.getAttribute('data-id');
+            var imageUrl = this.getAttribute('data-image-url') || '';
+
+            if (!id || !document.getElementById('sliderEditModal')) {
+                return;
+            }
 
 
 
-            $('#news_id').val(id);
-            $('#header_en').val($(this).data('header_en'));
-            $('#header_ar').val($(this).data('header_ar'));
-            $('#content_en').val($(this).data('content_en'));
-            $('#content_ar').val($(this).data('content_ar'));
-            $('#key_word_en').val($(this).data('key_word_en'));
-            $('#key_word_ar').val($(this).data('key_word_ar'));
+            $('#slider_id').val(id);
+            $('#header_en').val(this.getAttribute('data-header_en') || '');
+            $('#header_ar').val(this.getAttribute('data-header_ar') || '');
+            $('#content_en').val(this.getAttribute('data-content_en') || '');
+            $('#content_ar').val(this.getAttribute('data-content_ar') || '');
+            $('#key_word_en').val(this.getAttribute('data-key_word_en') || '');
+            $('#key_word_ar').val(this.getAttribute('data-key_word_ar') || '');
 
 
             var $editFrame = $('#edit_slider_preview_frame');
@@ -897,7 +891,7 @@
                 $('.editNewsModal .del_icon').hide();
             }
 
-
+            $('#sliderEditModal').modal('show');
 
         });
     </script>

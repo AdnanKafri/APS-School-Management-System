@@ -626,7 +626,6 @@
 
         .v2-dashboard-modal .modal-dialog.modal-dialog-centered {
             min-height: 0;
-            display: block;
         }
 
         .v2-dashboard-modal .modal-content {

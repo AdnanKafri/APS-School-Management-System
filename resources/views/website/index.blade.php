@@ -178,9 +178,7 @@
                         @foreach($orderedClasses as $item)
                             @php
                                 $className = $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name);
-                                $classInfo = $locale === 'ar'
-                                    ? ($item->description_ar ?: $item->description_en)
-                                    : ($item->description_en ?: $item->description_ar);
+                                $classInfo = $item->description;
                                 $classInfo = \Illuminate\Support\Str::limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
                             @endphp
                             <article class="class-marquee-card">
@@ -198,9 +196,7 @@
                         @foreach($orderedClasses as $item)
                             @php
                                 $className = $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name);
-                                $classInfo = $locale === 'ar'
-                                    ? ($item->description_ar ?: $item->description_en)
-                                    : ($item->description_en ?: $item->description_ar);
+                                $classInfo = $item->description;
                                 $classInfo = \Illuminate\Support\Str::limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
                             @endphp
                             <article class="class-marquee-card">

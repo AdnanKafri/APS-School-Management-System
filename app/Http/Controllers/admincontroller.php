@@ -4659,6 +4659,8 @@ return $request->all();
     $slider->header_en = $request->header_en;
     $slider->content_ar= $request->content_ar;
     $slider->content_en= $request->content_en;
+    $slider->key_word_ar = $request->key_word_ar;
+    $slider->key_word_en = $request->key_word_en;
 
 
 
@@ -4676,7 +4678,7 @@ $slider->image = $request->image->store('sliderimages','public');
     }
     $slider->save();
 
-    return redirect()->back()->with('success','! تمت العملية بنجاح');
+    return redirect()->back()->with('success', __('admin.slider.notifications.created'));
 
 }
 
@@ -4687,29 +4689,34 @@ public function slider_update(Request $request){
     $slider = Slider::find($sliderId);
 
     if (!$slider) {
-        return redirect()->back()->with('error', 'Slider not found');
+        return redirect()->back()->with('error', __('admin.slider.notifications.not_found'));
     }
 
     $slider->header_ar = $request->header_ar;
     $slider->header_en = $request->header_en;
     $slider->content_ar= $request->content_ar;
     $slider->content_en= $request->content_en;
+    $slider->key_word_ar = $request->key_word_ar;
+    $slider->key_word_en = $request->key_word_en;
 
 
+
+    $oldImage = $slider->image;
+    $newImage = null;
 
     if ($request->hasFile('image')) {
-
-        if ($slider->image != null) {
-
-            Storage::disk('public')->delete($slider->image);
-        }
-        $slider->image=$request->image->store('sliderimages','public');
+        $newImage = $request->image->store('sliderimages', 'public');
+        $slider->image = $newImage;
     }
 
 
     $slider->save();
 
-    return redirect()->back()->with('success','! تمت العملية بنجاح');
+    if ($newImage && $oldImage && $oldImage !== $newImage) {
+        Storage::disk('public')->delete($oldImage);
+    }
+
+    return redirect()->back()->with('success', __('admin.slider.notifications.updated'));
 
 }
 
@@ -4718,16 +4725,18 @@ public function slider_delete(Request $request){
 
     $slider= Slider::find($request->id);
 
-
-    if ($slider->image != null) {
-
-       Storage::disk('public')->delete($slider->image);
+    if (!$slider) {
+        return redirect()->back()->with('error', __('admin.slider.notifications.not_found'));
     }
 
-
+    $image = $slider->image;
     $slider->delete();
 
-    return redirect()->back()->with('success','! تمت العملية بنجاح ');
+    if ($image) {
+       Storage::disk('public')->delete($image);
+    }
+
+    return redirect()->back()->with('success', __('admin.slider.notifications.deleted'));
 
 }
 
