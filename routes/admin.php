@@ -186,7 +186,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::post('/news/store', 'DashboardController@news_store')->name('news.store');
     Route::get('classes/teacher_lessons/{class_id}', 'DashboardController@teacher_lessons')->name('teacher_lessons');
     Route::get('classes/rooms/{class_id}', 'DashboardController@rooms')->name('rooms');
-    Route::post('students/change', 'DashboardController@student_change')->name('student_change');
+    Route::post('students/change-dashboard', 'DashboardController@student_change')->name('student_change_dashboard_legacy');
     Route::post('students/invoice_store', 'DashboardController@invoice_store')->name('invoice_store');
     Route::post('student/change_lang', 'DashboardController@change_lang')->name('change_lang');
     Route::post('send_message', 'DashboardController@send_message')->name('send_message');

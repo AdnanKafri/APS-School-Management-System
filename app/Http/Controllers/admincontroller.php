@@ -606,20 +606,39 @@ return $a;
 
 public function student_details($student_id){
 
-    $year=Year::where('current_year','1')->first();
-    $student=Student::with(['room'=>fn($q1)=>$q1->where('room_student.year_id',$year->id)])->find($student_id);
-        $room=$student->room;
+    $activeYear = Year::where('current_year','1')->first();
+    $student = Student::with('user')->findOrFail($student_id);
 
-if($room->isEmpty()){
-    return redirect()->back();
-}
+    $contextYear = $activeYear;
+    $room = $student->room()->wherePivot('year_id', $activeYear->id)->get();
 
-$student_mark=Students_mark::where('student_id',$student_id)->where('year_id',$year->id)->first();
+    if ($room->isEmpty()) {
+        $latestEnrollment = Room_student::where('student_id', $student_id)
+            ->orderByDesc('year_id')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($latestEnrollment) {
+            $fallbackYear = Year::find($latestEnrollment->year_id);
+            if ($fallbackYear) {
+                $contextYear = $fallbackYear;
+            }
+
+            $room = $student->room()->wherePivot('year_id', $contextYear->id)->get();
+        }
+    }
+
+    if ($room->isEmpty()) {
+        return redirect()->back();
+    }
+
+    $student->setRelation('room', $room);
+    $student_mark=Students_mark::where('student_id',$student_id)->where('year_id',$contextYear->id)->first();
 
      $lessons=  $room[0]->classes->lessons;
     $classes=Classe::all();
     $class_id= $student->room[0]->classes->id;
-    $rooms=Room::where('class_id',$class_id)->where('year_id',$year->id)->get();
+    $rooms=Room::where('class_id',$class_id)->where('year_id',$contextYear->id)->get();
     $student_detail = Student_detail::where('student_id', $student->id)->first();
     $student_details_departments = Student_details_department::with(['student_details_department_field.student_details_field_value' => function ($q1) use ($student_id) {
         $q1->where('student_id', $student_id);
@@ -5544,270 +5563,8 @@ $applicants=Applicant::where('job_id',$job_id)->delete();
 
         public function student_change(Request $request){
 
-            $year=Year::where('current_year','1')->first();
-            $student_room=Room_student::where('student_id',$request->student_id)
-            ->where('year_id',$year->id)->first();
-
-
-        if($student_room){
-
-
-
-if($student_room->room_id==$request->room_change_id){
-    return redirect()->back()->with('success','لا يوجد اي تعديل !');
-}
-
-
-    $student=Student::find($request->student_id);
-
-
-    $class_id= $student->room()->where('rooms.year_id',$year->id)->first()->class_id;
-
-    if($class_id == $request->class_change_id && $class_id == $request->old_class_id ){
-
-
-    $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->first();
-            $student_room->room_id = $request->room_change_id;
-            $student_room->save();
-
-            $student_mark->room_id= $request->room_change_id;
-              $student_mark->save();
-            return redirect()->back()->with('success','تم تعديل الشعبة الدراسية !');
-
-
-
-
-}
-   }
-            $student_room=Room_student::where('student_id',$request->student_id)
-            ->where('year_id',$year->id)->get();
-                $student_mark=Students_mark::where('student_id',$request->student_id)->where('year_id',$year->id)->get();
-
-            if ($student_room->count() > 0) {
-
-                foreach ($student_room as $item) {
-
-                    $item->delete();
-                    }
-
-                    foreach ($student_mark as $item) {
-
-                        $item->delete();
-                        }
-
-            }
-
-
-            $room_student = new Room_student;
-
-            $room_student->student_id = $request->student_id;
-            $room_student->room_id = $request->room_change_id;
-            $room_student->year_id = $year->id;
-            $room_student->save();
-
-
-
-
-
-
-
-
-            $lessons=Lesson::where('class_id',$request->class_change_id)->get();
-            $object1=new stdClass();
-            foreach($lessons as $item){
-                $object1->{$item->id}['oral']=$request->oral;
-                $object1->{$item->id}['homework']=$request->homework;
-                $object1->{$item->id}['activities']=$request->activities;
-                $object1->{$item->id}['quize']=$request->quize;
-                $object1->{$item->id}['exam']=$request->exam;
-
-
-            }
-
-            $object2=new stdClass();
-            foreach($lessons as $item){
-                $object2->{$item->id}['oral']=$request->oral;
-                $object2->{$item->id}['homework']=$request->homework;
-                $object2->{$item->id}['activities']=$request->activities;
-                $object2->{$item->id}['quize']=$request->quize;
-                $object2->{$item->id}['exam']=$request->exam;
-
-
-            }
-
-            $object_result1=new stdClass();
-
-            foreach($lessons as $item){
-                $object_result1->{$item->id}['term1_quizes']=null;
-                $object_result1->{$item->id}['term1_exam']=null;
-                $object_result1->{$item->id}['term1_result']=null;
-
-            }
-
-
-            $object_result2=new stdClass();
-
-            foreach($lessons as $item){
-                $object_result2->{$item->id}['term2_quizes']=null;
-                $object_result2->{$item->id}['term2_exam']=null;
-                $object_result2->{$item->id}['term2_result']=null;
-
-            }
-
-            $object_result=new stdClass();
-
-            foreach($lessons as $item){
-                $object_result->{$item->id}['year_result']=null;
-
-            }
-
-            $object_result_term=new stdClass();
-
-            $object_result_term->{'term1'}=null;
-            $object_result_term->{'term2'}=null;
-
-
-        Students_mark::create([
-        'student_id'=>$request->student_id,
-        'room_id'=>$request->room_change_id,
-        'year_id'=>$year->id,
-        'mark'=>json_encode($object1),
-        'mark2'=>json_encode($object2),
-        'result1'=>json_encode($object_result1),
-        'result2'=>json_encode($object_result2),
-        'result'=>json_encode($object_result),
-        'term_result'=>json_encode($object_result_term),
-
-        'status'=>'1',
-        'lang'=>$student->lang,
-    ]);
-
-
-
-
-    if ($student->lang=='0') {
-        $lessons=Lesson::where('class_id',$request->class_change_id)->where('lang','1')->get();
-
-    }elseif($student->lang=='1'){
-        $lessons=Lesson::where('class_id',$request->class_change_id)->where('lang','0')->get();
-
-    }
-
-
-    foreach($lessons as $lesson){
-
-        if ($lesson->lang!=null) {
-
-            $student_mark=Students_mark::where('student_id',$student->id)->where('lang',$student->lang)->where('year_id',$year->id)->first();
-
-
-
-
-                 $arr1= json_decode($student_mark->mark,true) ;
-                  $arr2= json_decode($student_mark->mark2,true) ;
-                 $arr_result1= json_decode($student_mark->result1,true) ;
-                 $arr_result2= json_decode($student_mark->result2,true) ;
-                 $arr_result= json_decode($student_mark->result,true) ;
-
-                    if(array_key_exists($lesson->id,$arr1)=='1'){
-
-                       unset($arr1[$lesson->id]);
-
-                       $student_mark->mark=json_encode($arr1);
-
+            return app(\App\Services\StudentTransferService::class)->handle($request);
         }
-
-                                if(array_key_exists($lesson->id,$arr2)){
-
-                       unset($arr2[$lesson->id]);
-                       $student_mark->mark2=json_encode($arr2);
-
-                    }
-
-
-                                            if(array_key_exists($lesson->id,$arr_result1)){
-
-                       unset($arr_result1[$lesson->id]);
-                       $student_mark->result1=json_encode($arr_result1);
-
-                    }
-
-                                            if(array_key_exists($lesson->id,$arr_result2)){
-
-                       unset($arr_result2[$lesson->id]);
-                       $student_mark->result2=json_encode($arr_result2);
-
-                    }
-
-                                            if(array_key_exists($lesson->id,$arr_result)){
-
-                       unset($arr_result[$lesson->id]);
-                       $student_mark->result=json_encode($arr_result);
-
-                    }
-
-
-                                    $student_mark->save();
-
-                 $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->first();
-
-                            $result_term1=0;
-                                                $result_term2=0;
-
-                $count1=0;
-                        $count2=0;
-
-                foreach( json_decode($student_mark->result1,true) as $key1=>$value1){
-
-                    $result_term1=$result_term1+$value1['term1_result'];
-                    $count1++;
-
-                }
-                        foreach( json_decode($student_mark->result2,true) as $key1=>$value1){
-
-                    $result_term2=$result_term2+$value1['term2_result'];
-                    $count2++;
-
-                }
-
-                $objec_term_result=json_decode($student_mark->term_result,true);
-                $objec_term_result['term1'] = $result_term1!=0 ?$result_term1/$count1 : "0" ;
-                $objec_term_result['term2'] = $result_term2!=0 ?$result_term2/$count2 : "0" ;
-
-                    $student_mark->term_result=json_encode($objec_term_result);
-                                    $student_mark->save();
-                 $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->first();
-
-
-                $year_result=(json_decode($student_mark->term_result,true)['term1']
-                        +json_decode($student_mark->term_result,true)['term2'])/2;
-
-        $student_mark->year_result= $year_result;
-        $student_mark->save();
-
-
-
-
-    }
-
-
-            }
-
-
-
-
-
-
-            return redirect()->back()->with('success','! تمت العملية بنجاح');
-
-        }
-
-
-
-
-
-
-
 
         public function student_archive($student_id){
 

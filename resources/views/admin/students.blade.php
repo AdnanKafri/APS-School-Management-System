@@ -929,6 +929,10 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
 
                                     <input type="hidden" name="year_id" id="years" value={{$year2->id}}>
 
+                                    <div class="alert alert-info text-right" style="direction: rtl;">
+                                        {{ __('student_transfer.notice') }}
+                                    </div>
+
                                     <!--<div class="form-group">-->
                                     <!--    <label>From Year</label>-->
 
@@ -1495,6 +1499,10 @@ error: function (xhr) {
 
 $(document).on('click','.change_student',function(){
 
+        $('#mydivclass').empty();
+        $('#mydivroom').empty();
+        $('#option-1').prop('checked', true);
+        $('#option-2').prop('checked', false);
         $('#student_id').val($(this).data('id'));
 
         var student_id = $(this).data('id');
@@ -1518,6 +1526,15 @@ error: function (xhr) {
 
 
 
+    });
+
+    $('.changeStudentModal').on('hidden.bs.modal', function () {
+        $('#student_id').val('');
+        $('#old_class_id2').val('');
+        $('#mydivclass').empty();
+        $('#mydivroom').empty();
+        $('#option-1').prop('checked', true);
+        $('#option-2').prop('checked', false);
     });
 
 

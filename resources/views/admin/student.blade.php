@@ -1173,6 +1173,10 @@ $about = \App\Other::find(1);
 
                     <input type="hidden" name="year_id" id="years" value={{$year2->id}}>
 
+                    <div class="alert alert-info text-right" style="direction: rtl;">
+                        {{ __('student_transfer.notice') }}
+                    </div>
+
                     <div class="wrapper">
                         <input type="radio" name="select" id="option-1" value="0" checked>
                         <input type="radio" name="select" id="option-2" value="1">
@@ -1828,6 +1832,8 @@ if($('#hidden_student_phone').val()==1){
                     <i class="fas fa-ellipsis-v"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow ">
+        <a href=".changeStudentModal" class="dropdown-item change_student" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" style="
+                    direction: ltr;"><i class="fa fa-random"></i>{{ __('student_transfer.change_action') }}</a>
         <a href=".financialaccountModal" class="dropdown-item financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.room[0] != null ? full.room[0].classes.id : '0' }" style="
                     direction: ltr;"><i class="fa fa-folder"></i>الحساب المالي</a>
                     
@@ -1979,6 +1985,8 @@ else{
                     <i class="fas fa-ellipsis-v"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow ">
+        <a href=".changeStudentModal" class="dropdown-item change_student" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" style="
+                    direction: ltr;"><i class="fa fa-random"></i>{{ __('student_transfer.change_action') }}</a>
 
         <a href=".financialaccountModal" class="dropdown-item financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.room[0] != null ? full.room[0].classes.id : '0' }" style="
                     direction: ltr;"><i class="fa fa-folder"></i>الحساب المالي</a>
@@ -2291,7 +2299,7 @@ $.ajax({
                 var type = `
                 <label>الشعبة</label>
 
-                <select name="rooms" id="" class="form-control dep"
+                <select name="room_change_id" id="" class="form-control dep"
                     style="min-height: 36px;direction:rtl" required>
                     <option value="">اختر الشعبة الدراسية</option>
 
@@ -2339,6 +2347,10 @@ $.ajax({
 
     $(document).on('click', '.change_student', function () {
 
+        $('#mydivclass').empty();
+        $('#mydivroom').empty();
+        $('#option-1').prop('checked', true);
+        $('#option-2').prop('checked', false);
         $('#student_id').val($(this).data('id'));
 
         var student_id = $(this).data('id');
@@ -2358,6 +2370,15 @@ $.ajax({
 
         });
 
+    });
+
+    $('.changeStudentModal').on('hidden.bs.modal', function () {
+        $('#student_id').val('');
+        $('#old_class_id2').val('');
+        $('#mydivclass').empty();
+        $('#mydivroom').empty();
+        $('#option-1').prop('checked', true);
+        $('#option-2').prop('checked', false);
     });
 
 
@@ -2522,5 +2543,3 @@ $(document).on('click', '.financial_account', function () {
 
 
 @endsection
-
-
