@@ -486,10 +486,18 @@ class studentscontroller extends Controller
         $student_id = auth()->user()->student_id;
         $year = Year::where('current_year', '1')->first();
         $student = Student::with('details')->find($student_id);
-        $item = Room_student::where('student_id', $student_id)->where('year_id', $year->id)->first();
-        if ($item == "") {
+        $roomStudentQuery = Room_student::where('student_id', $student_id);
+        $item = $year ? (clone $roomStudentQuery)->where('year_id', $year->id)->first() : null;
 
-            return redirect()->back();
+        if (!$item) {
+            $item = (clone $roomStudentQuery)->orderByDesc('year_id')->orderByDesc('id')->first();
+            if ($item && (!$year || (int) $item->year_id !== (int) $year->id)) {
+                $year = Year::find($item->year_id) ?? $year;
+            }
+        }
+
+        if (!$item) {
+            return redirect()->route('website.login');
         }
 
         //  $room = Room::with('lessons3')->find($item->room_id);
@@ -2986,18 +2994,27 @@ class studentscontroller extends Controller
 
     public function student_exam()
     {
+        $year = Year::where('current_year', '1')->first();
+        $student = Student::findOrFail(auth()->user()->student_id);
 
-          $year = Year::where('current_year', '1')->first();
+        // Prefer the active-year enrollment, but keep the portal usable when
+        // the active year has not yet received this student's enrollment.
+        $room = $year
+            ? $student->room()->where('rooms.year_id', $year->id)->first()
+            : null;
 
-        $student = Student::find(auth()->user()->student_id);
+        if (!$room) {
+            $room = $student->room()
+                ->orderByDesc('rooms.year_id')
+                ->orderByDesc('rooms.id')
+                ->first();
+        }
 
-         $room = $student->room->where('year_id', $year->id)->first();
-         if (!$room) {
- 
+        if (!$room) {
             return redirect()->back();
         }
-         $room_id = $room->id;
-        $room = $student->room()->where('rooms.year_id', $year->id)->first();
+
+        $room_id = $room->id;
         $class = $room->classes;
         $school_data = School_data::first();
         return view('students.student_exam', compact('school_data','student', 'class', 'room', 'room_id'));

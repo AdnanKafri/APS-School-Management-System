@@ -146,15 +146,30 @@
 @endphp
 @php
     $year = DB::table('years')->where('current_year', '1')->first();
-    $room = $student
-        ->room()
-        ->where('rooms.year_id', $year->id)
-        ->first();
-    $class = $room->classes;
-    $report_card_details = DB::table('report_card_details')
-        ->where('year_id', $year->id)
-        ->where('class_id', $class->id)
-        ->first();
+    $room = $room ?? null;
+    if (!$room && $year) {
+        $room = $student
+            ->room()
+            ->where('rooms.year_id', $year->id)
+            ->first();
+    }
+    if (!$room) {
+        $room = $student
+            ->room()
+            ->orderByDesc('rooms.year_id')
+            ->orderByDesc('rooms.id')
+            ->first();
+    }
+
+    $room_id = $room_id ?? optional($room)->id;
+    $class = optional($room)->classes;
+    $report_card_details = null;
+    if ($year && $class) {
+        $report_card_details = DB::table('report_card_details')
+            ->where('year_id', $year->id)
+            ->where('class_id', $class->id)
+            ->first();
+    }
 
 @endphp
 @php

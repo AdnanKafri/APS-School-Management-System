@@ -170,51 +170,56 @@ class websitecontroller extends Controller
 
 
     public function login1(Request $request){
-    $input = $request->all();
     $request->validate([
         'email' => 'required',
         'password' => 'required',
     ]);
+
     $credentials = $request->only('email', 'password');
 
-    if(auth()->attempt(array('email' => $input['email'], 'password' => $input['password'])))
-        {
-           if(auth()->user()->type=='4'){
-                return redirect('SMARMANger/dashboard/coordinator');
+    if (auth()->attempt($credentials, (bool) $request->get('remember'))) {
+        $request->session()->regenerate();
 
-            }
-             if(auth()->user()->type=='5'){
-                return redirect('SMARMANger/dashboard/acadsupervisor');
-
-            }
-            
-                       if(auth()->user()->type=='6'){
-                 return redirect('ADHAMMANger/dashboard/administrator');
-
-            }
-            
-                               if(auth()->user()->type=='7'){
-                 return redirect('ADHAMMANger/dashboard/employeeAdmin');
-
-            }
-            
-           $user = Auth::getProvider()->retrieveByCredentials($credentials);
-           Auth::login($user, $request->get('remember'));
-
-
-
-           return redirect('SMARMANger/teacher');
-
-
-
-
+        $redirectPath = $this->websiteLoginRedirectPath(auth()->user());
+        if ($redirectPath !== null) {
+            return redirect($redirectPath);
         }
-        else {
-            session()->flash('error', '  ');
 
-        return redirect()->back()->with('error',' البريد الالكتروني وكلمة السر غير متطابقين ... ') ;
-        }
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->back()->with('error', 'Unable to determine the account destination.');
     }
+
+    session()->flash('error', '  ');
+
+    return redirect()->back()->with('error',' البريد الالكتروني وكلمة السر غير متطابقين ... ') ;
+}
+
+protected function websiteLoginRedirectPath($user)
+{
+    switch ((string) $user->type) {
+        case '0':
+            return 'SMARMANger/dashboard/student';
+        case '1':
+            return 'SMARMANger/teacher';
+        case '2':
+            return 'SMT/admin/index';
+        case '3':
+            return 'SMARMANger/dashboard/supervisor';
+        case '4':
+            return 'SMARMANger/dashboard/coordinator';
+        case '5':
+            return 'SMARMANger/dashboard/acadsupervisor';
+        case '6':
+            return 'ADHAMMANger/dashboard/administrator';
+        case '7':
+            return 'ADHAMMANger/dashboard/employeeAdmin';
+        default:
+            return null;
+    }
+}
     public function index(){
 
 

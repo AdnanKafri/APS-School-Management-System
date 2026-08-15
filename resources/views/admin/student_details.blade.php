@@ -133,8 +133,24 @@
         row-gap: 1rem;
     }
 
-    .student-details-v2 .student-details-shell .card-body > .btn-danger {
-        margin-bottom: 1rem;
+    .student-details-v2 .student-details-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .student-details-v2 .student-details-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        min-width: 190px;
+        margin: 0 !important;
+        text-align: center;
+        white-space: nowrap;
     }
 
     .student-details-v2 .btn {
@@ -162,6 +178,14 @@
     .student-details-v2 .btn-default,
     .student-details-v2 .btn-secondary {
         color: #2f2b3a !important;
+    }
+
+    @media (max-width: 575.98px) {
+        .student-details-v2 .student-details-actions .btn {
+            flex: 1 1 100%;
+            width: 100%;
+            min-width: 0;
+        }
     }
 
     .student-details-v2 .form-control,
@@ -202,6 +226,73 @@
         border-color: rgba(91, 75, 138, 0.12);
     }
 
+    .student-details-v2 .wrapper {
+        display: inline-flex;
+        width: 100%;
+        gap: .75rem;
+        margin: 0 0 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .student-details-v2 .wrapper .option {
+        background: #fff;
+        min-width: 155px;
+        border-radius: 14px;
+        padding: .85rem 1rem;
+        border: 1px solid rgba(91, 75, 138, 0.18);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .65rem;
+        transition: all .2s ease;
+    }
+
+    .student-details-v2 .wrapper input[type="radio"] {
+        display: none;
+    }
+
+    .student-details-v2 .wrapper .option .dot {
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        border: 2px solid rgba(91, 75, 138, 0.28);
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .student-details-v2 .wrapper .option .dot::before {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border-radius: 50%;
+        background: transparent;
+        transition: background .2s ease;
+    }
+
+    .student-details-v2 .wrapper .option span {
+        font-weight: 700;
+        color: #2f2b3a;
+    }
+
+    .student-details-v2 #option-1:checked ~ .option-1,
+    .student-details-v2 #option-2:checked ~ .option-2 {
+        border-color: #5B4B8A;
+        box-shadow: 0 10px 24px rgba(91, 75, 138, 0.16);
+        background: rgba(91, 75, 138, 0.06);
+    }
+
+    .student-details-v2 #option-1:checked ~ .option-1 .dot,
+    .student-details-v2 #option-2:checked ~ .option-2 .dot {
+        border-color: #5B4B8A;
+    }
+
+    .student-details-v2 #option-1:checked ~ .option-1 .dot::before,
+    .student-details-v2 #option-2:checked ~ .option-2 .dot::before {
+        background: #5B4B8A;
+    }
+
     @media (max-width: 991.98px) {
         .v2-content-wrap > .v2-card:first-of-type > div {
             padding: .95rem 1rem !important;
@@ -238,6 +329,14 @@
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
             aria-hidden="true">&times;</span></button>
     {{ session()->get('success') }}
+</div>
+@endif
+
+@if(session()->has('warning'))
+<div class="alert alert-warning alert-dismissible" role="alert" style="text-align: right; font-size: 22px">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+            aria-hidden="true">&times;</span></button>
+    {{ session()->get('warning') }}
 </div>
 @endif
 
@@ -314,8 +413,15 @@
 
 
             <div class="card-body" style="text-align:right">
-                <a class="btn btn-danger" data-target="#change_password" data-toggle="modal" style="color:white;"> تغيير
-                    كلمة المرور </a>
+                <div class="student-details-actions">
+                    <a class="btn btn-danger" data-target="#change_password" data-toggle="modal" style="color:white;"> تغيير
+                        كلمة المرور </a>
+                    <a class="btn btn-success change_student" data-target=".changeStudentModal" data-toggle="modal"
+                        data-id="{{ $student->id }}" data-name="{{ $student->first_name }} {{ $student->last_name }}"
+                        style="color:white;">
+                        {{ __('student_transfer.change_action') }}
+                    </a>
+                </div>
                 <form method="post" action="{{ route('student_update',$student->id) }}" enctype="multipart/form-data">
                     @csrf
                     @method('post')
@@ -1935,6 +2041,66 @@
 
 
 
+<div class="modal fade changeStudentModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('student_change') }}" enctype="multipart/form-data">
+                @csrf
+
+                <div class="modal-header">
+                    <h5 class="modal-title" style="font-weight: bold; font-size: 20px">
+                        {{ $student->first_name }} {{ $student->last_name }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="student_id" id="student_id" value="{{ $student->id }}">
+                    <input type="hidden" name="old_class_id" id="old_class_id2"
+                        value="{{ optional($student->room->first())->class_id }}">
+                    <input type="hidden" name="year_id" id="years" value="{{ optional($activeYear)->id }}">
+
+                    <div class="alert alert-info text-right" style="direction: rtl;">
+                        {{ __('student_transfer.notice') }}
+                    </div>
+
+                    <div class="wrapper">
+                        <input type="radio" name="select" id="option-1" value="0" checked>
+                        <input type="radio" name="select" id="option-2" value="1">
+                        <label for="option-1" class="option option-1">
+                            <div class="dot"></div>
+                            <span>راسب</span>
+                        </label>
+                        <label for="option-2" class="option option-2">
+                            <div class="dot"></div>
+                            <span>ناجح</span>
+                        </label>
+                    </div>
+                    <div id="mydivclass">
+                        <br>
+                        <div class="form-group" style="text-align:right">
+                            <label>الصف</label>
+                            <select name="class_change_id" id="classes_change" class="form-control dep"
+                                onchange="renderStudentTransferRooms(this.value)"
+                                style="min-height: 36px;direction: rtl" required>
+                                <option value="">اختر الصف الدراسي</option>
+                                @foreach ($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="mydivroom" style="text-align:right"></div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-default" data-dismiss="modal">إلغاء</a>
+                    <button class="btn btn-info" type="submit">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <script src="{{ asset('students/js/jquery-3.2.1.min.js') }}"></script>
 
 
@@ -2087,10 +2253,52 @@
 </script>
 
 <script>
+    window.transferRoomsByClass = @json(
+        $transferRooms
+            ->groupBy('class_id')
+            ->map(function ($rooms) {
+                return $rooms->map(function ($room) {
+                    return ['id' => $room->id, 'name' => $room->name];
+                })->values();
+            })
+    );
+
+    window.renderStudentTransferRooms = function (classId) {
+        $('#mydivroom').empty();
+
+        if (!classId || !window.transferRoomsByClass[classId] || window.transferRoomsByClass[classId].length === 0) {
+            return;
+        }
+
+        var type = `
+            <label>الشعبة</label>
+
+            <select name="room_change_id" class="form-control dep"
+                style="min-height: 36px;direction:rtl" required>
+                <option value="">اختر الشعبة الدراسية</option>
+
+                `;
+
+        $.each(window.transferRoomsByClass[classId], function (key, value) {
+            type += `<option value="${value.id}">${value.name}</option>`;
+        });
+
+        type += `
+                </select>
+                      `;
+        $('#mydivroom').append(type);
+    };
+</script>
+
+<script>
     $(document).ready(function () {
-
-
-
+        $('.changeStudentModal').on('hidden.bs.modal', function () {
+            $('#student_id').val('{{ $student->id }}');
+            $('#classes_change').val('');
+            $('#mydivroom').empty();
+            $('#option-1').prop('checked', true);
+            $('#option-2').prop('checked', false);
+        });
         $(document).on('change', '#classes', function () {
             var class_id = $(this).val();
 
@@ -2147,6 +2355,3 @@
 
 </div>
 @endsection
-
-
-
