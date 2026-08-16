@@ -73,6 +73,11 @@ class Student extends Authenticatable
         return $this->hasMany(Students_mark::class,'student_id','id');
     }
 
+    public function academicPlacements()
+    {
+        return $this->hasMany(StudentAcademicPlacement::class, 'student_id')->orderByDesc('year_id')->orderByDesc('id');
+    }
+
     public function user(){
         return $this->hasOne(User::class,'student_id');
     }

@@ -2063,24 +2063,11 @@
                         {{ __('student_transfer.notice') }}
                     </div>
 
-                    <div class="wrapper">
-                        <input type="radio" name="select" id="option-1" value="0" checked>
-                        <input type="radio" name="select" id="option-2" value="1">
-                        <label for="option-1" class="option option-1">
-                            <div class="dot"></div>
-                            <span>راسب</span>
-                        </label>
-                        <label for="option-2" class="option option-2">
-                            <div class="dot"></div>
-                            <span>ناجح</span>
-                        </label>
-                    </div>
                     <div id="mydivclass">
                         <br>
                         <div class="form-group" style="text-align:right">
                             <label>الصف</label>
                             <select name="class_change_id" id="classes_change" class="form-control dep"
-                                onchange="renderStudentTransferRooms(this.value)"
                                 style="min-height: 36px;direction: rtl" required>
                                 <option value="">اختر الصف الدراسي</option>
                                 @foreach ($classes as $class)
@@ -2101,7 +2088,7 @@
 </div>
 
 
-<script src="{{ asset('students/js/jquery-3.2.1.min.js') }}"></script>
+<script src="{{ asset('assets/js/jquery-3.2.1.min.js') }}"></script>
 
 
 
@@ -2253,41 +2240,28 @@
 </script>
 
 <script>
-    window.transferRoomsByClass = @json(
-        $transferRooms
-            ->groupBy('class_id')
-            ->map(function ($rooms) {
-                return $rooms->map(function ($room) {
-                    return ['id' => $room->id, 'name' => $room->name];
-                })->values();
-            })
-    );
-
-    window.renderStudentTransferRooms = function (classId) {
+    $(document).on('change', '#classes_change', function () {
         $('#mydivroom').empty();
-
-        if (!classId || !window.transferRoomsByClass[classId] || window.transferRoomsByClass[classId].length === 0) {
+        var classId = $(this).val();
+        var yearId = $('#years').val();
+        if (!classId || !yearId) {
             return;
         }
-
-        var type = `
-            <label>الشعبة</label>
-
-            <select name="room_change_id" class="form-control dep"
-                style="min-height: 36px;direction:rtl" required>
-                <option value="">اختر الشعبة الدراسية</option>
-
-                `;
-
-        $.each(window.transferRoomsByClass[classId], function (key, value) {
-            type += `<option value="${value.id}">${value.name}</option>`;
+        $.get("{{ URL::to('SMT/admin/classes/rooms2') }}/" + classId + "/" + yearId, function (data) {
+            if (!data.length) {
+                $('#mydivroom').html('<div class="alert alert-warning text-right">لا توجد شعب متاحة لهذا الصف في العام الدراسي النشط.</div>');
+                return;
+            }
+            var type = '<label>الشعبة</label>';
+            type += '<select name="room_change_id" class="form-control dep" style="min-height: 36px;direction:rtl" required>';
+            type += '<option value="">اختر الشعبة الدراسية</option>';
+            $.each(data, function (key, value) {
+                type += '<option value="' + value.id + '">' + value.name + '</option>';
+            });
+            type += '</select>';
+            $('#mydivroom').append(type);
         });
-
-        type += `
-                </select>
-                      `;
-        $('#mydivroom').append(type);
-    };
+    });
 </script>
 
 <script>
@@ -2296,8 +2270,6 @@
             $('#student_id').val('{{ $student->id }}');
             $('#classes_change').val('');
             $('#mydivroom').empty();
-            $('#option-1').prop('checked', true);
-            $('#option-2').prop('checked', false);
         });
         $(document).on('change', '#classes', function () {
             var class_id = $(this).val();

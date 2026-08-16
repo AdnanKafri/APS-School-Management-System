@@ -113,6 +113,8 @@ Route::get('dashboard/student/electronic_files/{id}', 'studentscontroller@studen
   Route::get('dashboard/new22/{id}', 'studentscontroller@new2')->name('new22');
 
   Route::get('dashboard/student_exam', 'studentscontroller@student_exam')->name('student_exam');
+  Route::get('dashboard/student/academic-record', 'studentscontroller@academic_record')->name('dashboard.student.academic_record');
+  Route::get('dashboard/student/academic-record/{placement_id}', 'studentscontroller@academic_record_show')->name('dashboard.student.academic_record.show');
   Route::get('dashboard/student/view/report/card', 'studentscontroller@student_view_report_card')->name('student_view_report_card');
   Route::post('dashboard/student/add_payment_receipts', 'studentscontroller@add_payment_receipts')->name('add_payment_receipts');
   Route::get('dashboard/student/payment_receipts_last', 'studentscontroller@payment_receipts_last')->name('payment_receipts_last');

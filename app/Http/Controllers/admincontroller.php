@@ -640,9 +640,6 @@ public function student_details($student_id){
     $class_id= $student->room[0]->classes->id;
     $rooms=Room::where('class_id',$class_id)->where('year_id',$contextYear->id)->get();
     $student_detail = Student_detail::where('student_id', $student->id)->first();
-    $transferRooms = $activeYear
-        ? Room::where('year_id', $activeYear->id)->select('id', 'name', 'class_id')->orderBy('name')->get()
-        : collect();
     $student_details_departments = Student_details_department::with(['student_details_department_field.student_details_field_value' => function ($q1) use ($student_id) {
         $q1->where('student_id', $student_id);
     }])->get();
@@ -659,7 +656,7 @@ public function student_details($student_id){
     }
 
     // $rooms=
-     return view('admin.student_details',compact('student_details_departments','country_currency','student','student_mark','lessons','classes','rooms','student_detail','activeYear','transferRooms'));
+     return view('admin.student_details',compact('student_details_departments','country_currency','student','student_mark','lessons','classes','rooms','student_detail','activeYear'));
 
 }
 

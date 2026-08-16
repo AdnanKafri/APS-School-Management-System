@@ -121,7 +121,7 @@
         ->where('type', 0)
         ->count();
     $scheduleController = new App\Http\Controllers\studentscontroller();
-    $available_lecture = $scheduleController->available_schedule($room_id, $student->id);
+    $available_lecture = $room_id ? $scheduleController->available_schedule($room_id, $student->id) : collect();
 
 @endphp
 @php
@@ -250,15 +250,24 @@
                         <span class="menu-title">الامتحانات</span>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('dashboard.student.academic_record') }}">
+                        <i class="mdi mdi-school menu-icon"></i>
+                        <span class="menu-title">السجل الأكاديمي</span>
+                    </a>
+                </li>
                 
   
            
+                @if ($class)
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('student.book', $class->id) }}">
                         <i class="mdi mdi-book-multiple menu-icon"></i>
                         <span class="menu-title">الكتب المدرسية</span>
                     </a>
                 </li>
+                @endif
         
                          <li class="nav-item lesson11">
             <a class="nav-link" href="{{ route('dashboard.student.medical_profile', [$room_id, $student->id]) }}">

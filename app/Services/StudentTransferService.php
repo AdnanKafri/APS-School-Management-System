@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Classe;
+use App\Certificate;
 use App\Exam_file;
 use App\Exam_result;
 use App\Exam_result2;
@@ -11,6 +12,7 @@ use App\Report_card;
 use App\Room;
 use App\Room_student;
 use App\Student;
+use App\StudentAcademicPlacement;
 use App\Students_mark;
 use App\Year;
 use Illuminate\Http\RedirectResponse;
@@ -72,6 +74,7 @@ class StudentTransferService
 
         $currentMarks = Students_mark::where('student_id', $student->id)
             ->where('year_id', $year->id)
+            ->where('room_id', $currentRoom->id)
             ->orderBy('id')
             ->get();
 
@@ -81,6 +84,7 @@ class StudentTransferService
 
         $currentReportCards = Report_card::where('student_id', $student->id)
             ->where('year_id', $year->id)
+            ->where('room_id', $currentRoom->id)
             ->orderBy('id')
             ->get();
 
@@ -92,9 +96,9 @@ class StudentTransferService
         $currentReportCard = $currentReportCards->first();
         $currentClassId = (int) $currentRoom->class_id;
         $targetClassId = (int) $targetClass->id;
-        $hasRoomBoundAcademicActivity = $this->hasRoomBoundAcademicActivity($student->id, (int) $currentRoom->id);
-
-        if ($currentClassId !== $targetClassId && $hasRoomBoundAcademicActivity) {
+        if ($this->hasUnscopedAcademicActivity($student->id, $year->id)
+            || ($this->hasMeaningfulMarkData($currentMark) && !$this->recordBelongsToRoom($currentMark, $currentRoom->id))
+            || ($this->hasMeaningfulReportCardData($currentReportCard) && !$this->recordBelongsToRoom($currentReportCard, $currentRoom->id))) {
             return $this->warning('student_transfer.validation.transfer_existing_assessments');
         }
 
@@ -109,23 +113,47 @@ class StudentTransferService
                 $currentEnrollment,
                 $currentMark,
                 $currentReportCard,
-                $currentRoom,
-                $hasRoomBoundAcademicActivity
+                $currentRoom
             ) {
-                if ($currentClassId === $targetClassId) {
-                    $this->applySameClassRoomTransfer(
-                        $student->id,
-                        (int) $currentRoom->id,
-                        $currentEnrollment,
-                        $currentMark,
-                        $currentReportCard,
-                        $targetRoom,
-                        $targetClassId,
-                        $hasRoomBoundAcademicActivity
-                    );
+                $currentPlacement = StudentAcademicPlacement::where('student_id', $student->id)
+                    ->where('year_id', $year->id)
+                    ->where('status', 'active')
+                    ->orderByDesc('id')
+                    ->lockForUpdate()
+                    ->first();
 
-                    return;
+                if (!$currentPlacement) {
+                    $currentPlacement = StudentAcademicPlacement::create([
+                        'student_id' => $student->id,
+                        'year_id' => $year->id,
+                        'class_id' => $currentClassId,
+                        'room_id' => $currentRoom->id,
+                        'effective_from' => $currentEnrollment->created_at ?: now(),
+                        'status' => 'active',
+                        'reason' => 'legacy_sync',
+                        'action_source' => 'legacy_room_student',
+                    ]);
                 }
+
+                if ((int) $currentPlacement->room_id !== (int) $currentEnrollment->room_id) {
+                    throw new \RuntimeException('The active placement does not match the legacy enrollment.');
+                }
+
+                $currentPlacement->effective_to = now();
+                $currentPlacement->status = 'closed';
+                $currentPlacement->save();
+
+                $targetPlacement = StudentAcademicPlacement::create([
+                    'student_id' => $student->id,
+                    'year_id' => $year->id,
+                    'class_id' => $targetClassId,
+                    'room_id' => $targetRoom->id,
+                    'effective_from' => now(),
+                    'status' => 'active',
+                    'reason' => $currentClassId === $targetClassId ? 'manual_room_transfer' : 'manual_class_transfer',
+                    'action_source' => 'admin_transfer',
+                    'actioned_by' => optional(auth()->user())->id,
+                ]);
 
                 DB::table('student_transfer_histories')->insert([
                     'student_id' => $student->id,
@@ -142,7 +170,11 @@ class StudentTransferService
                     'previous_students_mark_snapshot' => $currentMark ? json_encode($currentMark->toArray(), JSON_UNESCAPED_UNICODE) : null,
                     'previous_report_card_snapshot' => $currentReportCard ? json_encode($currentReportCard->toArray(), JSON_UNESCAPED_UNICODE) : null,
                     'transferred_by_user_id' => optional(auth()->user())->id,
-                    'transfer_type' => 'cross_grade_current_year',
+                    'from_placement_id' => $currentPlacement->id,
+                    'to_placement_id' => $targetPlacement->id,
+                    'transfer_type' => $currentClassId === $targetClassId
+                        ? 'same_class_room_current_year'
+                        : 'cross_grade_current_year',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -150,20 +182,8 @@ class StudentTransferService
                 $currentEnrollment->room_id = $targetRoom->id;
                 $currentEnrollment->save();
 
-                $markPayload = $this->buildStudentMarkPayload($student, $targetClassId, $targetRoom->id, $year->id, $request);
-
-                if ($currentMark) {
-                    foreach ($markPayload as $field => $value) {
-                        $currentMark->{$field} = $value;
-                    }
-                    $currentMark->save();
-                } else {
-                    Students_mark::create($markPayload);
-                }
-
-                if ($currentReportCard) {
-                    $this->resetStudentReportCard($currentReportCard, $targetRoom->id, $year->id, $student->id, $targetClassId);
-                }
+                Students_mark::create($this->buildStudentMarkPayload($student, $targetClassId, $targetRoom->id, $year->id, $request));
+                $this->createStudentReportCard($student->id, $targetRoom->id, $year->id, $targetClassId);
             });
         } catch (\Throwable $e) {
             report($e);
@@ -178,48 +198,95 @@ class StudentTransferService
         return redirect()->back()->with('success', __('student_transfer.notifications.transferred'));
     }
 
-    private function applySameClassRoomTransfer(
-        int $studentId,
-        int $currentRoomId,
-        Room_student $currentEnrollment,
-        ?Students_mark $currentMark,
-        ?Report_card $currentReportCard,
-        Room $targetRoom,
-        int $targetClassId,
-        bool $hasRoomBoundAcademicActivity
-    ): void {
-        $currentEnrollment->room_id = $targetRoom->id;
-        $currentEnrollment->save();
-
-        if ($currentMark) {
-            $currentMark->room_id = $targetRoom->id;
-            $currentMark->save();
+    private function hasMeaningfulMarkData(?Students_mark $mark): bool
+    {
+        if (!$mark) {
+            return false;
         }
 
-        if ($currentReportCard) {
-            $currentReportCard->room_id = $targetRoom->id;
-            $currentReportCard->class = $targetClassId;
-            $currentReportCard->save();
+        foreach (['mark', 'mark2', 'result1', 'result2', 'result', 'term_result', 'year_result'] as $field) {
+            $hasValue = in_array($field, ['term_result', 'year_result'], true)
+                ? $this->containsNonZeroAcademicValue($mark->{$field})
+                : $this->containsAcademicValue($mark->{$field});
+
+            if ($hasValue) {
+                return true;
+            }
         }
 
-        if ($hasRoomBoundAcademicActivity) {
-            Exam_result::where('user_id', $studentId)
-                ->where('room_id', $currentRoomId)
-                ->update(['room_id' => $targetRoom->id, 'class_id' => $targetClassId]);
+        return false;
+    }
 
-            Exam_result2::where('user_id', $studentId)
-                ->where('room_id', $currentRoomId)
-                ->update(['room_id' => $targetRoom->id, 'class_id' => $targetClassId]);
-
-            DB::table('student_lesson_teacher_room_term_exam')
-                ->where('student_id', $studentId)
-                ->where('room_id', $currentRoomId)
-                ->update(['room_id' => $targetRoom->id]);
-
-            Exam_file::where('student_id', $studentId)
-                ->where('room_id', $currentRoomId)
-                ->update(['room_id' => $targetRoom->id, 'class_id' => $targetClassId]);
+    private function hasMeaningfulReportCardData(?Report_card $reportCard): bool
+    {
+        if (!$reportCard) {
+            return false;
         }
+
+        foreach (['teacher', 'teacher_notes', 'final_result', 'manager_notes', 'parent_notes', 'actual_attendance', 'student_attendance', 'justified_absence', 'unjustified_absence', 'teacher_name'] as $field) {
+            $value = $reportCard->{$field};
+            if ($field === 'final_result' && (string) $value === '1') {
+                continue;
+            }
+
+            if ($this->containsAcademicValue($value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function containsAcademicValue($value): bool
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $this->containsAcademicValue($decoded);
+            }
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                if ($this->containsAcademicValue($item)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return $value !== null && $value !== '';
+    }
+
+    private function containsNonZeroAcademicValue($value): bool
+    {
+        if ($value === null || $value === '' || $value === 0 || $value === '0') {
+            return false;
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $this->containsNonZeroAcademicValue($decoded);
+            }
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                if ($this->containsNonZeroAcademicValue($item)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     private function buildStudentMarkPayload(Student $student, int $classId, int $roomId, int $yearId, Request $request): array
@@ -334,11 +401,48 @@ class StudentTransferService
         return redirect()->back()->with('warning', __($translationKey));
     }
 
-    private function hasRoomBoundAcademicActivity(int $studentId, int $roomId): bool
+    private function hasUnscopedAcademicActivity(int $studentId, int $yearId): bool
     {
-        return Exam_result::where('user_id', $studentId)->where('room_id', $roomId)->exists()
-            || Exam_result2::where('user_id', $studentId)->where('room_id', $roomId)->exists()
-            || DB::table('student_lesson_teacher_room_term_exam')->where('student_id', $studentId)->where('room_id', $roomId)->exists()
-            || Exam_file::where('student_id', $studentId)->where('room_id', $roomId)->exists();
+        return Exam_result::where('user_id', $studentId)->whereNull('room_id')->exists()
+            || Exam_result2::where('user_id', $studentId)->whereNull('room_id')->exists()
+            || DB::table('student_lesson_teacher_room_term_exam')
+                ->where('student_id', $studentId)
+                ->whereNull('room_id')
+                ->exists()
+            || Exam_file::where('student_id', $studentId)->whereNull('room_id')->exists()
+            || Certificate::where('student_id', $studentId)->whereNull('room_id')->exists()
+            || Students_mark::where('student_id', $studentId)
+                ->where('year_id', $yearId)
+                ->whereNull('room_id')
+                ->exists()
+            || Report_card::where('student_id', $studentId)
+                ->where('year_id', $yearId)
+                ->whereNull('room_id')
+                ->exists();
+    }
+
+    private function recordBelongsToRoom($record, int $roomId): bool
+    {
+        return $record && (int) $record->room_id === $roomId;
+    }
+
+    private function createStudentReportCard(int $studentId, int $roomId, int $yearId, int $classId): void
+    {
+        $reportCard = new Report_card();
+        $reportCard->student_id = $studentId;
+        $reportCard->room_id = $roomId;
+        $reportCard->year_id = $yearId;
+        $reportCard->class = $classId;
+        $reportCard->teacher = null;
+        $reportCard->teacher_name = null;
+        $reportCard->teacher_notes = json_encode(['term1' => null, 'term2' => null], JSON_UNESCAPED_UNICODE);
+        $reportCard->manager_notes = null;
+        $reportCard->parent_notes = null;
+        $reportCard->final_result = 1;
+        $reportCard->student_attendance = json_encode(['term1' => null, 'term2' => null], JSON_UNESCAPED_UNICODE);
+        $reportCard->actual_attendance = json_encode(['term1' => null, 'term2' => null], JSON_UNESCAPED_UNICODE);
+        $reportCard->justified_absence = json_encode(['term1' => null, 'term2' => null], JSON_UNESCAPED_UNICODE);
+        $reportCard->unjustified_absence = json_encode(['term1' => null, 'term2' => null], JSON_UNESCAPED_UNICODE);
+        $reportCard->save();
     }
 }

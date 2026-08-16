@@ -8,6 +8,10 @@ class CreateStudentTransferHistoriesTable extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('student_transfer_histories')) {
+            return;
+        }
+
         Schema::create('student_transfer_histories', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('student_id')->nullable()->index();
@@ -24,6 +28,8 @@ class CreateStudentTransferHistoriesTable extends Migration
             $table->longText('previous_students_mark_snapshot')->nullable();
             $table->longText('previous_report_card_snapshot')->nullable();
             $table->unsignedBigInteger('transferred_by_user_id')->nullable();
+            $table->unsignedBigInteger('from_placement_id')->nullable()->index();
+            $table->unsignedBigInteger('to_placement_id')->nullable()->index();
             $table->string('transfer_type')->default('cross_grade_current_year');
             $table->timestamps();
         });

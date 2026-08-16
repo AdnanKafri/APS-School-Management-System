@@ -35,6 +35,7 @@ use App\About_us;
 use App\Student_detail;
 use App\Objection;
 use App\Student;
+use App\StudentAcademicPlacement;
 use App\Exams2;
 use App\Student_lesson_teacher_room_term_exam;
 use App\Student_schedule_tracer;
@@ -656,6 +657,10 @@ class studentscontroller extends Controller
     {
 
         $certificates = Certificate::find($request->id);
+        if (!$certificates || (int) $certificates->student_id !== (int) auth()->user()->student_id
+            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $certificates->room_id)) {
+            abort(403);
+        }
         $certificates->certificate = $request->certi;
         $certificates->save();
         return redirect()->back();
@@ -1470,6 +1475,9 @@ class studentscontroller extends Controller
     {
         $student = Student::find(auth()->user()->student_id);
         $content = Lesson_teacher_room_term_exam::findOrFail($exam_id);
+        if (!$this->studentHasActivePlacementForRoom($student->id, $content->room_id)) {
+            return redirect()->back()->with('warning', 'لا يمكن فتح سجل أكاديمي مغلق للتعديل');
+        }
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
         $room = Room::findOrFail($content->room_id);
         $room = Room::findOrFail($content->room_id);
@@ -1564,9 +1572,13 @@ class studentscontroller extends Controller
     public function save_exam(Request $request)
     {
 
+        $exam = Lesson_teacher_room_term_exam::findOrFail($request->content_id);
+        if (!$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $exam->room_id)) {
+            return redirect()->back()->with('warning', 'لا يمكن تعديل سجل أكاديمي مغلق');
+        }
+
         $exam_result = Exam_result::where('user_id', auth()->user()->student_id)
             ->where('exam_id', $request->content_id)->where('status', '1')->first();
-        $exam = Lesson_teacher_room_term_exam::find($request->content_id);
 
         if ($exam_result) {
 
@@ -1801,6 +1813,9 @@ class studentscontroller extends Controller
 
         $student = Student::find(auth()->user()->student_id);
         $content = Exams2::findOrFail($exam_id);
+        if (!$this->studentHasActivePlacementForRoom($student->id, $content->room_id)) {
+            return redirect()->back()->with('error', 'لا يمكن فتح سجل أكاديمي مغلق للتعديل');
+        }
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
         $room = Room::findOrFail($content->room_id);
         $room_id = $room->name;
@@ -1908,6 +1923,11 @@ class studentscontroller extends Controller
     public function save_main_exam(Request $request)
     {
 
+        $exam = Exams2::findOrFail($request->content_id);
+        if (!$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $exam->room_id)) {
+            return redirect()->back()->with('error', 'لا يمكن تعديل سجل أكاديمي مغلق');
+        }
+
 
         //  $option =  Option::create([
         //         'question_id' => 0,
@@ -1917,7 +1937,6 @@ class studentscontroller extends Controller
 //   return response()->json( json_decode($option->myOptions)) ;
        $exam_result=Exam_result2::where('user_id',auth()->user()->student_id)
                     ->where('exam_id',$request->content_id)->first();
-         $exam=Exams2::find($request->content_id);
         //   **********************************************
         //  just for test
         $exam_result_tester= new Exam_result_tester ;
@@ -2380,6 +2399,9 @@ class studentscontroller extends Controller
         $student_id = auth()->user()->student_id;
         $student = Student::find($student_id);
         $content = Lesson_teacher_room_term_exam::findOrFail($request->item_id);
+        if (!$this->studentHasActivePlacementForRoom($student_id, $content->room_id)) {
+            return redirect()->back()->with('error', 'لا يمكن تعديل ملفات سجل أكاديمي مغلق');
+        }
 
         $this->validate($request, [
             'file' => 'required',
@@ -2437,6 +2459,9 @@ class studentscontroller extends Controller
         $student_id = auth()->user()->student_id;
         $student = Student::find($student_id);
         $content = Exams2::findOrFail($request->exam_id);
+        if (!$this->studentHasActivePlacementForRoom($student_id, $content->room_id)) {
+            return redirect()->back()->with('error', 'لا يمكن تعديل ملفات سجل أكاديمي مغلق');
+        }
 
         if ($request->file && $request->hasFile('file')) {
             $old_exam = Exam_file::where('student_id', $student_id)->where('exam_id', $request->exam_id)->delete();
@@ -2508,6 +2533,11 @@ class studentscontroller extends Controller
         // return $question;
 
         $question = Lesson_teacher_room_term_exam::find($request->file_id);
+        if (!$question || (int) $request->student_id !== (int) auth()->user()->student_id
+            || (int) $request->room_id !== (int) $question->room_id
+            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $question->room_id)) {
+            return redirect()->back()->with('warning', 'لا يمكن تعديل سجل أكاديمي مغلق');
+        }
 
         if ($now > $question->start_time && $now < $question->end_time) {
             $answer = Student_lesson_teacher_room_term_exam::where('file_id', $request->file_id)->where('student_id', $request->student_id)->where('type', $request->type)->first();
@@ -2560,6 +2590,10 @@ class studentscontroller extends Controller
     {
 
         $answer = Student_lesson_teacher_room_term_exam::find($id);
+        if (!$answer || (int) $answer->student_id !== (int) auth()->user()->student_id
+            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $answer->room_id)) {
+            abort(403);
+        }
         Storage::disk('public')->delete($answer->file);
 
         $answer->delete();
@@ -2571,6 +2605,10 @@ class studentscontroller extends Controller
     {
 
         $answer = Student_lesson_teacher_room_term_exam::find($request->id);
+        if (!$answer || (int) $answer->student_id !== (int) auth()->user()->student_id
+            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $answer->room_id)) {
+            return response()->json(['status' => false, 'msg' => 'لا يمكن تعديل سجل أكاديمي مغلق'], 403);
+        }
         Storage::disk('public')->delete($answer->file);
 
         $answer->delete();
@@ -3019,6 +3057,227 @@ class studentscontroller extends Controller
         $school_data = School_data::first();
         return view('students.student_exam', compact('school_data','student', 'class', 'room', 'room_id'));
     }
+
+    /**
+     * List the student's append-only academic placements without using the
+     * globally selected year as the history source.
+     */
+    public function academic_record()
+    {
+        $student = Student::findOrFail(auth()->user()->student_id);
+        $placements = StudentAcademicPlacement::with(['year', 'classRoom', 'room'])
+            ->where('student_id', $student->id)
+            ->orderByDesc('year_id')
+            ->orderByDesc('id')
+            ->get();
+
+        $activePlacement = $placements->firstWhere('status', 'active');
+        $fallbackPlacement = $placements->first();
+        $room = $activePlacement ? $activePlacement->room : optional($fallbackPlacement)->room;
+        $room_id = optional($room)->id;
+        $class = optional($room)->classes;
+        $school_data = School_data::first();
+
+        return view('students.academic_record', compact('school_data', 'student', 'placements', 'room', 'room_id', 'class'));
+    }
+
+    /**
+     * Show only records belonging to one placement's year/room context.
+     * No current-year/current-term filters are used here.
+     */
+    public function academic_record_show($placement_id)
+    {
+        $student = Student::findOrFail(auth()->user()->student_id);
+        $placement = StudentAcademicPlacement::with(['year', 'classRoom', 'room'])
+            ->where('id', $placement_id)
+            ->where('student_id', $student->id)
+            ->firstOrFail();
+
+        $roomId = $placement->room_id;
+        $yearId = $placement->year_id;
+        $marks = Students_mark::where('student_id', $student->id)
+            ->where('year_id', $yearId)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+        $reportCards = Report_card::where('student_id', $student->id)
+            ->where('year_id', $yearId)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+        $examResults = Exam_result::where('user_id', $student->id)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+        $quizResults = Exam_result2::where('user_id', $student->id)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+        $submissions = Student_lesson_teacher_room_term_exam::where('student_id', $student->id)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+        $examFiles = Exam_file::where('student_id', $student->id)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+        $certificates = Certificate::where('student_id', $student->id)
+            ->where('room_id', $roomId)
+            ->orderBy('id')
+            ->get();
+
+        $decodeAcademicValue = function ($value) {
+            if (!is_string($value) || trim($value) === '') {
+                return [];
+            }
+
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        };
+        $readableValue = function ($value) {
+            return is_scalar($value) && $value !== '' ? (string) $value : null;
+        };
+
+        $markRecord = $marks->first();
+        $markValues = $markRecord ? $decodeAcademicValue($markRecord->mark) : [];
+        $resultValues = $markRecord ? $decodeAcademicValue($markRecord->result) : [];
+        $termOneValues = $markRecord ? $decodeAcademicValue($markRecord->result1) : [];
+        $termTwoValues = $markRecord ? $decodeAcademicValue($markRecord->result2) : [];
+        $lessonIds = array_unique(array_merge(
+            array_keys($markValues),
+            array_keys($resultValues),
+            array_keys($termOneValues),
+            array_keys($termTwoValues),
+            $examResults->pluck('lesson_id')->filter()->all(),
+            $quizResults->pluck('lesson_id')->filter()->all(),
+            $submissions->pluck('lesson_id')->filter()->all(),
+            $examFiles->pluck('lesson_id')->filter()->all(),
+            $certificates->pluck('lesson_id')->filter()->all()
+        ));
+        $lessonsById = Lesson::whereIn('id', $lessonIds)->get()->keyBy('id');
+
+        $markLabels = [
+            'oral' => 'شفهي',
+            'homework' => 'وظائف',
+            'activities' => 'نشاط',
+            'quize' => 'مذاكرة',
+            'exam' => 'امتحان',
+        ];
+        $markRows = [];
+        foreach ($lessonIds as $lessonId) {
+            $components = [];
+            foreach ($markLabels as $key => $label) {
+                $value = $readableValue(optional((object) ($markValues[$lessonId] ?? []))->{$key});
+                if ($value !== null) {
+                    $components[] = ['label' => $label, 'value' => $value];
+                }
+            }
+            $yearValue = $readableValue(optional((object) ($resultValues[$lessonId] ?? []))->year_result);
+            $termOneValue = $readableValue(optional((object) ($termOneValues[$lessonId] ?? []))->term1_result);
+            $termTwoValue = $readableValue(optional((object) ($termTwoValues[$lessonId] ?? []))->term2_result);
+            if ($components || $yearValue !== null || $termOneValue !== null || $termTwoValue !== null) {
+                $markRows[] = [
+                    'subject' => optional($lessonsById->get($lessonId))->name ?: 'مادة غير محددة',
+                    'components' => $components,
+                    'term_one' => $termOneValue,
+                    'term_two' => $termTwoValue,
+                    'year' => $yearValue,
+                ];
+            }
+        }
+
+        $termIds = $examResults->pluck('term_id')
+            ->merge($quizResults->pluck('term_id'))
+            ->merge($examResults->map(function ($item) {
+                return optional($item->exam)->term_id;
+            }))
+            ->merge($quizResults->map(function ($item) {
+                return optional($item->exam)->term_id;
+            }))
+            ->filter()
+            ->unique()
+            ->values();
+        $termsById = Term_year::whereIn('id', $termIds)->get()->keyBy('id');
+        $assessmentType = function ($type, $legacy) {
+            if ($legacy) {
+                return in_array((string) $type, ['2', '11'], true) ? 'مذاكرة' : (in_array((string) $type, ['3', '6'], true) ? 'امتحان' : 'اختبار');
+            }
+            return (string) $type === '1' ? 'امتحان' : ((string) $type === '2' ? 'مذاكرة' : 'اختبار');
+        };
+        $assessmentRows = [];
+        foreach ($examResults as $result) {
+            $assessment = $result->exam;
+            $termId = $result->term_id ?: optional($assessment)->term_id;
+            $assessmentRows[] = [
+                'subject' => optional(optional($assessment)->lesson)->name ?: optional($lessonsById->get($result->lesson_id))->name ?: 'مادة غير محددة',
+                'name' => optional($assessment)->name_exam ?: optional($assessment)->name_quize ?: optional($assessment)->name_quize1 ?: 'تقييم محفوظ',
+                'type' => $assessmentType(optional($assessment)->type, true),
+                'term' => optional($termsById->get($termId))->term ?: 'فصل غير محدد',
+                'result' => $readableValue($result->result) ?: 'غير مرصودة',
+                'maximum' => null,
+            ];
+        }
+        foreach ($quizResults as $result) {
+            $assessment = $result->exam;
+            $termId = $result->term_id ?: optional($assessment)->term_id;
+            $assessmentRows[] = [
+                'subject' => optional(optional($assessment)->lesson)->name ?: optional($lessonsById->get($result->lesson_id))->name ?: 'مادة غير محددة',
+                'name' => optional($assessment)->name ?: 'تقييم محفوظ',
+                'type' => $assessmentType(optional($assessment)->type, false),
+                'term' => optional($termsById->get($termId))->term ?: 'فصل غير محدد',
+                'result' => $readableValue($result->result) ?: 'غير مرصودة',
+                'maximum' => $readableValue(optional($assessment)->mark),
+            ];
+        }
+
+        $fileRows = $submissions->map(function ($item) use ($lessonsById) {
+            return [
+                'type' => ((string) $item->type === '1' ? 'اختبار' : ((string) $item->type === '2' ? 'مذاكرة' : 'امتحان')),
+                'subject' => optional($lessonsById->get($item->lesson_id))->name ?: 'مادة غير محددة',
+                'format' => $item->extension ?: 'ملف مرفوع',
+            ];
+        });
+        $fileRows = $fileRows->concat($examFiles->map(function ($item) use ($lessonsById) {
+            return [
+                'type' => 'ملف امتحان',
+                'subject' => optional($lessonsById->get($item->lesson_id))->name ?: 'مادة غير محددة',
+                'format' => $item->extension ?: 'ملف مرفوع',
+            ];
+        }))->values();
+        $reportRows = $reportCards->map(function ($card) use ($readableValue) {
+            $final = $readableValue($card->final_result);
+            return [
+                'status' => $final ?: 'بطاقة نتائج محفوظة',
+                'attendance' => $readableValue($card->student_attendance),
+            ];
+        });
+        $certificateRows = $certificates->map(function ($certificate) use ($lessonsById) {
+            return [
+                'subject' => optional($lessonsById->get($certificate->lesson_id))->name ?: 'شهادة أكاديمية',
+                'label' => 'شهادة محفوظة',
+            ];
+        });
+
+        $room = $placement->room;
+        $room_id = optional($room)->id;
+        $class = $placement->classRoom ?: optional($room)->classes;
+        $school_data = School_data::first();
+
+        return view('students.academic_record_show', compact(
+            'school_data', 'student', 'placement', 'room', 'room_id', 'class',
+            'marks', 'reportCards', 'examResults', 'quizResults',
+            'submissions', 'examFiles', 'certificates', 'markRows',
+            'assessmentRows', 'fileRows', 'reportRows', 'certificateRows'
+        ));
+    }
+
+    private function studentHasActivePlacementForRoom($studentId, $roomId)
+    {
+        return StudentAcademicPlacement::where('student_id', $studentId)
+            ->where('room_id', $roomId)
+            ->where('status', 'active')
+            ->exists();
+    }
     public function student_view_report_card()
     {
         $year = Year::where('current_year', '1')->first();
@@ -3026,8 +3285,25 @@ class studentscontroller extends Controller
             return redirect()->back()->with('error66', ' يجب تحديد العام الدراسي, تواصل مع الإدارة');
         }
         $student_id = Auth::user()->student_id;
+        $placement = StudentAcademicPlacement::where('student_id', $student_id)
+            ->where('year_id', $year->id)
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->first();
+        $placementRoomId = $placement ? $placement->room_id : null;
+        $student = Student::with(['room' => function ($q1) use ($year, $placementRoomId) {
+            $q1->where('rooms.year_id', $year->id);
+            if ($placementRoomId) {
+                $q1->where('rooms.id', $placementRoomId);
+            }
+        }])->findOrFail($student_id);
+        $room = $student->room->first();
+        if (!$room) {
+            return redirect()->back()->with('error66', 'الطالب لا يملك قيداً أكاديمياً نشطاً');
+        }
         $student_marks = Students_mark::where('year_id', $year->id)
             ->where('student_id', $student_id)
+            ->where('room_id', $room->id)
             ->first();
         if (!isset($student_marks)) {
             return redirect()->back()->with('error66', 'الطالب لايملك سجل في العام المختار');
@@ -3036,11 +3312,6 @@ class studentscontroller extends Controller
         $current_term = Term_year::where('current_term', 1)->where('year_id', $year->id)->first();
         $current_term = isset($current_term) ? $current_term->type : 1;
 
-        $student = Student::with(['room' => function ($q1) use ($year) {
-            $q1->where('rooms.year_id', $year->id);
-            // $q1->with('lessons') ;
-        }])->findOrFail($student_id);
-        $room = $student->room[0];
         $room_name = $room->name;
         $class_id = $room->class_id;
         $class = Classe::with(['report_card_details' => fn ($q) => $q->where('year_id', $year->id)])->findOrFail($class_id);
@@ -3050,7 +3321,10 @@ class studentscontroller extends Controller
         //تمييز الأول الثانوي عن الثاني الثانوي
         $report_card_design = isset($report_card_design) ?   $report_card_design  : '5';
         $report_card_details = Report_card_details::where('class_id', $class->id)->where('year_id', $year->id)->first();
-        $report_card = Report_card::where('student_id', $student_id)->where('year_id', $year->id)->first();
+        $report_card = Report_card::where('student_id', $student_id)
+            ->where('year_id', $year->id)
+            ->where('room_id', $room->id)
+            ->first();
         //  through these condition we determine wich data to show in report card
         // these conditions has been made for student account, admin can visualize the report card at any time.
         if (!isset($report_card))

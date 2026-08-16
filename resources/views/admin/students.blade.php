@@ -911,7 +911,7 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
                 <div class="modal fade changeStudentModal">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <form method="POST" action="{{ route('admin.student_change') }}" enctype="multipart/form-data">
+                            <form method="POST" action="{{ route('student_change') }}" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="modal-header">
@@ -951,24 +951,18 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
 
 
 
-                                    <div class="wrapper">
-                                        <input type="radio" name="select" id="option-1" value="0" checked>
-                                        <input type="radio" name="select" id="option-2" value="1">
-                                          <label for="option-1" class="option option-1">
-                                            <div class="dot"></div>
-                                             <span>راسب</span>
-                                             </label>
-                                          <label for="option-2" class="option option-2">
-                                            <div class="dot"></div>
-                                             <span>ناجح</span>
-                                          </label>
-                                       </div>
-
-
-
-                                       <div id="mydivclass">
-
-                                       </div>
+                                    <div id="mydivclass">
+                                        <div class="form-group" style="text-align:right">
+                                            <label>الصف</label>
+                                            <select name="class_change_id" id="classes_change" class="form-control dep"
+                                                style="min-height: 36px;direction: rtl" required>
+                                                <option value="">اختر الصف الدراسي</option>
+                                                @foreach ($classes as $class)
+                                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
 
 
 
@@ -987,8 +981,8 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
 
 
                                 <div class="modal-footer">
-                                    <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                                    <button class="btn btn-info" >حفظ</button>
+                                    <a class="btn btn-default" data-dismiss="modal">إلغاء</a>
+                                    <button class="btn btn-info" type="submit">حفظ</button>
                                 </div>
 
                             </form>
@@ -1501,8 +1495,6 @@ $(document).on('click','.change_student',function(){
 
         $('#mydivclass').empty();
         $('#mydivroom').empty();
-        $('#option-1').prop('checked', true);
-        $('#option-2').prop('checked', false);
         $('#student_id').val($(this).data('id'));
 
         var student_id = $(this).data('id');
@@ -1533,8 +1525,6 @@ error: function (xhr) {
         $('#old_class_id2').val('');
         $('#mydivclass').empty();
         $('#mydivroom').empty();
-        $('#option-1').prop('checked', true);
-        $('#option-2').prop('checked', false);
     });
 
 
@@ -1590,6 +1580,11 @@ var url = "{{ URL::to('SMARMANger/admin/classes/rooms2') }}/" + class_id +"/"+ y
             type: "get",
             contentType: 'application/json',
             success: function (data) {
+
+                if (!data.length) {
+                    $('#mydivroom').html('<div class="alert alert-warning text-right">لا توجد شعب متاحة لهذا الصف في العام الدراسي النشط.</div>');
+                    return;
+                }
 
                 var type = `
                 <label>الشعبة</label>

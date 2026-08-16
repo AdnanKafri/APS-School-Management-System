@@ -1177,20 +1177,17 @@ $about = \App\Other::find(1);
                         {{ __('student_transfer.notice') }}
                     </div>
 
-                    <div class="wrapper">
-                        <input type="radio" name="select" id="option-1" value="0" checked>
-                        <input type="radio" name="select" id="option-2" value="1">
-                        <label for="option-1" class="option option-1">
-                            <div class="dot"></div>
-                            <span>راسب</span>
-                        </label>
-                        <label for="option-2" class="option option-2">
-                            <div class="dot"></div>
-                            <span>ناجح</span>
-                        </label>
-                    </div>
                     <div id="mydivclass">
-
+                        <div class="form-group" style="text-align:right">
+                            <label>الصف</label>
+                            <select name="class_change_id" id="classes_change" class="form-control dep"
+                                style="min-height: 36px;direction: rtl" required>
+                                <option value="">اختر الصف الدراسي</option>
+                                @foreach ($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group" id="mydivroom" style="text-align:right">
                     </div>
@@ -1700,7 +1697,7 @@ $about = \App\Other::find(1);
 
 
 
-<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="{{ asset('assets/js/jquery-3.2.1.min.js') }}"></script>
 <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
@@ -2296,6 +2293,10 @@ $.ajax({
             type: "get",
             contentType: 'application/json',
             success: function (data) {
+                if (!data.length) {
+                    $('#mydivroom').html('<div class="alert alert-warning text-right">لا توجد شعب متاحة لهذا الصف في العام الدراسي النشط.</div>');
+                    return;
+                }
                 var type = `
                 <label>الشعبة</label>
 
@@ -2318,39 +2319,9 @@ $.ajax({
     });
 
 
-    $('input:radio[name=select]').on('click', function () {
-        $('#mydivclass').empty();
-        var val = $(this).val();
-        var type = "";
-        type += `
-                <br>
-                <div class="form-group" style="text-align:right">
-                <label >الصف</label>
-                <select name="class_change_id" id="classes_change" class="form-control dep"
-                    style="min-height: 36px;direction: rtl" required>
-                    <option value="">اختر الصف الدراسي</option>
-
-                @foreach ($classes as $class)
-
-                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                @endforeach
-
-                </select>
-
-            </div>
-        `;
-        $('#mydivclass').append(type);
-
-    });
-
-
-
     $(document).on('click', '.change_student', function () {
 
-        $('#mydivclass').empty();
         $('#mydivroom').empty();
-        $('#option-1').prop('checked', true);
-        $('#option-2').prop('checked', false);
         $('#student_id').val($(this).data('id'));
 
         var student_id = $(this).data('id');
@@ -2375,10 +2346,8 @@ $.ajax({
     $('.changeStudentModal').on('hidden.bs.modal', function () {
         $('#student_id').val('');
         $('#old_class_id2').val('');
-        $('#mydivclass').empty();
+        $('#classes_change').val('');
         $('#mydivroom').empty();
-        $('#option-1').prop('checked', true);
-        $('#option-2').prop('checked', false);
     });
 
 
