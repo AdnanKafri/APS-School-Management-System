@@ -228,6 +228,9 @@
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#currentYearModal">
                         تغيير العام الدراسي
                     </button>
+                    <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#createYearModal">
+                        إنشاء سنة دراسية
+                    </button>
                 </div>
             </div>
         </div>
@@ -244,6 +247,7 @@
                             <th scope="col">الاسم</th>
                             <th scope="col">الحالة</th>
                             <th scope="col">العام التالي</th>
+                            <th scope="col">إجراء</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -258,10 +262,11 @@
                                     @endif
                                 </td>
                                 <td>{{ optional(\App\Year::find($year->next_year))->name ?? '-' }}</td>
+                                <td><button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editYear{{ $year->id }}">تعديل السنة والربط</button></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="text-center py-4" style="color:#7b7590;">لا توجد سنوات مسجلة حالياً.</td>
+                                <td colspan="4" class="text-center py-4" style="color:#7b7590;">لا توجد سنوات مسجلة حالياً.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -270,6 +275,40 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade v2-dashboard-modal" id="createYearModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document"><div class="modal-content">
+        <form action="{{ route('year_store') }}" method="post">@csrf
+            <div class="modal-header"><h5 class="modal-title">إنشاء سنة دراسية</h5><button type="button" class="close" data-dismiss="modal"><span>×</span></button></div>
+            <div class="modal-body">
+                <p class="text-muted">أنشئ السنة أولاً، ثم اربط العام الحالي بها من نافذة تعديل السنة الحالية.</p>
+                <div class="form-group"><label>اسم السنة</label><input name="name" class="form-control" maxlength="20" required placeholder="مثال: 2026/2027"></div>
+                <div class="form-group"><label>بداية السنة</label><input type="date" name="start" class="form-control" required></div>
+                <div class="form-group"><label>نهاية السنة</label><input type="date" name="end" class="form-control" required></div>
+                <div class="form-group"><label>العام التالي</label><select name="next_year" class="form-control" required><option value="">اختر العام التالي أو العام الحالي مؤقتاً</option>@foreach($years as $year)<option value="{{ $year->id }}">{{ $year->name }}</option>@endforeach</select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">إغلاق</button><button class="btn btn-primary" type="submit">إنشاء السنة</button></div>
+        </form>
+    </div></div>
+</div>
+
+@foreach($years as $year)
+<div class="modal fade v2-dashboard-modal" id="editYear{{ $year->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document"><div class="modal-content">
+        <form action="{{ route('year_update') }}" method="post">@csrf
+            <input type="hidden" name="term_id" value="{{ $year->id }}">
+            <div class="modal-header"><h5 class="modal-title">تعديل السنة وربط العام التالي</h5><button type="button" class="close" data-dismiss="modal"><span>×</span></button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>اسم السنة</label><input name="name" class="form-control" maxlength="20" required value="{{ $year->name }}"></div>
+                <div class="form-group"><label>بداية السنة</label><input type="date" name="start" class="form-control" required value="{{ $year->start }}"></div>
+                <div class="form-group"><label>نهاية السنة</label><input type="date" name="end" class="form-control" required value="{{ $year->end }}"></div>
+                <div class="form-group"><label>العام التالي</label><select name="next_year" class="form-control" required><option value="">اختر العام التالي</option>@foreach($years as $next)<option value="{{ $next->id }}" {{ (int) $year->next_year === (int) $next->id ? 'selected' : '' }}>{{ $next->name }}</option>@endforeach</select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">إغلاق</button><button class="btn btn-primary" type="submit">حفظ التعديل</button></div>
+        </form>
+    </div></div>
+</div>
+@endforeach
 
 <div class="modal fade v2-dashboard-modal" id="currentYearModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
