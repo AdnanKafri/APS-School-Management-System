@@ -282,6 +282,8 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
 
 
     Route::post('students/change', 'admincontroller@student_change')->name('student_change');
+    Route::post('students/bulk-transfer', 'admincontroller@student_bulk_transfer')->name('student_bulk_transfer');
+    Route::get('students/bulk-transfer/rooms/{class_id}', 'admincontroller@rooms')->name('student_bulk_transfer.rooms');
     Route::get('students/archive/{student_id}', 'admincontroller@student_archive')->name('student_archive');
     Route::post('students/financial_account', 'admincontroller@financial_account')->name('financial_account');
     Route::get('students/invoices_details/{student_id}', 'admincontroller@invoices_details')->name('invoices_details');

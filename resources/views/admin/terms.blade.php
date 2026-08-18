@@ -260,6 +260,9 @@
                         <label>اختر الفصل</label>
                         <select class="form-control a term1" required name="type"></select>
                     </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" class="term-current" name="current_term" value="1"> &#x627;&#x644;&#x641;&#x635;&#x644; &#x627;&#x644;&#x62D;&#x627;&#x644;&#x64A;</label>
+                    </div>
 
                     <div class="form-group">
                         <label>بداية الفصل</label>
@@ -302,6 +305,9 @@
                                 <option value="{{ $year->id }}">{{ $year->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" class="term-current" name="current_term" value="1"> &#x627;&#x644;&#x641;&#x635;&#x644; &#x627;&#x644;&#x62D;&#x627;&#x644;&#x64A;</label>
                     </div>
 
                     <div class="form-group">
@@ -459,12 +465,7 @@ $(document).on('click', '.edit', function () {
     $('#start').val($(this).data('start'));
     $('#end').val($(this).data('end'));
 
-    if ($(this).data('current_term') == 1) {
-        $('#current_term').attr('checked', true);
-    }
-    if ($(this).data('current_term') == 0) {
-        $('#current_term').removeAttr('checked');
-    }
+    $('.term-current').prop('checked', $(this).data('current_term') == 1);
 
     $('.year').val(yearid);
     if ($(this).data('type') == 1) {

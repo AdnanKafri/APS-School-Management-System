@@ -3,6 +3,17 @@
 
 <head>
     <style>
+        .bulk-transfer-toolbar { direction: rtl; display: grid; grid-template-columns: minmax(180px, 1.4fr) repeat(2, minmax(160px, 1fr)) auto; gap: 10px; align-items: end; margin: 12px 0; }
+        .bulk-transfer-toolbar label { display: block; font-weight: 700; margin-bottom: 4px; }
+        .bulk-transfer-count { align-self: center; white-space: nowrap; color: #555; }
+        .bulk-transfer-select { width: 18px; height: 18px; }
+        .bulk-transfer-modal { direction: rtl; text-align: right; }
+        .bulk-transfer-toolbar input,
+        .bulk-transfer-toolbar select { min-height: 42px; border: 1px solid #adb5bd; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+        .bulk-transfer-toolbar input:focus,
+        .bulk-transfer-toolbar select:focus { border-color: #5e72e4; box-shadow: 0 0 0 3px rgba(94,114,228,.16); outline: 0; }
+        .bulk-transfer-toolbar button { min-height: 42px; white-space: nowrap; }
+        @media (max-width: 768px) { .bulk-transfer-toolbar { grid-template-columns: 1fr; } .bulk-transfer-count { white-space: normal; } }
 @import url('https://fonts.googleapis.com/css?family=Lato:400,500,600,700&display=swap');
 
 .wrapper{
@@ -206,6 +217,12 @@
 <div class="col" style="direction:rtl; text-align:right">
     <div class="card">
 
+                @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+                @if(session('warning'))<div class="alert alert-warning">{{ session('warning') }}</div>@endif
+                @if(session('student_transfer_failures'))
+                    <div class="alert alert-warning"><strong>{{ html_entity_decode(__('student_transfer.ui.failure_heading')) }}</strong><ul class="mb-0 mt-2">@foreach(session('student_transfer_failures') as $failure)<li><strong>{{ $failure['student_name'] }}</strong>: {{ $failure['reason'] }}</li>@endforeach</ul></div>
+                @endif
+
                 @if ($errors->any())
         @foreach ($errors->all() as $error)
 
@@ -236,7 +253,7 @@
     {{-- <input type="text" name="search_student" placeholder="&#xF002; Search" class="form-control"
     style="color: #000;display: inline; font-family:Arial, FontAwesome;" id="search_student1"> --}}
   </div>
-<div class="table-responsive">
+
 
     <a href=".createStudentModal" class=" btn btn-success" data-toggle="modal"
     data-id=""><i class="material-icons" data-toggle="tooltip">إنشاء طالب </i></a>
@@ -262,9 +279,21 @@
 @endif
 {{-- ---------------------------------------------- --}}
 
+<div class="bulk-transfer-toolbar" id="bulk-transfer-toolbar">
+    <div><label for="bulk-transfer-search">{{ html_entity_decode(__('student_transfer.ui.search')) }}</label><input type="search" id="bulk-transfer-search" class="form-control" placeholder="{{ html_entity_decode(__('student_transfer.ui.placeholder')) }}"></div>
+    <div><label for="bulk-transfer-current-class">{{ html_entity_decode(__('student_transfer.ui.current_class')) }}</label><select id="bulk-transfer-current-class" class="form-control"><option value="">{{ html_entity_decode(__('student_transfer.ui.all_classes')) }}</option>@foreach($classes as $class)<option value="{{ $class->id }}">{{ $class->name }}</option>@endforeach</select></div>
+    <div><label for="bulk-transfer-current-room">{{ html_entity_decode(__('student_transfer.ui.current_section')) }}</label><select id="bulk-transfer-current-room" class="form-control" disabled><option value="">{{ html_entity_decode(__('student_transfer.ui.all_sections')) }}</option></select></div>
+    <div><button type="button" class="btn btn-primary" id="bulk-transfer-open" disabled>{{ html_entity_decode(__('student_transfer.ui.bulk_action')) }}</button></div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap mb-2" dir="rtl">
+    <label class="mb-0"><input type="checkbox" id="bulk-transfer-select-visible" class="bulk-transfer-select"> {{ html_entity_decode(__('student_transfer.ui.select_visible')) }}</label>
+    <span class="bulk-transfer-count" id="bulk-transfer-count"></span>
+</div>
+
                     <select name="class_id" id="class_filter" class="form-control dep"
                     style="min-height: 36px;direction: rtl" required>
-                    <option value="">اختر الصف الدراسي</option>
+                    <option value="">{{ html_entity_decode(__('student_transfer.ui.choose_class')) }}</option>
 
                 @foreach ($classes as $class)
 
@@ -276,16 +305,17 @@
 
                     <select name="room_id" id="room_filter" class="form-control dep"
                     style="min-height: 36px;direction: rtl" required>
-                    <option value="">اختر الشعبة الدراسية</option>
+                    <option value="">{{ html_entity_decode(__('student_transfer.ui.choose_section')) }}</option>
 
 
 
                 </select>
 
 
-        <table class="table align-items-center table-flush">
+        <div class="table-responsive">        <table class="table align-items-center table-flush">
                 <thead class="thead-light">
                   <tr>
+                    <th scope="col" class="text-center"><input type="checkbox" id="bulk-transfer-select-all" class="bulk-transfer-select" aria-label="{{ html_entity_decode(__('student_transfer.ui.select_all')) }}"></th>
                     <th scope="col" class="sort" data-sort="budget">الإسم الأول</th>
                     <th scope="col" class="sort" data-sort="status">الكنية</th>
                     <!--<th scope="col" class="sort" data-sort="status">Age</th>-->
@@ -303,7 +333,9 @@
                     @if ($count!=0)
                     @foreach ($students as $item)
 
-                    <tr>
+                    @php($bulkRoom = $item->room->first())
+                    <tr class="bulk-transfer-row" data-name="{{ strtolower(trim($item->first_name.' '.$item->last_name)) }}" data-student-id="{{ $item->id }}" data-current-class="{{ optional(optional($bulkRoom)->classes)->id }}" data-current-room="{{ optional($bulkRoom)->id }}" data-current-room-name="{{ optional($bulkRoom)->name }}">
+                         <td class="text-center"><input type="checkbox" class="bulk-transfer-student bulk-transfer-select" data-student-id="{{ $item->id }}" data-student-name="{{ trim($item->first_name.' '.$item->last_name) }}" aria-label="{{ html_entity_decode(__('student_transfer.ui.select_student')) }}"></td>
 
                          <td class="budget" style="font-weight:bold;font-size:15px">
                          {{$item->first_name}}
@@ -907,6 +939,24 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
 <!----------------------->
 
 
+
+                <div class="modal fade" id="bulkStudentTransferModal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content bulk-transfer-modal">
+                            <form method="POST" action="{{ route('student_bulk_transfer') }}" id="bulk-student-transfer-form">
+                                @csrf
+                                <div class="modal-header"><h5 class="modal-title">{{ html_entity_decode(__('student_transfer.ui.bulk_action')) }}</h5><button type="button" class="close" data-dismiss="modal" aria-label="{{ html_entity_decode(__('student_transfer.ui.close')) }}"><span aria-hidden="true">&times;</span></button></div>
+                                <div class="modal-body">
+                                    <p id="bulk-transfer-review" class="alert alert-info"></p>
+                                    <div class="form-group"><label for="bulk-transfer-target-class">{{ html_entity_decode(__('student_transfer.ui.target_class')) }}</label><select name="class_change_id" id="bulk-transfer-target-class" class="form-control" required><option value="">{{ html_entity_decode(__('student_transfer.ui.choose_class')) }}</option>@foreach($classes as $class)<option value="{{ $class->id }}">{{ $class->name }}</option>@endforeach</select></div>
+                                    <div class="form-group"><label for="bulk-transfer-target-room">{{ html_entity_decode(__('student_transfer.ui.target_section')) }}</label><select name="room_change_id" id="bulk-transfer-target-room" class="form-control" disabled required><option value="">{{ html_entity_decode(__('student_transfer.ui.choose_section')) }}</option></select></div>
+                                    <div id="bulk-transfer-no-rooms" class="alert alert-warning d-none">{{ html_entity_decode(__('student_transfer.ui.no_sections')) }}</div>
+                                </div>
+                                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">{{ html_entity_decode(__('student_transfer.ui.cancel')) }}</button><button type="submit" class="btn btn-primary" id="bulk-transfer-submit">{{ html_entity_decode(__('student_transfer.ui.confirm_button')) }}</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="modal fade changeStudentModal">
                     <div class="modal-dialog">
@@ -2369,5 +2419,87 @@ function password_show_hide2() {
     hide_eye.style.display = "none";
   }
 }
+</script>
+<script>
+(function () {
+    var rows = function () { return Array.prototype.slice.call(document.querySelectorAll('.bulk-transfer-row')); };
+    var selected = function () { return Array.prototype.slice.call(document.querySelectorAll('.bulk-transfer-student:checked')); };
+    var currentClass = document.getElementById('bulk-transfer-current-class');
+    var currentRoom = document.getElementById('bulk-transfer-current-room');
+    var search = document.getElementById('bulk-transfer-search');
+    var ui = {
+        count: @json(html_entity_decode(__('student_transfer.ui.count'))),
+        review: @json(html_entity_decode(__('student_transfer.ui.review'))),
+        loading: @json(html_entity_decode(__('student_transfer.ui.loading'))),
+        chooseClass: @json(html_entity_decode(__('student_transfer.ui.choose_class'))),
+        noSections: @json(html_entity_decode(__('student_transfer.ui.no_sections'))),
+        loadFailed: @json(html_entity_decode(__('student_transfer.ui.load_failed'))),
+        validation: @json(html_entity_decode(__('student_transfer.ui.validation'))),
+        confirm: @json(html_entity_decode(__('student_transfer.ui.confirm'))),
+        allSections: @json(html_entity_decode(__('student_transfer.ui.all_sections'))),
+    };
+    if (!currentClass || !currentRoom || !search) return;
+    function visibleRows() { return rows().filter(function (row) { return !row.classList.contains('d-none'); }); }
+    function updateCount() {
+        var visible = visibleRows().length;
+        var count = document.getElementById('bulk-transfer-count');
+        var open = document.getElementById('bulk-transfer-open');
+        if (count) count.textContent = ui.count.replace(':visible', visible).replace(':selected', selected().length);
+        if (open) open.disabled = selected().length === 0;
+    }
+    function rebuildCurrentRooms() {
+        var classId = currentClass.value;
+        var values = {};
+        rows().forEach(function (row) { if ((!classId || row.getAttribute('data-current-class') === classId) && row.getAttribute('data-current-room')) values[row.getAttribute('data-current-room')] = true; });
+        currentRoom.innerHTML = '<option value="">' + ui.allSections + '</option>';
+        Object.keys(values).forEach(function (id) { var row = document.querySelector('.bulk-transfer-row[data-current-room="' + id + '"]'); if (row) { var option = document.createElement('option'); option.value = id; option.textContent = row.getAttribute('data-current-room-name') || id; currentRoom.appendChild(option); } });
+        currentRoom.disabled = Object.keys(values).length === 0;
+    }
+    function applyFilters() {
+        var query = (search.value || '').toLowerCase().trim();
+        var classId = currentClass.value;
+        var roomId = currentRoom.value;
+        rows().forEach(function (row) {
+            var matches = (!query || row.getAttribute('data-name').toLowerCase().indexOf(query) !== -1 || row.getAttribute('data-student-id') === query) && (!classId || row.getAttribute('data-current-class') === classId) && (!roomId || row.getAttribute('data-current-room') === roomId);
+            row.classList.toggle('d-none', !matches);
+            if (!matches) { var checkbox = row.querySelector('.bulk-transfer-student'); if (checkbox) checkbox.checked = false; }
+        });
+        updateCount();
+    }
+    currentClass.addEventListener('change', function () { rebuildCurrentRooms(); applyFilters(); });
+    currentRoom.addEventListener('change', applyFilters);
+    search.addEventListener('input', applyFilters);
+    document.getElementById('bulk-transfer-select-visible').addEventListener('change', function () { visibleRows().forEach(function (row) { var checkbox = row.querySelector('.bulk-transfer-student'); if (checkbox) checkbox.checked = this.checked; }, this); updateCount(); });
+    document.getElementById('bulk-transfer-select-all').addEventListener('change', function () { document.getElementById('bulk-transfer-select-visible').checked = this.checked; visibleRows().forEach(function (row) { var checkbox = row.querySelector('.bulk-transfer-student'); if (checkbox) checkbox.checked = this.checked; }); updateCount(); });
+    Array.prototype.forEach.call(document.querySelectorAll('.bulk-transfer-student'), function (checkbox) { checkbox.addEventListener('change', updateCount); });
+    document.getElementById('bulk-transfer-open').addEventListener('click', function () {
+        document.getElementById('bulk-transfer-review').textContent = ui.review.replace(':count', selected().length);
+        $('#bulkStudentTransferModal').modal('show');
+    });
+    $('#bulk-transfer-target-class').on('change', function () {
+        var classId = this.value;
+        var roomSelect = $('#bulk-transfer-target-room');
+        var empty = $('#bulk-transfer-no-rooms');
+        roomSelect.prop('disabled', true).html('<option value="">' + ui.loading + '</option>');
+        empty.addClass('d-none');
+        if (!classId) { roomSelect.html('<option value="">' + ui.chooseClass + '</option>'); return; }
+        $.get('{{ url('SMT/admin/students/bulk-transfer/rooms') }}/' + classId).done(function (rooms) {
+            roomSelect.empty();
+            if (!rooms.length) { roomSelect.html('<option value="">' + ui.noSections + '</option>'); empty.removeClass('d-none'); return; }
+            rooms.forEach(function (room) { roomSelect.append($('<option>', { value: room.id, text: room.name })); });
+            roomSelect.prop('disabled', false);
+        }).fail(function () { roomSelect.html('<option value="">' + ui.loadFailed + '</option>'); });
+    });
+    $('#bulk-student-transfer-form').on('submit', function (event) {
+        var checked = selected();
+        if (!checked.length || !$('#bulk-transfer-target-class').val() || !$('#bulk-transfer-target-room').val()) { event.preventDefault(); window.alert(ui.validation); return; }
+        if (!window.confirm(ui.confirm.replace(':count', checked.length))) { event.preventDefault(); return; }
+        $('#bulk-student-transfer-form input[name="student_ids[]"]').remove();
+        checked.forEach(function (checkbox) { $('<input>', { type: 'hidden', name: 'student_ids[]', value: checkbox.getAttribute('data-student-id') }).appendTo('#bulk-student-transfer-form'); });
+        $('#bulk-transfer-submit').prop('disabled', true);
+    });
+    rebuildCurrentRooms();
+    applyFilters();
+})();
 </script>
 @endsection

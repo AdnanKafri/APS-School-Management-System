@@ -1419,27 +1419,50 @@ public function term_store(Request $request){
 $request->validate([
 
     'term_name'=>'required|max:20',
-    'year_id'=>'required|numeric',
+    'year_id'=>'required|integer|exists:years,id',
 ]);
 
-    Term_year::create([
-        'term'=>$request->term_name,
-        'year_id'=>$request->year_id
-    ]);
+    DB::transaction(function () use ($request) {
+        $isCurrent = $request->boolean('current_term');
+        if ($isCurrent) {
+            Term_year::where('year_id', $request->year_id)
+                ->where('current_term', 1)
+                ->update(['current_term' => 0]);
+        }
+
+        Term_year::create([
+            'term' => $request->term_name,
+            'year_id' => $request->year_id,
+            'current_term' => $isCurrent ? 1 : 0,
+        ]);
+    });
     return redirect()->back()->with('success','! تمت العملية بنجاح');
 }
 
 
 public function term_update(Request $request) {
 
- $term = Term_year::find($request->term_id);
+ $request->validate([
+     'term_id' => 'required|integer|exists:term_years,id',
+     'term_name' => 'required|max:20',
+     'year_id' => 'required|integer|exists:years,id',
+ ]);
 
+ DB::transaction(function () use ($request) {
+     $term = Term_year::findOrFail($request->term_id);
+     $isCurrent = $request->boolean('current_term');
+     if ($isCurrent) {
+         Term_year::where('year_id', $request->year_id)
+             ->where('current_term', 1)
+             ->where('id', '!=', $term->id)
+             ->update(['current_term' => 0]);
+     }
 
- $term->term = $request->term_name;
-
-$term->year_id=$request->year_id;
-
-$term->save();
+     $term->term = $request->term_name;
+     $term->year_id = $request->year_id;
+     $term->current_term = $isCurrent ? 1 : 0;
+     $term->save();
+ });
 return redirect()->back()->with('success','! تمت العملية بنجاح');
 }
 
@@ -5566,6 +5589,11 @@ $applicants=Applicant::where('job_id',$job_id)->delete();
             return app(\App\Services\StudentTransferService::class)->handle($request);
         }
 
+        public function student_bulk_transfer(Request $request){
+
+            return app(\App\Services\StudentTransferService::class)->handleBulk($request);
+        }
+
         public function student_archive($student_id){
 
             $student=Student::with(['room.student_mark'=>fn($q1) => $q1->where('student_id',$student_id)])->find($student_id);
@@ -5658,31 +5686,11 @@ $applicants=Applicant::where('job_id',$job_id)->delete();
 
         public function current_year(Request $request){
 
-            $years=Year::all();
-
-            foreach ($years as $item) {
-
-                $item->current_year='0';
-                $item->save();
-            }
-            $year = Year::find($request->year_id);
-            $year->current_year = '1';
-            $year->save();
-
-            $students=Student::all();
-            foreach($students as $student){
-                $student->status='0';
-                $student->oral_status='0';
-                $student->quize_status='0';
-                $student->activity_status='0';
-                $student->homework_status='0';
-                $student->exam_status='0';
-
-                $student->save();
-            }
-
-                Teacher_event::truncate();
-            Message::truncate();
+            $request->validate(['year_id' => 'required|integer|exists:years,id']);
+            DB::transaction(function () use ($request) {
+                Year::where('current_year', 1)->update(['current_year' => 0]);
+                Year::whereKey($request->year_id)->update(['current_year' => 1]);
+            });
 
             return redirect()->back();
 
@@ -6450,7 +6458,7 @@ return redirect()->back()->with('success','! تمت العملية بنجاح');
 
 
     public function databasebackup()
-    { include app_path() . '/BackupDataBase.php';
+    { include_once app_path() . '/BackupDataBase.php';
         try {
             $world_dumper = Shuttle_Dumper::create(array(
                 'host' => 'localhost',
@@ -6496,7 +6504,7 @@ return redirect()->back()->with('success','! تمت العملية بنجاح');
 
 
 public function importedatabase(Request $request)
-    {include app_path() . '/BackupDataBase.php';
+    {include_once app_path() . '/BackupDataBase.php';
         $this->validate($request, [
             'sql' => 'required',
         ]);

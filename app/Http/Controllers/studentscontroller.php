@@ -71,6 +71,15 @@ use App\School_data;
 class studentscontroller extends Controller
 {
 
+    protected function currentTermForActiveYear()
+    {
+        $year = Year::where('current_year', '1')->first();
+
+        return $year
+            ? Term_year::where('year_id', $year->id)->where('current_term', 1)->first()
+            : null;
+    }
+
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -491,7 +500,11 @@ class studentscontroller extends Controller
         $item = $year ? (clone $roomStudentQuery)->where('year_id', $year->id)->first() : null;
 
         if (!$item) {
-            $item = (clone $roomStudentQuery)->orderByDesc('year_id')->orderByDesc('id')->first();
+            $fallbackQuery = clone $roomStudentQuery;
+            if ($year) {
+                $fallbackQuery->where('year_id', '<=', $year->id);
+            }
+            $item = $fallbackQuery->orderByDesc('year_id')->orderByDesc('id')->first();
             if ($item && (!$year || (int) $item->year_id !== (int) $year->id)) {
                 $year = Year::find($item->year_id) ?? $year;
             }
@@ -679,7 +692,7 @@ class studentscontroller extends Controller
     public function student_exams($room_id, $student_id)
     {
         $years = Year::where('current_year', '1')->first();
-        $term1 = Term_year::where('current_term', 1)->first();
+        $term1 = $this->currentTermForActiveYear();
 
         $student = Student::with('details')->findOrFail($student_id);
         $room = Room::findOrFail($room_id);
@@ -688,7 +701,9 @@ class studentscontroller extends Controller
         $class_name =  $room->classes->name;
         $now = Carbon::now();
 
-        $exams = Lesson_teacher_room_term_exam::where('room_id', $room_id)->where('term_id', $term1->id)->whereIn('type', ['2', '3'])->orderBy('created_at', 'asc')->where('type_file', 2)->with('lesson2')->get();
+        $exams = $term1
+            ? Lesson_teacher_room_term_exam::where('room_id', $room_id)->where('term_id', $term1->id)->whereIn('type', ['2', '3'])->orderBy('created_at', 'asc')->where('type_file', 2)->with('lesson2')->get()
+            : collect();
         foreach ($exams  as $item) {
             $timestamp = strtotime($item->start_time);
             $day = date('l', $timestamp);
@@ -705,7 +720,7 @@ class studentscontroller extends Controller
     }
     public function student_main_exams($room_id, $student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->currentTermForActiveYear();
         $student = Student::with('details')->findOrFail($student_id);
         $room = Room::findOrFail($room_id);
         $room_name = $room->name;
@@ -716,7 +731,9 @@ class studentscontroller extends Controller
         $exams_id = Exam_result2::where('room_id', $room_id)->where('user_id', $student_id)->where('type', '1')->pluck('exam_id');
 
 
-        $exams = Exams2::where('term_id', $term->id)->whereIn('id', $exams_id)->where('type', '1')->orderBy('created_at', 'asc')->with(['lesson' => fn ($q) => $q->select('name', 'lessons.id')])->get();
+        $exams = $term
+            ? Exams2::where('term_id', $term->id)->whereIn('id', $exams_id)->where('type', '1')->orderBy('created_at', 'asc')->with(['lesson' => fn ($q) => $q->select('name', 'lessons.id')])->get()
+            : collect();
         foreach ($exams  as $item) {
             $timestamp = strtotime($item->start_date);
             $day = date('l', $timestamp);
@@ -765,7 +782,7 @@ class studentscontroller extends Controller
 
     public function student_main_quizes($room_id, $student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->currentTermForActiveYear();
         $student = Student::with('details')->findOrFail($student_id);
         $room = Room::findOrFail($room_id);
         $room_name = $room->name;
@@ -776,7 +793,9 @@ class studentscontroller extends Controller
 
         $exams_id = Exam_result2::where('room_id', $room_id)->where('user_id', $student_id)->where('type', '2')->pluck('exam_id');
 
-        $exams = Exams2::where('term_id', $term->id)->whereIn('id', $exams_id)->where('type', '2')->orderBy('created_at', 'asc')->with(['lesson' => fn ($q) => $q->select('name', 'lessons.id')])->get();
+        $exams = $term
+            ? Exams2::where('term_id', $term->id)->whereIn('id', $exams_id)->where('type', '2')->orderBy('created_at', 'asc')->with(['lesson' => fn ($q) => $q->select('name', 'lessons.id')])->get()
+            : collect();
 
         foreach ($exams  as $item) {
             $timestamp = strtotime($item->start_date);
@@ -1232,7 +1251,7 @@ class studentscontroller extends Controller
 
     public function lectures($lesson_id, $room_id, $student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->currentTermForActiveYear();
         $year = Year::where('current_year', '1')->first();
         $lesson = Lesson::find($lesson_id);
         $lectures = $lesson->lectures()->where('room_id', $room_id)->where('lesson_id', $lesson_id)
@@ -2840,7 +2859,7 @@ class studentscontroller extends Controller
     // os
     public function student_medals($student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->currentTermForActiveYear();
         $student = Student::find($student_id);
         $year = Year::where('current_year', '1')->first();
         $room = $student->room()->where('rooms.year_id', $year->id)->first();
@@ -2849,9 +2868,9 @@ class studentscontroller extends Controller
 
 
 
-        $test_medals = Exam_result::with('lesson')->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get();
-         $exam_medals = Exam_result2::with('lesson')->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get();
-        $medals = Medal::with('lesson')->where('student_id', $student_id)->where('term', $term->id)->orderBy('updated_at', 'desc')->get();
+        $test_medals = $term ? Exam_result::with('lesson')->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
+        $exam_medals = $term ? Exam_result2::with('lesson')->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
+        $medals = $term ? Medal::with('lesson')->where('student_id', $student_id)->where('term', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
 
 
         $room->lessons2 =  $room->lessons->unique();
@@ -3043,6 +3062,9 @@ class studentscontroller extends Controller
 
         if (!$room) {
             $room = $student->room()
+                ->when($year, function ($query) use ($year) {
+                    $query->where('rooms.year_id', '<=', $year->id);
+                })
                 ->orderByDesc('rooms.year_id')
                 ->orderByDesc('rooms.id')
                 ->first();
@@ -3065,20 +3087,74 @@ class studentscontroller extends Controller
     public function academic_record()
     {
         $student = Student::findOrFail(auth()->user()->student_id);
+        $currentYear = Year::where('current_year', '1')->first();
         $placements = StudentAcademicPlacement::with(['year', 'classRoom', 'room'])
             ->where('student_id', $student->id)
             ->orderByDesc('year_id')
             ->orderByDesc('id')
             ->get();
 
-        $activePlacement = $placements->firstWhere('status', 'active');
+        // Future prepared placements belong to admin rollover operations and
+        // should not appear in the student's normal historical timeline.
+        if ($currentYear) {
+            $placements = $placements
+                ->filter(function ($placement) use ($currentYear) {
+                    return (int) $placement->year_id <= (int) $currentYear->id;
+                })
+                ->groupBy(function ($placement) {
+                    return implode(':', [
+                        $placement->year_id,
+                        $placement->class_id,
+                        $placement->room_id,
+                        optional($placement->effective_from)->format('Y-m-d H:i:s'),
+                    ]);
+                })
+                ->map(function ($sameInterval) {
+                    // A rollover-created placement and a later legacy_sync row
+                    // can describe the exact same interval. Keep the real
+                    // transition row in the student timeline, but preserve
+                    // every database row for audit/history purposes.
+                    return $sameInterval->sortByDesc(function ($placement) {
+                        return in_array($placement->action_source, ['legacy_sync', 'legacy_room_student'], true)
+                            ? 0
+                            : 1;
+                    })->first();
+                })
+                ->sort(function ($left, $right) use ($currentYear) {
+                    $leftIsCurrent = $left->status === 'active'
+                        && (int) $left->year_id === (int) $currentYear->id;
+                    $rightIsCurrent = $right->status === 'active'
+                        && (int) $right->year_id === (int) $currentYear->id;
+
+                    if ($leftIsCurrent !== $rightIsCurrent) {
+                        return $leftIsCurrent ? -1 : 1;
+                    }
+
+                    if ((int) $left->year_id !== (int) $right->year_id) {
+                        return (int) $right->year_id <=> (int) $left->year_id;
+                    }
+
+                    $leftDate = optional($left->effective_from)->timestamp ?: 0;
+                    $rightDate = optional($right->effective_from)->timestamp ?: 0;
+                    return $rightDate <=> $leftDate;
+                })
+                ->values();
+        }
+
+        $activePlacement = $placements->first(function ($placement) use ($currentYear) {
+            return $currentYear
+                && $placement->status === 'active'
+                && (int) $placement->year_id === (int) $currentYear->id;
+        });
         $fallbackPlacement = $placements->first();
         $room = $activePlacement ? $activePlacement->room : optional($fallbackPlacement)->room;
         $room_id = optional($room)->id;
         $class = optional($room)->classes;
         $school_data = School_data::first();
 
-        return view('students.academic_record', compact('school_data', 'student', 'placements', 'room', 'room_id', 'class'));
+        return view('students.academic_record', compact(
+            'school_data', 'student', 'placements', 'room', 'room_id', 'class', 'currentYear'
+        ));
     }
 
     /**
@@ -4009,25 +4085,25 @@ $old_token = Studentfcmtoken::where('s_fk',auth()->user()->student_id)->where('s
  ///  المكافئات والعقوبات 
     public function student_rewads($student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->currentTermForActiveYear();
         $student = Student::find($student_id);
         $year = Year::where('current_year', '1')->first();
         $room = $student->room()->where('rooms.year_id', $year->id)->first();
         $room_id = $room->id;
         $class = $room->classes;
-        $rewads = Rewad_and_sanction_student::with('lesson')->where('student_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get();
+        $rewads = $term ? Rewad_and_sanction_student::with('lesson')->where('student_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
 
         return view('students.student_rewads', compact('student', 'room', 'class', 'room_id','rewads'));
     }
     public function student_sanctions($student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->currentTermForActiveYear();
         $student = Student::find($student_id);
         $year = Year::where('current_year', '1')->first();
         $room = $student->room()->where('rooms.year_id', $year->id)->first();
         $room_id = $room->id;
         $class = $room->classes;
-        $rewads = Rewad_and_sanction_student::with('lesson')->where('student_id', $student_id)->where('type', 2)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get();
+        $rewads = $term ? Rewad_and_sanction_student::with('lesson')->where('student_id', $student_id)->where('type', 2)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
 
         return view('students.student_sanctions', compact('student', 'room', 'class', 'room_id','rewads'));
     }

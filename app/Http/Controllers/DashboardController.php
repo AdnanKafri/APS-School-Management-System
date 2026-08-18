@@ -850,31 +850,27 @@ public function countries_currencies_archive($id)
     public function term_store(Request $request)
     {
         $request->validate([
-
             'name' => 'required|max:20',
-            'year_id' => 'required|numeric',
+            'year_id' => 'required|integer|exists:years,id',
         ]);
-        if ($request->current_term    == 1) {
-            $term1 = Term_year::where('current_term', 1)->first();
-            if ($term1) {
-                $term1->current_term = 0;
-                $term1->save();
+
+        DB::transaction(function () use ($request) {
+            $isCurrent = $request->boolean('current_term');
+            if ($isCurrent) {
+                Term_year::where('year_id', $request->year_id)
+                    ->where('current_term', 1)
+                    ->update(['current_term' => 0]);
             }
-        }
 
-        $term = new Term_year();
-        $term->term = $request->name;
-        $term->start = $request->start;
-        $term->end = $request->end;
-        $term->type = $request->type;
-
-        if ($request->current_term) {
-
-            $term->current_term    = $request->current_term;
-        }
-
-        $term->year_id = $request->year_id;
-        $term->save();
+            $term = new Term_year();
+            $term->term = $request->name;
+            $term->start = $request->start;
+            $term->end = $request->end;
+            $term->type = $request->type;
+            $term->current_term = $isCurrent ? 1 : 0;
+            $term->year_id = $request->year_id;
+            $term->save();
+        });
 
 
         return redirect()->back()->with('success', '! تمت العملية بنجاح');
@@ -882,31 +878,28 @@ public function countries_currencies_archive($id)
     public function term_update(Request $request)
     {
         $request->validate([
-
             'name' => 'required|max:20',
-            'year_id' => 'required|numeric',
+            'year_id' => 'required|integer|exists:years,id',
         ]);
-        if ($request->current_term == 1) {
-            $term1 = Term_year::where('current_term', 1)->first();
-            if ($term1) {
-                $term1->current_term = 0;
-                $term1->save();
+
+        DB::transaction(function () use ($request) {
+            $term = Term_year::findOrFail($request->term_id);
+            $isCurrent = $request->boolean('current_term');
+            if ($isCurrent) {
+                Term_year::where('year_id', $request->year_id)
+                    ->where('current_term', 1)
+                    ->where('id', '!=', $term->id)
+                    ->update(['current_term' => 0]);
             }
-        }
 
-        $term = Term_year::find($request->term_id);
-        $term->term = $request->name;
-        $term->start = $request->start;
-        $term->end = $request->end;
-        $term->type = $request->type;
-
-        if ($request->current_term) {
-
-            $term->current_term    = $request->current_term;
-        }
-
-        $term->year_id = $request->year_id;
-        $term->save();
+            $term->term = $request->name;
+            $term->start = $request->start;
+            $term->end = $request->end;
+            $term->type = $request->type;
+            $term->current_term = $isCurrent ? 1 : 0;
+            $term->year_id = $request->year_id;
+            $term->save();
+        });
 
 
         return redirect()->back()->with('success', '! تمت العملية بنجاح');
@@ -1187,6 +1180,7 @@ public function countries_currencies_archive($id)
         $totalRecords = Term_year::count();
         $totalRecordswithFilter = Term_year::where('term', "like", "%" . $result_search . "%")->count();
         $records = Term_year::where('term', "like", "%" . $result_search . "%")->with('year')->skip($start)->take($rowperpage)->get();
+        $activeYear = Year::where('current_year', '1')->first();
 
 
         $data_arr = array();
@@ -1194,7 +1188,9 @@ public function countries_currencies_archive($id)
             $data_arr[] = array(
                 "name" => $record->term,
                 "id" => $record->id,
-                "current_term" => $record->current_term,
+                "current_term" => $activeYear && (int) $record->year_id === (int) $activeYear->id
+                    ? $record->current_term
+                    : 0,
                 "type" => $record->type,
                 "start" => $record->start,
                 "end" => $record->end,
@@ -2023,7 +2019,7 @@ public function countries_currencies_archive($id)
     public function end_school_backup()
     {
 
-        include app_path() . '/BackupDataBase.php';
+        include_once app_path() . '/BackupDataBase.php';
         try {
             $world_dumper = Shuttle_Dumper::create(array(
                 'host' => 'localhost',
@@ -6277,6 +6273,7 @@ public function startQueueWorker()
             $class_filter = $request->class_id;
             $room_filter = $request->room_id;
             $stage_id = $request->stage_id;
+            $year = Year::where('current_year', '1')->first();
 
             // Normalize search value (e.g., remove diacritics if needed)
             $searchValue = preg_replace('/[\p{Mn}]/u', '', $searchValue);
@@ -6288,11 +6285,15 @@ public function startQueueWorker()
                       ->orWhere('last_name', 'like', $searchValue)
                       ->orWhere('public_record_number', 'like', $searchValue);
                 })
-                ->whereHas('room.classes', function ($q) use ($class_filter, $room_filter, $stage_id) {
-                    $year = Year::where('current_year', '1')->first();
+                ->whereHas('room.classes', function ($q) use ($class_filter, $room_filter, $stage_id, $year) {
+                    if (!$year) {
+                        $q->whereRaw('1 = 0');
+                        return;
+                    }
+
+                    $q->where('rooms.year_id', $year->id);
                     if ($class_filter) {
-                        $q->where('classes.id', $class_filter)
-                          ->where('room_student.year_id', $year->id);
+                        $q->where('classes.id', $class_filter);
                     }
                     if ($room_filter) {
                         $q->where('rooms.id', $room_filter);
@@ -6309,7 +6310,18 @@ public function startQueueWorker()
             // Apply pagination
             $records = $query->skip($start)
                              ->take($rowperpage)
-                             ->with('room.classes', 'user', 'details')
+                             ->with([
+                                 'room' => function ($q) use ($year) {
+                                     if ($year) {
+                                         $q->where('rooms.year_id', $year->id);
+                                     } else {
+                                         $q->whereRaw('1 = 0');
+                                     }
+                                 },
+                                 'room.classes',
+                                 'user',
+                                 'details',
+                             ])
                              ->get();
 
             // Prepare data array
@@ -7282,7 +7294,7 @@ public function class_update(Request $request)
     {
 
 
-        include app_path() . '/BackupDataBase.php';
+        include_once app_path() . '/BackupDataBase.php';
         try {
             $world_dumper = Shuttle_Dumper::create(array(
                 'host' => 'localhost',

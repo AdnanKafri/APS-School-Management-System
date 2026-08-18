@@ -21,6 +21,55 @@ use Illuminate\Support\Facades\DB;
 
 class StudentTransferService
 {
+    private $bulkMode = false;
+    private $bulkLastSucceeded = false;
+
+    public function handleBulk(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'required|integer',
+            'class_change_id' => 'required|integer',
+            'room_change_id' => 'required|integer',
+        ]);
+
+        $this->bulkMode = true;
+        $successes = 0;
+        $failures = [];
+        $studentIds = array_values(array_unique(array_map('intval', $request->student_ids)));
+
+        foreach ($studentIds as $studentId) {
+            $this->bulkLastSucceeded = false;
+            try {
+                $singleRequest = Request::create('', 'POST', [
+                    'student_id' => $studentId,
+                    'class_change_id' => $request->class_change_id,
+                    'room_change_id' => $request->room_change_id,
+                ]);
+                $this->handle($singleRequest);
+                if ($this->bulkLastSucceeded) {
+                    $successes++;
+                } else {
+                    throw new \RuntimeException('student_transfer.notifications.transfer_failed');
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                $student = Student::find($studentId);
+                $key = $e->getMessage();
+                $translated = __($key);
+                $failures[] = [
+                    'student_id' => $studentId,
+                    'student_name' => $student ? trim($student->first_name . ' ' . $student->last_name) : (string) $studentId,
+                    'reason' => $translated === $key ? __('student_transfer.notifications.transfer_failed') : $translated,
+                ];
+            }
+        }
+
+        $this->bulkMode = false;
+        $message = __('student_transfer.notifications.bulk_result', ['success' => $successes, 'failed' => count($failures)]);
+        return redirect()->back()->with(count($failures) ? 'warning' : 'success', $message)->with('student_transfer_failures', $failures);
+    }
+
     public function handle(Request $request): RedirectResponse
     {
         $request->validate([
@@ -189,6 +238,11 @@ class StudentTransferService
             report($e);
 
             return $this->warning('student_transfer.notifications.transfer_failed');
+        }
+
+        $this->bulkLastSucceeded = true;
+        if ($this->bulkMode) {
+            return redirect()->back();
         }
 
         if ($currentClassId === $targetClassId) {
@@ -398,6 +452,10 @@ class StudentTransferService
 
     private function warning(string $translationKey): RedirectResponse
     {
+        if ($this->bulkMode) {
+            throw new \RuntimeException($translationKey);
+        }
+
         return redirect()->back()->with('warning', __($translationKey));
     }
 

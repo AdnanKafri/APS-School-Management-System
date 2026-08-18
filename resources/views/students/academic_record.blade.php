@@ -28,10 +28,10 @@
                 <a class="academic-record__item" href="{{ route('dashboard.student.academic_record.show', $placement->id) }}">
                     <div class="d-flex justify-content-between align-items-start flex-wrap">
                         <h4 class="mb-2">{{ optional($placement->year)->name ?: 'عام دراسي غير محدد' }}</h4>
-                        @if ($placement->status === 'active')
-                            <span class="academic-record__status">الحالي</span>
+                        @if ($currentYear && $placement->status === 'active' && (int) $placement->year_id === (int) $currentYear->id)
+                            <span class="academic-record__status">&#x627;&#x644;&#x62D;&#x627;&#x644;&#x64A;</span>
                         @else
-                            <span class="text-muted">سجل سابق</span>
+                            <span class="text-muted">&#x633;&#x62c;&#x644; &#x633;&#x627;&#x628;&#x642;</span>
                         @endif
                     </div>
                     <div class="academic-record__meta">
