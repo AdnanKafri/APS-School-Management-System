@@ -27,6 +27,7 @@ use App\Supervisor;
 use App\Supervisor_class_lesson;
 use App\Teacher;
 use App\Room_student;
+use App\StudentAcademicPlacement;
 use App\Post;
 use App\Recruitment;
 use App\Slider;
@@ -5688,12 +5689,73 @@ $applicants=Applicant::where('job_id',$job_id)->delete();
 
             $request->validate(['year_id' => 'required|integer|exists:years,id']);
             DB::transaction(function () use ($request) {
+                $previousYear = Year::where('current_year', 1)->lockForUpdate()->first();
+                $nextYear = Year::whereKey($request->year_id)->lockForUpdate()->firstOrFail();
+
                 Year::where('current_year', 1)->update(['current_year' => 0]);
-                Year::whereKey($request->year_id)->update(['current_year' => 1]);
+                Year::whereKey($nextYear->id)->update(['current_year' => 1]);
+                $nextYear->current_year = 1;
+
+                if ($previousYear && (int) $previousYear->id !== (int) $nextYear->id) {
+                    StudentAcademicPlacement::where('year_id', $previousYear->id)
+                        ->where('status', 'active')
+                        ->update(['status' => 'closed', 'effective_to' => now()]);
+                }
+
+                $this->reconcileActiveYearPlacements($nextYear);
             });
 
             return redirect()->back();
 
+        }
+
+        private function reconcileActiveYearPlacements(Year $year)
+        {
+            $enrollments = Room_student::where('year_id', $year->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($enrollments as $enrollment) {
+                $room = Room::where('id', $enrollment->room_id)
+                    ->where('year_id', $year->id)
+                    ->first();
+                if (!$room) {
+                    continue;
+                }
+
+                $placements = StudentAcademicPlacement::where('student_id', $enrollment->student_id)
+                    ->where('year_id', $year->id)
+                    ->where('status', 'active')
+                    ->orderByDesc('id')
+                    ->lockForUpdate()
+                    ->get();
+                $matching = $placements->first(function ($placement) use ($room) {
+                    return (int) $placement->room_id === (int) $room->id
+                        && (int) $placement->class_id === (int) $room->class_id;
+                });
+
+                foreach ($placements as $placement) {
+                    if (!$matching || (int) $placement->id !== (int) $matching->id) {
+                        $placement->status = 'closed';
+                        $placement->effective_to = $placement->effective_to ?: now();
+                        $placement->save();
+                    }
+                }
+
+                if (!$matching) {
+                    StudentAcademicPlacement::create([
+                        'student_id' => $enrollment->student_id,
+                        'year_id' => $year->id,
+                        'class_id' => $room->class_id,
+                        'room_id' => $room->id,
+                        'effective_from' => $enrollment->created_at ?: now(),
+                        'status' => 'active',
+                        'reason' => 'legacy_sync',
+                        'action_source' => 'legacy_room_student',
+                    ]);
+                }
+            }
         }
 
 

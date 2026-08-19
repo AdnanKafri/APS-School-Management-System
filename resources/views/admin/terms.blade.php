@@ -197,6 +197,9 @@
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     <div class="terms-toolbar">
         <div class="terms-toolbar__actions">
@@ -403,11 +406,11 @@ var table_test = $('#table_xx').DataTable({
         {
             data: 'id',
             render: function (data, type, full) {
-                let status = 'لا';
+                let status = @json(__('terms.not_current'));
                 let style = `style="color:red;"`;
                 if (full.current_term == 1) {
                     style = `style="color:green;"`;
-                    status = 'نعم';
+                    status = @json(__('terms.current'));
                 }
                 return `${full.current_term != null ? `<p ${style}>${status}</p>` : ""}`;
             },
@@ -416,6 +419,14 @@ var table_test = $('#table_xx').DataTable({
         {
             data: 'id',
             render: function (data, type, full) {
+                const setCurrentLabel = @json(__('terms.set_current'));
+                const csrfToken = @json(csrf_token());
+                const setCurrentAction = full.current_term == 1 ? '' : `
+                    <form method="POST" action="{{ route('term_set_current') }}" style="display:inline-block;margin-inline-start:.35rem;">
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <input type="hidden" name="term_id" value="${full.id}">
+                        <button type="submit" class="btn btn-success btn-sm terms-action-btn">${setCurrentLabel}</button>
+                    </form>`;
                 return `
                     <a data-id="${full.id}" style="font-size:18px !important"
                        data-type="${full.type}" data-year="${full.year.name}" data-yearid="${full.year.id}"
@@ -425,6 +436,7 @@ var table_test = $('#table_xx').DataTable({
                        class="btn btn-info btn-sm edit terms-action-btn" title="تعديل">
                         <i class="fa fa-eye fa-x" style="color:#eff0f1"></i>
                     </a>
+                    ${setCurrentAction}
                 `;
             },
             orderable: false

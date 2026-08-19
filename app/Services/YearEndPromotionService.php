@@ -160,10 +160,6 @@ class YearEndPromotionService
             $oldReport = Report_card::where('student_id', $student->id)
                 ->where('year_id', $sourceYear->id)->where('room_id', $sourceRoom->id)->first();
 
-            $oldPlacement->effective_to = now();
-            $oldPlacement->status = 'closed';
-            $oldPlacement->save();
-
             $newPlacement = StudentAcademicPlacement::create([
                 'student_id' => $student->id,
                 'year_id' => $targetYear->id,
@@ -247,9 +243,8 @@ class YearEndPromotionService
             ->lockForUpdate()
             ->first();
         if ($oldPlacement) {
-            $oldPlacement->effective_to = $oldPlacement->effective_to ?: now();
-            $oldPlacement->status = 'closed';
-            $oldPlacement->save();
+            // Preparation must not close the current year's placement. The
+            // placement is closed when the target year is activated.
         } elseif (!$existing) {
             StudentAcademicPlacement::create([
                 'student_id' => $student->id,
@@ -257,8 +252,8 @@ class YearEndPromotionService
                 'class_id' => $targetRoom->class_id,
                 'room_id' => $sourceEnrollment->room_id,
                 'effective_from' => $sourceEnrollment->created_at ?: now(),
-                'effective_to' => now(),
-                'status' => 'closed',
+                'effective_to' => null,
+                'status' => 'active',
                 'reason' => 'legacy_sync',
                 'action_source' => 'legacy_room_student',
             ]);

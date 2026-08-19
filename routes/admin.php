@@ -137,6 +137,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
 
     Route::post('/term_store', 'DashboardController@term_store')->name('term_store');
     Route::post('/term_update', 'DashboardController@term_update')->name('term_update');
+    Route::post('/term_set_current', 'DashboardController@setCurrentTerm')->name('term_set_current');
     Route::post('/year_store', 'DashboardController@year_store')->name('year_store');
     Route::post('/year_update', 'DashboardController@year_update')->name('year_update');
 

@@ -854,6 +854,16 @@ public function countries_currencies_archive($id)
             'year_id' => 'required|integer|exists:years,id',
         ]);
 
+        if ($request->boolean('current_term')) {
+            $activeYear = Year::where('current_year', 1)->first();
+            if (!$activeYear) {
+                return redirect()->back()->with('error', __('terms.missing_year'));
+            }
+            if ((int) $request->year_id !== (int) $activeYear->id) {
+                return redirect()->back()->with('error', __('terms.active_year_only'));
+            }
+        }
+
         DB::transaction(function () use ($request) {
             $isCurrent = $request->boolean('current_term');
             if ($isCurrent) {
@@ -882,6 +892,16 @@ public function countries_currencies_archive($id)
             'year_id' => 'required|integer|exists:years,id',
         ]);
 
+        if ($request->boolean('current_term')) {
+            $activeYear = Year::where('current_year', 1)->first();
+            if (!$activeYear) {
+                return redirect()->back()->with('error', __('terms.missing_year'));
+            }
+            if ((int) $request->year_id !== (int) $activeYear->id) {
+                return redirect()->back()->with('error', __('terms.active_year_only'));
+            }
+        }
+
         DB::transaction(function () use ($request) {
             $term = Term_year::findOrFail($request->term_id);
             $isCurrent = $request->boolean('current_term');
@@ -903,6 +923,37 @@ public function countries_currencies_archive($id)
 
 
         return redirect()->back()->with('success', '! تمت العملية بنجاح');
+    }
+
+    public function setCurrentTerm(Request $request)
+    {
+        $request->validate([
+            'term_id' => 'required|integer|exists:term_years,id',
+        ]);
+
+        $activeYear = Year::where('current_year', 1)->first();
+        if (!$activeYear) {
+            return redirect()->back()->with('error', __('terms.missing_year'));
+        }
+
+        $term = Term_year::find($request->term_id);
+        if (!$term) {
+            return redirect()->back()->with('error', __('terms.missing_term'));
+        }
+
+        if ((int) $term->year_id !== (int) $activeYear->id) {
+            return redirect()->back()->with('error', __('terms.active_year_only'));
+        }
+
+        DB::transaction(function () use ($activeYear, $term) {
+            Term_year::where('year_id', $activeYear->id)
+                ->update(['current_term' => 0]);
+
+            $term->current_term = 1;
+            $term->save();
+        });
+
+        return redirect()->back()->with('success', __('terms.set_current_success'));
     }
 
     public function year_store(Request $request)

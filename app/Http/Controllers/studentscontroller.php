@@ -3349,8 +3349,14 @@ class studentscontroller extends Controller
 
     private function studentHasActivePlacementForRoom($studentId, $roomId)
     {
+        $year = Year::where('current_year', '1')->first();
+        if (!$year) {
+            return false;
+        }
+
         return StudentAcademicPlacement::where('student_id', $studentId)
             ->where('room_id', $roomId)
+            ->where('year_id', $year->id)
             ->where('status', 'active')
             ->exists();
     }

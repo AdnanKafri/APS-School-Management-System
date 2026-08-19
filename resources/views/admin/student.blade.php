@@ -690,6 +690,11 @@
 @section('content')
 <div class="student-index-v2">
 
+@if (!$year2)
+    <div class="alert alert-warning" role="alert">
+        {{ __('student_transfer.validation.transfer_active_year_missing') }}
+    </div>
+@endif
 @if (session('warning'))
     <div class="alert alert-warning" role="alert">{{ session('warning') }}</div>
 @endif
@@ -1203,7 +1208,7 @@ $about = \App\Other::find(1);
                     <input type="hidden" name="student_id" id="student_id">
                     <input type="hidden" name="old_class_id" id="old_class_id2">
 
-                    <input type="hidden" name="year_id" id="years" value={{$year2->id}}>
+                    <input type="hidden" name="year_id" id="years" value="{{ $year2 ? $year2->id : '' }}">
 
                     <div class="alert alert-info text-right" style="direction: rtl;">
                         {{ __('student_transfer.notice') }}
@@ -1898,13 +1903,16 @@ if($('#hidden_student_phone').val()==1){
             {
                 data: 'id',
                 render: function (data, type, full) {
-                    return `${full.room[0] != null ? full.room[0].classes.name : ""}`;
+                    const currentRoom = Array.isArray(full.room) && full.room.length ? full.room[0] : null;
+                    const currentClass = currentRoom && currentRoom.classes ? currentRoom.classes : null;
+                    return `${currentClass ? currentClass.name : ""}`;
                 },orderable : false
             },
             {
                 data: 'id',
                 render: function (data, type, full) {
-                     return `${full.room[0] != null ? full.room[0].name : ""}`;
+                     const currentRoom = Array.isArray(full.room) && full.room.length ? full.room[0] : null;
+                     return `${currentRoom ? currentRoom.name : ""}`;
                 },orderable : false
             },
             {
@@ -1919,7 +1927,7 @@ if($('#hidden_student_phone').val()==1){
                     <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow ">
         <a href=".changeStudentModal" class="dropdown-item change_student" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" style="
                     direction: ltr;"><i class="fa fa-random"></i>{{ __('student_transfer.change_action') }}</a>
-        <a href=".financialaccountModal" class="dropdown-item financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.room[0] != null ? full.room[0].classes.id : '0' }" style="
+        <a href=".financialaccountModal" class="dropdown-item financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.room && full.room[0] && full.room[0].classes ? full.room[0].classes.id : '0' }" style="
                     direction: ltr;"><i class="fa fa-folder"></i>الحساب المالي</a>
                     
 
@@ -2059,14 +2067,17 @@ else{
             {
                 data: 'id',
                 render: function (data, type, full) {
-                    return `${full.room[0] != null ? full.room[0].classes.name : ""}`;
+                    const currentRoom = Array.isArray(full.room) && full.room.length ? full.room[0] : null;
+                    const currentClass = currentRoom && currentRoom.classes ? currentRoom.classes : null;
+                    return `${currentClass ? currentClass.name : ""}`;
                 },orderable : false
             },
             {
                 data: 'id',
                 render: function (data, type, full) {
-                    v=full.room[0].id;
-                    return `${full.room[0] != null ? full.room[0].name : ""}`;
+                    const currentRoom = Array.isArray(full.room) && full.room.length ? full.room[0] : null;
+                    v = currentRoom ? currentRoom.id : 0;
+                    return `${currentRoom ? currentRoom.name : ""}`;
                 },orderable : false
             },
             {
@@ -2082,7 +2093,7 @@ else{
         <a href=".changeStudentModal" class="dropdown-item change_student" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" style="
                     direction: ltr;"><i class="fa fa-random"></i>{{ __('student_transfer.change_action') }}</a>
 
-        <a href=".financialaccountModal" class="dropdown-item financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.room[0] != null ? full.room[0].classes.id : '0' }" style="
+        <a href=".financialaccountModal" class="dropdown-item financial_account" data-toggle="modal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" data-class="${ full.room && full.room[0] && full.room[0].classes ? full.room[0].classes.id : '0' }" style="
                     direction: ltr;"><i class="fa fa-folder"></i>الحساب المالي</a>
                     
                     <a href=".changeLangModal" class="dropdown-item change_lang" data-toggle="modal" data-id="${full.id}" data-lang="${ full.lang }" style="direction: ltr;"><i class="fa fa-folder"></i> تغيير لغة الطالب</a>
