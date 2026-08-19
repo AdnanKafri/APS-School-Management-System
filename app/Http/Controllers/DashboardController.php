@@ -5973,6 +5973,93 @@ public function startQueueWorker()
             }
             $year1 = Year::where('current_year','1')->first();
 
+            // Keep the financial list visible after a year switch. Invoices
+            // remain attached to the permanent student and are not copied
+            // during academic-year preparation.
+            $financialYearId = $year1 && Invoice::where('year_id', $year1->id)->exists()
+                ? $year1->id
+                : Invoice::max('year_id');
+            $amountValue = trim((string) $request->amount);
+            $typeValue = (string) $request->type;
+
+            if (!$year1 || !$financialYearId) {
+                return response()->json([
+                    'draw' => (int) $draw,
+                    'iTotalRecords' => 0,
+                    'iTotalDisplayRecords' => 0,
+                    'aaData' => [],
+                ]);
+            }
+
+            $financialQuery = DB::table('students')
+                ->join('room_student', function ($join) use ($year1) {
+                    $join->on('students.id', '=', 'room_student.student_id')
+                        ->where('room_student.year_id', '=', $year1->id);
+                })
+                ->join('rooms', 'room_student.room_id', '=', 'rooms.id')
+                ->join('classes', 'rooms.class_id', '=', 'classes.id')
+                ->join('invoices', function ($join) use ($financialYearId) {
+                    $join->on('students.id', '=', 'invoices.student_id')
+                        ->where('invoices.year_id', '=', $financialYearId);
+                })
+                ->leftJoin('class_cost', function ($join) {
+                    $join->on('class_cost.country_id', '=', 'students.country_currency')
+                        ->on('class_cost.class_id', '=', 'classes.id');
+                })
+                ->when(in_array('student_hidden', Auth::user()->role->permissions), function ($query) {
+                    return $query->where('students.hidden', 0);
+                })
+                ->where(function ($query) use ($result_search) {
+                    $query->where('students.first_name', 'like', $result_search)
+                        ->orWhere('students.last_name', 'like', $result_search)
+                        ->orWhere('classes.name', 'like', $result_search);
+                })
+                ->select(
+                    'students.id',
+                    'students.first_name',
+                    'students.last_name',
+                    'rooms.id as room_id',
+                    'classes.id as class_id',
+                    'classes.name as classname',
+                    DB::raw('COALESCE(class_cost.cost, classes.fixed_cost) as fixed_cost'),
+                    DB::raw('SUM(invoices.invoice_amount) as total'),
+                    DB::raw('COALESCE(class_cost.cost, classes.fixed_cost) - SUM(invoices.invoice_amount) as remain_total')
+                )
+                ->groupBy('students.id', 'students.first_name', 'students.last_name', 'rooms.id', 'classes.id', 'classes.name', 'class_cost.cost');
+
+            if ($amountValue !== '' && is_numeric($amountValue)) {
+                $amount = (float) $amountValue;
+                if ($typeValue === '0') {
+                    $financialQuery->having('remain_total', '>', $amount);
+                } elseif ($typeValue === '1') {
+                    $financialQuery->having('total', '>', $amount);
+                } elseif ($typeValue === '2') {
+                    $financialQuery->having('total', '<', $amount);
+                }
+            }
+
+            $financialRecords = $financialQuery->orderBy('students.first_name')->get();
+            $visibleRecords = $financialRecords->slice((int) $start, (int) $rowperpage)->values();
+            $data_arr = $visibleRecords->map(function ($record) {
+                return [
+                    'id' => $record->id,
+                    'first_name' => $record->first_name,
+                    'last_name' => $record->last_name,
+                    'total' => $record->total,
+                    'remain_total' => $record->remain_total,
+                    'class' => $record->classname,
+                    'class_id' => $record->class_id,
+                    'fixed_cost' => $record->fixed_cost,
+                ];
+            })->all();
+
+            return response()->json([
+                'draw' => (int) $draw,
+                'iTotalRecords' => Student::count(),
+                'iTotalDisplayRecords' => $financialRecords->count(),
+                'aaData' => $data_arr,
+            ]);
+
             if ($request->amount == "") {
                 $request->amount = 0;
             }

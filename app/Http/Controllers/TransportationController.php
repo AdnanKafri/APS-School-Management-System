@@ -334,13 +334,15 @@ foreach($request->student_ids as $item){
     public function transport_invoices ($student_id)
     { 
          $year = Year::where('current_year', '1')->first();
-          $invoices=Transport_invoice::with('student')->where('student_id',$student_id)->where('year_id',$year->id)->paginate(paginate_num);
+          // This is a student invoice-history page. Historical transport
+          // invoices must remain visible after an academic-year rollover.
+          $invoices=Transport_invoice::with('student')->where('student_id',$student_id)->orderBy('year_id')->orderBy('id')->paginate(paginate_num);
  
    $student=Student::with('bus.bus_lines')->find($student_id);
 
            $sum_invoices=Transport_invoice::with('student')->where('student_id',$student_id)->where('year_id',$year->id)->sum('invoice_amount');
                  $remain_invoices= $student->bus->bus_lines->annual_cost-$sum_invoices;
-                        $count = Transport_invoice::with('student')->where('student_id',$student_id)->where('year_id',$year->id)->count();
+                        $count = Transport_invoice::with('student')->where('student_id',$student_id)->count();
 
  
         return view('admin.transportation.invoices', compact('year','count','invoices','student','remain_invoices'));

@@ -3096,35 +3096,39 @@ class studentscontroller extends Controller
 
         // Future prepared placements belong to admin rollover operations and
         // should not appear in the student's normal historical timeline.
-        if ($currentYear) {
-            $placements = $placements
-                ->filter(function ($placement) use ($currentYear) {
-                    return (int) $placement->year_id <= (int) $currentYear->id;
+        $currentYearId = optional($currentYear)->id;
+        $placements = $placements
+                ->when($currentYear, function ($placements) use ($currentYear) {
+                    return $placements->filter(function ($placement) use ($currentYear) {
+                        return (int) $placement->year_id <= (int) $currentYear->id;
+                    });
                 })
-                ->groupBy(function ($placement) {
-                    return implode(':', [
-                        $placement->year_id,
-                        $placement->class_id,
-                        $placement->room_id,
-                        optional($placement->effective_from)->format('Y-m-d H:i:s'),
-                    ]);
-                })
-                ->map(function ($sameInterval) {
-                    // A rollover-created placement and a later legacy_sync row
-                    // can describe the exact same interval. Keep the real
-                    // transition row in the student timeline, but preserve
-                    // every database row for audit/history purposes.
-                    return $sameInterval->sortByDesc(function ($placement) {
-                        return in_array($placement->action_source, ['legacy_sync', 'legacy_room_student'], true)
-                            ? 0
-                            : 1;
+                ->groupBy('year_id')
+                ->map(function ($sameYear) use ($currentYearId) {
+                    $active = $sameYear->first(function ($placement) use ($currentYearId) {
+                        return $placement->status === 'active'
+                            && $currentYearId !== null
+                            && (int) $placement->year_id === (int) $currentYearId;
+                    });
+
+                    return $active ?: $sameYear->sort(function ($left, $right) {
+                        $leftDate = optional($left->effective_from)->timestamp ?: 0;
+                        $rightDate = optional($right->effective_from)->timestamp ?: 0;
+
+                        if ($leftDate !== $rightDate) {
+                            return $rightDate <=> $leftDate;
+                        }
+
+                        return (int) $right->id <=> (int) $left->id;
                     })->first();
                 })
-                ->sort(function ($left, $right) use ($currentYear) {
+                ->sort(function ($left, $right) use ($currentYearId) {
                     $leftIsCurrent = $left->status === 'active'
-                        && (int) $left->year_id === (int) $currentYear->id;
+                        && $currentYearId !== null
+                        && (int) $left->year_id === (int) $currentYearId;
                     $rightIsCurrent = $right->status === 'active'
-                        && (int) $right->year_id === (int) $currentYear->id;
+                        && $currentYearId !== null
+                        && (int) $right->year_id === (int) $currentYearId;
 
                     if ($leftIsCurrent !== $rightIsCurrent) {
                         return $leftIsCurrent ? -1 : 1;
@@ -3139,7 +3143,6 @@ class studentscontroller extends Controller
                     return $rightDate <=> $leftDate;
                 })
                 ->values();
-        }
 
         $activePlacement = $placements->first(function ($placement) use ($currentYear) {
             return $currentYear

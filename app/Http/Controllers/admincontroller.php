@@ -5658,9 +5658,12 @@ $applicants=Applicant::where('job_id',$job_id)->delete();
         public function invoices_details ($student_id)  {
 
             $student = Student::find($student_id);
-            $year = Year::where('current_year','1')->first();
-
-            $invoices_details = Invoice::where('student_id',$student_id)->where('year_id',$year->id)->get();
+            // Invoice history belongs to the permanent student identity and
+            // must remain visible after academic-year or room changes.
+            $invoices_details = Invoice::where('student_id', $student_id)
+                ->orderBy('year_id')
+                ->orderBy('id')
+                ->get();
 
 
             return view('admin.invoices_details',compact('invoices_details','student'));

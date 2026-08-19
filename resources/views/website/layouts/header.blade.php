@@ -328,7 +328,7 @@
                                 </a>
                                 <h3 class="widget-title sch-footer-school-name">{{ $schoolDisplayName }}</h3>
                                 @if($footerDescription)
-                                    <p class="sch-footer-description">{{ \Illuminate\Support\Str::limit($footerDescription, 170) }}</p>
+                                    <p class="sch-footer-description">{{ school_text_limit($footerDescription, 170) }}</p>
                                 @endif
 
                             </aside>

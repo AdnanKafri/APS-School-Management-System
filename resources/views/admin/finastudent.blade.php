@@ -162,6 +162,7 @@
                 <div class="financial-toolbar">
                     <div class="financial-toolbar__filters">
                         <select id="type_filtter" class="form-control">
+                            <option value="">كل الطلاب</option>
                             <option value="0">باقي له أكثر من</option>
                             <option value="1">دافع أكثر من</option>
                             <option value="2">دافع أقل من</option>

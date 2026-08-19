@@ -110,7 +110,7 @@
                                     <i class="pbmit-kidzieo-icon pbmit-kidzieo-icon-book"></i>
                                 </div>
                                 <h3 class="modern-vision-title">{{ $item->title }}</h3>
-                                <p class="modern-vision-desc">{{ \Illuminate\Support\Str::limit((string) $item->title, 120) }}</p>
+                                <p class="modern-vision-desc">{{ school_text_limit($item->title, 120) }}</p>
                             </article>
                         </div>
                     @endforeach
@@ -179,7 +179,7 @@
                             @php
                                 $className = $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name);
                                 $classInfo = $item->description;
-                                $classInfo = \Illuminate\Support\Str::limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
+                                $classInfo = school_text_limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
                             @endphp
                             <article class="class-marquee-card">
                                 <div class="class-marquee-media">
@@ -197,7 +197,7 @@
                             @php
                                 $className = $locale === 'ar' ? $item->name : ($item->name_en ?: $item->name);
                                 $classInfo = $item->description;
-                                $classInfo = \Illuminate\Support\Str::limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
+                                $classInfo = school_text_limit((string) ($classInfo ?: ($isRtl ? 'مستوى دراسي ضمن المنهاج الأكاديمي.' : 'A grade level in the academic curriculum.')), 82);
                             @endphp
                             <article class="class-marquee-card">
                                 <div class="class-marquee-media">
@@ -336,7 +336,7 @@
                     @foreach($testimonials->take(3) as $item)
                         <div class="col-12 col-md-6 col-lg-4">
                             <article class="sch-quote-card h-100">
-                                <p>{{ \Illuminate\Support\Str::limit((string) $item->message, 180) }}</p>
+                                <p>{{ school_text_limit($item->message, 180) }}</p>
                                 <div class="sch-quote-user">
                                     <strong>{{ $item->user_name }}</strong>
                                     <span>{{ $item->job_title }}</span>
@@ -421,7 +421,7 @@
                                         <span class="blog-annc-mini-content">
                                             <strong>{{ $itemTitle }}</strong>
                                             @if($itemDescription)
-                                                <small>{{ \Illuminate\Support\Str::limit($itemDescription, 88) }}</small>
+                                                <small>{{ school_text_limit($itemDescription, 88) }}</small>
                                             @endif
                                         </span>
                                     </button>
