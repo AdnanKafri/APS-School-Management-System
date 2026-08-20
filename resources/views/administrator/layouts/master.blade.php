@@ -1,6 +1,7 @@
 <html>
 
 <head>
+    <meta name="robots" content="noindex, nofollow">
     <style>
         .gradient-custom-2,
         body {

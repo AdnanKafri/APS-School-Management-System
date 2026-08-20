@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() === 'en' ? 'en' : 'ar' }}" dir="{{ app()->getLocale() === 'en' ? 'ltr' : 'rtl' }}">
 <head>
+    <meta name="robots" content="noindex, nofollow">
     @php
         $logo = DB::table('other')->first();
         $scheduleController = new App\Http\Controllers\TeacherController_New();

@@ -10,6 +10,25 @@
         ? (optional($schoolData)->name_ar ?: optional($schoolData)->name_en ?: 'مدرسة الأدهم الخاصة')
         : (optional($schoolData)->name_en ?: optional($schoolData)->name_ar ?: 'Al Adham Private School');
     $officialLogo = asset('assets/images/school/adham_black.png');
+    $studentBrandIcon = asset('student/avatar.png');
+    $studentLogoPath = ltrim(trim((string) optional($schoolData)->logo), '/');
+    if (\Illuminate\Support\Str::startsWith($studentLogoPath, 'storage/')) {
+        $studentLogoPath = ltrim(substr($studentLogoPath, strlen('storage/')), '/');
+    }
+    if ($studentLogoPath !== '') {
+        $studentLogoCandidates = [
+            storage_path($studentLogoPath),
+            storage_path('app/public/' . $studentLogoPath),
+            public_path('storage/' . $studentLogoPath),
+            public_path($studentLogoPath),
+        ];
+        foreach ($studentLogoCandidates as $studentLogoCandidate) {
+            if (is_string($studentLogoCandidate) && file_exists($studentLogoCandidate)) {
+                $studentBrandIcon = asset('storage/' . $studentLogoPath);
+                break;
+            }
+        }
+    }
 @endphp
 <!doctype html>
 <html class="no-js" lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -17,9 +36,12 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>{{ $schoolName }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="robots" content="noindex, follow">
+    @include('website.partials.seo')
+    <meta name="theme-color" content="#1f4f8f">
+    <link rel="icon" href="{{ $studentBrandIcon }}">
+    <link rel="apple-touch-icon" href="{{ $studentBrandIcon }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
 
     <link rel="stylesheet" href="{{ asset('assets/website/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/website/css/fontawesome.css') }}">

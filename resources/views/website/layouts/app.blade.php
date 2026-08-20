@@ -13,6 +13,25 @@
     $schoolData = \App\School_data::first();
     $footer_web = $footer_web ?? \App\Footer_website::first();
     $officialLogo = asset('assets/images/school/adham_black.png');
+    $studentBrandIcon = asset('student/avatar.png');
+    $studentLogoPath = ltrim(trim((string) optional($schoolData)->logo), '/');
+    if (\Illuminate\Support\Str::startsWith($studentLogoPath, 'storage/')) {
+        $studentLogoPath = ltrim(substr($studentLogoPath, strlen('storage/')), '/');
+    }
+    if ($studentLogoPath !== '') {
+        $studentLogoCandidates = [
+            storage_path($studentLogoPath),
+            storage_path('app/public/' . $studentLogoPath),
+            public_path('storage/' . $studentLogoPath),
+            public_path($studentLogoPath),
+        ];
+        foreach ($studentLogoCandidates as $studentLogoCandidate) {
+            if (is_string($studentLogoCandidate) && file_exists($studentLogoCandidate)) {
+                $studentBrandIcon = asset('storage/' . $studentLogoPath);
+                break;
+            }
+        }
+    }
     $isHomepage = request()->routeIs('website.index');
     $localMediaExists = function ($relativePath) {
         $relativePath = ltrim((string) $relativePath, '/');
@@ -44,7 +63,7 @@
         return false;
     };
     $resolveImage = function ($path, $fallback = null) use ($localMediaExists) {
-        $defaultFallback = $fallback ?: asset('assets/website/images/homepage-1/slider/slider-img-01.jpg');
+        $defaultFallback = $fallback ?: asset('assets/website/images/pbmit-slider/slider-b-new-01.jpg');
         $path = trim((string) $path);
 
         if ($path === '') {
@@ -161,21 +180,15 @@
 <!-- Mirrored from kidzieo-demo.pbminfotech.com/html-demo/ by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 02 Apr 2024 10:17:03 GMT -->
 
 <head>
-    <meta property="og:title" content="{{ optional($schoolData)->name ?: 'مدرسة الأدهم الخاصة' }}" />
-    <meta property="og:description" content="{{ optional($footer_web)->title ?: 'موقع مدرسة الأدهم الخاصة - تعليم متميز لبناء المستقبل' }}" />
-    <meta property="og:image" content="{{ $officialLogo }}" />
-    <meta property="og:url" content="https://aladhamedu.com/ar" />
-    <meta property="og:type" content="website" />
-    <meta property="og:locale" content="ar_AR" />
 
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>{{ optional($schoolData)->name_en ?? 'Aladham Private School' }}</title>
-    <meta name="robots" content="noindex, follow">
-    <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png">
+    @include('website.partials.seo')
+    <meta name="theme-color" content="#1f4f8f">
+    <link rel="icon" href="{{ $studentBrandIcon }}">
+    <link rel="apple-touch-icon" href="{{ $studentBrandIcon }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
     <!-- CSS
    ============================================ -->
     <!-- Bootstrap CSS -->
@@ -443,7 +456,7 @@
         @if ($isHomepage)
             @php
                 $heroSlides = isset($sliders) ? $sliders : collect();
-                $heroFallback = asset('assets/website/images/homepage-1/slider/slider-img-01.jpg');
+                $heroFallback = asset('assets/website/images/pbmit-slider/slider-b-new-01.jpg');
                 $hasHeroSlider = $heroSlides->count() > 1;
             @endphp
             <div class="sch-hero-wrapper">

@@ -5,6 +5,7 @@
 <!DOCTYPE html>
 <html lang="{{ $isRtl ? 'ar' : $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
+    <meta name="robots" content="noindex, nofollow">
     @php
         $school_data = \App\School_data::first();
     @endphp

@@ -7,18 +7,36 @@
 
     $makeMediaUrl = function ($path, $fallback = null) {
         if (empty($path)) {
-            return $fallback ?: asset('assets/website/images/homepage-1/static-box/staticbox-img-01.jpg');
+            return $fallback ?: asset('assets/website/images/course/course-img-01.jpg');
         }
         if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
             return $path;
         }
-        return asset('storage/' . ltrim($path, '/'));
+        $cleanPath = ltrim((string) $path, '/');
+        $storagePath = \Illuminate\Support\Str::startsWith($cleanPath, 'storage/')
+            ? ltrim(substr($cleanPath, strlen('storage/')), '/')
+            : $cleanPath;
+        $candidates = [
+            public_path($cleanPath),
+            public_path('storage/' . $storagePath),
+            storage_path($storagePath),
+            storage_path('app/public/' . $storagePath),
+        ];
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) && file_exists($candidate)) {
+                if (\Illuminate\Support\Str::startsWith($cleanPath, ['assets/', 'website/', 'storage/'])) {
+                    return asset($cleanPath);
+                }
+                return asset('storage/' . $cleanPath);
+            }
+        }
+        return $fallback ?: asset('assets/website/images/course/course-img-01.jpg');
     };
 
     $heroSlide = isset($sliders) && $sliders->count() ? $sliders->first() : null;
-    $fallbackWide = asset('assets/website/images/homepage-1/static-box/staticbox-img-01.jpg');
-    $fallbackSquare = asset('assets/website/images/homepage-1/gallery/gallery-img-01.jpg');
-    $fallbackAbout = asset('assets/website/images/homepage-1/about-img-01.jpg');
+    $fallbackWide = asset('assets/website/images/course/course-img-01.jpg');
+    $fallbackSquare = asset('assets/website/images/blog/blog-01.jpg');
+    $fallbackAbout = asset('assets/website/images/pbmit-slider/slider-b-new-02.jpg');
     $txt = [
         'welcome' => $isRtl ? 'مرحباً بكم' : 'Welcome',
         'our_vision' => $isRtl ? 'رؤيتنا' : 'Our Vision',

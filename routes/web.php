@@ -69,6 +69,10 @@ Route::get('adh-login', function () {
     return redirect()->to(url('ar/adh-login'));
 });
 
+Route::get('/robots.txt', 'PublicSeoController@robots')->name('seo.robots');
+Route::get('/sitemap.xml', 'PublicSeoController@sitemap')->name('seo.sitemap');
+Route::get('/site.webmanifest', 'PublicSeoController@manifest')->name('seo.manifest');
+
 Route::post('/stu_register2', 'websitecontroller@stu_register')->name('website.stu_register');
 Route::get('/gallery/media', 'websitecontroller@gallery_media')->name('gallery.media');
 Route::get('redirectTo404', function () {

@@ -17,6 +17,7 @@
 <html>
 
 <head>
+    <meta name="robots" content="noindex, nofollow">
     @php
         $school_data = \App\School_data::first();
     @endphp
