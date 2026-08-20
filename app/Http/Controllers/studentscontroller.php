@@ -2511,30 +2511,38 @@ class studentscontroller extends Controller
 
     public function results($student_id)
     {
-
+        $authenticatedStudentId = (int) auth()->user()->student_id;
+        if ((int) $student_id !== $authenticatedStudentId) {
+            abort(403);
+        }
 
         $year = Year::where('current_year', '1')->first();
-        $student = Student::with(['room' => fn ($q1) => $q1->where('room_student.year_id', $year->id)])->find($student_id);
-        $room = $student->room;
-        if ($room->isEmpty() || $student->status != '1') {
-            return redirect()->back()->with('warning', 'لم تصدر النتائج بعد !');
-        }
+        $student = Student::with('details')->findOrFail($authenticatedStudentId);
+        $room = null;
+        $class = null;
+        $room_id = null;
+        $lessons = collect();
         $student_mark = null;
-        if ($student->status != 0) {
-            $student_mark = Students_mark::where('student_id', $student_id)
-                ->where('room_id', $room[0]->id)->where('year_id', $year->id)->first();
+
+        if ($year) {
+            $room = $student->room()->where('rooms.year_id', $year->id)->first();
         }
 
-        $lessons =  $room[0]->classes->lessons;
+        if ($room) {
+            $class = $room->classes;
+            $room_id = $room->id;
+            $lessons = $class ? $class->lessons : collect();
+            $student_mark = $year
+                ? Students_mark::where('student_id', $authenticatedStudentId)
+                    ->where('room_id', $room->id)
+                    ->where('year_id', $year->id)
+                    ->first()
+                : null;
+        }
 
-        $count = Message::whereNull('view')->where('student_id', auth()->user()->student_id)->get();
-
-        $count = $count->count();
-
-
-        $room = $student->room()->where('rooms.year_id', $year->id)->first();
-        $class = $room->classes;
-        return view('students.results', compact('student_mark', 'student', 'class', 'room', 'count', 'lessons'));
+        $count = Message::whereNull('view')->where('student_id', $authenticatedStudentId)->count();
+        $school_data = School_data::first();
+        return view('students.results', compact('student_mark', 'student', 'class', 'room', 'room_id', 'count', 'lessons', 'school_data'));
     }
 
     public function upload_store(Request $request)
@@ -2647,15 +2655,39 @@ class studentscontroller extends Controller
     public function financial_account($student_id)
     {
 
+        $authenticatedStudentId = (int) auth()->user()->student_id;
+        if ((int) $student_id !== $authenticatedStudentId) {
+            abort(403);
+        }
+
         $year = Year::where('current_year', '1')->first();
-        $student = Student::with(['room' => fn ($q1) => $q1->where('room_student.year_id', $year->id)])->find($student_id);
-        $class = $student->room[0]->classes;
-        $invoices = Invoice::where('student_id', $student_id)->where('class_id', $class->id)->where('year_id', $year->id)->get();
-        $class = Classe::find($class->id);
-        $year = Year::where('current_year', '1')->first();
+        $student = Student::with('details')->findOrFail($authenticatedStudentId);
+        $room = $year
+            ? $student->room()->where('rooms.year_id', $year->id)->first()
+            : null;
+
+        if (!$room) {
+            $room = $student->room()
+                ->when($year, function ($query) use ($year) {
+                    $query->where('rooms.year_id', '<=', $year->id);
+                })
+                ->orderByDesc('rooms.year_id')
+                ->orderByDesc('rooms.id')
+                ->first();
+        }
+
+        $class = $room ? $room->classes : null;
+
+        // Financial history belongs to the permanent student identity. Academic
+        // year/class filters here hide valid invoices after a year rollover.
+        $invoices = Invoice::where('student_id', $authenticatedStudentId)
+            ->orderByDesc('created_at')
+            ->get();
 
         $remain_amount = 0;
-        $cost=Class_cost::where('class_id',$class->id)->where('country_id',$student->country_currency)->first();
+        $cost = $class
+            ? Class_cost::where('class_id', $class->id)->where('country_id', $student->country_currency)->first()
+            : null;
        $full_amount = 0;
        if ($cost) {
        $full_amount = $cost->cost;
@@ -2667,9 +2699,7 @@ class studentscontroller extends Controller
         $remain_amount = $full_amount - $amount_paid;
         $count = Message::whereNull('view')->where('student_id', auth()->user()->student_id)->get();
         $count = $count->count();
-        $room = $student->room()->where('rooms.year_id', $year->id)->first();
-        $class = $room->classes;
-        $room_id = $room->id;
+        $room_id = optional($room)->id;
         return view('students.financial_account', compact('room_id', 'invoices', 'student', 'class', 'room', 'count', 'remain_amount', 'amount_paid', 'full_amount'));
     }
 
@@ -3167,6 +3197,7 @@ class studentscontroller extends Controller
     public function academic_record_show($placement_id)
     {
         $student = Student::findOrFail(auth()->user()->student_id);
+        $currentYear = Year::where('current_year', '1')->first();
         $placement = StudentAcademicPlacement::with(['year', 'classRoom', 'room'])
             ->where('id', $placement_id)
             ->where('student_id', $student->id)
@@ -3343,7 +3374,7 @@ class studentscontroller extends Controller
         $school_data = School_data::first();
 
         return view('students.academic_record_show', compact(
-            'school_data', 'student', 'placement', 'room', 'room_id', 'class',
+            'school_data', 'student', 'placement', 'currentYear', 'room', 'room_id', 'class',
             'marks', 'reportCards', 'examResults', 'quizResults',
             'submissions', 'examFiles', 'certificates', 'markRows',
             'assessmentRows', 'fileRows', 'reportRows', 'certificateRows'

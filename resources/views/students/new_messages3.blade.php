@@ -1,190 +1,63 @@
 @extends('students.layouts.app4')
-@section('title')
-School
-@endsection
-@section('css')
-     <style>
 
-.chat-online {
-    color: #34ce57
-}
-
-.chat-offline {
-    color: #e4606d
-}
-
-.chat-messages {
-    display: flex;
-    flex-direction: column;
-    max-height: 800px;
-    overflow-y: scroll
-}
-
-.chat-message-left,
-.chat-message-right {
-    display: flex;
-    flex-shrink: 0
-}
-
-.chat-message-left {
-    margin-right: auto
-}
-
-.chat-message-right {
-    flex-direction: row-reverse;
-    margin-left: auto
-}
-.py-3 {
-    padding-top: 1rem!important;
-    padding-bottom: 1rem!important;
-}
-.px-4 {
-    padding-right: 1.5rem!important;
-    padding-left: 1.5rem!important;
-}
-.flex-grow-0 {
-    flex-grow: 0!important;
-}
-.border-top {
-    border-top: 1px solid #dee2e6!important;
-}
-.bg-success, .settings-panel .color-tiles .tiles.success{
-  background-color: #a5c9ff !important;
-    color: #fff !important;
-}
-.nname{
-    color: #152C4F;
-    font-weight: 600;
-}
-.btn-primary{
-  background: #152C4F;
-    border-color: #152C4F;
-    color: #ffffff;
-    font-weight: 900;
-    font-size: 20px;
-}
-.btn-primary:hover{
-  background: #a5c9ff ;
-}
-.bg-light, .settings-panel .color-tiles .tiles.light{
-  background-color: #a5c9ff4f  !important;
-}
-.mb-1{
-    min-height: 24px;
-
-}
-
-</style>
-@endsection
+@section('title', 'الرسائل مع المعلمين')
 
 @section('content')
-
-
-
-<div class="main-panel" >
-    <ul class="breadcrumbs" style="padding-bottom: 7px;
-    padding-top: 11px;">
-
-      <li class="li"><a href="{{ route('dashboard.student.lessons',$student->id) }}">المواد</a></li>
-      <li class="li"><a href="#">رسائل مع الاستاذ </a></li>
-
-   </ul>
-    <div class="content-wrapper pb-0">
-      <!--content  -->
-      <main class="content">
-        <div class="container p-0" style="padding-bottom: 100px !important;">
-
-        <h1 class="h3 mb-3"></h1>
-
-        <div class="card">
-
-          <div class="row g-0">
-            <div class="col-12 col-lg-5 col-xl-3 border-right">
-              
-              @foreach ($teachers as $key =>  $teacher)
-               @if($teacher_id == $teacher->id)
-               <input type="hidden" value="{{$teacher_id}}"  id="teacher_id">
-              <a  class="list-group-item list-group-item-action border-0 active  teacher{{ $key }} @if($key  == 0)  @endif teacher"
-                id="std1-tab"
-                data-toggle="tab"
-                href="#teacher{{ $key }}" role="tab"
-                aria-controls="teacher{{ $key }}"
-                aria-selected="true"
-                data-id="{{ $teacher->id }}">
-                <div class="badge bg-success float-right message_count"  data-id="{{ $teacher->id }}" data-count="{{ $teacher->message_count }}">{{ $teacher->message_count }}</div>
-                <div class="d-flex align-items-start">
-                    @if($teacher->image)
-                    <img src="{{ asset('storage/'. $teacher->image) }}" class="rounded-circle mr-1" alt="William Harris" width="40" height="40">
-                    @else
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZEAvDrrXeFOolwuey8_vCnT8vTn83dDC1Tc83pCFVUQ&s" class="rounded-circle mr-1" alt="William Harris" width="40" height="40">
-                    @endif
-
-                  <div class="flex-grow-1 ml-3">
-                    <span class="nname">{{ $teacher->first_name }} {{ $teacher->last_name }}  </span>
-                  </div>
+<main class="main-panel">
+    <div class="content-wrapper">
+        <div class="sp-page">
+            <section class="sp-page-header">
+                <div class="sp-page-header__content">
+                    <span class="sp-page-header__eyebrow">التواصل المدرسي</span>
+                    <h1>الرسائل مع المعلمين</h1>
+                    <p>اختر معلماً للاطلاع على المحادثة وإرسال رسالة.</p>
                 </div>
-              </a>
-                @else
-                <a  class="list-group-item list-group-item-action border-0  teacher{{ $key }} @if($key  == 0)  @endif teacher"
-                id="std1-tab"
-                data-toggle="tab"
-                href="#teacher{{ $key }}" role="tab"
-                aria-controls="teacher{{ $key }}"
-                aria-selected="true"
-                data-id="{{ $teacher->id }}">
-                <div class="badge bg-success float-right message_count"  data-id="{{ $teacher->id }}" data-count="{{ $teacher->message_count }}">{{ $teacher->message_count }}</div>
-                <div class="d-flex align-items-start">
-                    @if($teacher->image)
-                    <img src="{{ asset('storage/'. $teacher->image) }}" class="rounded-circle mr-1" alt="William Harris" width="40" height="40">
-                    @else
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZEAvDrrXeFOolwuey8_vCnT8vTn83dDC1Tc83pCFVUQ&s" class="rounded-circle mr-1" alt="William Harris" width="40" height="40">
-                    @endif
-
-                  <div class="flex-grow-1 ml-3">
-                    <span class="nname">{{ $teacher->first_name }} {{ $teacher->last_name }}  </span>
-                  </div>
+                <div class="sp-page-header__aside">
+                    <div class="sp-header-stat"><span>المعلمون</span><strong>{{ $teachers->count() }}</strong></div>
                 </div>
-              </a>
-               @endif
-              @endforeach
+            </section>
 
-              <hr class="d-block d-lg-none mt-1 mb-0">
-            </div>
-            <div class="col-12 col-lg-7 col-xl-9">
-                <form action="" class="this-form1">
-                    @csrf
-              <div class="position-relative">
-                <div class="chat-messages p-4 messages-content " id="messages">
+            <section class="sp-chat sp-card">
+                <aside class="sp-chat__contacts" aria-label="قائمة المعلمين">
+                    <div class="sp-chat__contacts-header"><strong>المعلمون</strong><small>اختر محادثة</small></div>
+                    <div class="sp-chat__contacts-list">
+                        @forelse ($teachers as $key => $teacher)
+                            @php $isSelected = (int) $teacher_id === (int) $teacher->id || ((int) $teacher_id === 0 && $key === 0); @endphp
+                            @if ($isSelected)<input type="hidden" value="{{ $teacher_id }}" id="teacher_id">@endif
+                            <a class="sp-chat-contact teacher teacher{{ $key }} {{ $isSelected ? 'active' : '' }}" href="#teacher{{ $key }}" data-toggle="tab" role="tab" data-id="{{ $teacher->id }}" aria-selected="{{ $isSelected ? 'true' : 'false' }}">
+                                <img src="{{ $teacher->image ? asset('storage/' . $teacher->image) : asset('student/avatar.png') }}" alt="صورة {{ $teacher->first_name }} {{ $teacher->last_name }}">
+                                <span><strong class="nname">{{ $teacher->first_name }} {{ $teacher->last_name }}</strong><small>فتح المحادثة</small></span>
+                                @if ($teacher->message_count)
+                                    <span class="sp-chat-contact__count message_count" data-id="{{ $teacher->id }}" data-count="{{ $teacher->message_count }}">{{ $teacher->message_count }}</span>
+                                @else
+                                    <span class="message_count" data-id="{{ $teacher->id }}" data-count="0" hidden>0</span>
+                                @endif
+                            </a>
+                        @empty
+                            <div class="sp-empty sp-empty--compact"><span class="sp-empty__icon"><i class="mdi mdi-account-off-outline"></i></span><h3>لا يوجد معلمون متاحون</h3></div>
+                        @endforelse
+                    </div>
+                </aside>
 
+                <div class="sp-chat__conversation">
+                    <div class="sp-chat__conversation-header"><span class="sp-icon-box"><i class="mdi mdi-message-text-outline"></i></span><span><strong>المحادثة</strong><small>الرسائل محفوظة ضمن العام الدراسي الحالي</small></span></div>
+                    <form action="" class="this-form1 sp-chat__form">
+                        @csrf
+                        <div class="chat-messages messages-content sp-chat__messages" id="messages">
+                            <div class="sp-chat__placeholder"><i class="mdi mdi-message-processing-outline"></i><span>اختر معلماً لعرض الرسائل</span></div>
+                        </div>
+                        <div class="sp-chat__composer">
+                            <input type="hidden" class="teacher_id" name="teacher_id">
+                            <input type="hidden" class="student_id" name="student_id" value="{{ $student->id }}">
+                            <input type="text" class="message-box form-control" name="message" placeholder="اكتب رسالتك" autocomplete="off">
+                            <button type="submit" class="sp-btn sp-btn--primary send"><i class="mdi mdi-send"></i> إرسال</button>
+                        </div>
+                    </form>
                 </div>
-              </div>
-
-              <div class="flex-grow-0 py-3 px-4 border-top">
-                <div class="input-group">
-                <input type="hidden" class="teacher_id" name="teacher_id">
-                <input type="hidden" class="student_id" name="student_id" value="{{ $student->id }}">
-                  <input type="text" class="message-box form-control"  name="message" placeholder="اكتب رسالتك">
-                  <button class="btn btn-primary send">ارسال</button>
-                </div>
-              </div>
-            </form>
-            </div>
-          </div>
-
+            </section>
         </div>
-      </div>
-    </main>
-
-      <!--end content-->
-
-</div>
-</div>
-
-
-
-
-
-
+    </div>
+</main>
 @endsection
 @section('js')
 <script>
@@ -504,11 +377,12 @@ var date = dt.getDate() + "/" + twoDigitMonth + "/" + dt.getFullYear();
                     }
                 });
             });
+
+            $('.teacher.active').first().trigger('click');
     })
    
 </script>
 
 @endsection
-
 
 

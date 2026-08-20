@@ -429,8 +429,6 @@ School
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
     <!--link for material icon -->
 
-    <link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/style.css') }}" />
-
     <link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/showcontent_style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
@@ -438,7 +436,7 @@ School
 @section('content')
 
 
-<div class="main-panel" style="background: #f8f9fb;">
+<div class="main-panel sp-content-page">
     @if (session()->has('success'))
 
     <script>

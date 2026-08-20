@@ -1,97 +1,60 @@
 @extends('students.layouts.app4')
-@section('title')
-School
-@endsection
-@section('css')
-@endsection
-<style>
 
-@media (min-width: 768px) and (max-width:1100px){
-    .col-md-3 {
-    -webkit-box-flex: 0;
-    -ms-flex: 0 0 70%;
-    flex: 0 0 47%;
-   max-width: 47%;
-}
-  }
-  @media(min-width:200px) and (max-width:700px){
-    .col-md-3{
-      padding-left: 0px !important;
-      padding-right: 0px !important;
-    }
-}
-  </style>
-</head>
+@section('title', 'دروس ' . $lesson->name)
+
 @section('content')
-<div class="main-panel" style="background: #f8f9fb;">
-	<ul class="breadcrumbs" style="padding-bottom: 7px;
-	padding-top: 11px;">
+<main class="main-panel">
+    <div class="content-wrapper">
+        <div class="sp-page">
+            <section class="sp-page-header">
+                <div class="sp-page-header__content">
+                    <a class="sp-page-header__eyebrow" href="{{ route('dashboard.student.lessons', $student->id) }}">المواد الدراسية</a>
+                    <h1>{{ $lesson->name }}</h1>
+                    <p>الدروس المنشورة والمحتوى التعليمي المتاح لهذه المادة.</p>
+                </div>
+                <div class="sp-page-header__aside">
+                    <div class="sp-header-stat">
+                        <span>الدروس المتاحة</span>
+                        <strong>{{ $lectures->filter(function ($lecture) use ($now) { return $lecture->lecture_time < $now; })->count() }}</strong>
+                    </div>
+                </div>
+            </section>
 
-	  <li class="li"><a href="{{ route('dashboard.student.lessons',$student->id) }}">الصفحة الرئيسية</a></li>
-	  <li class="li"><a href="#">الدروس</a></li>
-
-   </ul>
-	<div class="content-wrapper pb-0">
-	  <!--content -->
-		<!--card of subjects-->
-		  <div class="container" style="padding-bottom: 100px;" >
-			<div class="row">
-    
-				  <!--start card-->
-				  @foreach ($lectures as $lecture)
-				  @if($lecture->lecture_time < $now )
-				  <div class="col-md-3 lcol">
-					<div class="card__collection clear-fix  animated fadeInDown">
-				  <div class="cards cards--two"  data-aos="fade-down"
-				  data-aos-easing="linear"
-				  data-aos-duration="1500">
-					 <h3 style="text-align: center;margin-top: 20px;color: white;">{{ $lecture->name }}  </h3>
-					  <!--img src="../download (26).jpg" alt="Cards Image"-->
-					  <div class="row lessonrow" style="left: 35px;
-					  z-index: 999;
-					  position: absolute;
-					  top: 75%;">
-						<a href="{{ route('dashboard.student.lesson.lecture.content', ['lesson_id' => $lesson->id,'student_id' =>$student->id,'lecture_id' => $lecture->id]) }}"  class="button2"><span>محتوى الدرس</span><i></i></a>
-					  </div>
-					  <span class="cards--two__rect"></span>
-					  <span class="cards--two__tri">
-
-					  </span>
-
-					</div>
-					</div>
-				  </div>
-				  @endif
-					@endforeach
-
-					<!--end card-->
-					<!--start card-->
-
-					<!--end card-->
-					<!--start card-->
-
-					<!--end card-->
-
-
-			</div><!---end row-->
-
-
-
-
-
-
-	<!-- partial -->
-  </div>
-  <!-- main-panel ends -->
-</div><!--end container of cards-->
-<!-- page-body-wrapper ends -->
-</div>
-	@endsection
-	@section('js')
-	<script>
-		   $( document ).ready(function(){
-           $('.lesson11').addClass('active') ;
-     })
-		AOS.init();
-	  </script>
-	@endsection
+            <section class="sp-section">
+                <div class="sp-grid sp-grid--auto">
+                    @php $visibleLectureCount = 0; @endphp
+                    @foreach ($lectures as $lecture)
+                        @if ($lecture->lecture_time < $now)
+                            @php $visibleLectureCount++; @endphp
+                            <article class="sp-card sp-lesson-card">
+                                <div class="sp-card__body">
+                                    <span class="sp-icon-box"><i class="mdi mdi-play-box-outline"></i></span>
+                                    <div>
+                                        <span class="sp-badge sp-badge--success">درس متاح</span>
+                                        <h3 class="sp-card__title">{{ $lecture->name }}</h3>
+                                        @if ($lecture->lecture_time)
+                                            <p class="sp-card__meta">نشر في {{ \Carbon\Carbon::parse($lecture->lecture_time)->format('Y-m-d') }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="sp-card__footer">
+                                    <a class="sp-btn sp-btn--primary sp-btn--block" href="{{ route('dashboard.student.lesson.lecture.content', ['lesson_id' => $lesson->id, 'student_id' => $student->id, 'lecture_id' => $lecture->id]) }}">
+                                        <i class="mdi mdi-book-open-variant"></i> فتح محتوى الدرس
+                                    </a>
+                                </div>
+                            </article>
+                        @endif
+                    @endforeach
+                    @if ($visibleLectureCount === 0)
+                        <div class="sp-empty">
+                            <span class="sp-empty__icon"><i class="mdi mdi-calendar-blank-outline"></i></span>
+                            <h3>لا توجد دروس منشورة</h3>
+                            <p>ستظهر الدروس هنا عند نشرها من المعلم.</p>
+                        </div>
+                    @endif
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+@endsection

@@ -32,15 +32,15 @@
   body.student-portal-body #sidebar.sidebar-offcanvas {
     display: flex;
     flex-direction: column;
-    top: 60px;
+    top: var(--sp-header, 60px);
     right: 0 !important;
     left: auto !important;
     bottom: 0;
     z-index: 1040 !important;
     width: min(82vw, 280px) !important;
     max-width: 280px;
-    height: calc(100vh - 60px) !important;
-    height: calc(100dvh - 60px) !important;
+    height: calc(100vh - var(--sp-header, 60px)) !important;
+    height: calc(100dvh - var(--sp-header, 60px)) !important;
     max-height: none !important;
     overflow-x: hidden;
     overflow-y: hidden;

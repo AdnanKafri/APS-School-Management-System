@@ -1,583 +1,99 @@
 @extends('students.layouts.app4')
-@section('title')
-School
-@endsection
-@section('css')
-     <style>
-    /*
-	/*table */
-table {
-  border-spacing: 1;
-  border-collapse: collapse;
-  background: linear-gradient(to right top, #2c71ad 50%, rgb(132, 167, 196));
-  border-radius: 6px;
-  overflow: hidden;
-  max-width: 990px;
-  width: 100%;
-  margin: 0 auto;
-  position: relative;
-  margin-top: -170px;
-  margin-bottom: 100px;
-  direction: rtl;
 
+@section('title', 'الشهادات')
 
-}
-table * {
-  position: relative;
-}
-table td, table th {
-  padding-left: 8px;
-
-}
-table thead tr {
-  height: 60px;
-  background: white;
-  font-size: 22px;
-  color: #f38639;
-  border-style: solid ;
-  border-color: #094e89;
-
-
-}
-table tbody tr {
-  height: 48px;
-  font-size: 18px;
-  /*border-bottom: 1px solid #f38639;*/
-
-  color: white;
-}
-table tbody tr:last-child {
-  border: 0;
-  border-radius: 15px;
-}
-table td, table th {
-  text-align: center;
-}
-table td.l, table th.l {
-  text-align: center;
-}
-table td.c, table th.c {
-  text-align: center;
-}
-table td.r, table th.r {
-  text-align: center;
-}
-@media screen and (max-width: 35.5em) {
-  table {
-    display: block;
-  }
-  table > *, table tr, table td, table th {
-    display: block;
-  }
-  table thead {
-    display: none;
-  }
-  table tbody tr {
-    height: auto;
-    padding: 8px 0;
-  }
-  table tbody tr td {
-    padding-right: 45%;
-    margin-bottom: 12px;
-  }
-  table tbody tr td:last-child {
-    margin-bottom: 0;
-  }
-  table tbody tr td:before {
-    position: absolute;
-    font-weight: 700;
-    width: 40%;
-    right: 10px;
-    top: 0;
-  }
-  table tbody tr td:nth-child(1):before {
-    content: "اسم الاختبار ";
-  }
-  table tbody tr td:nth-child(2):before {
-    content: "وقت البداية ";
-  }
-  table tbody tr td:nth-child(3):before {
-    content: "وقت النهاية ";
-  }
-  table tbody tr td:nth-child(4):before {
-    content: "نوع الاختبار ";
-  }
-  table tbody tr td:nth-child(5):before {
-    content: "الاسئلة ";
-  }
-  table tbody tr td:nth-child(5):before {
-    content: "عمليات التعديل ";
-  }
-}
-
-
-/* end table */
-/*select and option */
-:root {
-  --background-gradient: linear-gradient(30deg, #4986fc 30%, #4986fc);
-  --gray: #2c71ad;
-  --darkgray: #2c71ad;
-}
-
-select {
-  /* Reset Select */
-  appearance: none;
-  outline: 0;
-  border: 0;
-  box-shadow: none;
-  /* Personalize */
-  flex: 1;
-  padding: 0 1em;
-  color: white;
-  background-color: var(--darkgray);
-  background-image: none;
-  cursor: pointer;
-
-
-}
-/* Remove IE arrow */
-select::-ms-expand {
-  display: none;
-}
-/* Custom Select wrapper */
-.select {
-  position: relative;
-  display: flex;
-  width: 20em;
-  height: 3em;
-  border-radius: .25em;
-  overflow: hidden;
-  color: #f38639;
-  float: right;
-  text-align: center;
-
-
-}
-/* Arrow */
-.select::after {
-  content: '\25BC';
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 1em;
-  background-color: #f38639;
-  transition: .25s all ease;
-  pointer-events: none;
-  float: right;
-  text-align: center;
-
-}
-/* Transition */
-.select:hover::after {
-  color: #f38639;
-  text-align: center;
-  float: right;
-
-
-}
- .cart-count
-{
-  display: flex;
-  position: relative;
-  align-items:center;
-  justify-content:center;
-  min-width:1.3rem;
-  height:1.3rem;
-  border-radius:50%;
-  font-weight:700;
-  font-size:0.7rem;
-  line-height:1;
-  
-  margin-left:20px;
-  margin-top:-40px;
-  color:#f38639;
-  background: linear-gradient(to right top, #2c71ad 20%, #84a7c4);
-}
-</style>
-
-
-	<section class="hero-wrap hero-wrap-2" style="background-image: url('{{  asset('teachers/ppp.jpg') }}'); border-bottom-right-radius: 70px 50px;">
-		<div class="overlay"></div>
-		<div class="container">
-			<div class="row no-gutters slider-text align-items-end justify-content-center">
-				<div class="col-md-12 ftco-animate pb-5 text-right">
-					{{-- <p class="breadcrumbs"></p> --}}
-					<h1 class="mb-0 bread">   الشهادات   </h1>
-				</div>
-			</div>
-		</div>
-	</section>
-  <!-- start new-->
-
-<div class="col-md-10 " style="margin: auto; direction: rtl; text-align:center">
-
-    @if (session()->has('success'))
-
+@section('content')
+@if (session()->has('success') || session()->has('otherday') || session()->has('othertime') || $errors->any())
     <script>
-        window.onload = function() {
-            notif({
-                msg: "  تم التخزين بنجاح  ",
-                type: "success"
-            })
-        }
-
+        window.addEventListener('load', function () {
+            @if (session()->has('success')) notif({ msg: @json(session('success')), type: 'success' }); @endif
+            @if (session()->has('otherday')) notif({ msg: @json(session('otherday')), type: 'warning' }); @endif
+            @if (session()->has('othertime')) notif({ msg: @json(session('othertime')), type: 'warning' }); @endif
+            @foreach ($errors->all() as $error) notif({ msg: @json($error), type: 'error' }); @endforeach
+        });
     </script>
 @endif
-    @if (session()->has('otherday'))
 
-    <script>
-        window.onload = function() {
-            notif({
-                msg: " {{ session()->get('otherday') }} ",
-                type: "warning"
-            })
-        }
+<main class="main-panel">
+    <div class="content-wrapper">
+        <div class="sp-page">
+            <section class="sp-page-header">
+                <div class="sp-page-header__content">
+                    <span class="sp-page-header__eyebrow">إنجازاتك</span>
+                    <h1>الشهادات</h1>
+                    <p>الشهادات والتكريمات الممنوحة لك من معلمي المواد.</p>
+                </div>
+                <div class="sp-page-header__aside"><div class="sp-header-stat"><span>عدد الشهادات</span><strong>{{ $certificates->count() }}</strong></div></div>
+            </section>
 
-    </script>
-@endif
-    @if (session()->has('othertime'))
-
-    <script>
-        window.onload = function() {
-            notif({
-                msg: " {{ session()->get('othertime') }} ",
-                type: "warning"
-            })
-        }
-
-    </script>
-@endif
-@if ($errors->any())
-
-        @foreach ($errors->all() as $error)
-        {{-- <li>{{ $error }}</li> --}}
-        <script>
-            window.onload = function() {
-                notif({
-                    msg: `{{  $error }}`  ,
-                    type: "error"
-                })
-            }
-
-        </script>
-        @endforeach
-
-@endif
-<br>
-<br>
-<br>
-<br>
-<br>
-<div class="col-md-12 heading-section text-center ">
-    
-        <div class="modal fade" id="staticBackdrop5" data-backdrop="static" data-keyboard="false" tabindex="-1"
-        aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="text-right">
-                        <i style="color:#495057" class="fa fa-close close" data-dismiss="modal">
-                        </i>
-                        <br>
-                    </div>
-                    <div class="tabs mt-3">
-                        <ul class="nav nav-tabs" id="myTab" role="tablist">
-                            <li class="nav-item" role="presentation">
-
-                            </li>
-
-                        </ul>
-
-                        <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="visa" role="tabpanel" aria-labelledby="visa-tab">
-                                <div class="mt-4 mx-4">
-                                    <form action="{{route('certificates_stor')}}" method="post" autocomplete="off">
-
-                                        @csrf
-                                    
-                                    <div class="text-center" style="height: auto;">
-                                        <h5>   اختيار شهادة  </h5>
-                                         <input type="text" id="cert_id" hidden value=""  name="id" > 
-                                     <input type="radio" value="1"  name="certi" > 
-                                        <img src="{{  asset('teachers/img1.png') }}" style="width: 50%;
-    padding: 7px;">
-                                        
-                                        <br>
-                                        <input type="radio" value="2" name="certi"  > 
-                                        <img src="{{  asset('teachers/img2.png') }}" style="width: 50%;
-    padding: 7px;" >
-                                        <br>
-                                         <input type="radio" value="3"name="certi"  > 
-                                        <img src="{{  asset('teachers/img3.png') }}" style="width: 50%;
-    padding: 7px;" >
-                                        <br>
-                                         <input type="radio" value="4" name="certi" > 
-                                        <img src="{{  asset('teachers/img4.png') }}"style="width: 50%;
-    padding: 7px;" >
-                                        <br>
-                                         <input type="radio" value="5" name="certi" > 
-                                        <img src="{{  asset('teachers/img5.png') }}" style="width: 50%;
-    padding: 7px;" >
-                                        <br>
-                                         <input type="radio" value="6" name="certi" > 
-                                        <img src="{{  asset('teachers/img6.png') }}"style="width: 50%;
-    padding: 7px;" >
-                                        <br>
-                                         <input type="radio" value="7" name="certi" > 
-                                        <img src="{{  asset('teachers/img7.png') }}"style="width: 50%;
-    padding: 7px;" >
-                                        <br>
-                                         <input type="radio" value="8" name="certi"  > 
-                                        <img src="{{  asset('teachers/img8.png') }}"style="width: 50%;
-    padding: 7px;" >
-                                      
-
-
-
-                                        <div class="px-5 pay" style="text-align: center;">
-                                            <button  type="submit" class="btn btn-primary" style="width: 200px;">
-                                                حفظ
-                                            </button>
-                                        </div>
-                                    </div>
-                                    </form>
-                                </div>
-                            </div>
-
-
+            <section class="sp-card sp-section">
+                <div class="sp-card__header sp-section-header"><div><h2>سجل الشهادات</h2><p>يمكن اختيار قالب الشهادة ثم عرضها.</p></div></div>
+                <div class="sp-card__body">
+                    @if ($certificates->isEmpty())
+                        <div class="sp-empty sp-empty--compact"><span class="sp-empty__icon"><i class="mdi mdi-certificate-outline"></i></span><h3>لا توجد شهادات حالياً</h3></div>
+                    @else
+                        @php
+                            $certificateRoutes = [
+                                1 => 'edit_2', 2 => 'newcertificate', 3 => 'new441', 4 => 'ncertificate12',
+                                5 => 'newcerti12', 6 => 'certificate_22', 7 => 'new22',
+                            ];
+                        @endphp
+                        <div class="sp-table-wrap">
+                            <table class="sp-table">
+                                <thead><tr><th>المعلم</th><th>تاريخ المنح</th><th>المادة</th><th>الشهادة</th></tr></thead>
+                                <tbody>
+                                @foreach ($certificates as $item)
+                                    <tr>
+                                        <td data-label="المعلم">{{ optional($item->teacher)->first_name }} {{ optional($item->teacher)->last_name }}</td>
+                                        <td data-label="تاريخ المنح">{{ optional($item->created_at)->format('Y-m-d') }}</td>
+                                        <td data-label="المادة"><strong>{{ optional($item->lesson)->name ?: 'غير محددة' }}</strong></td>
+                                        <td data-label="الشهادة">
+                                            @if ($item->certificate === null)
+                                                <button type="button" class="sp-btn sp-btn--primary js-choose-certificate" data-toggle="modal" data-target="#certificateTemplateModal" data-id="{{ $item->id }}"><i class="mdi mdi-palette-outline"></i> اختر قالباً</button>
+                                            @elseif (isset($certificateRoutes[(int) $item->certificate]))
+                                                <a class="sp-btn sp-btn--soft" href="{{ route($certificateRoutes[(int) $item->certificate], $item->id) }}" target="_blank" rel="noopener"><i class="mdi mdi-eye-outline"></i> عرض الشهادة</a>
+                                            @else
+                                                <span class="sp-badge sp-badge--warning">قالب غير متاح للعرض</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
                         </div>
+                    @endif
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="certificateTemplateModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="certificateTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <form action="{{ route('certificates_stor') }}" method="post" autocomplete="off">
+                @csrf
+                <input type="hidden" id="certificateId" name="id">
+                <div class="modal-header"><h5 class="modal-title" id="certificateTemplateModalLabel">اختيار قالب الشهادة</h5><button type="button" class="close" data-dismiss="modal" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button></div>
+                <div class="modal-body">
+                    <div class="sp-certificate-grid">
+                        @for ($template = 1; $template <= 8; $template++)
+                            <label class="sp-certificate-option"><input type="radio" value="{{ $template }}" name="certi" required><span><img src="{{ asset('teachers/img' . $template . '.png') }}" alt="قالب الشهادة {{ $template }}"><strong>القالب {{ $template }}</strong></span></label>
+                        @endfor
                     </div>
                 </div>
-            </div>
+                <div class="modal-footer"><button type="button" class="sp-btn sp-btn--soft" data-dismiss="modal">إلغاء</button><button type="submit" class="sp-btn sp-btn--primary">حفظ القالب</button></div>
+            </form>
         </div>
-        <!-- end model-->
-
-        <!--- end add section -->
     </div>
-        </div>
-      <br>
-<br>
-<br>
-<br>  
-  <br>
-  <br>
-  <br>
-
-  <table  >
-        <thead>
-            <tr>
-                <th>
-                   اسم   المعلم 
-                </th>
-             
-                <th>
-                  تاريخ   المنح  
-                </th>
-
-                <th>
-                    المادة  
-                 </th>
-                  <th>
-                     الشهادة المختارة  
-                 </th>
-
-
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ( $certificates  as  $item )
-            <tr id="exam1">
-                <td>{{$item->teacher->first_name  }} {{$item->teacher->last_name  }}</td>
-                 
-           
-     
-             <td>{{$item->created_at}} </td>
-             
-              <td>{{$item->lesson->name}} </td>   
-              @if($item->certificate==null)
-               <td><button  class="btn certqq" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"  data-toggle="modal"
-        data-target="#staticBackdrop5"  data-id="{{$item->id}}">  اختر شهادة           </button> </td>
-               @elseif($item->certificate==1)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">    <a href="{{route('edit_2',$item->id)}}"  >   اظهار الشهادة      </a>    </button> </td>
-    @elseif($item->certificate==2)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">   <a href="{{route('newcertificate',$item->id)}}"  >       اظهار الشهادة    </a>       </button> </td>
-    @elseif($item->certificate==3)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">  <a href="{{route('new441',$item->id)}}"  >         اظهار الشهادة   </a>       </button> </td>
-    @elseif($item->certificate==4)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}"> <a href="{{route('ncertificate12',$item->id)}}"  >          اظهار الشهادة     </a>     </button> </td>
-    @elseif($item->certificate==5)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">      <a href="{{route('newcerti12',$item->id)}}"  >   اظهار الشهادة  </a>       </button> </td>
-    @elseif($item->certificate==6)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">  <a href="{{route('certificate_22',$item->id)}}"  >         اظهار الشهادة       </a>     </button> </td>
-    @elseif($item->certificate==7)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">    <a href="{{route('new22',$item->id)}}"  >      اظهار الشهادة       </a>      </button> </td
-    @elseif($item->certificate==8)
-                  <td><button  class="btn" style="color: white;
-    border: 2px solid #f58634;
-   
-    box-shadow: -3px 2px 1px 1px #333036ad;"    data-id="{{$item->id}}">        اظهار الشهادة       </button> </td>>
-               @endif
-            </tr>
-
-
-            @endforeach
-
-
-
-
-
-
-
-
-        </tbody>
-    </table>
 </div>
-<!-- end new-->
+@endsection
 
-  <br>
-  <br>
-  <br>
-  <br>
-
-
-
-
-	@endsection
-    @section('js-scripts')
-    <script>
-        $(document).ready(function(){
-                $('.certqq').on("click", function (e) {
-                  $('#cert_id').val($(this).data('id'));  
-                });
-             $(".lesson").on("change", function (e) {
-                    $('.teacher').empty();
-                 lesson_id=$(this).val();
-                  var url = "{{ URL::to('SMARMANger/getteacher') }}/" + lesson_id ;
-        $.ajax({
-url: url,
-
-type: "get",
-contentType: 'application/json',
-success: function (data) {
-
-console.log(data);
-  
- $.each(data, function (key, value) {
-     
-    $('.teacher').append(` <option style="text-align: center;" value="${value.id}">${value.first_name} ${value.last_name}</option>`);
-
-     
-     
-    
-     
- })
-
-
-},
-error: function (xhr) {
-
-}
-
-});
-                 
-             })
-
-           
-        //     $.ajaxSetup({
-        //     headers: {
-        //         'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-        //     }
-        // });
-            let xx ;
-            let my_room = {{ $room_id }} ;
-            $('.add_time').on('click',function(){
-                xx = $(this).data('xx');
-                day = $(this).data('day');
-                time2 = $(this).data('time');
-                day_id = $(this).data('day_id');
-                time_id = $(this).data('time_id');
-                $(`.day`).val(day);
-               $(`.time`).val(time2);
-                $(`.day_id`).val(day_id);
-               $(`.time_id`).val(time_id);
-            });
-           
-            $('.save_lecture_time').on('click',function(e){
-                e.preventDefault() ;
-                let lesson_id = $('select.lesson_id').val();
-                let teacher_id = $('select.teacher_id').val();
-                let day_id = $(`.day_id`).val();
-                let lecture_time_id = $(`.time_id`).val();
-                $.ajax({
-                    url:"{{ route('dashboard.room.save.schedule') }}",
-                    type: "POST",
-
-                    data: {
-                            'lesson_id' : lesson_id,
-                            'teacher_id' : teacher_id,
-                            'room_id' : my_room,
-                            'day_id' : day_id,
-                            'lecture_time_id' : lecture_time_id,
-                            '_token': "{{ csrf_token() }}"
-
-                        },
-                    success: function (response2) {
-                        console.log(response2);
-                        let lesson_name = $( ".wide option:selected" ).text();
-                        let lesson_id = $( ".wide " ).val();
-                        let teacher_name = $( ".teacher_id option:selected" ).text();
-                        // let lesson_id = $( ".wide " ).val();
-
-                        $(`.${xx}`).val(lesson_name);
-                        $(`.id-${xx}`).val(lesson_id);
-                        $(`.lesson_name-${xx}`).text(lesson_name);
-                        $(`.teacher_name-${xx}`).text(`(${teacher_name})`);
-
-                        $("#add_schedule").modal('hide');
-
-                        notif({
-                        msg: "تم الإضافة  بنجاح",
-                        type: "success"
-                    })
-                    console.log('content name',response2);
-                    },error: function(error){
-                    console.log('insider function',error);
-                    var x = JSON.parse(error.responseText);
-                        $.each(x.errors, function(key,value) {
-                            notif({
-                                        msg: `${value}`,
-                                        type: "error",
-                            });
-                        });
-                    }
-                });
-
-            })
-        });
-        
-    </script>
-    @endsection
+@section('js')
+<script>
+    $(document).on('click', '.js-choose-certificate', function () {
+        $('#certificateId').val($(this).data('id'));
+        $('#certificateTemplateModal input[name="certi"]').prop('checked', false);
+    });
+</script>
+@endsection

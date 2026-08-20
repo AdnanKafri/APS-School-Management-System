@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Student</title>
+    <title>@yield('title', 'بوابة الطالب')</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('student/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('student/assets/vendors/flag-icon-css/css/flag-icon.min.css') }}">
@@ -22,8 +22,12 @@
     <script src="{{ asset('student/notify/js/notifIt.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/style.css') }}" />
     <link rel="stylesheet" href="{{ asset('student/assets/css/student-sidebar.css') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('student/assets/css/student-portal-v2.css') }}" />
     <!-- End layout styles -->
-    <link rel="shortcut icon" href="{{asset("storage/")}}/{{$school_data->logo}}" />
+    <link rel="shortcut icon" href="{{ isset($school_data) && $school_data && $school_data->logo ? asset('storage/' . $school_data->logo) : asset('student/avatar.png') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
     <style>
         @media(min-width:100px) and (max-width:848px) {
@@ -112,14 +116,17 @@
     @yield('css')
 </head>
 @php
+    $room_id = $room_id ?? null;
     $year = DB::table('years')->where('current_year', '1')->first();
 
-    $messages_count = DB::table('messages')
-        ->where('student_id', $student->id)
-        ->where('year_id', $year->id)
-        ->where('view', 0)
-        ->where('type', 0)
-        ->count();
+    $messages_count = $year
+        ? DB::table('messages')
+            ->where('student_id', $student->id)
+            ->where('year_id', $year->id)
+            ->where('view', 0)
+            ->where('type', 0)
+            ->count()
+        : 0;
     $scheduleController = new App\Http\Controllers\studentscontroller();
     $available_lecture = $room_id ? $scheduleController->available_schedule($room_id, $student->id) : collect();
 
@@ -127,13 +134,15 @@
 @php
     $year = DB::table('years')->where('current_year', '1')->first();
 
-    $messages_count2 = DB::table('messages')
-        ->where('student_id', $student->id)
-        ->where('admin_id', '!=', null)
-        ->where('year_id', $year->id)
-        ->where('view', 0)
-        ->where('type', 0)
-        ->count();
+    $messages_count2 = $year
+        ? DB::table('messages')
+            ->where('student_id', $student->id)
+            ->where('admin_id', '!=', null)
+            ->where('year_id', $year->id)
+            ->where('view', 0)
+            ->where('type', 0)
+            ->count()
+        : 0;
     $notification = DB::table('notifications')
         ->where('student_id', $student->id)
         ->take(100)
@@ -170,18 +179,133 @@
             ->where('class_id', $class->id)
             ->first();
     }
+    $portal_current_term = $year
+        ? DB::table('term_years')->where('year_id', $year->id)->where('current_term', 1)->first()
+        : null;
 
 @endphp
 @php
     $school_data = \App\School_data::first();
 @endphp
 
-<body class="student-portal-body" style="background: #f8f9fb;">
+<body class="student-portal-body rtl">
     <input id="student_id52" type="hidden" value="{{ $student->id }}">
     <div class="container-scroller">
         <!-- partial:partials/_sidebar.html -->
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
             <ul class="nav">
+                <li>
+                    <a class="student-sidebar-brand" href="{{ route('dashboard') }}">
+                        <span class="student-sidebar-brand__logo">
+                            <img src="{{ optional($school_data)->logo_account ? asset('storage/' . $school_data->logo_account) : asset('student/smartlogo.png') }}" alt="شعار المدرسة">
+                        </span>
+                        <span class="student-sidebar-brand__copy">
+                            <span class="student-sidebar-brand__title">{{ optional($school_data)->name ?: 'مدرسة الأدهم الخاصة' }}</span>
+                            <span class="student-sidebar-brand__eyebrow">بوابة الطالب</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('dashboard.student.profile', [$student->id, $room_id]) }}" class="student-sidebar-profile">
+                        <span class="student-sidebar-profile__avatar">
+                            <img src="{{ $student->image ? asset('storage/' . $student->image) : asset('student/avatar.png') }}" alt="صورة الطالب">
+                        </span>
+                        <span class="student-sidebar-profile__copy">
+                            <span class="student-sidebar-profile__name">{{ $student->first_name }} {{ $student->last_name }}</span>
+                            <span class="student-sidebar-profile__meta">{{ optional($class)->name ?: 'الملف الأكاديمي' }} @if($room) · {{ $room->name }} @endif</span>
+                        </span>
+                    </a>
+                </li>
+
+                <li class="student-nav-label">التعلّم</li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard', 'dashboard.student.lessons') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.student.lessons', $student->id) }}">
+                        <i class="mdi mdi-view-dashboard-outline menu-icon"></i>
+                        <span class="menu-title">الرئيسية والمواد</span>
+                    </a>
+                </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.students.room.view_schedule') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.students.room.view_schedule', [$room_id, $student->id, 1]) }}">
+                        <i class="mdi mdi-calendar-clock menu-icon"></i>
+                        <span class="menu-title">جدول الدوام</span>
+                    </a>
+                </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('student_exam', 'dashboard.student.room.main.exams', 'dashboard.student.room.main.quizes') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('student_exam') }}">
+                        <i class="mdi mdi-clipboard-text-outline menu-icon"></i>
+                        <span class="menu-title">الامتحانات والتقييمات</span>
+                    </a>
+                </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.results') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.student.results', $student->id) }}">
+                        <i class="mdi mdi-chart-line menu-icon"></i>
+                        <span class="menu-title">النتائج والعلامات</span>
+                    </a>
+                </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.academic_record*') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.student.academic_record') }}">
+                        <i class="mdi mdi-school menu-icon"></i>
+                        <span class="menu-title">السجل الأكاديمي</span>
+                    </a>
+                </li>
+
+                <li class="student-nav-label">الموارد والخدمات</li>
+                @if ($class)
+                    <li class="sp-sidebar-entry {{ request()->routeIs('student.book') ? 'is-active' : '' }}">
+                        <a class="nav-link" href="{{ route('student.book', $class->id) }}">
+                            <i class="mdi mdi-book-multiple menu-icon"></i>
+                            <span class="menu-title">الكتب المدرسية</span>
+                        </a>
+                    </li>
+                @endif
+                <li class="sp-sidebar-entry {{ request()->routeIs('student_electronic_sections', 'student_electronic_files') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('student_electronic_sections') }}">
+                        <i class="mdi mdi-folder-multiple-outline menu-icon"></i>
+                        <span class="menu-title">الملفات الإلكترونية</span>
+                    </a>
+                </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.messages') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.student.messages', [$student->id, 0]) }}">
+                        <i class="mdi mdi-message-text-outline menu-icon"></i>
+                        <span class="menu-title">الرسائل</span>
+                    </a>
+                </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.financial_account') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.financial_account', $student->id) }}">
+                        <i class="mdi mdi-wallet-outline menu-icon"></i>
+                        <span class="menu-title">الحساب المالي</span>
+                    </a>
+                </li>
+                @if ($room_id)
+                    <li class="sp-sidebar-entry {{ request()->routeIs('certificates') ? 'is-active' : '' }}">
+                        <a class="nav-link" href="{{ route('certificates', $room_id) }}">
+                            <i class="mdi mdi-certificate menu-icon"></i>
+                            <span class="menu-title">الشهادات</span>
+                        </a>
+                    </li>
+                    <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.medical_profile*') ? 'is-active' : '' }}">
+                        <a class="nav-link" href="{{ route('dashboard.student.medical_profile', [$room_id, $student->id]) }}">
+                            <i class="mdi mdi-medical-bag menu-icon"></i>
+                            <span class="menu-title">الملف الطبي</span>
+                        </a>
+                    </li>
+                    <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.transport') ? 'is-active' : '' }}">
+                        <a class="nav-link" href="{{ route('dashboard.student.transport', [$room_id, $student->id]) }}">
+                            <i class="mdi mdi-bus menu-icon"></i>
+                            <span class="menu-title">المواصلات</span>
+                        </a>
+                    </li>
+                @endif
+
+                <li class="sp-sidebar-logout">
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="button" class="student-logout-trigger" title="تسجيل الخروج">
+                            <i class="mdi mdi-export" aria-hidden="true"></i>
+                            <span>تسجيل الخروج</span>
+                        </button>
+                    </form>
+                </li>
                 <li class="nav-item">
                     <!--logo-->
                     <a class="nav-link" data-toggle="collapse" href="#" aria-expanded="false"
@@ -301,18 +425,35 @@
         <!--start header-->
         <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div class="navbar-menu-wrapper d-flex align-items-stretch">
-                <button class="navbar-toggler navbar-toggler align-self-center" type="button"
-                    data-toggle="minimize">
+                <button class="navbar-toggler navbar-toggler align-self-center student-desktop-sidebar-toggle" type="button"
+                    data-toggle="minimize" aria-label="تصغير القائمة">
                     <span class="mdi mdi-chevron-double-left"></span>
                 </button>
-                <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                    <a class="navbar-brand brand-logo-mini" href="index.html"><img
-                            src="{{ asset('student/assets/images/logo-mini.svg') }}" alt="logo" /></a>
+                <div class="student-header-brand">
+                    <span class="student-header-brand__mark"><i class="mdi mdi-school"></i></span>
+                    <span>
+                        <span class="student-header-brand__title">بوابة الطالب</span>
+                        <span class="student-header-brand__subtitle">مساحتك الأكاديمية اليومية</span>
+                    </span>
                 </div>
-                <ul class="navbar-nav">
+                <div class="student-context-chips" aria-label="السياق الأكاديمي الحالي">
+                    @if ($year)
+                        <span class="student-context-chip"><i class="mdi mdi-calendar-range"></i>{{ $year->name }}</span>
+                    @endif
+                    @if ($class)
+                        <span class="student-context-chip"><i class="mdi mdi-school-outline"></i>{{ $class->name }}</span>
+                    @endif
+                    @if ($room)
+                        <span class="student-context-chip"><i class="mdi mdi-door"></i>{{ $room->name }}</span>
+                    @endif
+                    @if ($portal_current_term)
+                        <span class="student-context-chip"><i class="mdi mdi-book-open-page-variant"></i>{{ $portal_current_term->term }}</span>
+                    @endif
+                </div>
+                <ul class="navbar-nav student-header-nav student-header-nav--messages">
 
                     <li class="nav-item dropdown">
-                        <a title="الرسائل" class="nav-link" id="messageDropdown" href="#"
+                        <a title="الرسائل" class="nav-link student-header-action" id="messageDropdown" href="#"
                             data-toggle="dropdown" aria-expanded="false">
                             <i class="mdi mdi-email-outline"></i>
                         </a>
@@ -860,16 +1001,13 @@
                     </li> --}}
                     <!--end live lessons-->
                 </ul>
-                <ul class="navbar-nav navbar-nav-right">
+                <ul class="navbar-nav navbar-nav-right student-header-nav student-header-nav--account">
                     <li class="nav-item nav-logout d-none d-lg-block">
-                        <form action="{{ route('logout') }}" title="تسجيل خروج" method="POST">
+                        <form action="{{ route('logout') }}" title="تسجيل الخروج" method="POST">
                             @csrf
-                            <a id="deletekey" class="student-logout-trigger" title="تسجيل خروج"
-                                style="background: #ffdead00;
-                   border: none;">
-                                <i class="mdi mdi-export" title="تسجيل خروج"
-                                    style="color:white;font-size: x-large;"></i>
-                            </a>
+                            <button id="deletekey" type="button" class="nav-link student-header-action student-logout-trigger" title="تسجيل الخروج" aria-label="تسجيل الخروج">
+                                <i class="mdi mdi-export" title="تسجيل الخروج"></i>
+                            </button>
 
                         </form>
                     </li>
@@ -877,7 +1015,7 @@
                 </ul>
                 <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center student-sidebar-toggle"
                     type="button" data-toggle="offcanvas" aria-controls="sidebar" aria-expanded="false"
-                    aria-label="Toggle menu">
+                    aria-label="فتح القائمة">
                     <span class="mdi mdi-menu"></span>
                 </button>
             </div>

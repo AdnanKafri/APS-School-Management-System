@@ -23,6 +23,7 @@
 
     toggles.forEach(function (toggle) {
       toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+      toggle.setAttribute('aria-label', shouldOpen ? 'إغلاق القائمة' : 'فتح القائمة');
     });
   }
 

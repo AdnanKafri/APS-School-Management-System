@@ -1,63 +1,57 @@
 @extends('students.layouts.app4')
-@section('title')
-School
-@endsection
-@section('css')
-<link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/style.css') }}" />
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700&display=swap" rel="stylesheet">
-     <style>
-       @media (min-width: 768px){
-      .col-md-6 {
-    -webkit-box-flex: 0;
-    -ms-flex: 0 0 50%;
-    flex: 0 0 50%;
-    max-width: 40%;
-}
-     }
-	 </style>
 
-@endsection
+@section('title', 'الامتحانات والتقييمات')
 
 @section('content')
-<div class="main-panel" >
-  <ul class="breadcrumbs" style="padding-bottom: 7px;
-	padding-top: 11px;">
-	 
-	  <li class="li"><a href="{{ route('dashboard.student.lessons',$student->id) }}">الصفحة الرئيسية</a></li>
-	  <li class="li"><a href="#"> الامتحانات</a></li>
-	  
-   </ul>
-    <div class="content-wrapper pb-0">
-      <!--content -->
-        <div class="container">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="flexcard flexcardBlue">
-                <div class="flexcardNumber flexcardNumberBlue">01</div>
-                <div class="flex flexcardTitle"><a href="{{ route('dashboard.student.room.main.exams',[$room_id,$student->id]) }}" style="color: #152C4F;">الامتحانات</a></div>
-                
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="flexcard flexcardBlue">
-                <div class="flexcardNumber flexcardNumberBlue">02</div>
-                <div class="flex flexcardTitle"><a href="{{ route('dashboard.student.room.main.quizes',[$room_id,$student->id]) }}" style="color: #152C4F;">المذاكرات</a></div>
-               
-              </div>
-            </div>
+<main class="main-panel">
+    <div class="content-wrapper">
+        <div class="sp-page">
+            <section class="sp-page-header">
+                <div class="sp-page-header__content">
+                    <a class="sp-page-header__eyebrow" href="{{ route('dashboard.student.lessons', $student->id) }}">الصفحة الرئيسية</a>
+                    <h1>الامتحانات والتقييمات</h1>
+                    <p>اختر نوع التقييم للاطلاع على المواعيد والنتائج المتاحة.</p>
+                </div>
+                <div class="sp-page-header__aside">
+                    <div class="sp-header-stat">
+                        <span>الصف</span>
+                        <strong>{{ optional($class)->name ?: 'غير محدد' }}</strong>
+                    </div>
+                    <div class="sp-header-stat">
+                        <span>الشعبة</span>
+                        <strong>{{ optional($room)->name ?: 'غير محددة' }}</strong>
+                    </div>
+                </div>
+            </section>
 
-          </div>
+            <section class="sp-section">
+                <div class="sp-section-header">
+                    <div>
+                        <h2>اختر القسم</h2>
+                        <p>جميع التقييمات مرتبطة بقيدك الدراسي الحالي.</p>
+                    </div>
+                </div>
+
+                <div class="sp-grid sp-grid--2">
+                    <a class="sp-card sp-assessment-entry" href="{{ route('dashboard.student.room.main.exams', [$room_id, $student->id]) }}">
+                        <span class="sp-icon-box sp-icon-box--blue"><i class="mdi mdi-file-document-edit-outline"></i></span>
+                        <span class="sp-assessment-entry__content">
+                            <strong>الامتحانات</strong>
+                            <small>الامتحانات الفصلية والنهائية</small>
+                        </span>
+                        <i class="mdi mdi-arrow-left sp-assessment-entry__arrow"></i>
+                    </a>
+                    <a class="sp-card sp-assessment-entry" href="{{ route('dashboard.student.room.main.quizes', [$room_id, $student->id]) }}">
+                        <span class="sp-icon-box sp-icon-box--gold"><i class="mdi mdi-lightbulb-on-outline"></i></span>
+                        <span class="sp-assessment-entry__content">
+                            <strong>المذاكرات والاختبارات</strong>
+                            <small>التقييمات القصيرة والأنشطة الصفية</small>
+                        </span>
+                        <i class="mdi mdi-arrow-left sp-assessment-entry__arrow"></i>
+                    </a>
+                </div>
+            </section>
         </div>
-
-      <!--end content-->
-  
-</div>
-</div>
-	@endsection
-    @section('js')
- <script>
-   $(document).ready(function(){
-   $('.exam11').addClass('active') ;  
- })
-    </script>
-    @endsection
+    </div>
+</main>
+@endsection

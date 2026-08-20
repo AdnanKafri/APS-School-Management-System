@@ -1,146 +1,155 @@
 @extends('students.layouts.app4')
 
-@section('title', 'السجل الأكاديمي')
-
-@section('css')
-<style>
-    .academic-record { direction: rtl; max-width: 1040px; margin: 0 auto; }
-    .academic-record__panel { background: #fff; border: 1px solid #e4e8ef; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
-    .academic-record__summary, .academic-record__chips { display: flex; flex-wrap: wrap; gap: 8px 18px; color: #68758a; }
-    .academic-record__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; }
-    .academic-record__count { padding: 14px; background: #f6f8fc; border-radius: 10px; text-align: center; }
-    .academic-record__count strong { display: block; color: #152c4f; font-size: 22px; }
-    .academic-record__table { width: 100%; border-collapse: collapse; }
-    .academic-record__table th, .academic-record__table td { border-bottom: 1px solid #edf0f5; padding: 11px 8px; text-align: right; vertical-align: top; }
-    .academic-record__table th { color: #68758a; font-size: 13px; white-space: nowrap; }
-    .academic-record__table td { color: #263853; }
-    .academic-record__chips span { background: #f4f7fb; border-radius: 999px; padding: 4px 9px; font-size: 12px; }
-    .academic-record__empty { color: #8a96a8; }
-    .academic-record__type { font-weight: 700; color: #245da8; white-space: nowrap; }
-    @media (max-width: 575px) {
-        .academic-record { padding: 0 10px; }
-        .academic-record__table { display: block; overflow-x: auto; white-space: nowrap; }
-        .academic-record__panel { padding: 15px; }
-    }
-</style>
-@endsection
+@section('title', 'تفاصيل السجل الأكاديمي')
 
 @section('content')
-<div class="main-panel" style="background:#f8f9fb;">
-    <div class="content-wrapper pb-5">
-        <div class="academic-record">
-            <div class="academic-record__panel">
-                <a href="{{ route('dashboard.student.academic_record') }}" class="btn btn-light mb-3">العودة إلى السجل</a>
-                <h2 class="mb-3">{{ optional($placement->year)->name ?: 'عام دراسي غير محدد' }}</h2>
-                <div class="academic-record__summary">
-                    <span>الصف: {{ optional($placement->classRoom)->name ?: 'غير محدد' }}</span>
-                    <span>الشعبة: {{ optional($placement->room)->name ?: 'غير محددة' }}</span>
-                    <span>{{ $placement->status === 'active' ? 'القيد الحالي' : 'قيد تاريخي للعرض فقط' }}</span>
+<main class="main-panel">
+    <div class="content-wrapper">
+        <div class="sp-page">
+            @php
+                $isCurrentPlacement = $currentYear
+                    && $placement->status === 'active'
+                    && (int) $placement->year_id === (int) $currentYear->id;
+            @endphp
+            <section class="sp-page-header">
+                <div class="sp-page-header__content">
+                    <a class="sp-page-header__eyebrow" href="{{ route('dashboard.student.academic_record') }}">
+                        <i class="mdi mdi-arrow-right"></i> العودة إلى السجل الأكاديمي
+                    </a>
+                    <h1>{{ optional($placement->year)->name ?: 'عام دراسي غير محدد' }}</h1>
+                    <div class="sp-meta-list sp-page-header__meta">
+                        <span><i class="mdi mdi-school-outline"></i> {{ optional($placement->classRoom)->name ?: 'صف غير محدد' }}</span>
+                        <span><i class="mdi mdi-door"></i> {{ optional($placement->room)->name ?: 'شعبة غير محددة' }}</span>
+                        <span class="sp-badge {{ $isCurrentPlacement ? 'sp-badge--success' : 'sp-badge--warning' }}">
+                            {{ $isCurrentPlacement ? 'القيد الحالي' : 'سجل تاريخي للعرض فقط' }}
+                        </span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="academic-record__panel">
-                <div class="academic-record__grid">
-                    <div class="academic-record__count"><strong>{{ count($markRows) }}</strong>سجلات المواد</div>
-                    <div class="academic-record__count"><strong>{{ $reportRows->count() }}</strong>بطاقات النتائج</div>
-                    <div class="academic-record__count"><strong>{{ count($assessmentRows) }}</strong>التقييمات</div>
-                    <div class="academic-record__count"><strong>{{ $fileRows->count() }}</strong>الملفات والتسليمات</div>
-                    <div class="academic-record__count"><strong>{{ $certificateRows->count() }}</strong>الشهادات</div>
+                <div class="sp-page-header__aside">
+                    <div class="sp-header-stat"><span>المواد</span><strong>{{ count($markRows) }}</strong></div>
+                    <div class="sp-header-stat"><span>التقييمات</span><strong>{{ count($assessmentRows) }}</strong></div>
                 </div>
-            </div>
+            </section>
 
-            <div class="academic-record__panel">
-                <h4>العلامات حسب المادة</h4>
-                @if (empty($markRows))
-                    <p class="academic-record__empty mb-0">لا توجد علامات قابلة للعرض لهذا القيد.</p>
-                @else
-                    <table class="academic-record__table">
-                        <thead><tr><th>المادة</th><th>تفصيل العلامات</th><th>الفصل الأول</th><th>الفصل الثاني</th><th>النتيجة السنوية</th></tr></thead>
-                        <tbody>
-                        @foreach ($markRows as $row)
-                            <tr>
-                                <td><strong>{{ $row['subject'] }}</strong></td>
-                                <td>
-                                    @if (empty($row['components']))
-                                        <span class="academic-record__empty">لا توجد تفاصيل</span>
-                                    @else
-                                        <div class="academic-record__chips">
-                                            @foreach ($row['components'] as $component)
-                                                <span>{{ $component['label'] }}: {{ $component['value'] }}</span>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </td>
-                                <td>{{ $row['term_one'] ?: '—' }}</td>
-                                <td>{{ $row['term_two'] ?: '—' }}</td>
-                                <td>{{ $row['year'] ?: '—' }}</td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </div>
+            @unless ($isCurrentPlacement)
+                <div class="sp-alert sp-alert--warning">
+                    <i class="mdi mdi-lock-outline"></i>
+                    هذا سجل أكاديمي تاريخي متاح للعرض فقط، وتبقى بياناته محفوظة ضمن عامها وشعبتها الأصلية.
+                </div>
+            @endunless
 
-            <div class="academic-record__panel">
-                <h4>الامتحانات والمذاكرات والاختبارات</h4>
-                @if (empty($assessmentRows))
-                    <p class="academic-record__empty mb-0">لا توجد تقييمات قابلة للعرض لهذا القيد.</p>
-                @else
-                    <table class="academic-record__table">
-                        <thead><tr><th>النوع</th><th>المادة</th><th>التقييم</th><th>الفصل</th><th>العلامة</th></tr></thead>
-                        <tbody>
-                        @foreach ($assessmentRows as $row)
-                            <tr>
-                                <td class="academic-record__type">{{ $row['type'] }}</td>
-                                <td>{{ $row['subject'] }}</td>
-                                <td>{{ $row['name'] }}</td>
-                                <td>{{ $row['term'] }}</td>
-                                <td>{{ $row['result'] }}@if ($row['maximum']) / {{ $row['maximum'] }}@endif</td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </div>
+            <section class="sp-grid sp-grid--4 sp-summary-grid" aria-label="ملخص السجل">
+                <div class="sp-summary-card"><span class="sp-icon-box"><i class="mdi mdi-book-education-outline"></i></span><span><strong>{{ count($markRows) }}</strong><small>سجلات المواد</small></span></div>
+                <div class="sp-summary-card"><span class="sp-icon-box sp-icon-box--blue"><i class="mdi mdi-clipboard-check-outline"></i></span><span><strong>{{ count($assessmentRows) }}</strong><small>التقييمات</small></span></div>
+                <div class="sp-summary-card"><span class="sp-icon-box sp-icon-box--gold"><i class="mdi mdi-file-document-outline"></i></span><span><strong>{{ $fileRows->count() }}</strong><small>الملفات والتسليمات</small></span></div>
+                <div class="sp-summary-card"><span class="sp-icon-box sp-icon-box--red"><i class="mdi mdi-certificate-outline"></i></span><span><strong>{{ $reportRows->count() + $certificateRows->count() }}</strong><small>النتائج والشهادات</small></span></div>
+            </section>
 
-            <div class="academic-record__panel">
-                <h4>الملفات والتسليمات</h4>
-                @if ($fileRows->isEmpty())
-                    <p class="academic-record__empty mb-0">لا توجد ملفات أو تسليمات مرتبطة بهذا القيد.</p>
-                @else
-                    <table class="academic-record__table">
-                        <thead><tr><th>النوع</th><th>المادة</th><th>الملف</th></tr></thead>
-                        <tbody>
-                        @foreach ($fileRows as $row)
-                            <tr><td>{{ $row['type'] }}</td><td>{{ $row['subject'] }}</td><td>{{ $row['format'] }}</td></tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </div>
-
-            <div class="academic-record__panel">
-                <h4>بطاقات النتائج والشهادات</h4>
-                @if ($reportRows->isEmpty() && $certificateRows->isEmpty())
-                    <p class="academic-record__empty mb-0">لا توجد بطاقات نتائج أو شهادات مرتبطة بهذا القيد.</p>
-                @else
-                    @if ($reportRows->isNotEmpty())
-                        <h6>بطاقات النتائج</h6>
-                        <table class="academic-record__table mb-3">
-                            <thead><tr><th>النتيجة النهائية</th><th>الحضور</th></tr></thead>
-                            <tbody>@foreach ($reportRows as $row)<tr><td>{{ $row['status'] }}</td><td>{{ $row['attendance'] ?: '—' }}</td></tr>@endforeach</tbody>
-                        </table>
+            <section class="sp-section sp-card">
+                <div class="sp-card__header sp-section-header">
+                    <div><h2>العلامات حسب المادة</h2><p>تفصيل العلامات الفصلية والنتيجة السنوية المسجلة.</p></div>
+                </div>
+                <div class="sp-card__body">
+                    @if (empty($markRows))
+                        <div class="sp-empty sp-empty--compact"><span class="sp-empty__icon"><i class="mdi mdi-chart-box-outline"></i></span><h3>لا توجد علامات قابلة للعرض</h3></div>
+                    @else
+                        <div class="sp-table-wrap">
+                            <table class="sp-table">
+                                <thead><tr><th>المادة</th><th>تفصيل العلامات</th><th>الفصل الأول</th><th>الفصل الثاني</th><th>النتيجة السنوية</th></tr></thead>
+                                <tbody>
+                                @foreach ($markRows as $row)
+                                    <tr>
+                                        <td data-label="المادة"><strong>{{ $row['subject'] }}</strong></td>
+                                        <td data-label="التفاصيل">
+                                            @if (empty($row['components']))
+                                                <span class="sp-muted">لا توجد تفاصيل</span>
+                                            @else
+                                                <div class="sp-chip-list">
+                                                    @foreach ($row['components'] as $component)
+                                                        <span>{{ $component['label'] }}: <strong>{{ $component['value'] }}</strong></span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td data-label="الفصل الأول">{{ $row['term_one'] ?: '—' }}</td>
+                                        <td data-label="الفصل الثاني">{{ $row['term_two'] ?: '—' }}</td>
+                                        <td data-label="النتيجة السنوية"><strong>{{ $row['year'] ?: '—' }}</strong></td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
-                    @if ($certificateRows->isNotEmpty())
-                        <h6>الشهادات</h6>
-                        <table class="academic-record__table">
-                            <thead><tr><th>المادة</th><th>الوثيقة</th></tr></thead>
-                            <tbody>@foreach ($certificateRows as $row)<tr><td>{{ $row['subject'] }}</td><td>{{ $row['label'] }}</td></tr>@endforeach</tbody>
-                        </table>
+                </div>
+            </section>
+
+            <section class="sp-section sp-card">
+                <div class="sp-card__header sp-section-header">
+                    <div><h2>الامتحانات والمذاكرات والاختبارات</h2><p>جميع التقييمات المرتبطة بهذا القيد الأكاديمي فقط.</p></div>
+                    <span class="sp-badge sp-badge--info">{{ count($assessmentRows) }} تقييم</span>
+                </div>
+                <div class="sp-card__body">
+                    @if (empty($assessmentRows))
+                        <div class="sp-empty sp-empty--compact"><span class="sp-empty__icon"><i class="mdi mdi-clipboard-text-off-outline"></i></span><h3>لا توجد تقييمات قابلة للعرض</h3></div>
+                    @else
+                        <div class="sp-table-wrap">
+                            <table class="sp-table">
+                                <thead><tr><th>النوع</th><th>المادة</th><th>التقييم</th><th>الفصل</th><th>العلامة</th></tr></thead>
+                                <tbody>
+                                @foreach ($assessmentRows as $row)
+                                    @php
+                                        $typeClass = $row['type'] === 'امتحان' ? 'sp-badge--danger' : ($row['type'] === 'مذاكرة' ? 'sp-badge--warning' : 'sp-badge--info');
+                                    @endphp
+                                    <tr>
+                                        <td data-label="النوع"><span class="sp-badge {{ $typeClass }}">{{ $row['type'] }}</span></td>
+                                        <td data-label="المادة">{{ $row['subject'] }}</td>
+                                        <td data-label="التقييم"><strong>{{ $row['name'] }}</strong></td>
+                                        <td data-label="الفصل">{{ $row['term'] }}</td>
+                                        <td data-label="العلامة"><strong>{{ $row['result'] }}</strong>@if ($row['maximum']) <span class="sp-muted">/ {{ $row['maximum'] }}</span>@endif</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
-                @endif
+                </div>
+            </section>
+
+            <div class="sp-grid sp-grid--2 sp-section">
+                <section class="sp-card">
+                    <div class="sp-card__header"><h2 class="sp-card__title">الملفات والتسليمات</h2><p class="sp-card__meta">الملفات المسجلة ضمن هذا القيد.</p></div>
+                    <div class="sp-card__body">
+                        @if ($fileRows->isEmpty())
+                            <div class="sp-empty sp-empty--compact"><span class="sp-empty__icon"><i class="mdi mdi-file-hidden"></i></span><h3>لا توجد ملفات مرتبطة</h3></div>
+                        @else
+                            <div class="sp-list">
+                                @foreach ($fileRows as $row)
+                                    <div class="sp-list__item"><span class="sp-icon-box"><i class="mdi mdi-file-check-outline"></i></span><span><strong>{{ $row['subject'] }}</strong><small>{{ $row['type'] }} · {{ $row['format'] }}</small></span></div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </section>
+
+                <section class="sp-card">
+                    <div class="sp-card__header"><h2 class="sp-card__title">بطاقات النتائج والشهادات</h2><p class="sp-card__meta">الوثائق الأكاديمية المحفوظة.</p></div>
+                    <div class="sp-card__body">
+                        @if ($reportRows->isEmpty() && $certificateRows->isEmpty())
+                            <div class="sp-empty sp-empty--compact"><span class="sp-empty__icon"><i class="mdi mdi-certificate-outline"></i></span><h3>لا توجد وثائق مرتبطة</h3></div>
+                        @else
+                            <div class="sp-list">
+                                @foreach ($reportRows as $row)
+                                    <div class="sp-list__item"><span class="sp-icon-box sp-icon-box--blue"><i class="mdi mdi-card-account-details-star-outline"></i></span><span><strong>{{ $row['status'] }}</strong><small>الحضور: {{ $row['attendance'] ?: 'غير مسجل' }}</small></span></div>
+                                @endforeach
+                                @foreach ($certificateRows as $row)
+                                    <div class="sp-list__item"><span class="sp-icon-box sp-icon-box--gold"><i class="mdi mdi-certificate-outline"></i></span><span><strong>{{ $row['subject'] }}</strong><small>{{ $row['label'] }}</small></span></div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </section>
             </div>
         </div>
     </div>
-</div>
+</main>
 @endsection

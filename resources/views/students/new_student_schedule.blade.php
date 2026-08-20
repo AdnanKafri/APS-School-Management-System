@@ -3,7 +3,6 @@
 School
 @endsection
 @section('css')
-<link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/style.css') }}" />
 <link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/showcontent_style.css') }}">
      <style>
 
@@ -647,7 +646,7 @@ th{
 @endsection
 
 @section('content')
-<div class="main-panel" style="background: #f8f9fb;">
+<div class="main-panel sp-schedule-page">
   <ul class="breadcrumbs" style="padding-bottom: 7px;
 	padding-top: 11px;">
 
