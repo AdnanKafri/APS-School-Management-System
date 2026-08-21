@@ -415,7 +415,7 @@
                             <label>   الحلقة  الدراسية </label>
 
                             <select name="stage_id" id="" class="form-control lesson_id"
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد   الحلقة  الدراسية </option>
                                 @foreach($stages as $stage)
                                 <option value="{{$stage->id}}"> {{ $stage->name }}</option>
@@ -427,7 +427,7 @@
                             <label> المرحلة الدراسية </label>
 
                             <select name="stages_id" id="" class="form-control lesson_id"
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد  المرحلة الدراسية </option>
                                 @foreach($stage1 as $stage)
                                 <option value="{{$stage->id}}"> {{ $stage->name }}</option>
@@ -441,7 +441,7 @@
 
 
                             <select name="stage_id" id="" class="form-control lesson_id"
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد المرحلة الدراسية </option>
                                 <input id="cost_id" type="number" name="cost" class="form-control" value=""
                                 style="direction: rtl">
@@ -452,8 +452,9 @@
                             <label> تصميم الجلاء </label>
 
                             <select name="report_card" id="" class="form-control lesson_id"
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد تصميم الجلاء </option>
+                                <option value="0">عام / رياض الأطفال</option>
                                 <option value="1"> صف 1-4</option>
                                 <option value="2">صف 5-6</option>
                                 <option value="3"> صف 7-8</option>
@@ -474,7 +475,7 @@
                             <label> تحديد الصف التالي عند النجاح </label>
 
                             <select name="next_class" id="" class="form-control "
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد الصف التالي </option>
                                 @foreach ($all_classes as $class)
                                     <option value="{{ $class->id }}"> {{ $class->name }}</option>
@@ -490,27 +491,27 @@
                         <div class="form-group" id="show" style="text-align:right">
                             <label> الوصف بالانكليزية </label>
                             <input type="text" id="description_en" name="description_en" class="form-control" value=""
-                                placeholder="Example: An ideal class studying the approved first-grade curriculum." maxlength="20" required>
+                                placeholder="Example: An ideal class studying the approved curriculum." maxlength="255">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> الوصف بالعربية </label>
                             <input type="text" id="description_ar" name="description_ar" class="form-control" value=""
-                                placeholder="مثال:صف مثالي يدرس منهاج الصف الاول المعتمد" maxlength="20" required>
+                                placeholder="" maxlength="255">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> عدد الطلاب</label>
                             <input type="number" id="cildren_count" name="cildren_count" min="0" class="form-control" value=""
-                                placeholder="20" maxlength="20" required>
+                                placeholder="20" maxlength="20">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> عدد الدروس  </label>
                             <input type="number" id="lesson_count" name="lesson_count" min="0" class="form-control" value=""
-                                placeholder="24" maxlength="20" required>
+                                placeholder="24" maxlength="20">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> عدد الأسابيع </label>
                             <input type="number" id="week_count" name="week_count" min="0" class="form-control" value=""
-                                placeholder="16" maxlength="20" required>
+                                placeholder="16" maxlength="20">
                         </div>
                         {{-- <div class="form-group" id="show" style="text-align:right">
                             <input id="cost_id" type="hidden" name="cost" class="form-control" value=""
@@ -669,7 +670,7 @@
                             <label>   الحقلة الدراسية </label>
 
                             <select name="stage_id" id="stage_id" class="form-control stage_id"
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد  الحلقة الدراسية </option>
                                 @foreach ($stages as $stage)
                                     <option value="{{ $stage->id }}"> {{ $stage->name }}</option>
@@ -681,7 +682,7 @@
                             <label> المرحلة الدراسية </label>
 
                             <select name="stages_id" id="stages_id" class="form-control lesson_id"
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد  المرحلة الدراسية </option>
                                 @foreach($stage1 as $stage)
                                 <option value="{{$stage->id}}"> {{ $stage->name }}</option>
@@ -693,8 +694,9 @@
                             <label> تصميم الجلاء </label>
 
                             <select name="report_card" id="report_card" class="form-control "
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد تصميم الجلاء </option>
+                                <option value="0">عام / رياض الأطفال</option>
                                 <option value="1"> صف 1-4</option>
                                 <option value="2">صف 5-6</option>
                                 <option value="3"> صف 7-8</option>
@@ -717,7 +719,7 @@
                             <label> تحديد الصف التالي عند النجاح </label>
 
                             <select name="next_class" id="next_class" class="form-control "
-                                style="min-height: 36px;direction: rtl" required>
+                                style="min-height: 36px;direction: rtl">
                                 <option value="" hidden>حدد الصف التالي </option>
                                 @foreach ($all_classes as $class)
                                     <option value="{{ $class->id }}"> {{ $class->name }}</option>
@@ -735,27 +737,27 @@
                         <div class="form-group" id="show" style="text-align:right">
                             <label> الوصف بالانكليزية </label>
                             <input type="text" id="description_en" name="description_en" class="form-control" value=""
-                                placeholder="" maxlength="20" required>
+                                placeholder="" maxlength="255">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> الوصف بالعربية </label>
                             <input type="text" id="description_ar" name="description_ar" class="form-control" value=""
-                                placeholder="" maxlength="20" required>
+                                placeholder="" maxlength="255">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> عدد الطلاب</label>
                             <input type="number" id="cildren_count" min="0" name="cildren_count" class="form-control" value=""
-                                placeholder="" maxlength="20" required>
+                                placeholder="" maxlength="20">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> عدد الدروس  </label>
                             <input type="number" id="lesson_count" min="0" name="lesson_count" class="form-control" value=""
-                                placeholder="" maxlength="20" required>
+                                placeholder="" maxlength="20">
                         </div>
                         <div class="form-group" id="show" style="text-align:right">
                             <label> عدد الأسابيع </label>
                             <input type="number" id="week_count" min="0" name="week_count" class="form-control" value=""
-                                placeholder="" maxlength="20" required>
+                                placeholder="" maxlength="20">
                         </div>
 
 

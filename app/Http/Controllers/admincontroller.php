@@ -64,6 +64,8 @@ use App\Country_currency;
 use App\Stage;
 use App\Class_cost;
 use App\Basic_stage;
+use App\Basic_stages_class;
+use App\Services\StudentAcademicPlacementService;
 use ZipArchive as A;
 
 // dd( DB::table('student_rooms')->leftJoin('students', 'students.id', '=', 'student_rooms.student_id')
@@ -187,6 +189,13 @@ if ($request->validate(['email'=>'required|email|unique:users'])) ;
 
         ]);
 
+        $year = Year::where('current_year', 1)->firstOrFail();
+        $room = Room::whereKey($request->room_id)
+            ->where('class_id', $request->class_id)
+            ->where('year_id', $year->id)
+            ->first();
+        abort_unless($room, 422, 'The selected section does not belong to the selected class and current academic year.');
+
        $student= Student::create([
             'first_name'=>$request->first_name,
             'last_name'=>$request->last_name,
@@ -264,8 +273,6 @@ if ($request->validate(['email'=>'required|email|unique:users'])) ;
             'student_id'=>$student->id,
 
         ]);
-        $year = Year::where('current_year' , '1') ->first();
-
         $room_student=new Room_student;
         $room_student->student_id=$student->id;
         $room_student->year_id=$year->id;
@@ -273,6 +280,7 @@ if ($request->validate(['email'=>'required|email|unique:users'])) ;
         $room_student->room_id=$request->room_id;
 
         $room_student->save();
+        app(StudentAcademicPlacementService::class)->syncForEnrollment($room_student);
 
         $lessons=Lesson::where('class_id',$request->class_id)->get();
         $object1=new stdClass();
@@ -1495,14 +1503,36 @@ return redirect()->back()->with('success','! تمت العملية بنجاح');
         $request->validate([
             'class_name'=>'required|max:20',
             'class_name_en'=>'required|max:20',
-
             'fixed_cost'=>'required',
+            'stage_id'=>'nullable|integer|exists:stages,id',
+            'stages_id'=>'nullable|integer|exists:basic_stages,id',
+            'report_card'=>'nullable|integer|min:0',
+            'next_class'=>'nullable|integer|min:0',
+            'description_en'=>'nullable|string|max:255',
+            'description_ar'=>'nullable|string|max:255',
+            'cildren_count'=>'nullable|integer|min:0',
+            'lesson_count'=>'nullable|integer|min:0',
+            'week_count'=>'nullable|integer|min:0',
         ]);
+
+        if ($request->filled('next_class') && (int) $request->next_class > 0) {
+            abort_unless(Classe::whereKey($request->next_class)->exists(), 422, 'Invalid next class.');
+        }
         $class=new Classe;
         $class->name=$request->class_name;
         $class->name_en=$request->class_name_en;
-
         $class->fixed_cost=$request->fixed_cost;
+        $class->stage_id=$request->input('stage_id');
+        $class->report_card = $request->has('report_card') && $request->input('report_card') !== ''
+            ? (int) $request->input('report_card') : null;
+        $class->next_class = $request->has('next_class') && $request->input('next_class') !== ''
+            ? (int) $request->input('next_class') : null;
+        $class->description_en=$request->input('description_en');
+        $class->description_ar=$request->input('description_ar');
+        $class->cildren_count=$request->input('cildren_count');
+        $class->lesson_count=$request->input('lesson_count');
+        $class->week_count=$request->input('week_count');
+        $class->is_scientific=$request->input('is_scientific');
 
         if ($request->hasFile('image')) {
 
@@ -1510,17 +1540,52 @@ return redirect()->back()->with('success','! تمت العملية بنجاح');
         }
 
         $class->save();
+        if ($request->filled('stages_id')) {
+            $class_stage = new Basic_stages_class;
+            $class_stage->class_id = $class->id;
+            $class_stage->stage_id = $request->stages_id;
+            $class_stage->save();
+        }
         return redirect()->back()->with('success','! تمت العملية بنجاح');
     }
 
     public function class_update(Request $request) {
 
+        $request->validate([
+            'class_id'=>'required|integer|exists:classes,id',
+            'class_name'=>'required|max:20',
+            'class_name_en'=>'required|max:20',
+            'stage_id'=>'nullable|integer|exists:stages,id',
+            'stages_id'=>'nullable|integer|exists:basic_stages,id',
+            'report_card'=>'nullable|integer|min:0',
+            'next_class'=>'nullable|integer|min:0',
+            'description_en'=>'nullable|string|max:255',
+            'description_ar'=>'nullable|string|max:255',
+            'cildren_count'=>'nullable|integer|min:0',
+            'lesson_count'=>'nullable|integer|min:0',
+            'week_count'=>'nullable|integer|min:0',
+        ]);
+
+        if ($request->filled('next_class') && (int) $request->next_class > 0) {
+            abort_unless(Classe::whereKey($request->next_class)->exists(), 422, 'Invalid next class.');
+        }
+
         $class_id = $request->class_id;
         $class=Classe::find($class_id);
         $class->name=$request->class_name;
         $class->name_en=$request->class_name_en;
-
         $class->fixed_cost=$request->fixed_cost;
+        $class->stage_id=$request->input('stage_id');
+        $class->report_card = $request->has('report_card') && $request->input('report_card') !== ''
+            ? (int) $request->input('report_card') : null;
+        $class->next_class = $request->has('next_class') && $request->input('next_class') !== ''
+            ? (int) $request->input('next_class') : null;
+        $class->description_en=$request->input('description_en');
+        $class->description_ar=$request->input('description_ar');
+        $class->cildren_count=$request->input('cildren_count');
+        $class->lesson_count=$request->input('lesson_count');
+        $class->week_count=$request->input('week_count');
+        $class->is_scientific=$request->input('is_scientific');
 
 if($request->has('del_img1')){
 Storage::disk('public')->delete($class->image);
@@ -1532,6 +1597,13 @@ $class->image=null;
         }
 
         $class->save();
+        Basic_stages_class::where('class_id', $class->id)->delete();
+        if ($request->filled('stages_id')) {
+            $class_stage = new Basic_stages_class;
+            $class_stage->class_id = $class->id;
+            $class_stage->stage_id = $request->stages_id;
+            $class_stage->save();
+        }
         return redirect()->back()->with('success','! تمت العملية بنجاح');
     }
     public function teacher_lessons($class_id){

@@ -3434,6 +3434,25 @@ class studentscontroller extends Controller
         $class_name = $class->name;
         $stage_id = $class->stage_id;
         $report_card_design = $class->report_card;
+
+        // Value 0 is an explicit generic/KG report choice. Keep the legacy
+        // fallback for older classes whose report_card value is still null.
+        if (!is_null($class->report_card) && (int) $class->report_card === 0) {
+            $room_id = $room->id;
+            $lessons = Lesson::where('class_id', $class->id)
+                ->orderBy('certificate_order')
+                ->get();
+
+            return view('students.generic_report_card', compact(
+                'student',
+                'room',
+                'room_id',
+                'class',
+                'year',
+                'student_marks',
+                'lessons'
+            ));
+        }
         //تمييز الأول الثانوي عن الثاني الثانوي
         $report_card_design = isset($report_card_design) ?   $report_card_design  : '5';
         $report_card_details = Report_card_details::where('class_id', $class->id)->where('year_id', $year->id)->first();

@@ -162,6 +162,7 @@
                     3 => ['الثالث', 'ثالث', 'third', 'grade 3', 'class 3'],
                     2 => ['الثاني', 'ثاني', 'second', 'grade 2', 'class 2'],
                     1 => ['الاول', 'اول', 'first', 'grade 1', 'class 1'],
+                    0 => ['kg', 'kindergarten', 'preschool'],
                 ];
 
                 $gradeIndex = function ($item) use ($normalizeClassLabel, $gradeTokenMap) {
@@ -175,6 +176,10 @@
 
                     if (preg_match('/(?:^|\s)(1[0-2]|[1-9])(?:\s|$)/u', $label, $matches)) {
                         return (int) $matches[1];
+                    }
+
+                    if (preg_match('/(?:^|\s)(?:kg|kindergarten|preschool)(?:\s*[12])?(?:\s|$)/i', $label)) {
+                        return 0;
                     }
 
                     return 999;

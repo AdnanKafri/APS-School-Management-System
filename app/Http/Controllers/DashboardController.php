@@ -46,6 +46,8 @@ use App\Room;
 use App\Other;
 use App\More_details;
 use App\Room_student;
+use App\StudentAcademicPlacement;
+use App\Services\StudentAcademicPlacementService;
 use App\Student;
 use App\Student_lesson_teacher_room_term_exam;
 use App\Students_mark;
@@ -5604,6 +5606,13 @@ public function startQueueWorker()
               'public_record_number.unique' => __('admin.students.validation.public_record_number_unique'),
         ]);
 
+        $year = Year::where('current_year', 1)->firstOrFail();
+        $room = Room::whereKey($request->room_id)
+            ->where('class_id', $request->class_id)
+            ->where('year_id', $year->id)
+            ->first();
+        abort_unless($room, 422, 'The selected section does not belong to the selected class and current academic year.');
+
         $student = Student::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -5628,7 +5637,6 @@ public function startQueueWorker()
         $student->country_currency =$request->country_currency;
 
         $student->save() ;
-        $year = Year::where('current_year', '1')->first();
         $rooom = Room::find($request->room_id);
         Invoice::create([
             'invoice_number' => $student->id,
@@ -5676,8 +5684,6 @@ public function startQueueWorker()
         $student->email = $email;
         $student->save();
 
-        $year = Year::where('current_year', '1')->first();
-
         $room_student = new Room_student;
         $room_student->student_id = $student->id;
         $room_student->year_id = $year->id;
@@ -5685,6 +5691,7 @@ public function startQueueWorker()
         $room_student->room_id = $request->room_id;
         $room_student->term = 1;
         $room_student->save();
+        app(StudentAcademicPlacementService::class)->syncForEnrollment($room_student);
 
         $lessons = Lesson::where('class_id', $request->class_id)->get();
         $object1 = new stdClass();
