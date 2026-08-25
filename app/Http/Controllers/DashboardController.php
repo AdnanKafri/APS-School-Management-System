@@ -6419,6 +6419,8 @@ public function startQueueWorker()
             $room_filter = $request->room_id;
             $stage_id = $request->stage_id;
             $year = Year::where('current_year', '1')->first();
+            $canViewStudentCredentials = auth()->user()
+                && auth()->user()->can('Account_Information_student');
 
             // Normalize search value (e.g., remove diacritics if needed)
             $searchValue = preg_replace('/[\p{Mn}]/u', '', $searchValue);
@@ -6470,7 +6472,15 @@ public function startQueueWorker()
                              ->get();
 
             // Prepare data array
-            $data_arr = $records->map(function ($record) {
+            $data_arr = $records->map(function ($record) use ($canViewStudentCredentials) {
+                $userData = $record->user ? [
+                    "email" => $record->user->email,
+                ] : null;
+
+                if ($userData && $canViewStudentCredentials) {
+                    $userData["view_password"] = $record->user->view_password;
+                }
+
                 return [
                     "first_name" => $record->first_name,
                     "last_name" => $record->last_name,
@@ -6480,10 +6490,7 @@ public function startQueueWorker()
                     "room" => $record->room,
                     "id" => $record->id,
                     "lang" => $record->lang,
-                    "user" => $record->user ? [
-                        "email" => $record->user->email,
-                        "view_password" => $record->user->view_password,
-                    ] : null,
+                    "user" => $userData,
                     "details" => $record->details,
                     "public_record_number" => $record->public_record_number,
                 ];

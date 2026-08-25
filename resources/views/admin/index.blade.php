@@ -137,6 +137,7 @@
             ['permission' => 'attendance_schedule_and_exams', 'route' => 'classes.view.exams', 'icon' => 'far fa-calendar-alt', 'title' => 'الاختبارات', 'desc' => 'إدارة اختبارات الصفوف'],
             ['permission' => 'workschedule', 'route' => 'workschedule_class', 'icon' => 'far fa-calendar-check', 'title' => 'برنامج الدوام', 'desc' => 'جدولة الحصص اليومية'],
             ['permission' => 'student_affairs_section', 'route' => 'students', 'icon' => 'fas fa-user-alt', 'title' => 'شؤون الطلاب', 'desc' => 'البيانات الأكاديمية والإدارية'],
+            ['permission' => 'student_affairs_section', 'route' => 'admin.year_end.index', 'icon' => 'fas fa-level-up-alt', 'title' => 'الترحيل إلى العام الجديد', 'desc' => 'تجهيز ونقل الطلاب للعام التالي'],
             ['permission' => null, 'route' => 'admin.complaints.index', 'icon' => 'fas fa-comments', 'title' => 'الشكاوى', 'desc' => 'مراجعة الشكاوى الدراسية وشكاوى النقل'],
             ['permission' => 'user_permissions', 'route' => 'admin.roles.index', 'icon' => 'far fa-id-badge', 'title' => 'صلاحيات المستخدم', 'desc' => 'الأدوار والصلاحيات'],
             ['permission' => 'lecture_time_section', 'route' => 'sessions', 'icon' => 'far fa-building', 'title' => 'الحصص', 'desc' => 'الجلسات والجدول الأسبوعي'],

@@ -424,7 +424,7 @@
                 </div>
                 <form method="post" action="{{ route('student_update',$student->id) }}" enctype="multipart/form-data">
                     @csrf
-                    @method('post')
+                    @method('PUT')
                     <h1 class="heading-small text-muted mb-4" style="font-size: 30px">المعلومات الشخصية</h1>
                     <div class="pl-lg-4">
 

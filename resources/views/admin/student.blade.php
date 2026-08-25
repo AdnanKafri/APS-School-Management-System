@@ -21,6 +21,30 @@
     .student-index-v2 .bulk-transfer-selection input[type="checkbox"],
     .student-index-v2 .bulk-transfer-student { width: 18px; height: 18px; vertical-align: middle; }
 
+    #studentAccountExportModal .modal-dialog { width: calc(100% - 24px); max-width: 520px; margin: 1.75rem auto; }
+    #studentAccountExportModal .modal-content { border: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 18px 48px rgba(36, 31, 63, .2); }
+    #studentAccountExportModal .modal-header { align-items: center; padding: 18px 22px; border-bottom: 1px solid #eceaf2; }
+    #studentAccountExportModal .modal-title { color: #2d2940; font-size: 19px; font-weight: 800; }
+    #studentAccountExportModal .close { margin: -6px auto -6px -8px; padding: 8px; }
+    #studentAccountExportModal .modal-body { padding: 22px; }
+    #studentAccountExportModal .form-group { margin-bottom: 18px; text-align: right; }
+    #studentAccountExportModal .form-group:last-child { margin-bottom: 0; }
+    #studentAccountExportModal label { display: block; margin-bottom: 8px; color: #464057; font-size: 14px; font-weight: 700; }
+    #studentAccountExportModal .form-control { width: 100%; min-height: 46px; padding: 8px 12px; border: 1px solid #cbc7d8; border-radius: 10px; background: #fff; color: #302b40; font-size: 15px; line-height: 1.5; box-shadow: none; }
+    #studentAccountExportModal .form-control:focus { border-color: #6f5aa8; box-shadow: 0 0 0 3px rgba(111, 90, 168, .14); }
+    #studentAccountExportModal .form-control:disabled { background: #f5f4f8; color: #777184; cursor: not-allowed; }
+    #studentAccountExportModal .form-text { min-height: 20px; margin-top: 7px; font-size: 13px; }
+    #studentAccountExportModal .modal-footer { justify-content: flex-start; gap: 10px; padding: 15px 22px 20px; border-top: 1px solid #eceaf2; }
+    #studentAccountExportModal .modal-footer .btn { min-width: 112px; min-height: 42px; margin: 0; border-radius: 9px; font-size: 14px; font-weight: 700; }
+
+    @media (max-width: 575.98px) {
+        #studentAccountExportModal .modal-dialog { width: calc(100% - 20px); margin: 10px auto; }
+        #studentAccountExportModal .modal-header,
+        #studentAccountExportModal .modal-body { padding: 16px; }
+        #studentAccountExportModal .modal-footer { padding: 14px 16px 16px; }
+        #studentAccountExportModal .modal-footer .btn { flex: 1 1 0; min-width: 0; }
+    }
+
     html[dir="ltr"] .student-index-v2 {
         direction: ltr;
         text-align: left;
@@ -1633,6 +1657,11 @@ $about = \App\Other::find(1);
          <button type="button" id="bulk-transfer-open" class="btn btn-primary" disabled>
              {{ html_entity_decode(__('student_transfer.ui.bulk_action')) }}
          </button>
+         @can('Account_Information_student')
+         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#studentAccountExportModal">
+             <i class="fas fa-file-export ml-1"></i> تصدير حسابات الطلاب
+         </button>
+         @endcan
          @can('create_student')
         <a  class="btn  btn-success" data-toggle="modal" data-target=".createStudentModal"
             >إضافة طالب</a>
@@ -1690,53 +1719,45 @@ $about = \App\Other::find(1);
         </div>
     </div>
 </div>
-<div class="modal fade" id="selectexport" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document" style="min-width: 50%">
-    <form action="{{ route('export_student1') }}" method="post">
+@can('Account_Information_student')
+<div class="modal fade" id="studentAccountExportModal" tabindex="-1" role="dialog" aria-labelledby="studentAccountExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+    <form action="{{ route('admin.students.export_accounts') }}" method="post" id="student-account-export-form" dir="rtl" class="w-100">
         @csrf
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title" id="exampleModalLabel">تصدير طلاب</h3>
+          <h5 class="modal-title" id="studentAccountExportModalLabel">تصدير حسابات الطلاب</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-                <div class="row" >
-                    <div class="col-12 col-lg-4">
-                    <select class="form-control "   name="stage" id="stage_id_filter1">
-                        <option value="0">  جميع المراحل </option>
-                        @foreach ($stages as $stage)
-                        <option value="{{ $stage->id }}">{{ $stage->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                    <div class="col-12 col-lg-4">
-
-
-                        <select  name="classes" id="classes_select" class="form-control" >
-                            <option value="0"> جميع الصفوف </option>
+                <div class="form-group">
+                    <label for="student-account-export-class">الصف</label>
+                    <select name="class_id" id="student-account-export-class" class="form-control" required>
+                            <option value="">اختر الصف</option>
                             @foreach ($classes as $item)
                                 <option value="{{ $item->id }}"> {{ $item->name }} </option>
                             @endforeach
-                        </select>
-                    </div>
-                    <div class="col-12 col-lg-4">
-                        <select  name="rooms" id="rooms_classes" class="form-control" >
-                            <option value="0"> جميع الشعب </option>
-                        </select>
-                    </div>
+                    </select>
+                </div>
+                <div class="form-group mb-0">
+                    <label for="student-account-export-room">الشعبة</label>
+                    <select name="room_id" id="student-account-export-room" class="form-control" required disabled>
+                        <option value="">اختر الصف أولاً</option>
+                    </select>
+                    <small id="student-account-export-room-message" class="form-text text-muted"></small>
                 </div>
         </div>
-        <div class="modal-footer" style="display: flex;justify-content: flex-start;" >
-          <a class="btn btn-secondary" data-dismiss="modal">اغلاق</a>
-          <button type="submit" class="btn btn-primary note_disabled">تصدير</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="student-account-export-submit" disabled>تصدير الحسابات</button>
         </div>
     </div>
     </form>
     </div>
   </div>
-</div>
+@endcan
 <div class="modal fade" id="bulkStudentTransferModal" tabindex="-1" role="dialog" aria-labelledby="bulkStudentTransferModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content" dir="rtl">
@@ -2529,26 +2550,62 @@ $.ajax({
         });
     });
 
-    $(document).on('change', '#classes_select', function () {
+    $(document).on('change', '#student-account-export-class', function () {
+        var classId = $(this).val();
+        var $room = $('#student-account-export-room');
+        var $submit = $('#student-account-export-submit');
+        var $message = $('#student-account-export-room-message');
 
-var year_id=$('#years').val();
-var class_id=$(this).val();
-var url = "{{ URL::to('SMT/admin/classes/rooms2') }}/" + class_id +"/"+ year_id;
-$('#rooms_classes').empty();
-$('#rooms_classes').append(`<option value="0">جميع الشعب</option>`);
-$.ajax({
-    url: url,
-    type: "get",
-    contentType: 'application/json',
-    success: function (data) {
-        $.each(data, function (key, value) {
-            $('#rooms_classes').append(`<option value="${value.id}">${value.name}</option>`);
+        $room.prop('disabled', true).empty().append('<option value="">جاري تحميل الشعب...</option>');
+        $submit.prop('disabled', true);
+        $message.text('');
+
+        if (!classId) {
+            $room.empty().append('<option value="">اختر الصف أولاً</option>');
+            return;
+        }
+
+        $.ajax({
+            url: "{{ route('admin.students.export_account_sections', ['class_id' => '__CLASS_ID__']) }}".replace('__CLASS_ID__', encodeURIComponent(classId)),
+            type: 'get',
+            dataType: 'json',
+            success: function (data) {
+                $room.empty().append('<option value="">اختر الشعبة</option>');
+                var sections = data.sections || [];
+                if (!sections.length) {
+                    $message.text('لا توجد شعب لهذا الصف في العام الدراسي الحالي.');
+                    return;
+                }
+
+                $.each(sections, function (key, value) {
+                    $room.append($('<option>', { value: value.id, text: value.name }));
+                });
+                $room.prop('disabled', false);
+            },
+            error: function (xhr) {
+                $room.empty().append('<option value="">تعذر تحميل الشعب</option>');
+                var message = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : 'تعذر تحميل الشعب. يرجى المحاولة مرة أخرى.';
+                $message.text(message);
+            }
         });
-    },
+    });
 
+    $(document).on('change', '#student-account-export-room', function () {
+        var hasClass = !!$('#student-account-export-class').val();
+        $('#student-account-export-submit').prop('disabled', !hasClass || !$(this).val());
+    });
 
-});
-});
+    $('#studentAccountExportModal').on('hidden.bs.modal', function () {
+        $('#student-account-export-form')[0].reset();
+        $('#student-account-export-room')
+            .prop('disabled', true)
+            .empty()
+            .append('<option value="">اختر الصف أولاً</option>');
+        $('#student-account-export-room-message').text('');
+        $('#student-account-export-submit').prop('disabled', true);
+    });
 
 $(document).on('click', '.financial_account', function () {
         var student_id = $(this).data('id');

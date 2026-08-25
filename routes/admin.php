@@ -62,7 +62,7 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::post('student/super', 'DashboardController@student_super')->name('student.super');
     Route::get('teacher_schedule/{id}', 'DashboardController@teacher_schedule')->name('teacher_schedule');
     Route::get('student_attendance/{student_id}/{room_id}/{month}', 'DashboardController@student_attendance')->name('student_attendance');
-    Route::post('student_vaccines_update/{student_id}', 'DashboardController@student_vaccines_update')->name('student_vaccines_update');
+    Route::put('student_vaccines_update/{student_id}', 'DashboardController@student_vaccines_update')->name('student_vaccines_update');
     Route::get('edu_supervisor/subjects/{room_id}', 'DashboardController@admin_supervisor_subjects')->name('edu_supervisor.subjects');
     Route::get('edu_supervisor/subjects/lectures/{lesson_id}/{room_id}', 'DashboardController@admin_supervisor_subjects_lectures')->name('edu_supervisor.subjects.lectures');
     Route::get('edu_supervisor/lecture_details/{lesson_id}/{room_id}/{lecture_id}', 'DashboardController@admin_supervisor_lecture_content')->name('edu_supervisor.lecture_content');
@@ -84,6 +84,12 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('certificate_fields', 'DashboardController@certificate_fields')->name('certificate_fields');
     Route::get('app_slider', 'DashboardController@app_slider')->name('app_slider');
     Route::post('export_student1', 'DashboardController@export_student1')->name('export_student1');
+    Route::post('students/export-accounts', 'Admin\\StudentAccountExportController@export')
+        ->middleware('can:Account_Information_student')
+        ->name('admin.students.export_accounts');
+    Route::get('students/export-accounts/sections/{class_id}', 'Admin\\StudentAccountExportController@sections')
+        ->middleware('can:Account_Information_student')
+        ->name('admin.students.export_account_sections');
     Route::post('export_register_student', 'DashboardController@export_register_student')->name('export_register_student');
     Route::post('export_teacher', 'DashboardController@export_teacher')->name('export_teacher');
     Route::post('st_import', 'DashboardController@st_import')->name('st_import');
@@ -593,10 +599,10 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::post('classes/single_Class_freeze_Marks', 'DashboardController@single_Class_freeze_Marks')->name('single_Class_freeze_Marks');
     Route::post('classes/all_Classes_freeze_Marks', 'DashboardController@all_Classes_freeze_Marks')->name('all_Classes_freeze_Marks');
     Route::post('classes/end_school_year', 'DashboardController@end_school_year')->name('end_school_year');
-    Route::get('year-end/promotion', 'Admin\\YearEndPromotionController@index')->name('admin.year_end.index');
-    Route::post('year-end/promotion/clone-rooms', 'Admin\\YearEndPromotionController@cloneRooms')->name('admin.year_end.clone_rooms');
-    Route::post('year-end/promotion/process', 'Admin\\YearEndPromotionController@process')->name('admin.year_end.process');
-    Route::post('year-end/promotion/process-bulk', 'Admin\\YearEndPromotionController@processBulk')->name('admin.year_end.process_bulk');
+    Route::get('year-end/promotion', 'Admin\\YearEndPromotionController@index')->middleware('can:student_affairs_section')->name('admin.year_end.index');
+    Route::post('year-end/promotion/clone-rooms', 'Admin\\YearEndPromotionController@cloneRooms')->middleware('can:student_affairs_section')->name('admin.year_end.clone_rooms');
+    Route::post('year-end/promotion/process', 'Admin\\YearEndPromotionController@process')->middleware('can:student_affairs_section')->name('admin.year_end.process');
+    Route::post('year-end/promotion/process-bulk', 'Admin\\YearEndPromotionController@processBulk')->middleware('can:student_affairs_section')->name('admin.year_end.process_bulk');
     Route::get('reports/teacher_sch', 'DashboardController@teacher_sch')->name('teacher_sch');
     Route::get('reports/student_sch', 'DashboardController@student_sch')->name('student_sch');
     Route::get('reports/phase_completion_documents', 'DashboardController@phase_completion_documents')->name('phase_completion_documents');
