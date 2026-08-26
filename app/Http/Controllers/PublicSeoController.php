@@ -15,16 +15,31 @@ class PublicSeoController extends Controller
         }
 
         if ($path !== '' && Storage::disk('public')->exists($path)) {
+            $absolutePath = Storage::disk('public')->path($path);
+
             return [
                 'url' => asset('storage/' . $path),
                 'type' => $this->imageMimeType($path),
+                'path' => $absolutePath,
+                'sizes' => $this->imageDimensions($absolutePath),
             ];
         }
+
+        $fallbackPath = public_path('student/avatar.png');
 
         return [
             'url' => asset('student/avatar.png'),
             'type' => 'image/png',
+            'path' => $fallbackPath,
+            'sizes' => $this->imageDimensions($fallbackPath),
         ];
+    }
+
+    private function imageDimensions($path)
+    {
+        $dimensions = is_file($path) ? @getimagesize($path) : false;
+
+        return $dimensions ? $dimensions[0] . 'x' . $dimensions[1] : '512x512';
     }
 
     private function imageMimeType($path)
@@ -54,17 +69,34 @@ class PublicSeoController extends Controller
     {
         $baseUrl = rtrim((string) config('app.url'), '/');
         $paths = ['', '/faq', '/contact_us', '/complaints', '/Recruitment_competition'];
-        $urls = [];
+        $entries = [];
 
         foreach (['ar', 'en'] as $locale) {
             foreach ($paths as $path) {
-                $urls[] = $baseUrl . '/' . $locale . $path;
+                $entries[] = [
+                    'loc' => $baseUrl . '/' . $locale . $path,
+                    'alternates' => [
+                        'ar' => $baseUrl . '/ar' . $path,
+                        'en' => $baseUrl . '/en' . $path,
+                        'x-default' => $baseUrl . '/ar' . $path,
+                    ],
+                ];
             }
         }
 
         return response()->view('website.sitemap', [
-            'urls' => $urls,
+            'entries' => $entries,
         ])->header('Content-Type', 'application/xml; charset=UTF-8');
+    }
+
+    public function favicon()
+    {
+        $icon = $this->schoolBrandIcon();
+
+        return response()->file($icon['path'], [
+            'Content-Type' => $icon['type'],
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
     }
 
     public function manifest()
@@ -81,9 +113,9 @@ class PublicSeoController extends Controller
             'theme_color' => '#1f4f8f',
             'icons' => [[
                 'src' => $icon['url'],
-                'sizes' => 'any',
+                'sizes' => $icon['sizes'],
                 'type' => $icon['type'],
-                'purpose' => 'any maskable',
+                'purpose' => 'any',
             ]],
         ])->header('Content-Type', 'application/manifest+json; charset=UTF-8');
     }

@@ -834,29 +834,29 @@ $about = \App\Other::find(1);
                     <div class="form-group">
                         <label>الإسم الأول بالعربية</label>
                         <input type="text" name="first_name" class="form-control a" style="direction:rtl" value=""
-                            maxlength="20" placeholder="الإسم الأول" required>
+                            maxlength="40" placeholder="الإسم الأول" required>
                     </div>
 
                     <div class="form-group">
                         <label>الكنية بالعربية</label>
-                        <input type="text" name="last_name" class="form-control b" value="" maxlength="20"
+                        <input type="text" name="last_name" class="form-control b" value="" maxlength="40"
                             style="direction:rtl" placeholder="الكنية" required>
                     </div>
                     <div class="form-group">
                         <label>الإسم الأول بالانكليزية</label>
                         <input type="text" name="first_name_en" class="form-control a english_name"
-                            style="direction:rtl" value="" maxlength="20" placeholder="الإسم الأول" required>
+                            style="direction:rtl" value="" maxlength="40" placeholder="الإسم الأول" required>
                     </div>
 
                     <div class="form-group">
                         <label> الكنية بالانكليزية</label>
                         <input type="text" name="last_name_en" class="form-control b english_name" value=""
-                            maxlength="20" style="direction:rtl" placeholder="الكنية" required>
+                            maxlength="40" style="direction:rtl" placeholder="الكنية" required>
                     </div>
 
                     <div class="form-group">
                         <label>اسم الأب </label>
-                        <input type="text" name="father_name" class="form-control b" value="" maxlength="20"
+                        <input type="text" name="father_name" class="form-control b" value="" maxlength="40"
                             style="direction:rtl" placeholder="اسم الأب " required>
                     </div>
 
@@ -870,7 +870,7 @@ $about = \App\Other::find(1);
 
                     <div class="form-group">
                         <label>اسم الأم</label>
-                        <input type="text" name="mother_name" class="form-control b" value="" maxlength="20"
+                        <input type="text" name="mother_name" class="form-control b" value="" maxlength="40"
                             style="direction:rtl" placeholder="اسم الأم">
                     </div>
 
@@ -885,7 +885,7 @@ $about = \App\Other::find(1);
                     {{-- <div class="form-group">
                         <label>مكان الولادة</label>
                         <input type="text" name="place_birth" class="form-control b"
-                            value="" maxlength="100"style="direction:rtl"
+                            value="" maxlength="200"style="direction:rtl"
                             placeholder="مكان الولادة">
                     </div> --}}
 
@@ -913,7 +913,7 @@ $about = \App\Other::find(1);
                  <div class="form-group">
                         <label>العنوان الحالي</label>
                         <input type="text" name="address" class="form-control b" style="direction:rtl" value=""
-                            maxlength="100" placeholder="االعنوان الحالي">
+                            maxlength="200" placeholder="االعنوان الحالي">
                     </div> 
 
                     <div class="form-group">

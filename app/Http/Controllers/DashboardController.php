@@ -5595,9 +5595,15 @@ public function startQueueWorker()
 
 
         $this->validate($request, [
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'father_name' => 'required',
+            'first_name' => 'required|string|max:40',
+            'last_name' => 'required|string|max:40',
+            'first_name_en' => 'nullable|string|max:40',
+            'last_name_en' => 'nullable|string|max:40',
+            'father_name' => 'required|string|max:40',
+            'mother_name' => 'nullable|string|max:40',
+            'place_birth' => 'nullable|string|max:200',
+            'nationality' => 'nullable|string|max:60',
+            'address' => 'nullable|string|max:200',
             'phone' => 'required',
             'class_id' => 'required|Numeric',
             'room_id' => 'required|Numeric',

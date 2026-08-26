@@ -175,9 +175,15 @@ if ($request->validate(['email'=>'required|email|unique:users'])) ;
     public function student_store(Request $request){
 
         $this->validate($request, [
-            'first_name' =>'required',
-            'last_name' =>'required',
-            'father_name' =>'required',
+            'first_name' =>'required|string|max:40',
+            'last_name' =>'required|string|max:40',
+            'first_name_en' => 'nullable|string|max:40',
+            'last_name_en' => 'nullable|string|max:40',
+            'father_name' =>'required|string|max:40',
+            'mother_name' => 'nullable|string|max:40',
+            'place_birth' => 'nullable|string|max:200',
+            'nationality' => 'nullable|string|max:60',
+            'address' => 'nullable|string|max:200',
             'email'=>'required|email|unique:users',
             'phone'=>'required',
             'class_id'=>'required|Numeric',
@@ -679,9 +685,15 @@ public function student_update(Request $request , $student_id){
 
     $year=Year::where('current_year','1')->first();
     $request->validate([
-        'first_name'=>'required',
-        'last_name'=>'required',
-        'father_name'=>'required',
+        'first_name'=>'required|string|max:40',
+        'last_name'=>'required|string|max:40',
+        'first_name_en' => 'nullable|string|max:40',
+        'last_name_en' => 'nullable|string|max:40',
+        'father_name'=>'required|string|max:40',
+        'mother_name' => 'nullable|string|max:40',
+        'place_birth' => 'nullable|string|max:200',
+        'nationality' => 'nullable|string|max:60',
+        'address' => 'nullable|string|max:200',
         'email' => 'required|unique:users,email,'.$user->id.',id',
         'phone'=>'required',
 

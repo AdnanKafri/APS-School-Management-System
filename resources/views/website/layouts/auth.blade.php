@@ -39,9 +39,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     @include('website.partials.seo')
     <meta name="theme-color" content="#1f4f8f">
-    <link rel="icon" href="{{ $studentBrandIcon }}">
+    <link rel="icon" href="{{ route('seo.favicon') }}">
     <link rel="apple-touch-icon" href="{{ $studentBrandIcon }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <link rel="manifest" href="{{ route('seo.manifest') }}">
 
     <link rel="stylesheet" href="{{ asset('assets/website/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/website/css/fontawesome.css') }}">

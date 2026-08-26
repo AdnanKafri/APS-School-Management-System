@@ -1141,35 +1141,35 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
                                     <div class="form-group">
                                         <label>الإسم الأول</label>
                                         <input type="text" name="first_name" class="form-control a" style="direction:rtl"
-                                            value="" maxlength="20"
+                                            value="" maxlength="40"
                                             placeholder="Type first name" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label>الكنية</label>
                                         <input type="text" name="last_name" class="form-control b"
-                                            value="" maxlength="20"style="direction:rtl"
+                                            value="" maxlength="40"style="direction:rtl"
                                             placeholder="Type last name" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label>اسم الأب </label>
                                         <input type="text" name="father_name" class="form-control b"
-                                            value="" maxlength="20"style="direction:rtl"
+                                            value="" maxlength="40"style="direction:rtl"
                                             placeholder="Type Father Name" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label>اسم الأم</label>
                                         <input type="text" name="mother_name" class="form-control b"
-                                            value="" maxlength="20"style="direction:rtl"
+                                            value="" maxlength="40"style="direction:rtl"
                                             placeholder="Type Mother Name" >
                                     </div>
 
                                     <div class="form-group">
                                         <label>مكان الولادة</label>
                                         <input type="text" name="place_birth" class="form-control b"
-                                            value="" maxlength="100"style="direction:rtl"
+                                            value="" maxlength="200"style="direction:rtl"
                                             placeholder="Type last name">
                                     </div>
 
@@ -1204,7 +1204,7 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
                                     <div class="form-group">
                                         <label>الجنسية</label>
                                         <input type="text" name="nationality" class="form-control b"style="direction:rtl"
-                                            value="" maxlength="30"
+                                            value="" maxlength="60"
                                             placeholder="مثال: عربي سوري">
                                     </div>
 
@@ -1309,7 +1309,7 @@ data-name="{{ $item->first_name }} {{ $item->last_name }} "><i class="material-i
                                     <div class="form-group">
                                         <label>العنوان</label>
                                         <input type="text" name="address" class="form-control b"style="direction:rtl"
-                                            value="" maxlength="100"
+                                            value="" maxlength="200"
                                             placeholder="Type address">
                                     </div>
 

@@ -223,11 +223,6 @@ protected function websiteLoginRedirectPath($user)
     public function index(){
 
 
-        $counter=Count::first();
-
-        $counter->count=$counter->count+1;
-        $counter->save();
-
         $video=Video::first();
         $sliders=Slider::
         select('id','header_'.LaravelLocalization::setLocale().
@@ -354,7 +349,7 @@ protected function websiteLoginRedirectPath($user)
     $header=Header_info::select('id','email','address_'.LaravelLocalization::setLocale().   ' as address')->first();
     
         return view('website.index',compact('sliders','vision','service','about','news1','news','classes','about_us','video',
-        'counter','stats','header','footer','super_students','advantages','other','our_services_feature','counter_web','gallery','how_it_works_website','testimonials','blogs_web','footer_web'));
+        'stats','header','footer','super_students','advantages','other','our_services_feature','counter_web','gallery','how_it_works_website','testimonials','blogs_web','footer_web'));
         
         return view('website.app',compact('sliders','vision','news1','news','classes','about_us','video',
         'counter','stats','header','footer','super_students','advantages','other','footer_web'));

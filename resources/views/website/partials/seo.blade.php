@@ -58,19 +58,26 @@
     $seoRobots = in_array($seoRoute, $seoNoIndexRoutes, true) ? 'noindex, nofollow' : 'index, follow';
     $seoIsIndexable = $seoRobots === 'index, follow';
     $seoImageAlt = $seoLocale === 'ar' ? $seoBrandAr : $seoBrandEn;
+    $seoLogoId = $seoBaseUrl . '/#logo';
     $seoSchema = [
         '@type' => 'School',
         '@id' => $seoBaseUrl . '/#school',
         'name' => $seoBrand,
         'url' => $seoBaseUrl . '/' . $seoLocale,
-        'logo' => $seoLogo,
-        'address' => [
+        'logo' => ['@id' => $seoLogoId],
+    ];
+    $seoAlternateBrand = $seoLocale === 'ar' ? $seoBrandEn : $seoBrandAr;
+    if ($seoAlternateBrand !== '' && $seoAlternateBrand !== $seoBrand) {
+        $seoSchema['alternateName'] = $seoAlternateBrand;
+    }
+    if ($seoAddress !== '') {
+        $seoSchema['address'] = [
             '@type' => 'PostalAddress',
             'streetAddress' => $seoAddress,
             'addressLocality' => 'Hama',
             'addressCountry' => 'SY',
-        ],
-    ];
+        ];
+    }
     if ($seoPhone !== '') {
         $seoSchema['telephone'] = preg_replace('/\s+/', ' ', $seoPhone);
     }
@@ -80,8 +87,16 @@
     if (count($seoSocialLinks)) {
         $seoSchema['sameAs'] = $seoSocialLinks;
     }
+    $seoPageType = $seoRoute === 'website.contact_us' ? 'ContactPage' : 'WebPage';
     $seoGraph = [
         $seoSchema,
+        [
+            '@type' => 'ImageObject',
+            '@id' => $seoLogoId,
+            'url' => $seoLogo,
+            'contentUrl' => $seoLogo,
+            'caption' => $seoImageAlt,
+        ],
         [
             '@type' => 'WebSite',
             '@id' => $seoBaseUrl . '/#website',
@@ -91,7 +106,7 @@
             'inLanguage' => $seoLocale,
         ],
         [
-            '@type' => 'WebPage',
+            '@type' => $seoPageType,
             '@id' => $seoCanonical . '#webpage',
             'url' => $seoCanonical,
             'name' => $seoCopy['title'],
@@ -100,6 +115,32 @@
             'inLanguage' => $seoLocale,
         ],
     ];
+    if ($seoRoute === 'website.faq' && isset($faqs)) {
+        $seoFaqEntities = [];
+        foreach ($faqs as $seoFaq) {
+            $seoQuestion = trim(preg_replace('/\s+/u', ' ', strip_tags((string) optional($seoFaq)->title)));
+            $seoAnswer = trim(preg_replace('/\s+/u', ' ', strip_tags((string) optional($seoFaq)->description)));
+            if ($seoQuestion !== '' && $seoAnswer !== '') {
+                $seoFaqEntities[] = [
+                    '@type' => 'Question',
+                    'name' => $seoQuestion,
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => $seoAnswer,
+                    ],
+                ];
+            }
+        }
+        if (count($seoFaqEntities)) {
+            $seoGraph[] = [
+                '@type' => 'FAQPage',
+                '@id' => $seoCanonical . '#faq',
+                'url' => $seoCanonical,
+                'inLanguage' => $seoLocale,
+                'mainEntity' => $seoFaqEntities,
+            ];
+        }
+    }
     if ($seoPath !== '/' && $seoPath !== '/ar' && $seoPath !== '/en') {
         $seoGraph[] = [
             '@type' => 'BreadcrumbList',

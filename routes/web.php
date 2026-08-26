@@ -72,11 +72,12 @@ Route::get('adh-login', function () {
 Route::get('/robots.txt', 'PublicSeoController@robots')->name('seo.robots');
 Route::get('/sitemap.xml', 'PublicSeoController@sitemap')->name('seo.sitemap');
 Route::get('/site.webmanifest', 'PublicSeoController@manifest')->name('seo.manifest');
+Route::get('/favicon.ico', 'PublicSeoController@favicon')->name('seo.favicon');
 
 Route::post('/stu_register2', 'websitecontroller@stu_register')->name('website.stu_register');
 Route::get('/gallery/media', 'websitecontroller@gallery_media')->name('gallery.media');
 Route::get('redirectTo404', function () {
-  return view('errors.404');
+  return response()->view('errors.404', [], 404);
 });
 
 Route::group([
@@ -92,7 +93,9 @@ Route::group([
   Route::get('/complaints', 'ComplaintController@create')->name('website.complaints');
   Route::post('/complaints', 'ComplaintController@store')->name('website.complaints.store');
 
-  Route::get('/contact', 'websitecontroller@contact')->name('website.contact');
+  Route::get('/contact', function () {
+    return redirect()->to(route('website.contact_us'), 301);
+  })->name('website.contact');
 
 
 
@@ -112,15 +115,16 @@ Route::group([
 
   Route::get('/lessons/{class_id}', 'websitecontroller@lessons')->name('website.lessons');
 
-  Route::get('/about_us', 'websitecontroller@about_us')->name('website.about_us');
+  Route::get('/about_us', function () {
+    return redirect()->to(route('website.index') . '#about_us', 301);
+  })->name('website.about_us');
 
 
-  Route::get('/contact', 'websitecontroller@contact')->name('website.contact');
 
 
-
-
-  Route::get('/classes', 'websitecontroller@classes')->name('website.classes');
+  Route::get('/classes', function () {
+    return redirect()->to(route('website.index') . '#classes', 301);
+  })->name('website.classes');
 
 
 
@@ -131,13 +135,17 @@ Route::group([
   Route::get('/event/single/{event_id}', 'websitecontroller@event_single')->name('website.event.single');
 
 
-  Route::get('/blogs', 'websitecontroller@blogs')->name('website.blogs');
+  Route::get('/blogs', function () {
+    return redirect()->to(route('website.index') . '#Blog', 301);
+  })->name('website.blogs');
 
 
   Route::get('/blog/single/{blog_id}', 'websitecontroller@blog_single')->name('website.blog.single');
 
 
-  Route::get('/news', 'websitecontroller@news')->name('website.news');
+  Route::get('/news', function () {
+    return redirect()->to(route('website.index') . '#Blog', 301);
+  })->name('website.news');
 
   Route::get('/employment', 'websitecontroller@employment')->name('website.employment');
 
@@ -161,7 +169,9 @@ Route::group([
   Route::get('/register', 'websitecontroller@registration_wizard')->name('website.register');
   Route::get('/register-legacy', 'websitecontroller@register')->name('website.register_legacy');
 
-  Route::get('/faqs', 'websitecontroller@faqs')->name('website.faqs');
+  Route::get('/faqs', function () {
+    return redirect()->to(route('website.faq'), 301);
+  })->name('website.faqs');
 
 
   Route::get('/search', 'websitecontroller@search')->name('website.search');
