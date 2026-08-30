@@ -175,15 +175,15 @@ if ($request->validate(['email'=>'required|email|unique:users'])) ;
     public function student_store(Request $request){
 
         $this->validate($request, [
-            'first_name' =>'required|string|max:40',
-            'last_name' =>'required|string|max:40',
-            'first_name_en' => 'nullable|string|max:40',
-            'last_name_en' => 'nullable|string|max:40',
-            'father_name' =>'required|string|max:40',
-            'mother_name' => 'nullable|string|max:40',
-            'place_birth' => 'nullable|string|max:200',
-            'nationality' => 'nullable|string|max:60',
-            'address' => 'nullable|string|max:200',
+            'first_name' =>'required|string|max:80',
+            'last_name' =>'required|string|max:80',
+            'first_name_en' => 'nullable|string|max:80',
+            'last_name_en' => 'nullable|string|max:80',
+            'father_name' =>'required|string|max:80',
+            'mother_name' => 'nullable|string|max:80',
+            'place_birth' => 'nullable|string|max:400',
+            'nationality' => 'nullable|string|max:120',
+            'address' => 'nullable|string|max:400',
             'email'=>'required|email|unique:users',
             'phone'=>'required',
             'class_id'=>'required|Numeric',
@@ -685,18 +685,23 @@ public function student_update(Request $request , $student_id){
 
     $year=Year::where('current_year','1')->first();
     $request->validate([
-        'first_name'=>'required|string|max:40',
-        'last_name'=>'required|string|max:40',
-        'first_name_en' => 'nullable|string|max:40',
-        'last_name_en' => 'nullable|string|max:40',
-        'father_name'=>'required|string|max:40',
-        'mother_name' => 'nullable|string|max:40',
-        'place_birth' => 'nullable|string|max:200',
-        'nationality' => 'nullable|string|max:60',
-        'address' => 'nullable|string|max:200',
+        'first_name'=>'required|string|max:80',
+        'last_name'=>'required|string|max:80',
+        'first_name_en' => 'nullable|string|max:80',
+        'last_name_en' => 'nullable|string|max:80',
+        'father_name'=>'required|string|max:80',
+        'mother_name' => 'nullable|string|max:80',
+        'place_birth' => 'nullable|string|max:400',
+        'nationality' => 'nullable|string|max:120',
+        'address' => 'nullable|string|max:400',
         'email' => 'required|unique:users,email,'.$user->id.',id',
         'phone'=>'required',
+        'public_record_number' => 'nullable|string|max:15|regex:/^[0-9]+(?:-[0-9]+)*$/|unique:students,public_record_number,'.$student_id,
 
+    ], [
+        'public_record_number.max' => __('admin.students.validation.public_record_number_max'),
+        'public_record_number.regex' => __('admin.students.validation.public_record_number_format'),
+        'public_record_number.unique' => __('admin.students.validation.public_record_number_unique'),
     ]);
 
     $student=Student::find($student_id);

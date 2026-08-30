@@ -13,6 +13,17 @@
         text-align: right;
     }
 
+    .student-index-v2 .student-field-counter {
+        display: block;
+        margin-top: 4px;
+        color: #7a7484;
+        font-size: 12px;
+    }
+
+    .student-index-v2 .student-create-errors {
+        margin: 12px 20px 0;
+    }
+
     .student-index-v2 .student-panel__filters select { min-height: 42px; border: 1px solid #adb5bd; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
     .student-index-v2 .student-panel__filters select:focus { border-color: #5e72e4; box-shadow: 0 0 0 3px rgba(94,114,228,.16); outline: 0; }
     .student-index-v2 .bulk-transfer-selection { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 12px; border: 1px solid rgba(91, 75, 138, 0.16); border-radius: 12px; background: rgba(91, 75, 138, 0.04); }
@@ -825,6 +836,18 @@ $about = \App\Other::find(1);
         <div class="modal-content">
             <form method="POST" action="{{ route('student_store') }}" enctype="multipart/form-data">
                 @csrf
+                <input type="hidden" name="student_create_form" value="1">
+
+                @if($errors->any() && old('student_create_form'))
+                    <div class="alert alert-danger student-create-errors" role="alert">
+                        <strong>{{ __('admin.students.validation.form_failed') }}</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach($errors->all() as $message)
+                                <li>{{ $message }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <div class="modal-header">
                     <h4 class="modal-title">إنشاء طالب</h4>
@@ -833,30 +856,30 @@ $about = \App\Other::find(1);
                 <div class="modal-body">
                     <div class="form-group">
                         <label>الإسم الأول بالعربية</label>
-                        <input type="text" name="first_name" class="form-control a" style="direction:rtl" value=""
-                            maxlength="40" placeholder="الإسم الأول" required>
+                        <input type="text" name="first_name" class="form-control a @error('first_name') is-invalid @enderror" style="direction:rtl" value="{{ old('first_name') }}"
+                            maxlength="80" placeholder="الإسم الأول" required>
                     </div>
 
                     <div class="form-group">
                         <label>الكنية بالعربية</label>
-                        <input type="text" name="last_name" class="form-control b" value="" maxlength="40"
+                        <input type="text" name="last_name" class="form-control b @error('last_name') is-invalid @enderror" value="{{ old('last_name') }}" maxlength="80"
                             style="direction:rtl" placeholder="الكنية" required>
                     </div>
                     <div class="form-group">
                         <label>الإسم الأول بالانكليزية</label>
-                        <input type="text" name="first_name_en" class="form-control a english_name"
-                            style="direction:rtl" value="" maxlength="40" placeholder="الإسم الأول" required>
+                        <input type="text" name="first_name_en" class="form-control a english_name @error('first_name_en') is-invalid @enderror"
+                            style="direction:rtl" value="{{ old('first_name_en') }}" maxlength="80" placeholder="الإسم الأول">
                     </div>
 
                     <div class="form-group">
                         <label> الكنية بالانكليزية</label>
-                        <input type="text" name="last_name_en" class="form-control b english_name" value=""
-                            maxlength="40" style="direction:rtl" placeholder="الكنية" required>
+                        <input type="text" name="last_name_en" class="form-control b english_name @error('last_name_en') is-invalid @enderror" value="{{ old('last_name_en') }}"
+                            maxlength="80" style="direction:rtl" placeholder="الكنية">
                     </div>
 
                     <div class="form-group">
                         <label>اسم الأب </label>
-                        <input type="text" name="father_name" class="form-control b" value="" maxlength="40"
+                        <input type="text" name="father_name" class="form-control b @error('father_name') is-invalid @enderror" value="{{ old('father_name') }}" maxlength="80"
                             style="direction:rtl" placeholder="اسم الأب " required>
                     </div>
 
@@ -870,7 +893,7 @@ $about = \App\Other::find(1);
 
                     <div class="form-group">
                         <label>اسم الأم</label>
-                        <input type="text" name="mother_name" class="form-control b" value="" maxlength="40"
+                        <input type="text" name="mother_name" class="form-control b @error('mother_name') is-invalid @enderror" value="{{ old('mother_name') }}" maxlength="80"
                             style="direction:rtl" placeholder="اسم الأم">
                     </div>
 
@@ -885,7 +908,7 @@ $about = \App\Other::find(1);
                     {{-- <div class="form-group">
                         <label>مكان الولادة</label>
                         <input type="text" name="place_birth" class="form-control b"
-                            value="" maxlength="200"style="direction:rtl"
+                            value="" maxlength="400"style="direction:rtl"
                             placeholder="مكان الولادة">
                     </div> --}}
 
@@ -893,17 +916,17 @@ $about = \App\Other::find(1);
 
                     <div class="form-group">
                         <label>تاريخ الولادة</label>
-                        <input type="date" name="date_birth" class="form-control b" value="" style="direction:rtl"
+                        <input type="date" name="date_birth" class="form-control b @error('date_birth') is-invalid @enderror" value="{{ old('date_birth') }}" style="direction:rtl"
                             placeholder="تاريخ الولادة">
                     </div>
 
                     <div class="form-group">
                         <label>الديانة</label>
 
-                        <select name="religion" id="classes" class="form-control dep"
+                        <select name="religion" id="student-religion" class="form-control dep @error('religion') is-invalid @enderror"
                             style="min-height: 36px;direction: rtl">
-                            <option value="0">مسلم</option>
-                            <option value="1">مسيحي</option>
+                            <option value="0" {{ old('religion', '0') == '0' ? 'selected' : '' }}>مسلم</option>
+                            <option value="1" {{ old('religion') == '1' ? 'selected' : '' }}>مسيحي</option>
                         </select>
 
                     </div>
@@ -912,20 +935,20 @@ $about = \App\Other::find(1);
 
                  <div class="form-group">
                         <label>العنوان الحالي</label>
-                        <input type="text" name="address" class="form-control b" style="direction:rtl" value=""
-                            maxlength="200" placeholder="االعنوان الحالي">
+                        <input type="text" name="address" class="form-control b @error('address') is-invalid @enderror" style="direction:rtl" value="{{ old('address') }}"
+                            maxlength="400" placeholder="االعنوان الحالي">
                     </div> 
 
                     <div class="form-group">
                         <label>رقم الهاتف المعتمد</label>
-                        <input type="text" name="phone" class="form-control b" style="direction:rtl" value=""
+                        <input type="text" name="phone" class="form-control b @error('phone') is-invalid @enderror" style="direction:rtl" value="{{ old('phone') }}"
                             maxlength="20" placeholder="رقم الهاتف المعتمد" required>
                     </div>
                           <div class="form-group">
                         <label>الدولة   </label>
                         
 
-                        <select class="form-control ldir" for="country" id="country" placeholder="مكان الإقامة" name="country" required>
+                        <select class="form-control ldir @error('country') is-invalid @enderror" for="country" id="country" placeholder="مكان الإقامة" name="country" required>
                             <option value="اختر البلد">اختر البلد</option>
                             <option value="سوريا">سوريا</option>
                             <option value="الامارات العربية المتحدة">الامارات العربية المتحدة</option>
@@ -1175,11 +1198,12 @@ $about = \App\Other::find(1);
                     <div class="form-group">
                         <label>الصف</label>
 
-                        <select name="class_id" id="classes" class="form-control dep"
+                        @error('class_id')<small class="text-danger d-block">{{ $message }}</small>@enderror
+                        <select name="class_id" id="classes" class="form-control dep @error('class_id') is-invalid @enderror"
                             style="min-height: 36px;direction: rtl" required>
                             <option value="">اختر الصف الدراسي</option>
                             @foreach ($classes as $class)
-                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
                             @endforeach
 
                         </select>
@@ -1189,7 +1213,8 @@ $about = \App\Other::find(1);
                     <div class="form-group" id="">
                         <label>الشعبة</label>
 
-                        <select name="room_id" id="class_room" class="form-control dep"
+                        @error('room_id')<small class="text-danger d-block">{{ $message }}</small>@enderror
+                        <select name="room_id" id="class_room" class="form-control dep @error('room_id') is-invalid @enderror" data-old-room-id="{{ old('room_id') }}"
                             style="min-height: 36px;direction: rtl" required>
                             <option value="">اختر الشعبة الدراسية</option>
                         </select>
@@ -1197,8 +1222,10 @@ $about = \App\Other::find(1);
                     </div>
                     <div class="form-group">
                         <label>رقم السجل العام </label>
-                        <input type="text" name="public_record_number" class="form-control public_record_number"style="direction:rtl"
-                            value="" maxlength="20"
+                        @error('public_record_number')<small class="text-danger d-block">{{ $message }}</small>@enderror
+                        <small class="form-text text-muted">{{ __('admin.students.validation.public_record_number_format') }}</small>
+                        <input type="text" name="public_record_number" class="form-control public_record_number @error('public_record_number') is-invalid @enderror" style="direction:rtl"
+                            value="{{ old('public_record_number') }}" maxlength="15" pattern="[0-9]+(?:-[0-9]+)*"
                             placeholder="رقم السجل  العام" required>
                     </div>
 
@@ -2304,6 +2331,11 @@ console.log(data);
         var class_id = $(this).val();
 
         var url = "{{ URL::to('SMT/admin/classes/rooms') }}/" + class_id;
+        $('#class_room').prop('disabled', true).empty().append('<option value="">' + @json(__('admin.students.validation.rooms_loading')) + '</option>');
+        if (!class_id) {
+            $('#class_room').empty().append('<option value="">' + @json(__('admin.students.validation.choose_section')) + '</option>');
+            return;
+        }
         $.ajax({
             url: url,
             type: "get",
@@ -2329,10 +2361,16 @@ console.log(data);
 
 
                 $('#class_room').append(type);
+                var oldRoomId = $('#class_room').data('old-room-id');
+                if (oldRoomId) {
+                    $('#class_room').val(String(oldRoomId));
+                    $('#class_room').removeData('old-room-id');
+                }
+                $('#class_room').prop('disabled', false);
 
             },
             error: function (xhr) {
-
+                $('#class_room').prop('disabled', false).empty().append('<option value="">' + @json(__('admin.students.validation.choose_section')) + '</option>');
             }
 
         });
@@ -2673,6 +2711,26 @@ $(document).on('click', '.financial_account', function () {
             return true;
         return false;
     });
+
+    $(function () {
+        var counterLabel = @json(__('admin.students.validation.characters'));
+        $('.createStudentModal input[name="first_name"], .createStudentModal input[name="last_name"], .createStudentModal input[name="first_name_en"], .createStudentModal input[name="last_name_en"], .createStudentModal input[name="father_name"], .createStudentModal input[name="mother_name"], .createStudentModal input[name="address"]').each(function () {
+            var $input = $(this);
+            var $counter = $('<small class="student-field-counter"></small>');
+            var limit = $input.attr('maxlength');
+            $input.after($counter);
+            var updateCounter = function () {
+                $counter.text(counterLabel + ': ' + $input.val().length + ' / ' + limit);
+            };
+            $input.on('input', updateCounter);
+            updateCounter();
+        });
+
+        var oldCountry = @json(old('country'));
+        if (oldCountry) $('#country').val(oldCountry);
+
+        if ($('#classes').val()) $('#classes').trigger('change');
+    });
 </script>
 
 
@@ -2777,6 +2835,14 @@ $(document).on('click', '.financial_account', function () {
     });
 }());
 </script>
+
+@if($errors->any() && old('student_create_form'))
+<script>
+    $(function () {
+        $('.createStudentModal').modal('show');
+    });
+</script>
+@endif
 
 
 @endsection

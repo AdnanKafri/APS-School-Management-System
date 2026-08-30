@@ -460,7 +460,7 @@
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-first-name">الإسم الأول
                                         بالعربية</label>
-                                    <input type="text" id="input-first-name" name="first_name" maxlength="40" required
+                                    <input type="text" id="input-first-name" name="first_name" maxlength="80" required
                                         class="form-control" value="{{ $student->first_name }}">
                                 </div>
                             </div>
@@ -468,7 +468,7 @@
                             <div class="col-lg-6">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-last-name">الكنية بالعربية</label>
-                                    <input type="text" id="input-last-name" name="last_name" maxlength="40" required
+                                    <input type="text" id="input-last-name" name="last_name" maxlength="80" required
                                         class="form-control" value="{{ $student->last_name }}">
                                 </div>
                             </div>
@@ -477,7 +477,7 @@
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-first-name">الإسم الأول
                                         بالانكليزية</label>
-                                    <input type="text" id="input-first-name_en" name="first_name_en" maxlength="40" required
+                                    <input type="text" id="input-first-name_en" name="first_name_en" maxlength="80" required
                                         class="form-control" value="{{ $student->first_name_en }}">
                                 </div>
                             </div>
@@ -485,7 +485,7 @@
                             <div class="col-lg-6">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-last-name">الكنية بالانكليزية</label>
-                                    <input type="text" id="input-last-name_en" name="last_name_en" maxlength="40" required
+                                    <input type="text" id="input-last-name_en" name="last_name_en" maxlength="80" required
                                         class="form-control" value="{{ $student->last_name_en }}">
                                 </div>
                             </div>
@@ -494,7 +494,7 @@
                             <div class="col-lg-6">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-first-name">اسم الأب</label>
-                                    <input type="text" id="input-first-name" name="father_name" maxlength="40"
+                                    <input type="text" id="input-first-name" name="father_name" maxlength="80"
                                         class="form-control" value="{{ $student_detail->father_name }}">
                                 </div>
                             </div>
@@ -517,7 +517,7 @@
                             <div class="col-lg-6">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-last-name">اسم الأم</label>
-                                    <input type="text" id="input-last-name" name="mother_name" maxlength="40" class="form-control"
+                                    <input type="text" id="input-last-name" name="mother_name" maxlength="80" class="form-control"
                                         value="{{ $student_detail->mother_name }}">
                                 </div>
                             </div>
@@ -556,7 +556,8 @@
                             <div class="col-lg-6">
                                 <div class="form-group">
                                   <label class="form-control-label" for="input-country">الرقم في السجل العام</label>
-                                  <input type="text" id="input-public_record_number" name="public_record_number" class="form-control public_record_number" value="{{$student->public_record_number }}">
+                                  <input type="text" id="input-public_record_number" name="public_record_number" class="form-control public_record_number @error('public_record_number') is-invalid @enderror" value="{{ old('public_record_number', $student->public_record_number) }}" maxlength="15" pattern="[0-9]+(?:-[0-9]+)*">
+                                  @error('public_record_number')<small class="text-danger d-block">{{ $message }}</small>@enderror
                                 </div>
                               </div>
 
@@ -619,7 +620,7 @@
                                         <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-address">العنوان الحالي </label>
-                                    <input id="input-address"  class="form-control" name="address" maxlength="200" placeholder="العنوان الحالي "
+                                    <input id="input-address"  class="form-control" name="address" maxlength="400" placeholder="العنوان الحالي "
                                         value="{{ $student->address }}" type="text">
                                 </div>
                             </div>
@@ -1395,7 +1396,7 @@
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-city">الجنسية</label>
-                                    <input type="text" id="input-city" name="nationality" maxlength="60" class="form-control"
+                                    <input type="text" id="input-city" name="nationality" maxlength="120" class="form-control"
                                         placeholder="الجنسية"
                                         value="{{ $student->nationality }}">
 
@@ -1424,7 +1425,7 @@
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <label class="form-control-label" for="input-country">مكان الولادة</label>
-                                    <input type="text" id="input-country" name="place_birth" maxlength="200" class="form-control"
+                                    <input type="text" id="input-country" name="place_birth" maxlength="400" class="form-control"
                                         value="{{ $student->place_birth }}">
                                 </div>
                             </div>

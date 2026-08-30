@@ -5595,29 +5595,66 @@ public function startQueueWorker()
 
 
         $this->validate($request, [
-            'first_name' => 'required|string|max:40',
-            'last_name' => 'required|string|max:40',
-            'first_name_en' => 'nullable|string|max:40',
-            'last_name_en' => 'nullable|string|max:40',
-            'father_name' => 'required|string|max:40',
-            'mother_name' => 'nullable|string|max:40',
-            'place_birth' => 'nullable|string|max:200',
-            'nationality' => 'nullable|string|max:60',
-            'address' => 'nullable|string|max:200',
-            'phone' => 'required',
-            'class_id' => 'required|Numeric',
-            'room_id' => 'required|Numeric',
-             'public_record_number'=>'required|Numeric|unique:students',
-                ],[
-              'public_record_number.unique' => __('admin.students.validation.public_record_number_unique'),
+            'first_name' => 'required|string|max:80',
+            'last_name' => 'required|string|max:80',
+            'first_name_en' => 'nullable|string|max:80',
+            'last_name_en' => 'nullable|string|max:80',
+            'father_name' => 'required|string|max:80',
+            'mother_name' => 'nullable|string|max:80',
+            'place_birth' => 'nullable|string|max:400',
+            'nationality' => 'nullable|string|max:120',
+            'address' => 'nullable|string|max:400',
+            'phone' => 'required|string|max:20',
+            'country' => 'required|string|max:255',
+            'religion' => 'required|in:0,1',
+            'date_birth' => 'nullable|date',
+            'class_id' => 'required|integer|exists:classes,id',
+            'room_id' => 'required|integer|exists:rooms,id',
+            'public_record_number' => 'required|string|max:15|regex:/^[0-9]+(?:-[0-9]+)*$/|unique:students,public_record_number',
+        ], [
+            'first_name.required' => __('admin.students.validation.first_name_required'),
+            'first_name.max' => __('admin.students.validation.first_name_max'),
+            'last_name.required' => __('admin.students.validation.last_name_required'),
+            'last_name.max' => __('admin.students.validation.last_name_max'),
+            'first_name_en.max' => __('admin.students.validation.first_name_en_max'),
+            'last_name_en.max' => __('admin.students.validation.last_name_en_max'),
+            'father_name.required' => __('admin.students.validation.father_name_required'),
+            'father_name.max' => __('admin.students.validation.father_name_max'),
+            'mother_name.max' => __('admin.students.validation.mother_name_max'),
+            'address.max' => __('admin.students.validation.address_max'),
+            'phone.required' => __('admin.students.validation.phone_required'),
+            'phone.max' => __('admin.students.validation.phone_max'),
+            'country.required' => __('admin.students.validation.country_required'),
+            'country.max' => __('admin.students.validation.country_max'),
+            'religion.in' => __('admin.students.validation.religion_invalid'),
+            'date_birth.date' => __('admin.students.validation.date_birth_invalid'),
+            'class_id.required' => __('admin.students.validation.class_required'),
+            'class_id.integer' => __('admin.students.validation.class_invalid'),
+            'class_id.exists' => __('admin.students.validation.class_invalid'),
+            'room_id.required' => __('admin.students.validation.room_required'),
+            'room_id.integer' => __('admin.students.validation.room_invalid'),
+            'room_id.exists' => __('admin.students.validation.room_invalid'),
+            'public_record_number.required' => __('admin.students.validation.public_record_number_required'),
+            'public_record_number.max' => __('admin.students.validation.public_record_number_max'),
+            'public_record_number.regex' => __('admin.students.validation.public_record_number_format'),
+            'public_record_number.unique' => __('admin.students.validation.public_record_number_unique'),
         ]);
 
-        $year = Year::where('current_year', 1)->firstOrFail();
+        $year = Year::where('current_year', 1)->first();
+        if (!$year) {
+            return redirect()->back()->withInput()->withErrors([
+                'class_id' => __('admin.students.validation.active_year_missing'),
+            ]);
+        }
         $room = Room::whereKey($request->room_id)
             ->where('class_id', $request->class_id)
             ->where('year_id', $year->id)
             ->first();
-        abort_unless($room, 422, 'The selected section does not belong to the selected class and current academic year.');
+        if (!$room) {
+            return redirect()->back()->withInput()->withErrors([
+                'room_id' => __('admin.students.validation.room_class_mismatch'),
+            ]);
+        }
 
         $student = Student::create([
             'first_name' => $request->first_name,
