@@ -76,6 +76,7 @@ class Kernel extends HttpKernel
         'roleacadsupervisor' => \App\Http\Middleware\roleacadsupervisor::class,
         'roleadministrator' => \App\Http\Middleware\roleadministrator::class,
         'roleEmployeeAdmin' => \App\Http\Middleware\roleEmployeeAdmin::class,
+        'student.operational' => \App\Http\Middleware\EnsureOperationalStudent::class,
 
         'localize'                => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
         'localizationRedirect'    => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter::class,

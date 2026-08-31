@@ -13,6 +13,13 @@ class Room_student extends Model
         return $this->belongsTo(Student::class, 'student_id');
     }
 
+    public function scopeForOperationalStudents($query)
+    {
+        return $query->whereHas('student', function ($studentQuery) {
+            $studentQuery->operational();
+        });
+    }
+
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id');

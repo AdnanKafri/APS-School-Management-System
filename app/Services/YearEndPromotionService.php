@@ -53,7 +53,10 @@ class YearEndPromotionService
         $studentsCarried = 0;
         $studentsSkipped = 0;
         $failures = [];
-        $enrollments = Room_student::where('year_id', $sourceYear->id)->with(['student'])->get();
+        $enrollments = Room_student::where('year_id', $sourceYear->id)
+            ->forOperationalStudents()
+            ->with(['student'])
+            ->get();
 
         foreach ($enrollments as $sourceEnrollment) {
             $targetRoom = $result['roomMap'][$sourceEnrollment->room_id] ?? null;
@@ -97,6 +100,9 @@ class YearEndPromotionService
     public function process(Student $student, Year $sourceYear, Year $targetYear, int $targetClassId, int $targetRoomId): StudentAcademicPlacement
     {
         return DB::transaction(function () use ($student, $sourceYear, $targetYear, $targetClassId, $targetRoomId) {
+            if (!$student->isActiveLifecycle()) {
+                throw new RuntimeException('student_lifecycle.errors.student_not_operational');
+            }
             if ((int) $sourceYear->next_year !== (int) $targetYear->id) {
                 throw new RuntimeException('year_end.errors.next_year');
             }
@@ -226,6 +232,9 @@ class YearEndPromotionService
     private function carryStudentForward(Room_student $sourceEnrollment, Room $targetRoom, Year $sourceYear, Year $targetYear): void
     {
         $student = $sourceEnrollment->student;
+        if (!$student || !$student->isActiveLifecycle()) {
+            throw new RuntimeException('student_lifecycle.errors.student_not_operational');
+        }
         $existing = StudentAcademicPlacement::where('student_id', $student->id)
             ->where('year_id', $targetYear->id)
             ->where('status', 'active')

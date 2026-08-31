@@ -13,6 +13,11 @@
         text-align: right;
     }
 
+    .student-index-v2 #table_xx tbody td:last-child { white-space: nowrap; vertical-align: middle; }
+    .student-index-v2 #table_xx tbody td:last-child > a,
+    .student-index-v2 #table_xx tbody td:last-child > .dropdown { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; margin-inline: 3px; }
+    .student-index-v2 #table_xx tbody td:last-child > a { min-width: 30px; min-height: 30px; }
+
     .student-index-v2 .student-field-counter {
         display: block;
         margin-top: 4px;
@@ -1746,6 +1751,15 @@ $about = \App\Other::find(1);
         </div>
     </div>
 </div>
+@can('students')
+<div class="modal fade" id="archiveStudentModal" tabindex="-1" role="dialog" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered"><form method="post" action="{{ route('admin.students.lifecycle_archive_action') }}" class="modal-content" dir="rtl">@csrf
+  <div class="modal-header"><h5 class="modal-title">&#1571;&#1585;&#1588;&#1610;&#1601; &#1575;&#1604;&#1591;&#1575;&#1604;&#1576; <span id="archive-student-name"></span></h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+  <div class="modal-body"><input type="hidden" name="student_id" id="archive-student-id"><p class="text-muted">&#1587;&#1610;&#1578;&#1605; &#1573;&#1610;&#1602;&#1575;&#1601; &#1575;&#1604;&#1591;&#1605;&#1604;&#1610;&#1575;&#1578; &#1575;&#1604;&#1581;&#1575;&#1604;&#1610;&#1577; &#1605;&#1593; &#1575;&#1604;&#1581;&#1601;&#1575;&#1592; &#1593;&#1604;&#1609; &#1575;&#1604;&#1581;&#1587;&#1575;&#1576; &#1608;&#1575;&#1604;&#1587;&#1580;&#1604;.</p><textarea name="reason" class="form-control" required placeholder="&#1587;&#1576;&#1576; &#1575;&#1604;&#1571;&#1585;&#1588;&#1601;&#1577;"></textarea></div>
+  <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">&#1573;&#1604;&#1594;&#1575;&#1569;</button><button class="btn btn-warning">&#1571;&#1585;&#1588;&#1601;&#1577;</button></div>
+ </form></div>
+</div>
+@endcan
 @can('Account_Information_student')
 <div class="modal fade" id="studentAccountExportModal" tabindex="-1" role="dialog" aria-labelledby="studentAccountExportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -1837,6 +1851,12 @@ $about = \App\Other::find(1);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
 <script>
+
+$(document).on('click', '.archive-student', function () {
+    $('#archive-student-id').val($(this).data('id'));
+    $('#archive-student-name').text(' - ' + ($(this).data('name') || ''));
+    $('#archiveStudentModal .modal-body p').text(@json(__('student_lifecycle.ui.archive_explanation')));
+});
 
     var i=0;
     var v=0;
@@ -1967,7 +1987,10 @@ if($('#hidden_student_phone').val()==1){
 
                 data: 'id',
                 render: function (data, type, full) {
-                    return ` @can('update_student')
+                    return ` @can('students')
+                    <a class="archive-student" data-toggle="modal" data-target="#archiveStudentModal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" title="&#1571;&#1585;&#1588;&#1610;&#1601;&#1577; &#1575;&#1604;&#1591;&#1575;&#1604;&#1576;"><i class="fa fa-archive" style="color:#d39e00;font-size:medium"></i></a>
+                    @endcan
+                    @can('update_student')
                     <div class="dropdown" style="display: inline-block;">
                     <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-ellipsis-v"></i>
@@ -2132,7 +2155,10 @@ else{
 
                 data: 'id',
                 render: function (data, type, full) {
-                    return ` @can('update_student')
+                    return ` @can('students')
+                    <a class="archive-student" data-toggle="modal" data-target="#archiveStudentModal" data-id="${full.id}" data-name="${ full.first_name+" "+full.last_name }" title="&#1571;&#1585;&#1588;&#1610;&#1601;&#1577; &#1575;&#1604;&#1591;&#1575;&#1604;&#1576;"><i class="fa fa-archive" style="color:#d39e00;font-size:medium"></i></a>
+                    @endcan
+                    @can('update_student')
                     <div class="dropdown" style="display: inline-block;">
                     <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-ellipsis-v"></i>

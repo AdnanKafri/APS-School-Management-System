@@ -87,6 +87,10 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::post('students/export-accounts', 'Admin\\StudentAccountExportController@export')
         ->middleware('can:Account_Information_student')
         ->name('admin.students.export_accounts');
+    Route::get('students/lifecycle-archive', 'Admin\\StudentLifecycleController@index')->middleware('can:students')->name('admin.students.lifecycle_archive');
+    Route::post('students/lifecycle-archive/archive', 'Admin\\StudentLifecycleController@archive')->middleware('can:students')->name('admin.students.lifecycle_archive_action');
+    Route::post('students/lifecycle-archive/restore', 'Admin\\StudentLifecycleController@restore')->middleware('can:students')->name('admin.students.lifecycle_restore');
+    Route::get('students/lifecycle-archive/rooms/{class_id}', 'Admin\\StudentLifecycleController@rooms')->middleware('can:students')->name('admin.students.lifecycle_rooms');
     Route::get('students/export-accounts/sections/{class_id}', 'Admin\\StudentAccountExportController@sections')
         ->middleware('can:Account_Information_student')
         ->name('admin.students.export_account_sections');

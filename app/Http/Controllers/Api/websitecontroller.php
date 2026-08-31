@@ -846,6 +846,9 @@ class websitecontroller extends Controller
         $user_check = User::where('email', $request->email)->where('view_password', $request->password)->first();
         if ($user_check) {
             if ($user_check->type == '0') {
+                if (!$user_check->student_id || !Student::operational()->whereKey($user_check->student_id)->exists()) {
+                    return response()->json(['msg' => 'No user', 'status' => '0']);
+                }
                 $user = User::with(['student.room' => function ($q1) use ($year) {
                     $q1->where('rooms.year_id', $year->id);
                     $q1->select('rooms.id', 'class_id', 'name');
@@ -889,7 +892,10 @@ class websitecontroller extends Controller
 
         // $student_id = $student_id ;
         $year = Year::where('current_year', '1')->first();
-        $student = Student::with('details')->find($student_id);
+        $student = Student::operational()->with('details')->find($student_id);
+        if (!$student) {
+            return response()->json(['msg' => 'Student is not operational', 'status' => '0'], 403);
+        }
         $item = Room_student::where('student_id', $student_id)->where('year_id', $year->id)->first();
         if ($item == "") {
 
@@ -3196,10 +3202,16 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
         $year = Year::where('current_year', '1')->first();
 
 
-        $children = Parents::whereHas('connections', function ($query) use ($parent_id) {
+        $children = Parents::whereHas('connections.student', function ($query) {
+            $query->operational();
+        })->whereHas('connections', function ($query) use ($parent_id) {
             $query->where('parent_id', $parent_id);
         })
-            ->with(['connections.student.room.classes'])
+            ->with(['connections' => function ($query) {
+                $query->whereHas('student', function ($studentQuery) {
+                    $studentQuery->operational();
+                });
+            }, 'connections.student.room.classes'])
             ->find($parent_id);
 
         return response()->json(['status' => 1, 'children' => $children]);

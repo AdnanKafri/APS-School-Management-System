@@ -27,7 +27,10 @@ class YearEndPromotionController extends Controller
         $roomCatalog = $rooms->map(function ($room) {
             return ['id' => $room->id, 'name' => $room->name, 'class_id' => $room->class_id];
         })->values();
-        $enrollments = $sourceYear ? Room_student::where('year_id', $sourceYear->id)->with(['student'])->get(['id', 'student_id', 'room_id', 'year_id']) : collect();
+        $enrollments = $sourceYear ? Room_student::where('year_id', $sourceYear->id)
+            ->forOperationalStudents()
+            ->with(['student'])
+            ->get(['id', 'student_id', 'room_id', 'year_id']) : collect();
         $sourceRooms = $sourceYear ? Room::where('year_id', $sourceYear->id)->with('classes')->get(['id', 'name', 'class_id', 'year_id'])->keyBy('id') : collect();
         $currentSectionCatalog = $sourceRooms->values()->map(function ($room) {
             return ['id' => $room->id, 'name' => $room->name, 'class_id' => $room->class_id];
@@ -46,7 +49,14 @@ class YearEndPromotionController extends Controller
             return $enrollment;
         })->values();
         $preparedPlacements = $targetYear
-            ? StudentAcademicPlacement::where('year_id', $targetYear->id)->where('status', 'active')->with(['room', 'classRoom'])->get()->keyBy('student_id')
+            ? StudentAcademicPlacement::where('year_id', $targetYear->id)
+                ->where('status', 'active')
+                ->whereHas('student', function ($query) {
+                    $query->operational();
+                })
+                ->with(['room', 'classRoom'])
+                ->get()
+                ->keyBy('student_id')
             : collect();
         return view('admin.year_end_promotion', compact('sourceYear', 'configuredTargetYear', 'targetYear', 'yearConfigurationError', 'classes', 'rooms', 'roomCatalog', 'currentSectionCatalog', 'enrollments', 'preparedPlacements', 'rolloverPreview'));
     }
@@ -90,6 +100,7 @@ class YearEndPromotionController extends Controller
         $student = Student::find($request->student_id);
         if (!$this->validTargetYear($source, $target)) return back()->with('error', $source && $target ? __('year_end.validation.year_invalid') : __('year_end.validation.year_missing'));
         if (!$student) return back()->with('error', __('student_transfer.validation.transfer_student_missing'));
+        if (!$student->isActiveLifecycle()) return back()->with('error', __('student_lifecycle.errors.student_not_operational'));
         try {
             $service->process($student, $source, $target, (int) $request->class_id, (int) $request->room_id);
         } catch (\Throwable $e) {
@@ -117,6 +128,7 @@ class YearEndPromotionController extends Controller
             $student = Student::find((int) ($item['student_id'] ?? 0));
             try {
                 if (!$student) throw new \RuntimeException('year_end.validation.selected_student');
+                if (!$student->isActiveLifecycle()) throw new \RuntimeException('student_lifecycle.errors.student_not_operational');
                 $service->process($student, $source, $target, (int) ($item['class_id'] ?? 0), (int) ($item['room_id'] ?? 0));
                 $successes++;
             } catch (\Throwable $e) {

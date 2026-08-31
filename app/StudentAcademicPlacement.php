@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class StudentAcademicPlacement extends Model
 {
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_CLOSED = 'closed';
+    public const STATUS_WITHDRAWN = 'withdrawn';
+    public const STATUS_CANCELLED = 'cancelled';
     protected $table = 'student_academic_placements';
 
     protected $fillable = [

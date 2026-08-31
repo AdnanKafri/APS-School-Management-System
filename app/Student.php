@@ -10,11 +10,47 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class Student extends Authenticatable
 {
 
+    public const LIFECYCLE_ACTIVE = 'active';
+    public const LIFECYCLE_ARCHIVED = 'archived';
+
     protected $table='students';
     protected $fillable=['first_name','last_name','first_name_en','last_name_en','father_name','mother_name','place_birth','date_birth',
     'box_birth','nationality','army_room','age','address',
     'phone','image','email','password','place','religion','transparent','lang','public_record_number'];
     protected $guard='student';
+
+    protected $casts = [
+        'archived_at' => 'datetime',
+    ];
+
+    public function isActiveLifecycle(): bool
+    {
+        return (string) $this->lifecycle_status === self::LIFECYCLE_ACTIVE;
+    }
+
+    public function isArchived(): bool
+    {
+        return (string) $this->lifecycle_status === self::LIFECYCLE_ARCHIVED;
+    }
+
+    public function scopeOperational($query)
+    {
+        return $query->where('lifecycle_status', self::LIFECYCLE_ACTIVE);
+    }
+
+    /**
+     * Resolve a student for a current operational action without changing
+     * the default model scope used by historical and identity views.
+     */
+    public static function operationalOrNull($id)
+    {
+        return static::operational()->whereKey($id)->first();
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where('lifecycle_status', self::LIFECYCLE_ARCHIVED);
+    }
 
     public function room(){
         return $this->belongsToMany(Room::class,'room_student','student_id','room_id');

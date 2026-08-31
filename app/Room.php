@@ -14,6 +14,12 @@ class Room extends Model
         return $this->belongsToMany(Student::class,'room_student','room_id','student_id');
     }
 
+    public function operationalStudents()
+    {
+        return $this->belongsToMany(Student::class, 'room_student', 'room_id', 'student_id')
+            ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE);
+    }
+
     public function year2(){
         return $this->belongsToMany(Year::class,'room_student','room_id','year_id');
     }

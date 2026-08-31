@@ -167,6 +167,13 @@ use Maatwebsite\Excel\Facades\Excel;
 class DashboardController extends Controller
 {
 
+    protected function requireOperationalStudent($studentId)
+    {
+        if (!Student::operational()->whereKey($studentId)->exists()) {
+            abort(403, __('student_lifecycle.errors.student_not_operational'));
+        }
+    }
+
   public function __construct()
     {
 
@@ -1617,6 +1624,7 @@ public function countries_currencies_archive($id)
     public function save_report_card(Request $request)
     {
         $student_id = $request->student_id;
+        $this->requireOperationalStudent($student_id);
         $year = Year::where('current_year', '1')->first();
         $student = Student::with(['room' => function ($q1) use ($year) {
             $q1->where('rooms.year_id', $year->id);
@@ -1697,6 +1705,7 @@ public function countries_currencies_archive($id)
 
 
         $student_id = $request->student_id;
+        $this->requireOperationalStudent($student_id);
         $year = Year::where('current_year', '1')->first();
         $student = Student::with(['room' => function ($q1) use ($year) {
             $q1->where('rooms.year_id', $year->id);
@@ -6059,6 +6068,7 @@ public function startQueueWorker()
                 ->when(in_array('student_hidden', Auth::user()->role->permissions), function ($query) {
                     return $query->where('students.hidden', 0);
                 })
+                ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
                 ->where(function ($query) use ($result_search) {
                     $query->where('students.first_name', 'like', $result_search)
                         ->orWhere('students.last_name', 'like', $result_search)
@@ -6105,7 +6115,7 @@ public function startQueueWorker()
 
             return response()->json([
                 'draw' => (int) $draw,
-                'iTotalRecords' => Student::count(),
+                'iTotalRecords' => Student::operational()->count(),
                 'iTotalDisplayRecords' => $financialRecords->count(),
                 'aaData' => $data_arr,
             ]);
@@ -6457,7 +6467,8 @@ public function startQueueWorker()
             $rowperpage = $request->length;
 
             $searchValue = $request->search['value'] ?? '';
-            $searchValue = '%' . str_replace('*', '%', $searchValue) . '%';
+            $searchValue = trim(str_replace('*', '%', $searchValue));
+            $searchLike = '%' . addcslashes($searchValue, '%_') . '%';
             $class_filter = $request->class_id;
             $room_filter = $request->room_id;
             $stage_id = $request->stage_id;
@@ -6467,13 +6478,23 @@ public function startQueueWorker()
 
             // Normalize search value (e.g., remove diacritics if needed)
             $searchValue = preg_replace('/[\p{Mn}]/u', '', $searchValue);
+            $searchLike = '%' . addcslashes($searchValue, '%_') . '%';
 
             // Initialize query
-            $query = Student::query()
-                ->where(function ($q) use ($searchValue) {
-                    $q->where('first_name', 'like', $searchValue)
-                      ->orWhere('last_name', 'like', $searchValue)
-                      ->orWhere('public_record_number', 'like', $searchValue);
+            $query = Student::operational()
+                ->where(function ($q) use ($searchLike) {
+                    $q->where('first_name', 'like', $searchLike)
+                      ->orWhere('last_name', 'like', $searchLike)
+                      ->orWhere('first_name_en', 'like', $searchLike)
+                      ->orWhere('last_name_en', 'like', $searchLike)
+                      ->orWhere('public_record_number', 'like', $searchLike)
+                      ->orWhereRaw("CONCAT_WS(' ', first_name, last_name) LIKE ?", [$searchLike])
+                      ->orWhereRaw("CONCAT_WS(' ', first_name_en, last_name_en) LIKE ?", [$searchLike])
+                      ->orWhereHas('details', function ($details) use ($searchLike) {
+                          $details->where('father_name', 'like', $searchLike)
+                              ->orWhere('mother_name', 'like', $searchLike)
+                              ->orWhere('phone', 'like', $searchLike);
+                      });
                 })
                 ->whereHas('room.classes', function ($q) use ($class_filter, $room_filter, $stage_id, $year) {
                     if (!$year) {
@@ -7666,6 +7687,10 @@ public function class_update(Request $request)
 
     public function student_mark(Request $request)
     {
+
+        foreach ((array) $request->student_id as $studentId) {
+            $this->requireOperationalStudent($studentId);
+        }
 
         $year = Year::where('current_year', '1')->first();
 

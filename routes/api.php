@@ -174,6 +174,7 @@ Route::get('fetchPolicyContent','Api\websitecontroller@fetchPolicyContent');
 //api مدرسة قيم الجديد
 
 
+    Route::middleware('student.operational')->group(function () {
     Route::post('get_login_student_info','Api\websitecontroller@get_login_student_info');
     Route::get('get_student_subjects/{room_id}/{student_id}','Api\websitecontroller@get_student_subjects');
     Route::get('get_student_lessons/{subject_id}/{room_id}/{student_id}','Api\websitecontroller@get_student_lessons');
@@ -218,6 +219,7 @@ Route::get('fetchPolicyContent','Api\websitecontroller@fetchPolicyContent');
     // الجلاءات
     Route::get('dashboard/student/graduate/{student_id}/{room_id}', 'Api\websitecontroller@student_graduate');
     Route::get('dashboard/student/get_certificate/{student_id}', 'Api\websitecontroller@get_certificate');
+    });
   
  
  
@@ -234,14 +236,15 @@ Route::get('fetchPolicyContent','Api\websitecontroller@fetchPolicyContent');
 
 
 
-    Route::get('app_parent_children/{parent_id}','Api\websitecontroller@app_parent_children');
-    
-    
-    Route::get('homeworke/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@homeworke');
-    Route::get('test/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@test');
-    Route::get('quize/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@quize');
-    Route::get('exam/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@exam');
-    Route::get('certificates/{student_id}/{parent_id}','Api\websitecontroller@certificates');
+    Route::get('app_parent_children/{parent_id}','Api\websitecontroller@app_parent_children')->middleware('student.operational');
+
+    Route::middleware('student.operational')->group(function () {
+        Route::get('homeworke/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@homeworke');
+        Route::get('test/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@test');
+        Route::get('quize/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@quize');
+        Route::get('exam/{student_id}/{lesson_id}/{parent_id}','Api\websitecontroller@exam');
+        Route::get('certificates/{student_id}/{parent_id}','Api\websitecontroller@certificates');
+    });
     Route::get('note/{parent_id}/{view_parent?}','Api\websitecontroller@note');
     Route::get('set_zero_notf_count_parents_objection/{parent_id}','Api\websitecontroller@set_zero_notf_count_parents_objection');
 
@@ -250,7 +253,7 @@ Route::get('fetchPolicyContent','Api\websitecontroller@fetchPolicyContent');
 
 
 
-    Route::get('go_to_stream_student/{scheduler_id}/{day_id}/{lecture_time_id}/{room_id}/{student_id}', 'Api\websitecontroller@go_to_stream_student');
+    Route::get('go_to_stream_student/{scheduler_id}/{day_id}/{lecture_time_id}/{room_id}/{student_id}', 'Api\websitecontroller@go_to_stream_student')->middleware('student.operational');
     
     
     Route::get('go_to_stream_teacher/{scheduler_id}/{day_id}/{lecture_time_id}/{room_id}/{teacher_id}', 'Api\websitecontroller@go_to_stream_teacher');

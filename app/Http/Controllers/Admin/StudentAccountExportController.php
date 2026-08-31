@@ -71,7 +71,7 @@ class StudentAccountExportController extends Controller
             ->distinct()
             ->pluck('student_id');
 
-        $students = Student::with('user')
+        $students = Student::operational()->with('user')
             ->whereIn('id', $studentIds)
             ->orderBy('first_name')
             ->orderBy('last_name')

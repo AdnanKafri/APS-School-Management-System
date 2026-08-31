@@ -76,6 +76,13 @@ use ZipArchive as A;
         // dd(Post::find(2)->tag);
 class admincontroller extends Controller
 {
+    private function requireOperationalStudent($studentId)
+    {
+        if (!Student::operational()->whereKey($studentId)->exists()) {
+            abort(403, __('student_lifecycle.errors.student_not_operational'));
+        }
+    }
+
      public function __construct()
     {
         $this->middleware(function($request,$next){
@@ -93,14 +100,14 @@ class admincontroller extends Controller
 
     public function students(){
         $year = Year::where('current_year','1')->first();
-        $students=Student::with(['room'=>function($q1){
+        $students=Student::operational()->with(['room'=>function($q1){
             $year = Year::where('current_year','1')->first();
             $q1->where('room_student.year_id',$year->id);
         }
         ])->orderBy('first_name')->paginate(paginate_num);
 
         $classes=Classe::all();
-        $count=Student::count();
+        $count=Student::operational()->count();
         $years=Year::all();
         $year2 = Year::where('current_year','1')->first();
 
@@ -1103,7 +1110,7 @@ public function reset_student_password(Request $request,$student_id){
 
 
 public function student_filter(Request $request){
-    $students=Student::where('first_name', "like", "%" . $request->student_now . "%")->
+    $students=Student::operational()->where('first_name', "like", "%" . $request->student_now . "%")->
     orwhere('last_name', "like", "%" . $request->student_now . "%")->
     orwhere('phone', "like", "%" . $request->student_now . "%")->with('room.classes')
 
@@ -1116,7 +1123,7 @@ public function student_room_filter(Request $request){
 
 //   return $request->room_id;
   $room=Room::find($request->room_id);
-  $student=$room->student()->with('room.classes')->get();
+  $student=$room->operationalStudents()->with('room.classes')->get();
 
 
 
@@ -3266,7 +3273,9 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
     public function StudentsRoomLesson($room_id,$lesson_id){
 
-        $room=Room::with('student')->find($room_id);
+        $room=Room::with(['student' => function ($query) {
+            $query->operational();
+        }])->find($room_id);
         $year=Year::where('current_year','1')->first();
 
         $students=Room::with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])->find($room_id);
@@ -3283,40 +3292,45 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
         if (isset($students) && $lesson->lang=='1') {
             $students = Room::whereHas('student', function ($query) use ($year) {
+                $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('lang', '1')->orderBy('first_name');
             })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->orderBy('first_name')])->find($room_id);
+                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
 
         } elseif (isset($students) && $lesson->lang=='0') {
 
             $students = Room::whereHas('student', function ($query) use ($year) {
+                $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('lang', '0')->orderBy('first_name');
             })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->orderBy('first_name')])->find($room_id);
+                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
 
         } elseif (isset($students) && $lesson->religion=='1') {
             $students = Room::whereHas('student', function ($query) use ($year) {
+                $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('religion', '1')->orderBy('first_name');
             })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->where('religion', '1')->orderBy('first_name')])->find($room_id);
+                ->with(['student'=>fn($q1)=>$q1->operational()->where('religion', '1')->orderBy('first_name')])->find($room_id);
 
         } elseif (isset($students) && $lesson->religion=='0') {
 
             $students = Room::whereHas('student', function ($query) use ($year) {
+                $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('religion', '0')->orderBy('first_name');
             })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->orderBy('first_name')])->find($room_id);
+                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
 
         } else {
 
             $students = Room::whereHas('student', function ($query) use ($year) {
+                $query->operational();
                 $query->where('year_id', $year->id);
             })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->orderBy('first_name')])->find($room_id);
+                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
         }
 
         $count = isset($students) ? count($students->student) : 0;
@@ -3327,7 +3341,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
     {
         $year = Year::where('current_year', '1')->first();
         $lesson_id = $request->lesson_id;
-        $studens = Room::find($request->room_id)->student;
+        $studens = Room::find($request->room_id)->operationalStudents;
         foreach ($studens as $student) {
 
             if ($request->term == 'term1') {
@@ -3777,6 +3791,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
     }
     public function student_mark(Request $request)
     {
+        $this->requireOperationalStudent($request->student_id);
         $year = Year::where('current_year', '1')->first();
 
         $lesson_id = $request->lesson_id;
@@ -4262,9 +4277,10 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
     /// اضافة علامة تفصيلية للكل
     public function student_mark_admin_details(Request $request)
     {
+        $students = Room::find($request->room_id)->operationalStudents;
         $year = Year::where('current_year', '1')->first();
         $lesson_id = $request->lesson_id;
-        $studens = Room::find($request->room_id)->student;
+        $studens = $students;
         foreach ($studens as $student) {
             $report_card=Report_card::where('student_id',$student->id)->where('year_id',$year->id)->first();
             if ($request->term == 'term1') {
@@ -5804,6 +5820,7 @@ $applicants=Applicant::where('job_id',$job_id)->delete();
         private function reconcileActiveYearPlacements(Year $year)
         {
             $enrollments = Room_student::where('year_id', $year->id)
+                ->forOperationalStudents()
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get();

@@ -240,13 +240,13 @@ class TransportationController extends Controller
 
    $year=Year::where('current_year','1')->first();
          $bus=Buses::find($bus_id);
-               $students=Buses::find($bus_id)->students()->with(['details','room.classes','room'=>function($q)use($year){
+               $students=Buses::find($bus_id)->students()->operational()->with(['details','room.classes','room'=>function($q)use($year){
               $q->where('room_student.year_id',$year->id);
               
                  
              }])->paginate(paginate_num);
          $count = count($students);
-      $all_students=Student::with(['room.classes','room'=>function($q)use($year){
+      $all_students=Student::operational()->with(['room.classes','room'=>function($q)use($year){
               $q->where('room_student.year_id',$year->id);
               
                  
@@ -262,7 +262,10 @@ class TransportationController extends Controller
   $year=Year::where('current_year','1')->first();
 foreach($request->student_ids as $item){
     
-    $student= Student::find($item);
+    $student= Student::operational()->find($item);
+    if (!$student) {
+        continue;
+    }
     $student->bus_id= $request->bus_id;
     $student->save();
     
@@ -277,7 +280,7 @@ foreach($request->student_ids as $item){
     public function bus_students_delete(Request $request)
     {
 
-        $student =Student::findOrFail($request->class_id_delete);
+        $student =Student::operational()->findOrFail($request->class_id_delete);
         $student->bus_id=null;
         $student->save();
 
@@ -295,7 +298,7 @@ foreach($request->student_ids as $item){
 
         $year = Year::where('current_year', '1')->first();
         $classes = Classe::all();
-   $students = Student::with(['room.classes', 'room' => function($q) use ($year) {
+   $students = Student::operational()->with(['room.classes', 'room' => function($q) use ($year) {
     $q->where('room_student.year_id', $year->id);
 }, 'bus.bus_lines'])
 ->whereHas('bus', function($q) {
@@ -314,7 +317,7 @@ foreach($request->student_ids as $item){
         $year = Year::where('current_year', '1')->first();
 
         if ($request->has('name') ) {
-          $students=  Student::with(['room.classes', 'room' => function($q) use ($year) {
+          $students=  Student::operational()->with(['room.classes', 'room' => function($q) use ($year) {
     $q->where('room_student.year_id', $year->id);
 }, 'bus.bus_lines'])
 ->whereHas('bus', function($q) {
@@ -341,7 +344,9 @@ foreach($request->student_ids as $item){
    $student=Student::with('bus.bus_lines')->find($student_id);
 
            $sum_invoices=Transport_invoice::with('student')->where('student_id',$student_id)->where('year_id',$year->id)->sum('invoice_amount');
-                 $remain_invoices= $student->bus->bus_lines->annual_cost-$sum_invoices;
+                        $remain_invoices = $student->bus && $student->bus->bus_lines
+                            ? $student->bus->bus_lines->annual_cost - $sum_invoices
+                            : 0;
                         $count = Transport_invoice::with('student')->where('student_id',$student_id)->count();
 
  
@@ -353,7 +358,11 @@ foreach($request->student_ids as $item){
     public function transport_invoice_store (Request $request)
     { 
           $year = Year::where('current_year', '1')->first();
-          $item=new Transport_invoice;
+    $student = Student::operational()->find($request->student_id);
+    if (!$student) {
+        return redirect()->back()->with('error', __('student_lifecycle.errors.student_not_operational'));
+    }
+    $item=new Transport_invoice;
     $item->student_id = $request->student_id ;
     $item->year_id = $year->id;
     $item->bus_line_id = $request->bus_line_id ;

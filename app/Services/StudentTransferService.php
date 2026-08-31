@@ -87,6 +87,9 @@ class StudentTransferService
         if (!$student) {
             return $this->warning('student_transfer.validation.transfer_student_missing');
         }
+        if (!$student->isActiveLifecycle()) {
+            return $this->warning('student_lifecycle.errors.student_not_operational');
+        }
 
         $targetClass = Classe::find($request->class_change_id);
         if (!$targetClass) {

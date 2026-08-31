@@ -37,6 +37,9 @@
                     <i class="fas fa-user-graduate"></i>
                     <span>الطلاب</span>
                 </a>
+                <a href="{{ route('admin.students.lifecycle_archive') }}" class="v2-menu-link {{ request()->routeIs('admin.students.lifecycle_archive') ? 'active' : '' }}">
+                    <i class="fas fa-archive"></i><span>&#1571;&#1585;&#1588;&#1610;&#1601; &#1575;&#1604;&#1591;&#1604;&#1575;&#1576;</span>
+                </a>
             @endcan
             @can('teachers')
                 <a href="{{ route('teachers') }}" class="v2-menu-link {{ request()->routeIs('teachers*','teacher_*') ? 'active' : '' }}">
