@@ -32,6 +32,7 @@ class StudentLifecycleController extends Controller
         return view('admin.student_lifecycle_archive', [
             'students' => $students,
             'years' => Year::orderByDesc('id')->get(),
+            'activeYear' => Year::where('current_year', 1)->first(),
             'classes' => Classe::orderBy('id')->get(),
             'events' => StudentLifecycleEvent::whereIn('student_id', $students->pluck('id'))->latest('occurred_at')->get()->groupBy('student_id'),
         ]);

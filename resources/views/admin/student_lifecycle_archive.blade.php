@@ -43,7 +43,7 @@
                         <input type="hidden" name="student_id" value="{{ $student->id }}">
                         <div class="modal-header"><h5 class="modal-title">{{ __('student_lifecycle.ui.restore') }}</h5><button type="button" class="close" data-dismiss="modal" aria-label="{{ __('student_lifecycle.ui.cancel') }}">&times;</button></div>
                         <div class="modal-body">
-                            <select name="year_id" class="form-control mb-2 restore-year" required><option value="">{{ __('student_lifecycle.ui.choose_year') }}</option>@foreach($years as $year)<option value="{{ $year->id }}">{{ $year->name }}</option>@endforeach</select>
+                            <select name="year_id" class="form-control mb-2 restore-year" required><option value="">{{ __('student_lifecycle.ui.choose_year') }}</option>@foreach($years as $year)<option value="{{ $year->id }}" {{ (string) old('year_id', optional($activeYear)->id) === (string) $year->id ? 'selected' : '' }}>{{ $year->name }}</option>@endforeach</select>
                             <select name="class_id" class="form-control mb-2 restore-class" required><option value="">{{ __('student_lifecycle.ui.choose_class') }}</option>@foreach($classes as $class)<option value="{{ $class->id }}">{{ $class->name }}</option>@endforeach</select>
                             <select name="room_id" class="form-control mb-2 restore-room" required disabled><option value="">{{ __('student_lifecycle.ui.choose_section') }}</option></select>
                             <textarea name="reason" class="form-control" rows="3" required placeholder="{{ __('student_lifecycle.ui.restore_reason') }}"></textarea>
