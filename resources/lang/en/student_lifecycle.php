@@ -8,6 +8,12 @@ return [
         'archive_reason' => 'Archive reason', 'cancel' => 'Cancel', 'confirm_archive' => 'Confirm archive',
         'archive_explanation' => 'The student will leave current academic operations while the account and academic and financial history remain preserved.',
     ],
+    'validation' => [
+        'student_required' => 'Please select a student.',
+        'reason_required' => 'Please provide an archive reason.',
+        'reason_max' => 'The reason may not exceed 1000 characters.',
+        'required' => 'Please complete all required fields.',
+    ],
     'messages' => ['archived' => 'Student archived successfully.', 'restored' => 'Student restored successfully.'],
     'errors' => [
         'student_forbidden' => 'You are not allowed to access another student\'s data.',

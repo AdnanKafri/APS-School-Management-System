@@ -42,6 +42,10 @@ class StudentLifecycleController extends Controller
         $data = $request->validate([
             'student_id' => 'required|integer',
             'reason' => 'required|string|max:1000',
+        ], [
+            'student_id.required' => __('student_lifecycle.validation.student_required'),
+            'reason.required' => __('student_lifecycle.validation.reason_required'),
+            'reason.max' => __('student_lifecycle.validation.reason_max'),
         ]);
         $student = Student::operational()->whereKey($data['student_id'])->firstOrFail();
         try {
@@ -59,6 +63,9 @@ class StudentLifecycleController extends Controller
             'student_id' => 'required|integer', 'year_id' => 'required|integer',
             'class_id' => 'required|integer', 'room_id' => 'required|integer',
             'reason' => 'required|string|max:1000',
+        ], [
+            '*.required' => __('student_lifecycle.validation.required'),
+            'reason.max' => __('student_lifecycle.validation.reason_max'),
         ]);
         $student = Student::archived()->whereKey($data['student_id'])->firstOrFail();
         try {

@@ -281,17 +281,17 @@
   @can('student_phone')
                        <td class="budget">
                          
-                         {{$item->details->phone}}
+                         {{optional($item->details)->phone}}
                            
                        </td>
   @endcan
 
 
                 <td>
-                    @if($item->details->personal_image != null)
+                    @if(optional($item->details)->personal_image != null)
                 <div class="avatar-group">
                     <a href="#" class="avatar avatar-sm rounded-circle" data-toggle="tooltip" data-original-title="Ryan Tompson">
-                    <img alt="Image placeholder" src="{{asset('storage/'.$item->details->personal_image)}}" style="width:100px;height:150px">
+                    <img alt="Image placeholder" src="{{asset('storage/'.optional($item->details)->personal_image)}}" style="width:100px;height:150px">
                     </a>
 
                 </div>
@@ -299,17 +299,12 @@
                 </td>
 
                 <td class="budget">
-            @if(isset($item->room[0]))
-
-            {{$item->room[0]->classes->name}}
-            <input type="hidden" id="old_class_id" value="{{$item->room[0]->classes->id}}">
-            @endif
+            {{optional($room->classes)->name}}
+            <input type="hidden" class="old_class_id" value="{{$room->class_id}}">
 
             </td>
             <td class="budget">
-            @if(isset($item->room[0]))
-            {{$item->room[0]->name}}
-            @endif
+            {{$room->name}}
 
             </td>
 
@@ -1325,7 +1320,7 @@ else {
     $('#mydivclass').empty();
     $('#mydivroom').empty();
 var year_id=$('#years').val();
-var class_id=$('#old_class_id').val();
+var class_id=$('.old_class_id').first().val();
 console.log(year_id);
 
 $('.old_class_id').val(class_id);

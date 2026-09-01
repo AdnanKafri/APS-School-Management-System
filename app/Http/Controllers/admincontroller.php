@@ -3229,18 +3229,28 @@ return redirect()->back()->with('success','! تمت العملية بنجاح');
 
     public function roomstudent($room_id,$class_id){
 
+        $year = Year::where('current_year', '1')->firstOrFail();
+        $room = Room::with('classes')
+            ->whereKey($room_id)
+            ->where('class_id', $class_id)
+            ->where('year_id', $year->id)
+            ->firstOrFail();
 
-        $students=Room_student::where('room_id',$room_id)->get();
-        $a=[];
-        foreach($students as $student){
-            $a[]=$student->student_id;
-        }
-        $students=Student::whereIn('id',$a)->orderBy('first_name')->paginate(paginate_num);
+        // The requested room is the authoritative current class/section context.
+        // Do not resolve it through Student::room(), which is intentionally
+        // unscoped and can return an older historical enrollment first.
+        $students = Student::operational()
+            ->whereHas('room', function ($query) use ($room_id, $year) {
+                $query->where('rooms.id', $room_id)
+                    ->where('room_student.year_id', $year->id);
+            })
+            ->with('details')
+            ->orderBy('first_name')
+            ->paginate(paginate_num);
         // return $students;
         $count= count($students);
         $classes=Classe::all();
         $years=Year::all();
-        $room=Room::find($room_id);
         return view('admin.student_room',compact('room','students','count','classes','years'));
     }
 
