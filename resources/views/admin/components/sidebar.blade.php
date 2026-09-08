@@ -87,6 +87,12 @@
 
         <div class="v2-menu-title">الإعدادات والإدارة</div>
         <div class="v2-menu-group">
+            @can('website_controll')
+                <a href="{{ route('admin.mobile-applications.index') }}" class="v2-menu-link {{ request()->routeIs('admin.mobile-applications.*') ? 'active' : '' }}">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>تطبيقات المدرسة</span>
+                </a>
+            @endcan
             @can('user_permissions')
                 <button class="v2-menu-link v2-menu-toggle {{ request()->routeIs('admin.roles.*','users*','roles*') ? 'active' : '' }}" type="button" data-toggle="collapse" data-target="#v2-users-menu" aria-expanded="{{ request()->routeIs('admin.roles.*','users*','roles*') ? 'true' : 'false' }}">
                     <i class="fas fa-user-shield"></i>

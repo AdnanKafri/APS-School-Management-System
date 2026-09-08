@@ -54,7 +54,14 @@
             ? 'تعرف على مدرسة الأدهم الخاصة وبرامجها وخدماتها التعليمية.'
             : 'Explore Aladham Private School, its programs, and educational services.',
     ];
-    $seoNoIndexRoutes = ['website.login', 'website.registration_wizard', 'website.register', 'website.register_legacy', 'website.registration_closed'];
+    if (in_array($seoRoute, ['website.parent_app', 'website.staff_apps'], true)) {
+        $appCopyKey = $seoRoute === 'website.parent_app' ? 'parent' : 'staff';
+        $seoCopy = [
+            'title' => __('app_downloads.'.$appCopyKey.'_title').' | '.$seoBrand,
+            'description' => __('app_downloads.'.$appCopyKey.'_description'),
+        ];
+    }
+    $seoNoIndexRoutes = ['website.staff_apps', 'website.login', 'website.registration_wizard', 'website.register', 'website.register_legacy', 'website.registration_closed'];
     $seoRobots = in_array($seoRoute, $seoNoIndexRoutes, true) ? 'noindex, nofollow' : 'index, follow';
     $seoIsIndexable = $seoRobots === 'index, follow';
     $seoImageAlt = $seoLocale === 'ar' ? $seoBrandAr : $seoBrandEn;

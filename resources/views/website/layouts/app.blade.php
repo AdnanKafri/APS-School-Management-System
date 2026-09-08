@@ -650,6 +650,7 @@
                         <div class="footer-clean-col">
                             <h4 class="footer-clean-title">{{ __('site.Utility Page') }}</h4>
                             <ul class="footer-clean-links">
+                                <li><a href="{{ route('website.parent_app') }}">{{ __('app_downloads.parent_title') }}</a></li>
                                 <li><a href="{{ Route('website.index') }}#about_us">{{ __('site.About Us') }}</a></li>
                                 <li><a href="{{ Route('website.faq') }}">{{ __('site.Faq') }}</a></li>
                                 <li><a href="{{ Route('website.index') }}#classes">{{ __('site.Classes') }}</a></li>
@@ -718,7 +719,7 @@
         </div>
         <div class="pbmit-search-outer">
             <form class="pbmit-site-searchform">
-                <input type="search" class="form-control field searchform-s" name="s" placeholder="Search â€¦">
+                <input type="search" class="form-control field searchform-s" name="s" placeholder="Search ...">
                 <button type="submit"></button>
             </form>
         </div>

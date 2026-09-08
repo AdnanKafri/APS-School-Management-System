@@ -48,6 +48,12 @@ return [
             'root' => storage_path('app'),
         ],
 
+        'mobile_applications' => [
+            'driver' => 'local',
+            'root' => storage_path('app/mobile-applications'),
+            'visibility' => 'private',
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path(),

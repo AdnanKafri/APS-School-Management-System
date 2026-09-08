@@ -182,6 +182,16 @@
         </div>
 
         <div class="control-grid">
+            @can('website_controll')
+            <a href="{{ route('admin.mobile-applications.index') }}" class="control-card">
+                <div class="control-card__top">
+                    <span class="control-card__icon"><i class="fas fa-mobile-alt"></i></span>
+                    <span class="control-card__badge">إدارة التطبيقات</span>
+                </div>
+                <h4>تطبيقات المدرسة</h4>
+                <p>رفع وتحديث النسخ المعتمدة من تطبيقات أولياء الأمور والمعلمين ومشرفي النقل.</p>
+            </a>
+            @endcan
             <a href="{{ route('websitehome') }}" class="control-card">
                 <div class="control-card__top">
                     <span class="control-card__icon"><i class="fas fa-home"></i></span>

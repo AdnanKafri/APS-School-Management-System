@@ -73,6 +73,7 @@ Route::get('/robots.txt', 'PublicSeoController@robots')->name('seo.robots');
 Route::get('/sitemap.xml', 'PublicSeoController@sitemap')->name('seo.sitemap');
 Route::get('/site.webmanifest', 'PublicSeoController@manifest')->name('seo.manifest');
 Route::get('/favicon.ico', 'PublicSeoController@favicon')->name('seo.favicon');
+Route::get('/downloads/apps/{slug}', 'MobileApplicationDistributionController@download')->name('mobile-applications.download');
 
 Route::post('/stu_register2', 'websitecontroller@stu_register')->name('website.stu_register');
 Route::get('/gallery/media', 'websitecontroller@gallery_media')->name('gallery.media');
@@ -89,6 +90,8 @@ Route::group([
 
   Route::get('/', 'websitecontroller@index')->name('website.index');
   Route::get('/faq', 'websitecontroller@faq')->name('website.faq');
+  Route::get('/parent-app', 'MobileApplicationDistributionController@parentApp')->name('website.parent_app');
+  Route::get('/staff-apps', 'MobileApplicationDistributionController@staffApps')->name('website.staff_apps');
   Route::get('/contact_us', 'websitecontroller@contact_us')->name('website.contact_us');
   Route::get('/complaints', 'ComplaintController@create')->name('website.complaints');
   Route::post('/complaints', 'ComplaintController@store')->name('website.complaints.store');

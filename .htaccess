@@ -4,6 +4,8 @@
     </IfModule>
 
     RewriteEngine On
+    # APKs must only be served by the controlled Laravel download endpoint.
+    RewriteRule ^(?:public/)?storage/app/mobile-applications(?:/|$) - [F,L,NC]
     RewriteCond %{HTTP_HOST} ^aladhamedu\.com [NC]
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]

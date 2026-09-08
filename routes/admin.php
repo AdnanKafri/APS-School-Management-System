@@ -520,6 +520,10 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::get('websitecontroller', 'DashboardController@websitecontroller')->name('websitecontroller');
     Route::get('websitecontrol', 'DashboardController@websitecontroller')->name('websitecontrol');
     Route::get('websitehome', 'DashboardController@websitehome')->name('websitehome');
+    Route::get('mobile-applications', 'Admin\MobileApplicationController@index')
+      ->middleware('can:website_controll')->name('admin.mobile-applications.index');
+    Route::post('mobile-applications/publish', 'Admin\MobileApplicationController@publish')
+      ->middleware('can:website_controll')->name('admin.mobile-applications.publish');
     Route::get('websitecontactus', 'DashboardController@websitecontactus')->name('websitecontactus');
     Route::get('about_us1', 'DashboardController@about_us1')->name('about_us1');
 

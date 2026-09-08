@@ -68,7 +68,7 @@ class PublicSeoController extends Controller
     public function sitemap()
     {
         $baseUrl = rtrim((string) config('app.url'), '/');
-        $paths = ['', '/faq', '/contact_us', '/complaints', '/Recruitment_competition'];
+        $paths = ['', '/faq', '/contact_us', '/complaints', '/Recruitment_competition', '/parent-app'];
         $entries = [];
 
         foreach (['ar', 'en'] as $locale) {
