@@ -228,6 +228,14 @@
         margin-bottom: 14px;
     }
 
+    .complaints-honeypot {
+        position: absolute;
+        left: -10000px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+    }
+
     .complaints-actions {
         display: flex;
         gap: 10px;
@@ -301,6 +309,11 @@
 
     <form method="POST" action="{{ route('website.complaints.store') }}" class="complaints-form">
         @csrf
+
+        <div class="complaints-honeypot" aria-hidden="true">
+            <label for="website_url">Website</label>
+            <input id="website_url" name="website_url" type="text" tabindex="-1" autocomplete="off">
+        </div>
 
         <div class="complaints-card">
             <div class="complaints-card__head">

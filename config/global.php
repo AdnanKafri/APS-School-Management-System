@@ -4,6 +4,8 @@ return [
 
     'permessions' => [
 
+        'manage_complaints'=>'إدارة الشكاوى والملاحظات',
+
 
 
 

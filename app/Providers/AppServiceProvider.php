@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Routing\Events\RouteMatched;
 use ReflectionClass;
+use App\Services\AdminComplaintNotificationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        view()->composer('admin.layouts.v2', function ($view) {
+            $admin = auth()->user();
+            $summary = app(AdminComplaintNotificationService::class)->summaryFor($admin);
+
+            $view->with('adminComplaintNotificationSummary', $summary);
+        });
+
         $this->applyAdminRouteAliases();
         $this->app->booted(function () {
             $this->applyAdminRouteAliases();

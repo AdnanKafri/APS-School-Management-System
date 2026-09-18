@@ -12,6 +12,9 @@ return [
     'messages' => [
         'marked_viewed' => 'The complaint has been marked as viewed.',
         'archived' => 'The complaint has been archived successfully.',
+        'status_updated' => 'The complaint status was updated successfully.',
+        'invalid_status' => 'The requested complaint status is invalid.',
+        'invalid_transition' => 'The complaint cannot move from its current status to the requested status.',
     ],
     'types' => [
         'academic' => 'Academic Complaint',
@@ -21,6 +24,8 @@ return [
         'new' => 'New',
         'viewed' => 'Viewed',
         'archived' => 'Archived',
+        'in_progress' => 'In progress',
+        'resolved' => 'Resolved',
     ],
     'fields' => [
         'type' => 'Complaint type',
@@ -45,6 +50,8 @@ return [
         'submit' => 'Submit complaint',
         'reset' => 'Clear form',
         'mark_viewed' => 'Mark as viewed',
+        'start' => 'Start processing',
+        'resolve' => 'Resolve complaint',
         'archive' => 'Archive complaint',
         'back' => 'Back to list',
         'view' => 'View details',
@@ -80,11 +87,21 @@ return [
         'archived_at' => 'Archived at',
         'viewed_at' => 'Viewed at',
         'created_at' => 'Submitted at',
+        'resolved_at' => 'Resolved at',
+        'handled_by' => 'Handled by',
     ],
     'validation' => [
         'required' => 'This field is required.',
         'required_field' => 'The :field is required.',
         'min_complaint' => 'The :field must contain at least :min characters.',
         'bus_required' => 'The bus number is required when transport complaint is selected.',
+        'rate_limited' => 'Too many submissions were received. Please try again later.',
+        'spam_rejected' => 'The request could not be submitted. Please try again.',
+    ],
+    'notifications' => [
+        'title' => 'Complaint notifications',
+        'new' => 'A new complaint was received',
+        'empty' => 'There are no complaint notifications yet.',
+        'view_all' => 'View all complaints',
     ],
 ];

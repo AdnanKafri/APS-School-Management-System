@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Complaint;
+use App\AdminComplaintNotification;
+use App\Services\AdminComplaintNotificationService;
+use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ComplaintController extends Controller
 {
@@ -22,6 +26,25 @@ class ComplaintController extends Controller
 
     public function store(Request $request)
     {
+        $limiter = app(RateLimiter::class);
+        $rateKey = 'complaints:' . $request->ip();
+
+        if ($limiter->tooManyAttempts($rateKey, 10)) {
+            return redirect()
+                ->route('website.complaints')
+                ->withInput()
+                ->withErrors(['complaint' => __('complaints.validation.rate_limited')]);
+        }
+
+        $limiter->hit($rateKey, 600);
+
+        if ($request->filled('website_url')) {
+            return redirect()
+                ->route('website.complaints')
+                ->withInput()
+                ->withErrors(['complaint' => __('complaints.validation.spam_rejected')]);
+        }
+
         $requiredFieldMessage = fn (string $field) => __('complaints.validation.required_field', ['field' => $field]);
         $minComplaintMessage = fn (string $field, int $min) => __('complaints.validation.min_complaint', ['field' => $field, 'min' => $min]);
 
@@ -59,7 +82,7 @@ class ComplaintController extends Controller
             ]
         );
 
-        Complaint::create([
+        $complaint = Complaint::create([
             'type' => $validated['type'],
             'student_name' => $validated['student_name'],
             'applicant_name' => $validated['applicant_name'],
@@ -72,6 +95,12 @@ class ComplaintController extends Controller
             'viewed_at' => null,
             'archived_at' => null,
         ]);
+
+        try {
+            app(AdminComplaintNotificationService::class)->notifyAuthorizedAdmins($complaint);
+        } catch (\Throwable $exception) {
+            app(AdminComplaintNotificationService::class)->safeFailureLog($complaint, $exception);
+        }
 
         return redirect()
             ->route('website.complaints')
@@ -91,7 +120,7 @@ class ComplaintController extends Controller
             $query->where('type', $typeFilter);
         }
 
-        if (in_array($statusFilter, ['new', 'viewed', 'archived'], true)) {
+        if (in_array($statusFilter, ['new', 'viewed', 'in_progress', 'resolved', 'archived'], true)) {
             $query->where('status', $statusFilter);
         }
 
@@ -107,6 +136,8 @@ class ComplaintController extends Controller
             'transport' => (clone $baseCounts)->where('type', 'transport')->count(),
             'new' => (clone $baseCounts)->where('status', 'new')->count(),
             'viewed' => (clone $baseCounts)->where('status', 'viewed')->count(),
+            'in_progress' => (clone $baseCounts)->where('status', 'in_progress')->count(),
+            'resolved' => (clone $baseCounts)->where('status', 'resolved')->count(),
             'archived' => (clone $baseCounts)->where('status', 'archived')->count(),
         ];
 
@@ -135,7 +166,7 @@ class ComplaintController extends Controller
 
         $complaint = Complaint::findOrFail($id);
 
-        if ($complaint->status !== 'archived') {
+        if ($complaint->status === 'new') {
             $complaint->status = 'viewed';
             $complaint->viewed_at = $complaint->viewed_at ?: Carbon::now();
             $complaint->save();
@@ -159,5 +190,77 @@ class ComplaintController extends Controller
         return redirect()
             ->route('admin.complaints.show', $complaint->id)
             ->with('success', __('complaints.messages.archived'));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        app()->setLocale('ar');
+
+        $complaint = Complaint::findOrFail($id);
+        $status = $request->input('status');
+
+        if (!in_array($status, ['viewed', 'in_progress', 'resolved'], true)) {
+            return redirect()
+                ->route('admin.complaints.show', $complaint->id)
+                ->withErrors(['status' => __('complaints.messages.invalid_status')]);
+        }
+
+        if (!$complaint->canTransitionTo($status)) {
+            return redirect()
+                ->route('admin.complaints.show', $complaint->id)
+                ->withErrors(['status' => __('complaints.messages.invalid_transition')]);
+        }
+
+        DB::transaction(function () use ($complaint, $status) {
+            $complaint->status = $status;
+            if ($status === 'viewed') {
+                $complaint->viewed_at = $complaint->viewed_at ?: Carbon::now();
+            }
+            if (in_array($status, ['in_progress', 'resolved'], true)) {
+                $complaint->handled_by = $complaint->handled_by ?: auth()->id();
+            }
+            if ($status === 'resolved') {
+                $complaint->resolved_at = Carbon::now();
+            }
+            $complaint->save();
+        });
+
+        return redirect()
+            ->route('admin.complaints.show', $complaint->id)
+            ->with('success', __('complaints.messages.status_updated'));
+    }
+
+    public function pollNotifications(Request $request)
+    {
+        $summary = app(AdminComplaintNotificationService::class)
+            ->summaryFor($request->user());
+
+        return response()->json([
+            'unread_count' => $summary['unread_count'],
+            'recent' => $summary['recent']->map(function (AdminComplaintNotification $notification) {
+                return [
+                    'id' => $notification->id,
+                    'complaint_id' => $notification->complaint_id,
+                    'type' => optional($notification->complaint)->type,
+                    'status' => optional($notification->complaint)->status,
+                    'read' => !is_null($notification->read_at),
+                    'created_at' => optional($notification->created_at)->toIso8601String(),
+                    'url' => route('admin.complaints.notifications.open', $notification->id),
+                ];
+            })->values(),
+        ]);
+    }
+
+    public function openNotification(Request $request, $notificationId)
+    {
+        $notification = AdminComplaintNotification::query()
+            ->where('id', $notificationId)
+            ->where('admin_id', $request->user()->id)
+            ->firstOrFail();
+
+        app(AdminComplaintNotificationService::class)
+            ->markReadForAdmin($notification->id, $request->user()->id);
+
+        return redirect()->route('admin.complaints.show', $notification->complaint_id);
     }
 }

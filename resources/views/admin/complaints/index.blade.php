@@ -154,6 +154,11 @@
         color: #6d6781;
     }
 
+    .complaints-badge.is-in-progress {
+        background: #fff8e8;
+        color: #a46b12;
+    }
+
     .complaints-empty {
         padding: 2rem 1rem;
         text-align: center;
@@ -190,13 +195,15 @@
     };
     $statusLabel = function ($value) {
         return [
-            'new' => 'جديدة',
-            'viewed' => 'تمت المراجعة',
-            'archived' => 'مؤرشفة',
-        ][$value] ?? 'جديدة';
+            'new' => __('complaints.status.new'),
+            'viewed' => __('complaints.status.viewed'),
+            'in_progress' => __('complaints.status.in_progress'),
+            'resolved' => __('complaints.status.resolved'),
+            'archived' => __('complaints.status.archived'),
+        ][$value] ?? __('complaints.status.new');
     };
     $typeLabel = function ($value) {
-        return $value === 'transport' ? 'شكاوى النقل' : 'الشكاوى الدراسية';
+        return $value === 'transport' ? __('complaints.types.transport') : __('complaints.types.academic');
     };
 @endphp
 
@@ -242,6 +249,12 @@
             <a href="{{ route('admin.complaints.index', array_filter(['type' => $type !== 'all' ? $type : null, 'status' => 'viewed'])) }}" class="complaints-filter {{ $status === 'viewed' ? 'is-active' : '' }}">
                 تمت المراجعة <span class="badge">{{ number_format($counts['viewed'] ?? 0) }}</span>
             </a>
+            <a href="{{ route('admin.complaints.index', array_filter(['type' => $type !== 'all' ? $type : null, 'status' => 'in_progress'])) }}" class="complaints-filter {{ $status === 'in_progress' ? 'is-active' : '' }}">
+                {{ __('complaints.status.in_progress') }} <span class="badge">{{ number_format($counts['in_progress'] ?? 0) }}</span>
+            </a>
+            <a href="{{ route('admin.complaints.index', array_filter(['type' => $type !== 'all' ? $type : null, 'status' => 'resolved'])) }}" class="complaints-filter {{ $status === 'resolved' ? 'is-active' : '' }}">
+                {{ __('complaints.status.resolved') }} <span class="badge">{{ number_format($counts['resolved'] ?? 0) }}</span>
+            </a>
             <a href="{{ route('admin.complaints.index', array_filter(['type' => $type !== 'all' ? $type : null, 'status' => 'archived'])) }}" class="complaints-filter {{ $status === 'archived' ? 'is-active' : '' }}">
                 مؤرشفة <span class="badge">{{ number_format($counts['archived'] ?? 0) }}</span>
             </a>
@@ -267,8 +280,8 @@
                     <tbody>
                         @forelse($complaints as $complaint)
                             @php
-                                $badgeClass = $complaint->status === 'viewed' ? 'is-viewed' : ($complaint->status === 'archived' ? 'is-archived' : 'is-new');
-                                $typeText = $complaint->type === 'transport' ? 'شكوى نقل' : 'شكوى دراسية';
+                                $badgeClass = $complaint->status === 'viewed' ? 'is-viewed' : ($complaint->status === 'in_progress' ? 'is-in-progress' : (in_array($complaint->status, ['resolved', 'archived'], true) ? 'is-archived' : 'is-new'));
+                                $typeText = $complaint->type === 'transport' ? __('complaints.types.transport') : __('complaints.types.academic');
                                 $statusText = $statusLabel($complaint->status);
                             @endphp
                             <tr>

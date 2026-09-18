@@ -86,6 +86,11 @@
         color: #2f6fc8;
     }
 
+    .complaint-show .pill.is-warning {
+        background: #fff8e8;
+        color: #a46b12;
+    }
+
     .complaint-show .pill.is-muted {
         background: #f3f1f8;
         color: #6d6781;
@@ -206,19 +211,24 @@
 
 @section('content')
 @php
-    $statusClass = $complaint->status === 'viewed' ? 'is-info' : ($complaint->status === 'archived' ? 'is-muted' : 'is-success');
+    $statusClass = $complaint->status === 'viewed' ? 'is-info' : ($complaint->status === 'in_progress' ? 'is-warning' : (in_array($complaint->status, ['resolved', 'archived'], true) ? 'is-muted' : 'is-success'));
     $statusText = [
-        'new' => 'جديدة',
-        'viewed' => 'تمت المراجعة',
-        'archived' => 'مؤرشفة',
-    ][$complaint->status] ?? 'جديدة';
-    $typeText = $complaint->type === 'transport' ? 'شكوى نقل' : 'شكوى دراسية';
+        'new' => __('complaints.status.new'),
+        'viewed' => __('complaints.status.viewed'),
+        'in_progress' => __('complaints.status.in_progress'),
+        'resolved' => __('complaints.status.resolved'),
+        'archived' => __('complaints.status.archived'),
+    ][$complaint->status] ?? __('complaints.status.new');
+    $typeText = $complaint->type === 'transport' ? __('complaints.types.transport') : __('complaints.types.academic');
 @endphp
 
 <div class="complaint-show">
     <div class="review-shell">
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger">{{ $errors->first() }}</div>
         @endif
 
         <div class="review-hero">
@@ -228,17 +238,41 @@
                     <p class="review-subtitle">تفاصيل الشكوى محفوظة بالكامل ويمكن الرجوع إليها لاحقاً مع الحفاظ على سجل الحالة.</p>
                 </div>
                 <div class="review-actions">
-                    @if($complaint->status !== 'archived')
+                    @if($complaint->status === 'new')
                         <form method="POST" action="{{ route('admin.complaints.viewed', $complaint->id) }}" class="m-0">
                             @csrf
-                            <button type="submit" class="btn btn-outline-primary">تمييز كمراجعة</button>
+                            <button type="submit" class="btn btn-outline-primary">{{ __('complaints.buttons.mark_viewed') }}</button>
                         </form>
-                        <form method="POST" action="{{ route('admin.complaints.archive', $complaint->id) }}" class="m-0">
+                        <form method="POST" action="{{ route('admin.complaints.status', $complaint->id) }}" class="m-0">
                             @csrf
-                            <button type="submit" class="btn btn-primary">أرشفة الشكوى</button>
+                            <input type="hidden" name="status" value="in_progress">
+                            <button type="submit" class="btn btn-outline-primary">{{ __('complaints.buttons.start') }}</button>
+                        </form>
+                    @elseif($complaint->status === 'viewed')
+                        <form method="POST" action="{{ route('admin.complaints.status', $complaint->id) }}" class="m-0">
+                            @csrf
+                            <input type="hidden" name="status" value="in_progress">
+                            <button type="submit" class="btn btn-outline-primary">{{ __('complaints.buttons.start') }}</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.complaints.status', $complaint->id) }}" class="m-0">
+                            @csrf
+                            <input type="hidden" name="status" value="resolved">
+                            <button type="submit" class="btn btn-outline-primary">{{ __('complaints.buttons.resolve') }}</button>
+                        </form>
+                    @elseif($complaint->status === 'in_progress')
+                        <form method="POST" action="{{ route('admin.complaints.status', $complaint->id) }}" class="m-0">
+                            @csrf
+                            <input type="hidden" name="status" value="resolved">
+                            <button type="submit" class="btn btn-outline-primary">{{ __('complaints.buttons.resolve') }}</button>
                         </form>
                     @endif
-                    <a href="{{ route('admin.complaints.index') }}" class="btn btn-light">العودة للقائمة</a>
+                    @if($complaint->status !== 'archived')
+                        <form method="POST" action="{{ route('admin.complaints.archive', $complaint->id) }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">{{ __('complaints.buttons.archive') }}</button>
+                        </form>
+                    @endif
+                    <a href="{{ route('admin.complaints.index') }}" class="btn btn-light">{{ __('complaints.buttons.back') }}</a>
                 </div>
             </div>
 
@@ -305,6 +339,14 @@
                         <div class="timeline-row">
                             <strong>تاريخ الأرشفة</strong>
                             <span>{{ optional($complaint->archived_at)->format('Y-m-d H:i') ?: '-' }}</span>
+                        </div>
+                        <div class="timeline-row">
+                            <strong>{{ __('complaints.admin.resolved_at') }}</strong>
+                            <span>{{ optional($complaint->resolved_at)->format('Y-m-d H:i') ?: '-' }}</span>
+                        </div>
+                        <div class="timeline-row">
+                            <strong>{{ __('complaints.admin.handled_by') }}</strong>
+                            <span>{{ optional($complaint->handledBy)->name ?: '-' }}</span>
                         </div>
                     </div>
                 </div>

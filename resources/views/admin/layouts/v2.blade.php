@@ -148,6 +148,20 @@
             line-height: 1.2;
         }
 
+        .v2-menu-count {
+            order: 1;
+            flex: 0 0 auto !important;
+            min-width: 24px;
+            padding: .16rem .4rem;
+            border-radius: 999px;
+            background: #fff0f0;
+            color: #c24141;
+            font-size: .7rem;
+            font-weight: 800;
+            text-align: center;
+            direction: ltr;
+        }
+
         .v2-menu-link i:first-child {
             order: 2;
             width: 28px;
@@ -387,13 +401,41 @@
 
         .v2-notify-badge {
             position: absolute;
-            top: 7px;
-            inset-inline-end: 8px;
-            width: 8px;
+            top: 3px;
+            inset-inline-end: 3px;
+            min-width: 8px;
             height: 8px;
             border-radius: 50%;
             background: #3B82F6;
             box-shadow: 0 0 0 2px #fff;
+            color: #fff;
+            font-size: .62rem;
+            line-height: 16px;
+            text-align: center;
+            padding: 0;
+        }
+
+        .v2-notify-badge.has-count {
+            min-width: 16px;
+            height: 16px;
+            padding: 0 .2rem;
+        }
+
+        .v2-notify-empty {
+            color: #8a869a;
+            cursor: default;
+        }
+
+        .v2-notify-all {
+            border-top: 1px solid #eef0f7;
+            margin-top: .25rem;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .v2-dropdown-item.is-unread {
+            background: rgba(59,130,246,.06);
+            font-weight: 800;
         }
 
         .v2-user-btn {
@@ -1131,6 +1173,72 @@
             });
             window.addEventListener('resize', repositionOpenDropdowns);
             window.addEventListener('scroll', repositionOpenDropdowns, true);
+
+            var notifyButton = document.querySelector('.v2-notify-btn[data-poll-url]');
+            var notifyList = document.querySelector('[data-complaint-notifications-list]');
+            var notificationPollInFlight = false;
+
+            function renderComplaintNotifications(payload) {
+                if (!notifyButton || !notifyList || !payload) {
+                    return;
+                }
+
+                var count = Number(payload.unread_count || 0);
+                var badge = notifyButton.querySelector('.v2-notify-badge');
+                if (badge) {
+                    badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+                    badge.classList.toggle('has-count', count > 0);
+                }
+
+                var items = Array.isArray(payload.recent) ? payload.recent : [];
+                notifyList.innerHTML = '';
+                if (!items.length) {
+                    var empty = document.createElement('span');
+                    empty.className = 'dropdown-item v2-dropdown-item v2-notify-empty';
+                    empty.textContent = '{{ __('complaints.notifications.empty') }}';
+                    notifyList.appendChild(empty);
+                    return;
+                }
+
+                items.forEach(function (item) {
+                    var link = document.createElement('a');
+                    link.className = 'dropdown-item v2-dropdown-item' + (item.read ? '' : ' is-unread');
+                    link.href = item.url;
+                    var dot = document.createElement('i');
+                    dot.className = 'fas fa-circle v2-item-dot';
+                    var text = document.createElement('span');
+                    text.textContent = '{{ __('complaints.notifications.new') }}';
+                    link.appendChild(dot);
+                    link.appendChild(text);
+                    notifyList.appendChild(link);
+                });
+            }
+
+            function pollComplaintNotifications() {
+                if (!notifyButton || notificationPollInFlight || document.hidden || !window.fetch) {
+                    return;
+                }
+
+                notificationPollInFlight = true;
+                fetch(notifyButton.getAttribute('data-poll-url'), {
+                    credentials: 'same-origin',
+                    headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+                }).then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('notification poll failed');
+                    }
+                    return response.json();
+                }).then(renderComplaintNotifications).catch(function () {
+                    // Notification polling is optional; keep the rest of Admin usable.
+                }).then(function () {
+                    notificationPollInFlight = false;
+                });
+            }
+
+            if (notifyButton) {
+                window.setInterval(pollComplaintNotifications, 60000);
+                document.addEventListener('visibilitychange', pollComplaintNotifications);
+            }
 
             @if (Session::has('success'))
                 toastr.success("{{ Session::get('success') }}");

@@ -122,10 +122,15 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::post('/studentadmission/setup', 'DashboardController@studentadmission_setup_store')->name('studentadmission_setup_store');
     Route::post('/studentadmission/request/status', 'DashboardController@update_studentadmission_status')->name('studentadmission_request_status');
     Route::get('/studentadmission/request/{id}', 'DashboardController@studentadmission_request_details')->name('studentadmission_request_details');
-    Route::get('/complaints', 'ComplaintController@index')->name('admin.complaints.index');
-    Route::get('/complaints/{id}', 'ComplaintController@show')->name('admin.complaints.show');
-    Route::post('/complaints/{id}/viewed', 'ComplaintController@markViewed')->name('admin.complaints.viewed');
-    Route::post('/complaints/{id}/archive', 'ComplaintController@archive')->name('admin.complaints.archive');
+    Route::group(['middleware' => 'can:manage_complaints'], function () {
+        Route::get('/complaints', 'ComplaintController@index')->name('admin.complaints.index');
+        Route::get('/complaints/notifications/poll', 'ComplaintController@pollNotifications')->name('admin.complaints.notifications.poll');
+        Route::get('/complaints/notifications/{notificationId}/open', 'ComplaintController@openNotification')->name('admin.complaints.notifications.open');
+        Route::get('/complaints/{id}', 'ComplaintController@show')->name('admin.complaints.show');
+        Route::post('/complaints/{id}/viewed', 'ComplaintController@markViewed')->name('admin.complaints.viewed');
+        Route::post('/complaints/{id}/status', 'ComplaintController@updateStatus')->name('admin.complaints.status');
+        Route::post('/complaints/{id}/archive', 'ComplaintController@archive')->name('admin.complaints.archive');
+    });
     Route::get('/students/financial', 'DashboardController@students_financial')->name('students_financial');
 
     Route::get('/students/financial_transport', 'TransportationController@students_financial_transport')->name('students_financial_transport');

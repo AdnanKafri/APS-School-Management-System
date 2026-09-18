@@ -2,6 +2,7 @@
     $school = \App\School_data::first();
     $pageTitle = trim($__env->yieldContent('page_title')) ?: 'لوحة التحكم';
     $userName = optional(auth()->user())->name ?: 'Admin';
+    $complaintNotifications = $adminComplaintNotificationSummary ?? ['unread_count' => 0, 'recent' => collect()];
 @endphp
 
 <header class="v2-navbar">
@@ -27,19 +28,28 @@
                 <input type="text" class="v2-search-input" placeholder="بحث سريع..." aria-label="بحث سريع">
             </form>
 
-            <div class="v2-dd">
-                <button class="btn btn-sm v2-nav-icon-btn v2-notify-btn v2-dd-toggle" type="button" data-dropdown-target="v2-notify-menu" aria-expanded="false" aria-haspopup="true">
-                    <i class="far fa-bell"></i>
-                    <span class="v2-notify-badge" aria-hidden="true"></span>
-                </button>
-                <div id="v2-notify-menu" class="v2-nav-dropdown v2-notify-dropdown v2-dd-menu" role="menu" aria-hidden="true">
-                    <div class="v2-dropdown-head">الإشعارات</div>
-                    <a class="dropdown-item v2-dropdown-item" href="javascript:void(0);">
-                        <i class="fas fa-circle v2-item-dot"></i>
-                        لا توجد إشعارات مرتبطة حالياً (Placeholder)
-                    </a>
+            @can('manage_complaints')
+                <div class="v2-dd">
+                    <button class="btn btn-sm v2-nav-icon-btn v2-notify-btn v2-dd-toggle" type="button" data-dropdown-target="v2-notify-menu" data-poll-url="{{ route('admin.complaints.notifications.poll') }}" aria-expanded="false" aria-haspopup="true" aria-label="{{ __('complaints.notifications.title') }}">
+                        <i class="far fa-bell"></i>
+                        <span class="v2-notify-badge {{ $complaintNotifications['unread_count'] > 0 ? 'has-count' : '' }}" aria-live="polite">{{ $complaintNotifications['unread_count'] > 99 ? '99+' : ($complaintNotifications['unread_count'] ?: '') }}</span>
+                    </button>
+                    <div id="v2-notify-menu" class="v2-nav-dropdown v2-notify-dropdown v2-dd-menu" role="menu" aria-hidden="true">
+                        <div class="v2-dropdown-head">{{ __('complaints.notifications.title') }}</div>
+                        <div data-complaint-notifications-list>
+                            @forelse($complaintNotifications['recent'] as $notification)
+                                <a class="dropdown-item v2-dropdown-item {{ is_null($notification->read_at) ? 'is-unread' : '' }}" href="{{ route('admin.complaints.notifications.open', $notification->id) }}">
+                                    <i class="fas fa-circle v2-item-dot"></i>
+                                    <span>{{ __('complaints.notifications.new') }}</span>
+                                </a>
+                            @empty
+                                <span class="dropdown-item v2-dropdown-item v2-notify-empty">{{ __('complaints.notifications.empty') }}</span>
+                            @endforelse
+                        </div>
+                        <a class="dropdown-item v2-dropdown-item v2-notify-all" href="{{ route('admin.complaints.index') }}">{{ __('complaints.notifications.view_all') }}</a>
+                    </div>
                 </div>
-            </div>
+            @endcan
 
             <div class="v2-dd">
                 <button class="btn btn-sm v2-user-btn v2-dd-toggle" type="button" data-dropdown-target="v2-user-menu" aria-expanded="false" aria-haspopup="true">
