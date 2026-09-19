@@ -249,6 +249,12 @@
                         <span class="menu-title">السجل الأكاديمي</span>
                     </a>
                 </li>
+                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.follow_ups') ? 'is-active' : '' }}">
+                    <a class="nav-link" href="{{ route('dashboard.student.follow_ups') }}">
+                        <i class="mdi mdi-clipboard-check-outline menu-icon"></i>
+                        <span class="menu-title">{{ __('student_follow_up_student.nav') }}</span>
+                    </a>
+                </li>
 
                 <li class="student-nav-label">الموارد والخدمات</li>
                 @if ($class)

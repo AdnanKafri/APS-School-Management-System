@@ -18,6 +18,8 @@
     $classCount = collect($classes)->count();
     $todayText = \Carbon\Carbon::now()->locale($isRtl ? 'ar' : 'en')->translatedFormat($isRtl ? 'l، j F Y' : 'l, j F Y');
     $labels = [
+        'no_current_assignments_title' => __('teacher_portal.dashboard.no_current_assignments_title'),
+        'no_current_assignments_text' => __('teacher_portal.dashboard.no_current_assignments_text'),
         'greeting' => $isRtl ? 'مرحباً' : 'Hello',
         'banner_intro' => $isRtl ? 'لوحة الأستاذ' : 'Teacher Dashboard',
         'classes' => $isRtl ? 'الصفوف' : 'Classes',
@@ -69,6 +71,13 @@
                     </div>
                 </div>
 
+                @if (collect($classes)->isEmpty())
+                    <div class="teacher-dashboard-empty">
+                        <i class="mdi mdi-folder-open-outline"></i>
+                        <strong>{{ $labels['no_current_assignments_title'] }}</strong>
+                        <span>{{ $labels['no_current_assignments_text'] }}</span>
+                    </div>
+                @else
                 <ul class="nav nav-tabs teacher-dashboard-tabs" data-tabs="tabs">
                     @foreach ($classes as $index => $item)
                         <li class="nav-item">
@@ -115,6 +124,7 @@
                         </div>
                     @endforeach
                 </div>
+                @endif
             </section>
         </div>
     </div>

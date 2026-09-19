@@ -24,6 +24,36 @@ class StudentFollowUp extends Model
         'voided_at' => 'datetime',
     ];
 
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class, 'lesson_id');
+    }
+
+    public function year()
+    {
+        return $this->belongsTo(Year::class, 'year_id');
+    }
+
+    public function term()
+    {
+        return $this->belongsTo(Term_year::class, 'term_id');
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class, 'room_id');
+    }
+
+    public function classRoom()
+    {
+        return $this->belongsTo(Classe::class, 'class_id');
+    }
+
     public function isEditableBy($teacherId, $now)
     {
         return (int) $this->teacher_id === (int) $teacherId

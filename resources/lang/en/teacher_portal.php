@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'dashboard' => [
+        'no_current_assignments_title' => 'No current classes or rooms are assigned to you',
+        'no_current_assignments_text' => 'Your classes and rooms will appear here after current-year assignments are added.',
+    ],
     'common' => [
         'teacher_prefix' => 'Mr. ',
         'teacher_default' => 'Teacher',

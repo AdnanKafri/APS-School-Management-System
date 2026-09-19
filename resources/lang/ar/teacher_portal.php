@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'dashboard' => [
+        'no_current_assignments_title' => 'لا توجد صفوف أو شعب مسندة لك حالياً',
+        'no_current_assignments_text' => 'ستظهر الصفوف والشعب هنا بعد إسناد تكليفاتك في العام الدراسي الحالي.',
+    ],
     'common' => [
         'teacher_prefix' => 'أ. ',
         'teacher_default' => 'الأستاذ',
