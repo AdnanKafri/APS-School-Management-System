@@ -120,12 +120,22 @@ class StudentFollowUpService
 
     public function create($teacherUserId, $teacherId, $assignmentId, $studentId, array $input)
     {
+        return $this->createForContext($teacherUserId, null, 'teacher', $teacherId, $assignmentId, $studentId, $input);
+    }
+
+    public function createOnBehalf($adminUserId, $teacherId, $assignmentId, $studentId, array $input)
+    {
+        return $this->createForContext($adminUserId, $adminUserId, 'admin_on_behalf', $teacherId, $assignmentId, $studentId, $input);
+    }
+
+    private function createForContext($createdByUserId, $adminUserId, $createdVia, $teacherId, $assignmentId, $studentId, array $input)
+    {
         $context = $this->resolveCreationContext($teacherId, $assignmentId, $studentId);
         $note = $this->normalizeNote($input['note'] ?? null);
         $level = $input['level'] ?? null;
         $this->validateContent($level, $note);
 
-        return DB::transaction(function () use ($teacherUserId, $context, $level, $note) {
+        return DB::transaction(function () use ($createdByUserId, $adminUserId, $createdVia, $context, $level, $note) {
             $now = $context['now'];
             return StudentFollowUp::create([
                 'student_id' => $context['student']->id,
@@ -142,7 +152,9 @@ class StudentFollowUpService
                 'observed_at' => $now,
                 'compliance_month' => $now->copy()->startOfMonth()->toDateString(),
                 'compliance_half' => $now->day <= 15 ? 1 : 2,
-                'created_by_user_id' => $teacherUserId,
+                'created_by_user_id' => $createdByUserId,
+                'created_by_admin_user_id' => $adminUserId,
+                'created_via' => $createdVia,
             ]);
         });
     }

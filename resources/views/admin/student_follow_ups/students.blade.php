@@ -1,0 +1,19 @@
+@extends('admin.layouts.v2')
+@section('page_title', __('student_follow_up_admin.by_student'))
+@section('page_subtitle', $year->name)
+@section('style') @include('admin.student_follow_ups._styles') @endsection
+@section('content')
+<div class="sfu-admin"><div class="v2-card sfu-shell">
+<div class="sfu-intro"><div><h3>{{ __('student_follow_up_admin.by_student') }}</h3><p>{{ __('student_follow_up_admin.month') }}: {{ $month }} | {{ __('student_follow_up_admin.academic_year') }}: {{ $year->name }}</p></div><a class="btn btn-outline-secondary" href="{{ route('admin.student_follow_ups.index',['month'=>$month]) }}">{{ __('student_follow_up_admin.back') }}</a></div>
+<form class="sfu-search" method="get"><input type="hidden" name="month" value="{{ $month }}"><input class="form-control" name="search" value="{{ $search }}" placeholder="{{ __('student_follow_up_admin.search_student') }}"><button class="btn btn-primary">بحث</button>@if($search!=='')<a class="btn btn-outline-secondary" href="{{ route('admin.student_follow_ups.students',['month'=>$month]) }}">مسح البحث</a>@endif</form>
+
+@if($search==='')
+<h4 class="sfu-section-title">{{ __('student_follow_up_admin.assigned_classes') }}</h4><div class="sfu-card-grid">@foreach($browseClasses as $class)<a class="sfu-nav-card {{ $filters['class_id']==$class->id?'is-active':'' }}" href="{{ route('admin.student_follow_ups.students',['month'=>$month,'class_id'=>$class->id]) }}"><strong>{{ $class->name }}</strong><span>{{ $class->room_count }} {{ __('student_follow_up_admin.assigned_sections') }}</span><span>{{ $class->student_count }} {{ __('student_follow_up_admin.student') }}</span></a>@endforeach</div>
+@if($filters['class_id'])<h4 class="sfu-section-title">{{ __('student_follow_up_admin.assigned_sections') }}</h4><div class="sfu-card-grid">@forelse($browseRooms as $room)<a class="sfu-nav-card {{ $filters['room_id']==$room->id?'is-active':'' }}" href="{{ route('admin.student_follow_ups.students',['month'=>$month,'class_id'=>$filters['class_id'],'room_id'=>$room->id]) }}"><strong>{{ $room->name }}</strong><span>{{ $room->student_count }} {{ __('student_follow_up_admin.student') }}</span></a>@empty<div class="sfu-empty">لا توجد شعب تشغيلية لهذا الصف في العام الحالي.</div>@endforelse</div>@endif
+@endif
+
+@if($students)
+<div class="sfu-result-head"><h4>{{ $search!=='' ? 'نتائج البحث' : 'طلاب الشعبة المختارة' }}</h4><span>{{ $students->total() }} {{ __('student_follow_up_admin.student') }}</span></div><div class="sfu-table-card"><div class="sfu-table-wrap"><table class="table sfu-table"><thead><tr><th>{{ __('student_follow_up_admin.student') }}</th><th>{{ __('student_follow_up_admin.class') }}</th><th>{{ __('student_follow_up_admin.section') }}</th><th>{{ __('student_follow_up_admin.subjects_with_observations') }} / {{ __('student_follow_up_admin.teachers_with_observations') }}</th><th>{{ __('student_follow_up_admin.observations') }}</th><th></th></tr></thead><tbody>@forelse($students as $student)<tr><td class="sfu-person">{{ $student->first_name }} {{ $student->last_name }}</td><td>{{ $student->class_name }}</td><td>{{ $student->room_name }}</td><td>{{ $student->teacher_subject_count }}</td><td>{{ $student->observation_count }}</td><td><a class="btn btn-sm btn-outline-primary" href="{{ route('admin.student_follow_ups.student',['student'=>$student->id,'month'=>$month]) }}">{{ __('student_follow_up_admin.view_details') }}</a></td></tr>@empty<tr><td colspan="6" class="sfu-empty">{{ __('student_follow_up_admin.empty_text') }}</td></tr>@endforelse</tbody></table></div></div><div class="mt-3">{{ $students->links() }}</div>
+@elseif($search==='' && !$filters['class_id'])<div class="sfu-empty"><h4>{{ __('student_follow_up_admin.choose_class') }}</h4></div>@elseif($search==='' && !$filters['room_id'])<div class="sfu-empty"><h4>{{ __('student_follow_up_admin.choose_section') }}</h4></div>@endif
+</div></div>
+@endsection

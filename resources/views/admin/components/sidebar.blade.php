@@ -41,6 +41,12 @@
                     <i class="fas fa-archive"></i><span>&#1571;&#1585;&#1588;&#1610;&#1601; &#1575;&#1604;&#1591;&#1604;&#1575;&#1576;</span>
                 </a>
             @endcan
+            @can('manage_student_follow_ups')
+                <a href="{{ route('admin.student_follow_ups.index') }}" class="v2-menu-link {{ request()->routeIs('admin.student_follow_ups.*') ? 'active' : '' }}">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>المتابعة الدورية للطلاب</span>
+                </a>
+            @endcan
             @can('teachers')
                 <a href="{{ route('teachers') }}" class="v2-menu-link {{ request()->routeIs('teachers*','teacher_*') ? 'active' : '' }}">
                     <i class="fas fa-chalkboard-teacher"></i>

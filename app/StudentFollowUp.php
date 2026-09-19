@@ -13,7 +13,7 @@ class StudentFollowUp extends Model
     protected $fillable = [
         'student_id', 'teacher_id', 'lesson_id', 'year_id', 'term_id', 'class_id', 'room_id',
         'student_academic_placement_id', 'teacher_assignment_period_id', 'level', 'note',
-        'observed_at', 'compliance_month', 'compliance_half', 'created_by_user_id',
+        'observed_at', 'compliance_month', 'compliance_half', 'created_by_user_id', 'created_by_admin_user_id', 'created_via',
         'last_edited_by_user_id', 'edited_at', 'voided_at',
     ];
 

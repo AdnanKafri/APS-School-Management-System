@@ -16,6 +16,19 @@ Route::group(['prefix' => 'SMARMANger/admin', 'as' => 'admin.', 'middleware' => 
 
   Route::post('send_message', 'admincontroller@send_message')->name('send_message');
 
+  Route::prefix('student-follow-ups')->middleware('can:manage_student_follow_ups')->group(function () {
+    Route::get('/', 'AdminStudentFollowUpController@index')->name('student_follow_ups.index');
+    Route::get('teachers', 'AdminStudentFollowUpController@teachers')->name('student_follow_ups.teachers');
+    Route::get('students', 'AdminStudentFollowUpController@students')->name('student_follow_ups.students');
+    Route::get('teachers/{teacher}', 'AdminStudentFollowUpController@teacher')->name('student_follow_ups.teacher');
+    Route::get('teachers/{teacher}/reports/compliance', 'AdminStudentFollowUpController@teacherComplianceReport')->name('student_follow_ups.teacher.compliance_report');
+    Route::get('teachers/{teacher}/reports/evaluations', 'AdminStudentFollowUpController@teacherEvaluationsReport')->name('student_follow_ups.teacher.evaluations_report');
+    Route::post('teachers/{teacher}/students/{student}', 'AdminStudentFollowUpController@storeOnBehalf')->name('student_follow_ups.store_on_behalf');
+    Route::get('students/{student}', 'AdminStudentFollowUpController@student')->name('student_follow_ups.student');
+    Route::get('students/{student}/report', 'AdminStudentFollowUpController@report')->name('student_follow_ups.student.report');
+    Route::get('observations', 'AdminStudentFollowUpController@observations')->name('student_follow_ups.observations');
+  });
+
 
 
   Route::prefix('roles')->group(function () {

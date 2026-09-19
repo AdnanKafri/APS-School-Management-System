@@ -5,6 +5,7 @@ return [
     'permessions' => [
 
         'manage_complaints'=>'إدارة الشكاوى والملاحظات',
+        'manage_student_follow_ups'=>'إدارة المتابعة الدورية للطلاب',
 
 
 
