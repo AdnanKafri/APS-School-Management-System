@@ -1,8 +1,34 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'إدارة المواد الدراسية')
+@section('page_subtitle', 'إدارة مواد الصف المحدد')
+@section('body_class', 'lessons-v2')
 
 @section('style')
 
     <style>
+    .lessons-v2 .lessons-v2-card {
+        margin: 0;
+        border: 1px solid var(--v2-border);
+        border-radius: 18px;
+        box-shadow: 0 14px 32px rgba(36, 30, 62, .07);
+        overflow: hidden;
+    }
+
+    .lessons-v2 .lessons-v2-card .card-header {
+        padding: 1.25rem 1.5rem;
+        background: #fff;
+        border-bottom: 1px solid var(--v2-border);
+    }
+
+    .lessons-v2 .lessons-v2-card .table-responsive {
+        margin: 0;
+    }
+
+    .lessons-v2 .lessons-v2-card .table {
+        margin-bottom: 0;
+    }
+
     .custom-file-label{
     display:none !important;
     }
@@ -530,7 +556,7 @@ button.close{
 @section('content')
 
 
-    <div class="card" style="direction:rtl;text-align:right;margin: 20px">
+    <div class="card v2-card lessons-v2-card" style="direction:rtl;text-align:right">
             <!-- Card header -->
 
             <div class="card-header border-0">

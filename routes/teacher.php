@@ -10,6 +10,14 @@ Route::group(['prefix' => 'SMARMANger', 'middleware' => ['roleteacher']], functi
     //new teachers2 routes
  //1
 Route::get('teacher', 'TeacherController_New@dashboard_teacher')->name('dashboard.teacher');
+
+    // Student periodic follow-up: teacher identity and academic context are
+    // resolved server-side by the dedicated controller/service.
+Route::get('dashboard/teacher/student-follow-ups', 'TeacherStudentFollowUpController@index')->name('teacher.student_follow_ups.index');
+Route::get('dashboard/teacher/student-follow-ups/assignments/{assignment}', 'TeacherStudentFollowUpController@roster')->name('teacher.student_follow_ups.roster');
+Route::post('dashboard/teacher/student-follow-ups', 'TeacherStudentFollowUpController@store')->name('teacher.student_follow_ups.store');
+Route::get('dashboard/teacher/student-follow-ups/assignments/{assignment}/students/{student}/history', 'TeacherStudentFollowUpController@history')->name('teacher.student_follow_ups.history');
+Route::post('dashboard/teacher/student-follow-ups/{followUp}/update', 'TeacherStudentFollowUpController@update')->name('teacher.student_follow_ups.update');
 //
 
 //2

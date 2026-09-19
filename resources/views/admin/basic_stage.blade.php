@@ -1,4 +1,8 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'المراحل الأساسية')
+@section('page_subtitle', 'إدارة المراحل والصفوف المرتبطة بها')
+@section('body_class', 'basic-stage-v2')
 
 
 
@@ -11,14 +15,23 @@
 </nav>
 
 @endsection
-@section('content')
-
-
-<head>
-
+@section('style')
 
 
     <style>
+    .basic-stage-v2 .basic-stage-v2-card {
+        margin: 0;
+        border: 1px solid var(--v2-border);
+        border-radius: 18px;
+        box-shadow: 0 14px 32px rgba(36, 30, 62, .07);
+        overflow: hidden;
+    }
+
+    .basic-stage-v2 .basic-stage-v2-card .card-header {
+        padding: 1.25rem 1.5rem;
+        background: #fff;
+        border-bottom: 1px solid var(--v2-border);
+    }
     .custom-file-label{
     display:none !important;
     }
@@ -532,10 +545,12 @@ button.close{
         width: 100% !important;
     }
     </style>
-</head>
+@endsection
+
+@section('content')
 
 
-    <div class="card" style="direction:rtl;text-align:right;margin: 20px">
+    <div class="card v2-card basic-stage-v2-card" style="direction:rtl;text-align:right">
             <!-- Card header -->
 
             <div class="card-header border-0">

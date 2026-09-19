@@ -77,6 +77,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Shuttle_Dumper;
 use Shuttle_Exception;
 use App\Advantages;
@@ -11141,15 +11142,16 @@ public function class_update(Request $request)
 
     public function session_store(Request $request)
     {
+        $validated = $this->validateLectureTimeInput($request, true);
 
-        foreach ($request->class as $item) {
+        foreach ($validated['class'] as $item) {
 
-            foreach ($request->room as $item2) {
+            foreach ($validated['room'] as $item2) {
                 $session = new Lecture_time;
-                $session->name = $request->session_name;
-                $session->type = $request->type;
-                $session->start_time = $request->start_time;
-                $session->end_time = $request->end_time;
+                $session->name = $validated['session_name'];
+                $session->type = $validated['type'];
+                $session->start_time = $validated['start_time'];
+                $session->end_time = $validated['end_time'];
                 $session->class_id = $item;
                 $session->room_id = $item2;
 
@@ -11161,16 +11163,16 @@ public function class_update(Request $request)
     }
     public function session_store1(Request $request)
     {
+        $validated = $this->validateLectureTimeInput($request, false);
 
 
-
-        foreach ($request->room as $item2) {
+        foreach ($validated['room'] as $item2) {
             $room = Room::find($item2);
             $session = new Lecture_time;
-            $session->name = $request->session_name;
-            $session->type = $request->type;
-            $session->start_time = $request->start_time;
-            $session->end_time = $request->end_time;
+            $session->name = $validated['session_name'];
+            $session->type = $validated['type'];
+            $session->start_time = $validated['start_time'];
+            $session->end_time = $validated['end_time'];
             $session->class_id = $room->class_id;
             $session->room_id = $item2;
 
@@ -11178,6 +11180,63 @@ public function class_update(Request $request)
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * Validate timetable-session inputs before the legacy save loops run.
+     */
+    private function validateLectureTimeInput(Request $request, $requiresClass)
+    {
+        $rules = [
+            'session_name' => ['required', 'string', 'max:20'],
+            'type' => ['required', 'in:1,2'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'room' => ['required', 'array', 'min:1'],
+            'room.*' => ['required', 'integer', 'distinct', 'exists:rooms,id'],
+        ];
+
+        if ($requiresClass) {
+            $rules['class'] = ['required', 'array', 'min:1'];
+            $rules['class.*'] = ['required', 'integer', 'distinct', 'exists:classes,id'];
+        }
+
+        $validated = $request->validate($rules, [
+            'class.required' => __('timetable.validation.class_required'),
+            'class.array' => __('timetable.validation.class_required'),
+            'class.min' => __('timetable.validation.class_required'),
+            'room.required' => __('timetable.validation.room_required'),
+            'room.array' => __('timetable.validation.room_required'),
+            'room.min' => __('timetable.validation.room_required'),
+            'session_name.required' => __('timetable.validation.name_required'),
+            'type.required' => __('timetable.validation.type_required'),
+            'start_time.required' => __('timetable.validation.start_required'),
+            'end_time.required' => __('timetable.validation.end_required'),
+            'end_time.after' => __('timetable.validation.end_after_start'),
+        ]);
+
+        $rooms = Room::whereIn('id', $validated['room'])->get()->keyBy('id');
+        if ($rooms->count() !== count($validated['room'])) {
+            throw ValidationException::withMessages([
+                'room' => __('timetable.validation.room_invalid'),
+            ]);
+        }
+
+        if ($requiresClass) {
+            $classIds = collect($validated['class'])->map(function ($classId) {
+                return (int) $classId;
+            })->all();
+
+            foreach ($rooms as $room) {
+                if (!in_array((int) $room->class_id, $classIds, true)) {
+                    throw ValidationException::withMessages([
+                        'room' => __('timetable.validation.room_class_mismatch'),
+                    ]);
+                }
+            }
+        }
+
+        return $validated;
     }
 
     public function getDay($day)
@@ -11938,7 +11997,7 @@ if($request->val){
     public function teacher_schedule($id)
     {
         $year=Year::where('current_year','1')->first();
-        $teacher = Teacher::find($id);
+        $teacher = Teacher::findOrFail($id);
         $user = User::where('teacher_id', $id)->first();
         $timestamp = strtotime(now());
         $today = date('l', $timestamp);
@@ -11959,7 +12018,9 @@ if($request->val){
         ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
         ->orderBy('lecture_times.start_time')
         ->select("lesson_room_teacher_lecture_time.*")
-        ->where('teacher_id', $id)->get();
+        ->where('teacher_id', $id)
+        ->where('lesson_room_teacher_lecture_time.year_id', $year->id)
+        ->get();
 
         $schedule_count = Lesson_room_teacher_lecture_time::with('lesson', 'lecture_time')
         ->WhereHas('room' ,function($q) use ($year){
@@ -11971,7 +12032,9 @@ if($request->val){
         ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
         ->orderBy('lecture_times.start_time')
         ->select("lesson_room_teacher_lecture_time.*")
-        ->where('teacher_id', $id)->count();
+        ->where('teacher_id', $id)
+        ->where('lesson_room_teacher_lecture_time.year_id', $year->id)
+        ->count();
 
         // pring student schedule tracer
         $student_schedule_tracer = Student_schedule_tracer::whereDate('created_at', Carbon::today())->where('user_id', $user->id)->get();

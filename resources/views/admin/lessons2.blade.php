@@ -1,9 +1,41 @@
-@extends('admin.master')
+@extends('admin.layouts.v2')
+
+@section('page_title', 'المناهج والمواد')
+@section('page_subtitle', 'استعراض المواد الدراسية حسب الصف')
+@section('body_class', 'lessons2-v2')
 
 @section('style')
 
 
     <style>
+    .lessons2-v2 .lessons2-card {
+        margin: 0;
+        border: 1px solid var(--v2-border);
+        border-radius: 18px;
+        box-shadow: 0 14px 32px rgba(36, 30, 62, .07);
+        overflow: hidden;
+    }
+
+    .lessons2-v2 .lessons2-card .card-header {
+        padding: 1.25rem 1.5rem;
+        background: #fff;
+        border-bottom: 1px solid var(--v2-border);
+    }
+
+    .lessons2-v2 .lessons2-card .table-responsive {
+        margin: 0;
+    }
+
+    .lessons2-v2 .lessons2-card .table {
+        margin-bottom: 0;
+    }
+
+    .lessons2-v2 .lessons2-card .table th,
+    .lessons2-v2 .lessons2-card .table td {
+        vertical-align: middle;
+        white-space: normal;
+    }
+
     .custom-file-label{
     display:none !important;
     }
@@ -529,7 +561,7 @@ button.close{
 
 @section('content')
 
-    <div class="card" style="direction:rtl;text-align:right;margin: 20px">
+    <div class="card v2-card lessons2-card" style="direction:rtl;text-align:right">
             <!-- Card header -->
 
             <div class="card-header border-0">
@@ -584,7 +616,6 @@ button.close{
         </div>
 
 
-                <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
                 <script>
                 var index_append = 0;
                 $('.alert-success').hide(5000);

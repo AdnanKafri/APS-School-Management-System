@@ -175,6 +175,7 @@
         }
     </style>
     <link rel="stylesheet" href="{{ asset('teachers_2/assets/css/teacher-responsive.css') }}">
+    @stack('page_styles')
 </head>
 
 <body class="teacher-portal-body {{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -234,6 +235,12 @@
                     <a class="nav-link" href="{{ route('teacher.mark_class') }}">
                         <i class="mdi mdi-notebook menu-icon"></i>
                         <span class="menu-title">{{ $labels['gradebook'] }}</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ request()->routeIs('teacher.student_follow_ups.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('teacher.student_follow_ups.index') }}">
+                        <i class="mdi mdi-account-check menu-icon"></i>
+                        <span class="menu-title">{{ __('student_follow_up.nav') }}</span>
                     </a>
                 </li>
             </ul>

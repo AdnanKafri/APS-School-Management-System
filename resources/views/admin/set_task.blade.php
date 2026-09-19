@@ -1,476 +1,224 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <link rel="stylesheet" href="{{ asset('students/css/bootstrap.min.css') }}">
-        <link rel="stylesheet" href="{{ asset('students/css/font-awesome.min.css') }}">
+@extends('admin.layouts.v2')
 
-    <style>
-        body {
-	font-family: 'Varela Round', sans-serif;
-}
-.modal-confirm {
-	color: #636363;
-	width: 400px;
-}
-.modal-confirm .modal-content {
-	padding: 20px;
-	border-radius: 5px;
-	border: none;
-	text-align: center;
-	font-size: 14px;
-}
-.modal-confirm .modal-header {
-	border-bottom: none;
-	position: relative;
-}
-.modal-confirm h4 {
-	text-align: center;
-	font-size: 26px;
-	margin: 30px 0 -10px;
-}
-.modal-confirm .close {
-	position: absolute;
-	top: -5px;
-	right: -2px;
-}
-.modal-confirm .modal-body {
-	color: #999;
-}
-.modal-confirm .modal-footer {
-	border: none;
-	text-align: center;
-	border-radius: 5px;
-	font-size: 13px;
-	padding: 10px 15px 25px;
-}
-.modal-confirm .modal-footer a {
-	color: #999;
-}
-.modal-confirm .icon-box {
-	width: 80px;
-	height: 80px;
-	margin: 0 auto;
-	border-radius: 50%;
-	z-index: 9;
-	text-align: center;
-	border: 3px solid #f15e5e;
-}
-.modal-confirm .icon-box i {
-	color: #f15e5e;
-	font-size: 46px;
-	display: inline-block;
-	margin-top: 13px;
-}
-.modal-confirm .btn, .modal-confirm .btn:active {
-	color: #fff;
-	border-radius: 4px;
-	background: #60c7c1;
-	text-decoration: none;
-	transition: all 0.4s;
-	line-height: normal;
-	min-width: 120px;
-	border: none;
-	min-height: 40px;
-	border-radius: 3px;
-	margin: 0 5px;
-}
-.modal-confirm .btn-secondary {
-	background: #c1c1c1;
-}
-.modal-confirm .btn-secondary:hover, .modal-confirm .btn-secondary:focus {
-	background: #a8a8a8;
-}
-.modal-confirm .btn-danger {
-	background: #f15e5e;
-}
-.modal-confirm .btn-danger:hover, .modal-confirm .btn-danger:focus {
-	background: #ee3535;
-}
-.trigger-btn {
-	display: inline-block;
-	margin: 100px auto;
-}
-    </style>
+@section('page_title', 'تحديد مهام المدرس')
+@section('page_subtitle', 'تكليف المواد والشعب للعام الدراسي الحالي')
+@section('body_class', 'teacher-assignment-v2')
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-</head>
-<body>
+@section('style')
+<style>
+    .teacher-assignment-v2 .assignment-shell { display: grid; gap: 1.25rem; direction: rtl; }
+    .teacher-assignment-v2 .assignment-card { border: 1px solid var(--v2-border); border-radius: 18px; box-shadow: 0 14px 32px rgba(36,30,62,.07); }
+    .teacher-assignment-v2 .assignment-card .card-body { padding: 1.5rem; }
+    .teacher-assignment-v2 .assignment-context { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+    .teacher-assignment-v2 .assignment-context__name { font-size: 1.25rem; font-weight: 800; color: var(--v2-text); }
+    .teacher-assignment-v2 .assignment-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .75rem; border-radius: 999px; background: rgba(91,75,138,.1); color: var(--v2-primary); font-weight: 700; }
+    .teacher-assignment-v2 .assignment-notice { margin: 0; border-radius: 12px; line-height: 1.8; }
+    .teacher-assignment-v2 .assignment-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto; gap: 1rem; align-items: end; padding: 1rem; border: 1px solid var(--v2-border); border-radius: 14px; background: #fcfbff; }
+    .teacher-assignment-v2 .assignment-row__field { min-width: 0; }
+    .teacher-assignment-v2 .assignment-row label { display: block; margin-bottom: .45rem; color: var(--v2-text); font-weight: 700; }
+    .teacher-assignment-v2 .assignment-row .form-control { min-height: 44px; border-color: #dcd9e8; border-radius: 10px; }
+    .teacher-assignment-v2 .assignment-row .form-control:focus { border-color: var(--v2-primary); box-shadow: 0 0 0 .18rem rgba(91,75,138,.12); }
+    .teacher-assignment-v2 .assignment-row__hint { margin: .45rem 0 0; color: var(--v2-muted); font-size: .82rem; line-height: 1.6; }
+    .teacher-assignment-v2 .assignment-row__remove { min-width: 44px; min-height: 44px; border-radius: 10px; }
+    .teacher-assignment-v2 .assignment-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; margin-top: 1.25rem; }
+    .teacher-assignment-v2 .assignment-existing { margin: 0; padding-right: 1.15rem; color: var(--v2-muted); }
+    .teacher-assignment-v2 .assignment-existing li { margin-bottom: .45rem; }
+    .teacher-assignment-v2 .assignment-feedback { margin-top: .55rem; color: #b42318; font-size: .85rem; font-weight: 700; }
+    @media (max-width: 991px) { .teacher-assignment-v2 .assignment-row { grid-template-columns: 1fr; } .teacher-assignment-v2 .assignment-row__remove { width: 100%; } }
+</style>
+@endsection
 
+@section('breadcrumbs')
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">لوحة التحكم</a>
+    <span class="breadcrumbs__sep" aria-hidden="true">/</span>
+    <a href="{{ route('teachers') }}" class="breadcrumbs__item">المدرسون</a>
+    <span class="breadcrumbs__sep" aria-hidden="true">/</span>
+    <span class="breadcrumbs__item is-active">تحديد مهام المدرس</span>
+</nav>
+@endsection
 
-    <div class="container">
-        <div class="row">
-
-            <div class="col-md-12">
-                <h3 class="text-center">تحديد المهام</h3>
+@section('content')
+<div class="assignment-shell">
+    <section class="card v2-card assignment-card">
+        <div class="card-body">
+            <div class="assignment-context">
+                <span class="assignment-context__name">{{ $teacher->first_name }} {{ $teacher->last_name }}</span>
+                <span class="assignment-badge"><i class="fas fa-calendar-alt"></i> العام الدراسي الحالي: {{ $year->name }}</span>
             </div>
+        </div>
+    </section>
 
-            <div class="col-md-12">
-                <form action="{{ route('teacher.store_set_task') }}" method="post"  enctype="multipart/form-data" >
-                @csrf
-                    <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
+    <section class="card v2-card assignment-card">
+        <div class="card-body">
+            <p class="alert alert-warning assignment-notice">
+                <strong>تنبيه:</strong> الحفظ يعتمد القائمة الكاملة أدناه لتكليفات هذا المدرس في العام الدراسي الحالي فقط. أي تكليف حالي لا يظهر في هذه القائمة سيتم إزالته، أما تكليفات الأعوام السابقة فلن تتغير.
+            </p>
 
-                <div style="">
-                    <div class="form-group" style="text-align:right">
-                        <label>الصف</label>
-
-                        <select name="class_id[]" id="classes" class="form-control classes dep"
-                            style="min-height: 36px;direction: rtl" required>
-                            <option value="">اختر الصف الدراسي</option>
-
-                        @foreach ($classes as $class)
-
-                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+            @php($formErrors = $errors ?? session('errors'))
+            @if($formErrors && $formErrors->any())
+                <div class="alert alert-danger mt-3 mb-0">
+                    <ul class="mb-0 pr-3">
+                        @foreach($formErrors->all() as $error)
+                            <li>{{ $error }}</li>
                         @endforeach
-
-                        </select>
-
-                    </div>
-                    <div class="form-group class_lessons" id="" style="text-align:right">
-
-
-
-                            </div>
-                            <div class="form-group class_rooms" style="text-align:right">
-
-                            </div>
-
-
-                            <div class="form-group mydiv" id="mydiv" style="text-align:right">
-
-
-
-                            </div>
-
-
-
+                    </ul>
                 </div>
+            @endif
 
-                <span style="cursor: pointer" class="hvr-sweep-to-top btn btn-primary btn-block  add_new_work_experiences hover" href="">اضافة مهمة جديدة</span>
+            <form id="teacher-assignment-form" method="POST" action="{{ route('teacher.store_set_task') }}" class="mt-3" novalidate>
+                @csrf
+                <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
 
+                <div id="assignment-rows"></div>
 
-            <br><br><br>
-
-            <button id="confirm1" hidden>حفظ</button>
-
-            <div class="text-center">
-                <!-- Button HTML (to Trigger Modal) -->
-                <a href="#myModal" class="trigger-btn btn btn-success"data-toggle="modal">حفظ</a>
-            </div>
-
+                <div class="assignment-actions">
+                    <button type="button" id="add-assignment-row" class="btn btn-outline-primary"><i class="fas fa-plus ml-1"></i> إضافة مادة أو شعبة</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save ml-1"></i> حفظ التكليفات</button>
+                </div>
             </form>
-
-            </div>
         </div>
+    </section>
+
+    @if($currentAssignments->isNotEmpty())
+        <section class="card v2-card assignment-card">
+            <div class="card-body">
+                <h3 class="h5 font-weight-bold mb-3">التكليفات الحالية</h3>
+                <ul class="assignment-existing">
+                    @foreach($currentAssignments as $assignment)
+                        <li>{{ optional($assignment->lesson)->name ?? 'مادة غير متاحة' }} — {{ $assignment->room_name ?? 'شعبة غير متاحة' }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </section>
+    @endif
+</div>
+
+<template id="assignment-row-template">
+    <div class="assignment-row">
+        <div class="assignment-row__field">
+            <label>الصف</label>
+            <select name="class_id[]" class="form-control js-assignment-class" required>
+                <option value="">اختر الصف الدراسي</option>
+                @foreach($classes as $class)
+                    <option value="{{ $class->id }}">{{ $class->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="assignment-row__field js-lesson-field">
+            <label>المادة الدراسية</label>
+            <select class="form-control" disabled><option>اختر الصف أولاً</option></select>
+        </div>
+        <div class="assignment-row__field js-room-field">
+            <label>الشعبة</label>
+            <select class="form-control" disabled><option>اختر الصف أولاً</option></select>
+        </div>
+        <button type="button" class="btn btn-outline-danger assignment-row__remove js-remove-assignment" title="إزالة"><i class="fas fa-times"></i><span class="sr-only">إزالة</span></button>
     </div>
+</template>
+@endsection
 
-
-
-
-        <!-- Modal HTML -->
-        <div id="myModal" class="modal fade">
-            <div class="modal-dialog modal-confirm" style="">
-                <div class="modal-content">
-                    <div class="modal-header flex-column">
-                        <div class="icon-box" style="border-color: green !important">
-                            <div class="icon-preview col s6 m3"><i class="material-icons dp48" style="color: green">done</i><span></span></div>                        </div>
-                        <h4 class="modal-title w-100">هل أنت متأكد ؟</h4>
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>هل حقاً تريد تحديد هذه المهام للمدرس</p>
-                    </div>
-                    <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">الغاء</button>
-                        <button type="button" id="ok" class="btn btn-success">تأكيد</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </body>
-        </html>
-
-
-
-    <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
-
-<script src="{{ asset('students/js/bootstrap.min.js') }}"></script>
-
-
-
+@section('js')
 <script>
-
-    $(document).ready(function () {
-
-
-
-$('#ok').click(function(){
-     /* when the submit button in the modal is clicked, submit the form */
-    $('#confirm1').click();
-});
-
-
-
-
-        $('#search_teacher').on('keyup',function(){
-
-            var search_teacher = $(this).val();
-            var url = "{{ URL::to('SMARMANger/admin/teachers/teacher_filter') }}";
-            $.ajax({
-                url: url,
-                type: "get",
-                contentType: 'application/json',
-                data:{
-
-    teacher_now:search_teacher,
-
-    },
-                success: function (data) {
-
-                    $('#mydiv').empty();
-    var type="";
-
-                    $.each(data, function (key, value) {
-    console.log(data);
-                        type += `
-
-                        <tr>
-                        <th scope="row">
-                            ${value.id}
-                        </th>
-                        <td class="budget">
-                        ${value.first_name}
-
-                      </td>
-
-                      <td class="budget">
-                        ${value.last_name}
-
-                      </td>
-
-
-                      <td class="budget">
-                        ${value.age}
-
-                      </td>
-
-                      <td class="budget">
-                        ${value.address}
-
-                      </td>
-
-                      <td class="budget">
-                        ${value.phone}
-
-                      </td>
-
-                      <td>
-                          <div class="avatar-group">
-                            <a href="#" class="avatar avatar-sm rounded-circle" data-toggle="tooltip" data-original-title="Ryan Tompson">
-                              <img alt="Image placeholder" src="{{asset('assets/img/theme/team-1.jpg')}}">
-                            </a>
-
-                          </div>
-                        </td>
-
-
-
-                      <td class="text-right">
-                          <div class="dropdown">
-                            <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                              <i class="fas fa-ellipsis-v"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow ">
-                            <a href=".deleteEmployeeModal" class=" dropdown-item" data-toggle="modal"
-                                        data-id="${value.id}"><i class="material-iconsni ni ni-fat-remove" data-toggle="tooltip"
-                                            title="Delete">&#xE872; Delete</i></a>
-                              <a class="dropdown-item" href="#">Another action</a>
-                              <a class="dropdown-item" href="#">Something else here</a>
-                            </div>
-                          </div>
-
-
-
-                        </td>
-
-                      </tr>
-
-                          `;
-
-                    });
-
-
-                    $('#mydiv').append(type);
-
-                },
-                error: function (xhr) {
-
-                }
-
-            });
-        });
-
-
-
-
-        $('.delete').on('click', function () {
-            var id = $(this).data('id');
-            var url = "{{URL::to('SMARMANger/admin/students')}}";
-            $('#form_delete').attr("action", url);
-
-
-        });
-
-
-
-        $(document).on('click' , '.deldiv' , function () {
-
-            $(this).parent().remove();
-        });
-
-
-        $(document).on('click' , '.add_new_work_experiences' , function () {
-
-        var type=`
-            <div style="border:1px solid #aaa; padding:10px; text-align:right">
-                <div class="deldiv" style=" text-align:right;color:red">
-            <i class="fa fa-window-close fa-3x " style="cursor:pointer" title="الغاء" aria-hidden="true"></i>
-        </div>
-                <h1>صف جديد</h1>
-
-                                     <div class="form-group" style="text-align:right">
-                                        <label>الصف</label>
-
-                                        <select name="class_id[]" id="classes" class="form-control classes dep"
-                                            style="min-height: 36px;direction: rtl">
-                                            <option value="">اختر الصف الدراسي</option>
-
-                                        @foreach ($classes as $class)
-
-                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                        @endforeach
-
-                                        </select>
-
-                                    </div>
-                                    <div class="form-group class_lessons" id=""  style="text-align:right">
-
-
-
-                                            </div>
-                                            <div class="form-group class_rooms" id=""  style="text-align:right">
-
-
-
-                                            </div>
-
-                                            </div>
-        `;
-
-        $(this).prev().append(type);
-
-
-
-
-
-    });
-
-
-    $(document).on('change', '.classes', function () {
-            var class_id = $(this).val();
-            var url = "{{ URL::to('classes/teacher_lessons') }}/" + class_id ;
-            $(this).addClass('x');
-
-            $.ajax({
-                url: url,
-                type: "get",
-                contentType: 'application/json',
-                success: function (data) {
-                    var type = `
-                    <label>المادة الدراسية</label>
-
-                    <select name="lesson_id[]" id="" class="form-control lessons dep"
-                        style="min-height: 36px;direction:rtl"  required>
-                        <option value="">اختر المواد الدراسية</option>
-
-                        `;
-
-                    $.each(data, function (key, value) {
-                        type += `<option value="${value.id}">${value.name}</option>`;
-                    });
-
-                    type+=`</select>`;
-                    $('.x').parent().nextAll('.class_lessons').empty();
-
-                    $('.x').parent().nextAll('.class_lessons').append(type);
-                    $('.x').removeClass('x');
-
-
-                },
-                error: function (xhr) {
-
-                }
-
-            });
-        });
-
-
-        $(document).on('change', '.classes', function () {
-
-            var class_id = $(this).val();
-            var url = "{{ URL::to('classes/rooms') }}/" + class_id ;
-            var type="";
-       $(this).addClass('w');
-            $.ajax({
-                url: url,
-                type: "get",
-                contentType: 'application/json',
-                success: function (data)  {
-        console.log(data);
-        $('#class_rooms').empty();
-         type+= `
-        <label>الشعبة</label>
-
-        <select name="room_id[][]" id="" class="form-control rooms dep"
-            style="min-height: 36px;direction:rtl" multiple required>`;
-            if (data.length != 0) {
-                type+=`<option value="0">كافة الشعب</option>`;
-            }
-
-                    $.each(data, function (key, value) {
-                        type += `<option value="${value.id}">${value.name}</option>`;
-                    });
-                    type+=`</select>`;
-
-                    $('.w').parent().nextAll("div.class_rooms").empty();
-                    $('.w').parent().nextAll("div.class_rooms").append(type);
-                    $('.w').removeClass('w');
-                },
-
-                error: function (xhr) {
-
-                }
-
-            });
-        })
-
-        $(document).on('change', '.lessons', function () {
-
-            var lesson_id = $(this).val();
-            var a="room_id"+"["+lesson_id+"]"+"[]";
-            $(this).parent().next().find('.rooms').attr('name',a);
-            $(this).parent().next().find('.lesson_arr').val(lesson_id);
-
+(function ($) {
+    var lessonsUrlTemplate = @json(route('teacher_lessons', ['class_id' => '__class_id__']));
+    var roomsUrlTemplate = @json(route('rooms', ['class_id' => '__class_id__']));
+    var rows = $('#assignment-rows');
+    var template = document.getElementById('assignment-row-template');
+
+    function option(value, label) {
+        return $('<option>').val(value).text(label);
+    }
+
+    function addRow() {
+        var fragment = document.importNode(template.content, true);
+        rows.append(fragment);
+        updateRemoveButtons();
+    }
+
+    function updateRemoveButtons() {
+        rows.find('.js-remove-assignment').prop('disabled', rows.find('.assignment-row').length === 1);
+    }
+
+    function setFieldMessage(field, message) {
+        field.find('.assignment-feedback').remove();
+        field.append($('<div class="assignment-feedback">').text(message));
+    }
+
+    rows.on('change', '.js-assignment-class', function () {
+        var classSelect = $(this);
+        var row = classSelect.closest('.assignment-row');
+        var lessonField = row.find('.js-lesson-field');
+        var roomField = row.find('.js-room-field');
+        var classId = classSelect.val();
+
+        lessonField.html('<label>المادة الدراسية</label><select class="form-control" disabled><option>جارٍ تحميل المواد...</option></select>');
+        roomField.html('<label>الشعبة</label><select class="form-control" disabled><option>جارٍ تحميل الشعب...</option></select>');
+        if (!classId) {
+            lessonField.html('<label>المادة الدراسية</label><select class="form-control" disabled><option>اختر الصف أولاً</option></select>');
+            roomField.html('<label>الشعبة</label><select class="form-control" disabled><option>اختر الصف أولاً</option></select>');
+            return;
+        }
+
+        $.when(
+            $.getJSON(lessonsUrlTemplate.replace('__class_id__', encodeURIComponent(classId))),
+            $.getJSON(roomsUrlTemplate.replace('__class_id__', encodeURIComponent(classId)))
+        ).done(function (lessonsResponse, roomsResponse) {
+            var lessons = lessonsResponse[0] || [];
+            var roomsData = roomsResponse[0] || [];
+            var lessonSelect = $('<select class="form-control js-assignment-lesson" required>').append(option('', lessons.length ? 'اختر المادة الدراسية' : 'لا توجد مواد لهذا الصف'));
+            var roomSelect = $('<select class="form-control js-assignment-room" multiple required>').append(option('', roomsData.length ? 'اختر الشعبة أو الشعب' : 'لا توجد شعب مجهزة لهذا الصف'));
+
+            lessons.forEach(function (lesson) { lessonSelect.append(option(lesson.id, lesson.name)); });
+            if (roomsData.length) { roomSelect.append(option('0', 'كافة الشعب')); }
+            roomsData.forEach(function (room) { roomSelect.append(option(room.id, room.name)); });
+
+            lessonField.html('<label>المادة الدراسية</label>').append(lessonSelect);
+            roomField.html('<label>الشعبة</label>').append(roomSelect);
+            if (!lessons.length) { setFieldMessage(lessonField, 'لا توجد مواد مرتبطة بهذا الصف.'); }
+            if (!roomsData.length) { setFieldMessage(roomField, 'لا توجد شعب مجهزة لهذا الصف في العام الدراسي الحالي.'); }
+        }).fail(function () {
+            lessonField.html('<label>المادة الدراسية</label><select class="form-control" disabled><option>تعذر تحميل المواد</option></select>');
+            roomField.html('<label>الشعبة</label><select class="form-control" disabled><option>تعذر تحميل الشعب</option></select>');
+            setFieldMessage(roomField, 'تعذر تحميل البيانات. يرجى تحديث الصفحة والمحاولة مجدداً.');
         });
     });
-    </script>
 
-</body>
-</html>
+    rows.on('change', '.js-assignment-lesson', function () {
+        var row = $(this).closest('.assignment-row');
+        var roomSelect = row.find('.js-assignment-room');
+        var lessonId = $(this).val();
+        roomSelect.removeAttr('name');
+        if (lessonId) {
+            roomSelect.attr('name', 'room_id[' + lessonId + '][]');
+        }
+    });
+
+    rows.on('change', '.js-assignment-room', function () {
+        var values = $(this).val() || [];
+        if (values.indexOf('0') !== -1 && values.length > 1) {
+            $(this).val(['0']);
+        }
+    });
+
+    $('#add-assignment-row').on('click', addRow);
+    rows.on('click', '.js-remove-assignment', function () {
+        $(this).closest('.assignment-row').remove();
+        updateRemoveButtons();
+    });
+
+    $('#teacher-assignment-form').on('submit', function (event) {
+        if (!this.checkValidity()) {
+            event.preventDefault();
+            this.reportValidity();
+            return;
+        }
+        if (!window.confirm('سيتم حفظ القائمة الحالية كتَكليفات المدرس للعام الدراسي الحالي. هل تريد المتابعة؟')) {
+            event.preventDefault();
+        }
+    });
+
+    addRow();
+})(jQuery);
+</script>
+@endsection

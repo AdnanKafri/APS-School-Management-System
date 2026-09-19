@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Routing\Events\RouteMatched;
 use ReflectionClass;
 use App\Services\AdminComplaintNotificationService;
+use App\Observers\TeacherRoomLessonObserver;
+use App\Teacher_room_lesson;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Teacher_room_lesson::observe(TeacherRoomLessonObserver::class);
+
         view()->composer('admin.layouts.v2', function ($view) {
             $admin = auth()->user();
             $summary = app(AdminComplaintNotificationService::class)->summaryFor($admin);

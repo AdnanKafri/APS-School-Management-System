@@ -19,6 +19,7 @@ use App\Job;
 use App\Room;
 use App\Year;
 use App\Lesson;
+use App\Base_subjects;
 use App\Message;
 use App\Teacher_event;
 use App\Inside_slider;
@@ -1292,61 +1293,29 @@ if($request->hasFile('image')){
 
  public function set_task($teacher_id) {
 
-     $teacher=Teacher::find($teacher_id);
-     $classes=Classe::all();
-    return view('admin.set_task',compact('teacher','classes'));
- }
+     $teacher = Teacher::findOrFail($teacher_id);
+     $classes = Classe::orderBy('name')->get();
+     $year = Year::where('current_year', '1')->firstOrFail();
+     $currentAssignments = Teacher_room_lesson::with('lesson')
+         ->where('teacher_id', $teacher->id)
+         ->where('year_id', $year->id)
+         ->get();
+     $rooms = Room::whereIn('id', $currentAssignments->pluck('room_id'))
+         ->get()
+         ->keyBy('id');
+
+     foreach ($currentAssignments as $assignment) {
+         $assignment->room_name = optional($rooms->get($assignment->room_id))->name;
+     }
+
+    return view('admin.set_task', compact('teacher', 'classes', 'year', 'currentAssignments'));
+  }
 
 public function store_set_task(Request $request){
+    $context = $this->validatedTeacherAssignmentPlan($request);
+    $this->syncTeacherAssignmentPlan($context['teacher'], $context['year'], $context['assignments']);
 
-    $year = Year:: where('current_year','1')->first();
-
-
-Teacher_room_lesson::where('teacher_id',$request->teacher_id)->where('year_id',$year->id)->delete();
-$teacher = Teacher :: find($request->teacher_id);
-
-
-foreach ($request->room_id as $key => $value) {
-
-    foreach ($value as $item) {
-        if ($item == 0) {
-            $class_id=Lesson::where('id',$key)->first()->classes->id;
-            $rooms=Classe::find($class_id)->room()->where('rooms.year_id',$year->id)->get();
-            foreach ($rooms as $room) {
-                $teacher_room_lesson=new  Teacher_room_lesson;
-
-                $teacher_room_lesson->teacher_id=$teacher->id;
-                $teacher_room_lesson->class_id=$class_id;
-                $teacher_room_lesson->year_id=$year->id;
-                $teacher_room_lesson->room_id=$room->id;
-                $teacher_room_lesson->lesson_id=$key;
-                $teacher_room_lesson->save();
-
-            }
-
-
-break;
-
-
-        }
-        else {
-
-            $teacher_room_lesson=new  Teacher_room_lesson;
-
-            $teacher_room_lesson->teacher_id=$teacher->id;
-            $teacher_room_lesson->class_id=Room::find($item)->classes->id;
-            $teacher_room_lesson->year_id=$year->id;
-            $teacher_room_lesson->room_id=$item;
-            $teacher_room_lesson->lesson_id=$key;
-            $teacher_room_lesson->save();
-
-        }
-
-    }
-
-}
-
-return redirect()->back()->with('success','! تمت العملية بنجاح');
+return redirect()->back()->with('success', __('teacher_assignment.messages.saved'));
 }
 
 public function edit_task($teacher_id) {
@@ -1366,62 +1335,124 @@ return redirect()->back()->with('warning','لا يوجد مهمات حتى ال�
 
 
 public function update_set_task(Request $request){
-    $year = Year:: where('current_year','1')->first();
+    $context = $this->validatedTeacherAssignmentPlan($request);
+    $this->syncTeacherAssignmentPlan($context['teacher'], $context['year'], $context['assignments']);
 
-
-    if($request->has('class_id')!='1') {
-
-
-
-        return redirect(route('admin.teacher.set_task',$request->teacher_id));
-    }
-
-
-Teacher_room_lesson::where('teacher_id',$request->teacher_id)->where('year_id',$year->id)->delete();
-$teacher = Teacher::find($request->teacher_id);
-
-foreach ($request->room_id as $key => $value) {
-
-    foreach ($value as $item) {
-        if ($item == 0) {
-            $class_id=Lesson::where('id',$key)->first()->classes->id;
-            $rooms=Classe::find($class_id)->room()->where('rooms.year_id',$year->id)->get();
-
-            foreach ($rooms as $room) {
-                $teacher_room_lesson=new  Teacher_room_lesson;
-
-                $teacher_room_lesson->teacher_id=$teacher->id;
-                $teacher_room_lesson->class_id=$class_id;
-                $teacher_room_lesson->year_id=$year->id;
-                $teacher_room_lesson->room_id=$room->id;
-                $teacher_room_lesson->lesson_id=$key;
-                $teacher_room_lesson->save();
-
-            }
-
-
-break;
-
-
-        }
-        else {
-
-            $teacher_room_lesson=new  Teacher_room_lesson;
-
-            $teacher_room_lesson->teacher_id=$teacher->id;
-            $teacher_room_lesson->class_id=Room::find($item)->classes->id;
-            $teacher_room_lesson->year_id=$year->id;
-            $teacher_room_lesson->room_id=$item;
-            $teacher_room_lesson->lesson_id=$key;
-            $teacher_room_lesson->save();
-
-        }
-
-    }
-
+return redirect()->back()->with('success', __('teacher_assignment.messages.saved'));
 }
 
-return redirect()->back()->with('success','! تمت العملية بنجاح');
+private function validatedTeacherAssignmentPlan(Request $request)
+{
+    $validated = $request->validate([
+        'teacher_id' => ['required', 'integer', 'exists:teachers,id'],
+        'class_id' => ['required', 'array', 'min:1'],
+        'class_id.*' => ['required', 'integer', 'exists:classes,id'],
+        'room_id' => ['required', 'array', 'min:1'],
+        'room_id.*' => ['required', 'array', 'min:1'],
+        'room_id.*.*' => ['required', 'integer'],
+    ], [
+        'teacher_id.required' => __('teacher_assignment.validation.teacher_required'),
+        'class_id.required' => __('teacher_assignment.validation.class_required'),
+        'class_id.array' => __('teacher_assignment.validation.class_required'),
+        'class_id.min' => __('teacher_assignment.validation.class_required'),
+        'room_id.required' => __('teacher_assignment.validation.lesson_room_required'),
+        'room_id.array' => __('teacher_assignment.validation.lesson_room_required'),
+        'room_id.min' => __('teacher_assignment.validation.lesson_room_required'),
+    ]);
+
+    $year = Year::where('current_year', '1')->firstOrFail();
+    $teacher = Teacher::findOrFail($validated['teacher_id']);
+    $selectedClassIds = collect($validated['class_id'])->map(function ($classId) {
+        return (int) $classId;
+    })->all();
+    $assignments = [];
+
+    foreach ($validated['room_id'] as $lessonId => $roomIds) {
+        $lesson = Lesson::find($lessonId);
+        if (!$lesson || !in_array((int) $lesson->class_id, $selectedClassIds, true)) {
+            throw ValidationException::withMessages([
+                'room_id' => __('teacher_assignment.validation.lesson_class_mismatch'),
+            ]);
+        }
+
+        $roomIds = collect($roomIds)->map(function ($roomId) {
+            return (int) $roomId;
+        })->unique()->values();
+
+        if ($roomIds->contains(0)) {
+            if ($roomIds->count() !== 1) {
+                throw ValidationException::withMessages([
+                    'room_id' => __('teacher_assignment.validation.all_sections_exclusive'),
+                ]);
+            }
+
+            $rooms = Room::where('class_id', $lesson->class_id)
+                ->where('year_id', $year->id)
+                ->get();
+        } else {
+            $rooms = Room::whereIn('id', $roomIds)
+                ->where('class_id', $lesson->class_id)
+                ->where('year_id', $year->id)
+                ->get();
+
+            if ($rooms->count() !== $roomIds->count()) {
+                throw ValidationException::withMessages([
+                    'room_id' => __('teacher_assignment.validation.room_context_invalid'),
+                ]);
+            }
+        }
+
+        if ($rooms->isEmpty()) {
+            throw ValidationException::withMessages([
+                'room_id' => __('teacher_assignment.validation.no_sections'),
+            ]);
+        }
+
+        foreach ($rooms as $room) {
+            $assignments[$lesson->id . ':' . $room->id] = [
+                'teacher_id' => $teacher->id,
+                'class_id' => $lesson->class_id,
+                'year_id' => $year->id,
+                'room_id' => $room->id,
+                'lesson_id' => $lesson->id,
+            ];
+        }
+    }
+
+    if (empty($assignments)) {
+        throw ValidationException::withMessages([
+            'room_id' => __('teacher_assignment.validation.lesson_room_required'),
+        ]);
+    }
+
+    return compact('teacher', 'year', 'assignments');
+}
+
+private function syncTeacherAssignmentPlan(Teacher $teacher, Year $year, array $assignments)
+{
+    DB::transaction(function () use ($teacher, $year, $assignments) {
+        $existing = Teacher_room_lesson::where('teacher_id', $teacher->id)
+            ->where('year_id', $year->id)
+            ->lockForUpdate()
+            ->get();
+        $retained = [];
+
+        foreach ($existing as $assignment) {
+            $key = $assignment->lesson_id . ':' . $assignment->room_id;
+            if (!isset($assignments[$key]) || isset($retained[$key])) {
+                $assignment->delete();
+                continue;
+            }
+
+            $retained[$key] = true;
+        }
+
+        foreach ($assignments as $key => $assignment) {
+            if (!isset($retained[$key])) {
+                Teacher_room_lesson::create($assignment);
+            }
+        }
+    });
 }
 
 

@@ -1074,6 +1074,12 @@ var table_test = $('#table_xx').DataTable({
                                 <i class="fa fa-table fa-x"></i>
                             </a>
 
+                            @can('set_task')
+                            <a href="{{ url('SMT/admin/teacher/set_task') }}/${full.id}" class="teacher-action-btn btn btn-success btn-sm" title="تحديد المهام" aria-label="تحديد المهام">
+                                <i class="fa fa-tasks fa-x"></i>
+                            </a>
+                            @endcan
+
                             @can('update_teacher')
                             <a data-id="${ full.id }" data-data='${ JSON.stringify(full) }' class="edit_teacher teacher-action-btn btn btn-info btn-sm" href="{{ url('SMT/admin/teacher_details') }}/${full.id}" title="تعديل معلومات المدرس">
                                 <i class="fa fa-eye fa-x"></i>

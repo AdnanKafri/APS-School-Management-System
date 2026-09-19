@@ -289,6 +289,17 @@
         border: 1px dashed rgba(140, 150, 171, 0.35);
     }
 
+    .teacher-schedule-v2 .teacher-schedule-empty {
+        margin: 0;
+        padding: 2.25rem 1.5rem;
+        border: 1px dashed rgba(91, 75, 138, .28);
+        border-radius: 16px;
+        color: #6e6880;
+        text-align: center;
+        background: #fbfaff;
+        font-weight: 700;
+    }
+
     .teacher-schedule-v2 .uuu1,
     .teacher-schedule-v2 .uuu2,
     .teacher-schedule-v2 .uuu3,
@@ -485,15 +496,14 @@
                         ->keys()
                         ->first();
 
-                    $instructionLectureTimes = $lecture_times
-                        ->when($primaryRoomId, function ($collection) use ($primaryRoomId) {
-                            return $collection->where('room_id', $primaryRoomId);
-                        })
-                        ->where('type', 1)
-                        ->sortBy(function ($lectureTime) {
-                            return sprintf('%s|%s|%06d', $lectureTime->start_time, $lectureTime->end_time, $lectureTime->id);
-                        })
-                        ->values();
+                    $instructionLectureTimes = $primaryRoomId
+                        ? $lecture_times->where('room_id', $primaryRoomId)
+                            ->where('type', 1)
+                            ->sortBy(function ($lectureTime) {
+                                return sprintf('%s|%s|%06d', $lectureTime->start_time, $lectureTime->end_time, $lectureTime->id);
+                            })
+                            ->values()
+                        : collect();
 
                     $lessonLabels = [
                         'الحصة الأولى',
@@ -505,6 +515,9 @@
                         'الحصة السابعة',
                     ];
                 @endphp
+                @if($instructionLectureTimes->isEmpty())
+                    <p class="teacher-schedule-empty">لا يوجد جدول حصص مسجل لهذا المدرس في العام الدراسي الحالي.</p>
+                @else
                 <table class="table teacher-timetable" style="direction: rtl !important; text-align: center !important;">
                     <thead>
                         <tr>
@@ -547,6 +560,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                @endif
             </div>
         </div>
     </div>
