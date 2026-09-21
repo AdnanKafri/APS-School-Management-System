@@ -250,7 +250,7 @@
         <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div class="navbar-menu-wrapper d-flex align-items-center">
                 <div class="teacher-topbar__start">
-                    <button class="navbar-toggler align-self-center teacher-topbar__toggle d-none d-lg-inline-flex" type="button" data-toggle="minimize" aria-label="{{ $labels['toggle_sidebar'] }}">
+                    <button class="navbar-toggler align-self-center teacher-topbar__toggle d-none d-lg-inline-flex" type="button" data-toggle="teacher-minimize" aria-label="{{ $labels['toggle_sidebar'] }}" aria-expanded="true">
                         <span class="mdi mdi-menu-open"></span>
                     </button>
                     <button class="navbar-toggler navbar-toggler-right align-self-center teacher-topbar__toggle d-lg-none" type="button" data-toggle="offcanvas" aria-label="{{ $labels['open_menu'] }}">
@@ -325,6 +325,17 @@
 
             $(document).on('click', '[data-toggle="offcanvas"]', function () {
                 window.setTimeout(syncMobileSidebar, 0);
+            });
+
+            // Keep the desktop control in this layout, where the RTL offsets are defined.
+            $(document).on('click', '[data-toggle="teacher-minimize"]', function (event) {
+                event.preventDefault();
+                if ($body.hasClass('sidebar-toggle-display') || $body.hasClass('sidebar-absolute')) {
+                    $body.toggleClass('sidebar-hidden');
+                } else {
+                    $body.toggleClass('sidebar-icon-only');
+                }
+                $(this).attr('aria-expanded', (!$body.hasClass('sidebar-icon-only') && !$body.hasClass('sidebar-hidden')).toString());
             });
 
             $backdrop.on('click', closeMobileSidebar);

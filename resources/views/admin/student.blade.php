@@ -1754,6 +1754,13 @@ $about = \App\Other::find(1);
 @can('students')
 <div class="modal fade" id="archiveStudentModal" tabindex="-1" role="dialog" aria-hidden="true">
  <div class="modal-dialog modal-dialog-centered"><form method="post" action="{{ route('admin.students.lifecycle_archive_action') }}" class="modal-content" dir="rtl">@csrf
+  <input type="hidden" name="return_context" value="students">
+  <input type="hidden" name="list_class_id" id="archive-list-class-id">
+  <input type="hidden" name="list_room_id" id="archive-list-room-id">
+  <input type="hidden" name="list_stage_id" id="archive-list-stage-id">
+  <input type="hidden" name="list_search" id="archive-list-search">
+  <input type="hidden" name="list_start" id="archive-list-start">
+  <input type="hidden" name="list_length" id="archive-list-length">
   <div class="modal-header"><h5 class="modal-title">&#1571;&#1585;&#1588;&#1610;&#1601; &#1575;&#1604;&#1591;&#1575;&#1604;&#1576; <span id="archive-student-name"></span></h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
   <div class="modal-body"><input type="hidden" name="student_id" id="archive-student-id"><p class="text-muted">&#1587;&#1610;&#1578;&#1605; &#1573;&#1610;&#1602;&#1575;&#1601; &#1575;&#1604;&#1591;&#1605;&#1604;&#1610;&#1575;&#1578; &#1575;&#1604;&#1581;&#1575;&#1604;&#1610;&#1577; &#1605;&#1593; &#1575;&#1604;&#1581;&#1601;&#1575;&#1592; &#1593;&#1604;&#1609; &#1575;&#1604;&#1581;&#1587;&#1575;&#1576; &#1608;&#1575;&#1604;&#1587;&#1580;&#1604;.</p><textarea name="reason" class="form-control" required placeholder="&#1587;&#1576;&#1576; &#1575;&#1604;&#1571;&#1585;&#1588;&#1601;&#1577;"></textarea></div>
   <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">&#1573;&#1604;&#1594;&#1575;&#1569;</button><button class="btn btn-warning">&#1571;&#1585;&#1588;&#1601;&#1577;</button></div>
@@ -1858,11 +1865,39 @@ $(document).on('click', '.archive-student', function () {
     $('#archiveStudentModal .modal-body p').text(@json(__('student_lifecycle.ui.archive_explanation')));
 });
 
+function captureStudentListContext() {
+    $('#archive-list-class-id').val($('#class_id_filter').val() || '');
+    $('#archive-list-room-id').val($('#room_id_filter').val() || '');
+    $('#archive-list-stage-id').val($('#stage_id_filter').val() || '');
+
+    if (typeof table_test !== 'undefined' && table_test.search) {
+        $('#archive-list-search').val(table_test.search() || '');
+        var pageInfo = table_test.page.info();
+        $('#archive-list-start').val(pageInfo.start || 0);
+        $('#archive-list-length').val(pageInfo.length || 10);
+    }
+}
+
+$(document).on('submit', '#archiveStudentModal form', captureStudentListContext);
+
     var i=0;
     var v=0;
 var x=[];
 var obj ={ };
 var obj1={ };
+@php
+$studentListContext = [
+    'class_id' => request('list_class_id'),
+    'room_id' => request('list_room_id'),
+    'stage_id' => request('list_stage_id'),
+    'search' => request('list_search'),
+    'start' => request('list_start'),
+    'length' => request('list_length'),
+];
+@endphp
+var studentListContext = @json($studentListContext);
+var restoringStudentListContext = false;
+var restoredStudentListRoomId = null;
 
 console.log(obj);
 if($('#hidden_student_phone').val()==1){
@@ -1873,7 +1908,8 @@ if($('#hidden_student_phone').val()==1){
             sProcessing: "<h1>Proccessing</h1>"
         },
         serverSide: true,
-        "pageLength": 10,
+        "pageLength": parseInt(studentListContext.length || 10, 10),
+        "displayStart": parseInt(studentListContext.start || 0, 10),
         "ajax": {
             "type": "GET",
             "url": "{{ route('getstudents') }}",
@@ -2028,6 +2064,12 @@ if($('#hidden_student_phone').val()==1){
             },
 
         ],
+        drawCallback: function () {
+            var info = this.api().page.info();
+            if (info.start > 0 && info.recordsDisplay === 0) {
+                this.api().page('previous').draw('page');
+            }
+        },
         // dom: 'Bfrtip',
         buttons: [
 
@@ -2046,7 +2088,8 @@ else{
             sProcessing: "<h1>Proccessing</h1>"
         },
         serverSide: true,
-        "pageLength": 10,
+        "pageLength": parseInt(studentListContext.length || 10, 10),
+        "displayStart": parseInt(studentListContext.start || 0, 10),
         "ajax": {
             "type": "GET",
             "url": "{{ route('getstudents') }}",
@@ -2194,6 +2237,12 @@ else{
             },
 
         ],
+        drawCallback: function () {
+            var info = this.api().page.info();
+            if (info.start > 0 && info.recordsDisplay === 0) {
+                this.api().page('previous').draw('page');
+            }
+        },
         // dom: 'Bfrtip',
         buttons: [
 
@@ -2419,13 +2468,35 @@ console.log(data);
                     $('#room_id_filter').append(
                         `<option value="${value.id}">${value.name}</option>`);
                 });
+                if (restoringStudentListContext && restoredStudentListRoomId) {
+                    $('#room_id_filter').val(String(restoredStudentListRoomId));
+                }
                  table_test.draw();
+                 restoringStudentListContext = false;
+                 restoredStudentListRoomId = null;
             },
 
 
         });
 
     });
+
+    function restoreStudentListContext() {
+        if (studentListContext.search) {
+            table_test.search(studentListContext.search);
+        }
+
+        if (studentListContext.class_id) {
+            restoringStudentListContext = true;
+            restoredStudentListRoomId = studentListContext.room_id || null;
+            $('#class_id_filter').val(String(studentListContext.class_id)).trigger('change');
+        } else if (studentListContext.search) {
+            table_test.draw();
+        }
+    }
+
+    restoreStudentListContext();
+
     $(document).on('change', '#stage_id_filter', function () {
 
 // var year_id = $('#years').val();

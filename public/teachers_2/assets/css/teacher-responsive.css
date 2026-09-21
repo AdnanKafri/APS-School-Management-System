@@ -78,6 +78,58 @@ body.teacher-portal-body .teacher-sidebar-backdrop {
   transition: opacity .2s ease, visibility .2s ease;
 }
 
+/* The shared guardrails load after the base theme; keep desktop RTL offsets state-aware. */
+@media (min-width: 992px) {
+  body.teacher-portal-body .main-panel {
+    margin-right: 260px !important;
+    margin-left: 0 !important;
+    width: calc(100% - 260px) !important;
+    padding-top: 64px;
+    transition: margin-right .25s ease, margin-left .25s ease, width .25s ease;
+  }
+
+  body.teacher-portal-body.ltr .main-panel {
+    margin-right: 0 !important;
+    margin-left: 260px !important;
+  }
+
+  body.teacher-portal-body .navbar.default-layout-navbar {
+    right: 260px;
+    left: 0;
+  }
+
+  body.teacher-portal-body.ltr .navbar.default-layout-navbar {
+    right: 0;
+    left: 260px;
+  }
+
+  body.teacher-portal-body.sidebar-icon-only #sidebar.sidebar.sidebar-offcanvas {
+    width: 88px !important;
+    min-width: 88px !important;
+  }
+
+  body.teacher-portal-body.sidebar-icon-only .main-panel {
+    margin-right: 88px !important;
+    margin-left: 0 !important;
+    width: calc(100% - 88px) !important;
+  }
+
+  body.teacher-portal-body.sidebar-icon-only.ltr .main-panel {
+    margin-right: 0 !important;
+    margin-left: 88px !important;
+  }
+
+  body.teacher-portal-body.sidebar-icon-only .navbar.default-layout-navbar {
+    right: 88px;
+    left: 0;
+  }
+
+  body.teacher-portal-body.sidebar-icon-only.ltr .navbar.default-layout-navbar {
+    right: 0;
+    left: 88px;
+  }
+}
+
 body.teacher-portal-body .table-responsive {
   width: 100%;
   max-width: 100%;

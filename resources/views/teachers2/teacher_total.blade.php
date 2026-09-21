@@ -366,6 +366,77 @@ table {
             -o-transform: skew(0deg) !important;
         }
 
+        /* Keep the wide marks grid inside the Teacher content area. */
+        .teacher-marks-total-page {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        .teacher-marks-total-page .content-wrapper,
+        .teacher-marks-total-page .container,
+        .teacher-marks-total-page .row,
+        .teacher-marks-total-page .col-lg-12,
+        .teacher-marks-total-page .stretch-card,
+        .teacher-marks-total-page .card,
+        .teacher-marks-total-page .card-body,
+        .teacher-marks-total-page .tabs {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0;
+            left: auto !important;
+        }
+
+        .teacher-marks-total-page .table-responsive {
+            width: 100% !important;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .teacher-marks-total-page .table-responsive > table {
+            width: 100% !important;
+            min-width: 0;
+            max-width: 100% !important;
+            table-layout: fixed;
+        }
+
+        .teacher-marks-total-page .table-responsive th,
+        .teacher-marks-total-page .table-responsive td {
+            padding: .35rem .25rem !important;
+            font-size: .72rem !important;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+
+        .teacher-marks-total-page .table-responsive th:first-child,
+        .teacher-marks-total-page .table-responsive td:first-child {
+            width: 18%;
+        }
+
+        .teacher-marks-total-page .table-responsive th:nth-child(2),
+        .teacher-marks-total-page .table-responsive td:nth-child(2) {
+            width: 7%;
+        }
+
+        .teacher-marks-total-page .table-responsive .number {
+            width: 42px !important;
+            max-width: 100%;
+            height: 34px !important;
+            padding: .2rem !important;
+        }
+
+        @media (max-width: 1199.98px) {
+            .teacher-marks-total-page .table-responsive > table {
+                min-width: 900px;
+                width: max-content !important;
+                max-width: none !important;
+            }
+        }
+
 @media screen and (max-width: 900px){
  table td {
     padding: 16px !important;
@@ -394,7 +465,7 @@ table th {
     }
 </script>
 @endif
-    <div class="main-panel" style="background: #f8f9fb;">
+    <div class="main-panel teacher-marks-total-page" style="background: #f8f9fb;">
         <ul class="breadcrumbs" style="padding-bottom: 7px;
         padding-top: 11px;">
             <li class="li"><a href="{{ route('dashboard.teacher') }}">الصفحة الرئيسية</a></li>

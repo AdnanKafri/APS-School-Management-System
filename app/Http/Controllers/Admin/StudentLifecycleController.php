@@ -10,6 +10,7 @@ use App\StudentLifecycleEvent;
 use App\Services\StudentLifecycleService;
 use App\Year;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class StudentLifecycleController extends Controller
 {
@@ -40,7 +41,7 @@ class StudentLifecycleController extends Controller
 
     public function archive(Request $request, StudentLifecycleService $service)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'student_id' => 'required|integer',
             'reason' => 'required|string|max:1000',
         ], [
@@ -48,14 +49,51 @@ class StudentLifecycleController extends Controller
             'reason.required' => __('student_lifecycle.validation.reason_required'),
             'reason.max' => __('student_lifecycle.validation.reason_max'),
         ]);
+        if ($validator->fails()) {
+            return $this->studentListRedirect($request, 'error', __('student_lifecycle.errors.operation_failed'))
+                ->withErrors($validator)
+                ->withInput();
+        }
+        $data = $validator->validated();
         $student = Student::operational()->whereKey($data['student_id'])->firstOrFail();
         try {
             $service->archiveStudent($student, $data['reason'], optional(auth()->user())->id);
         } catch (\Throwable $e) {
             report($e);
-            return back()->with('error', __($e->getMessage()) === $e->getMessage() ? __('student_lifecycle.errors.operation_failed') : __($e->getMessage()));
+            $message = __($e->getMessage()) === $e->getMessage()
+                ? __('student_lifecycle.errors.operation_failed')
+                : __($e->getMessage());
+            return $this->studentListRedirect($request, 'error', $message);
         }
-        return back()->with('success', __('student_lifecycle.messages.archived'));
+        return $this->studentListRedirect($request, 'success', __('student_lifecycle.messages.archived'));
+    }
+
+    /**
+     * Return to the active Students list without accepting an arbitrary URL.
+     * The list itself uses server-side DataTables, so its browser state must be
+     * carried explicitly through the archive form.
+     */
+    private function studentListRedirect(Request $request, $flashKey, $message)
+    {
+        if ($request->input('return_context') !== 'students') {
+            return back()->with($flashKey, $message);
+        }
+
+        $query = [];
+        foreach (['list_class_id', 'list_room_id', 'list_stage_id', 'list_start', 'list_length'] as $key) {
+            $value = $request->input($key);
+            if ($value === null || $value === '' || filter_var($value, FILTER_VALIDATE_INT) === false) {
+                continue;
+            }
+            $query[$key] = (int) $value;
+        }
+
+        $search = $request->input('list_search');
+        if (is_string($search) && strlen($search) <= 200 && trim($search) !== '') {
+            $query['list_search'] = $search;
+        }
+
+        return redirect()->route('students', $query)->with($flashKey, $message);
     }
 
     public function restore(Request $request, StudentLifecycleService $service)
