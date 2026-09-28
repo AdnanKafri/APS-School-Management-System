@@ -1087,9 +1087,9 @@
                 </button>
             </div>
             <div class="modal-body">
-            <form  action="{{ route('dashboard.room.save.schedule') }}" method="post" class="w-100 this-form ">
+            <form action="{{ route('save.schedule') }}" method="post" class="w-100 this-form" id="workScheduleAssignmentForm">
                 @csrf
-                <input type="hidden" name="room_id" id="room_id" value=" {{ $room_id }}" class="room_id">
+                <input type="hidden" name="room_id" value="{{ $room_id }}" class="room_id">
 
 
                 <div class="form-group row">
@@ -1134,7 +1134,7 @@
                <span> <a href="#" class="btn btn-info btn-sm add_another_lesson">إضافة مادة أخرى لهذ التوقيت</a></span>
                 <div class="form-group modal-footer row justify-content-around px-3">
                       <button class="btn btn-success save_lecture_time" type="submit" style="width: 35%">تأكيد </button>
-                    <button  class="btn btn-light btn-light text-dark" data-dismiss="modal" style="width: 35%">خروج</button>
+                    <button type="button" class="btn btn-light btn-light text-dark" data-dismiss="modal" style="width: 35%">خروج</button>
                 </div>
 
                 <!-- end submit-->
@@ -1214,8 +1214,10 @@
     <script>
         $(document).ready(function(){
             let counter = 0 ;
-            $('.lesson_id').select2();
-            $('.teacher_id').select2();
+            if ($.fn.select2) {
+                $('.lesson_id').select2({ dropdownParent: $('#add_schedule') });
+                $('.teacher_id').select2({ dropdownParent: $('#add_schedule') });
+            }
         //     $.ajaxSetup({
         //     headers: {
         //         'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -1235,26 +1237,28 @@
                $(`.time_id`).val(time_id);
             });
 
-            $('.save_lecture_time').on('click',function(e){
+            $('#workScheduleAssignmentForm').on('submit',function(e){
                 e.preventDefault() ;
                 // let lesson_id = $('select.lesson_id').val();
                 // let teacher_id = $('select.teacher_id').val();
                 // let day_id = $(`.day_id`).val();
                 // let lecture_time_id = $(`.time_id`).val();
-                var form = $('.this-form');
+                var form = $(this);
+                var submitButton = form.find('.save_lecture_time');
+                submitButton.prop('disabled', true);
                 $.ajax({
-                    url:"{{ route('save.schedule') }}",
+                    url: form.attr('action'),
                     type: "POST",
 
                     data: form.serialize(),
                     success: function (response2) {
                         console.log(response2);
                         if (response2.status == false) {
-                            swal({title:"خطأ",text:`<p> هذا التوقيت محجوز للاستاذ</p>`,html:!0});
+                            swal({title:"خطأ",text:`<p>${response2.msg}</p>`,html:!0});
                         }else if (response2.status == 2){
-                            swal({title:"خطأ",text:`<p> لايمكن إضافة مادنتين بنفس الوقت   </p>`,html:!0});
+                            swal({title:"خطأ",text:`<p>${response2.msg}</p>`,html:!0});
                         }else if (response2.status == 3){
-                            swal({title:"خطأ",text:`<p> مسموح إضافة مادة واحدة   فقط      </p>`,html:!0});
+                            swal({title:"خطأ",text:`<p>${response2.msg}</p>`,html:!0});
                         }else{
                             let lesson_name = $( ".wide option:selected" ).text();
                             let lesson_id = $( ".wide " ).val();
@@ -1268,16 +1272,25 @@
 
                             $("#add_schedule").modal('hide');
                             swal({title:"نجاح",text:`<p>تم الإضافة  بنجاح</p>`,html:!0});
-                            window.location.reload();
+                            window.location.href = response2.redirect || "{{ route('workschedule', $room_id) }}";
 
                             console.log('content name',response2);
                     }
                     },error: function(error){
-                    console.log('insider function',error);
-                    var x = JSON.parse(error.responseText);
-                        $.each(x.errors, function(key,value) {
-                            swal({title:"خطأ",text:`<p>${value}</p>`,html:!0});
+                        console.log('insider function',error);
+                        var response = error.responseJSON || {};
+                        var errors = response.errors || {};
+                        var messages = [];
+                        $.each(errors, function(key,value) {
+                            messages.push($.isArray(value) ? value[0] : value);
                         });
+                        swal({
+                            title:"خطأ",
+                            text:`<p>${messages[0] || response.message || 'تعذر حفظ الجدول. يرجى المحاولة مرة أخرى.'}</p>`,
+                            html:!0
+                        });
+                    },complete: function(){
+                        submitButton.prop('disabled', false);
                     }
                 });
 
@@ -1311,6 +1324,10 @@
                     </div>
                 </div>
                 `)
+                if ($.fn.select2) {
+                    $('.lessons-container .lesson_id:not(.select2-hidden-accessible)').select2({ dropdownParent: $('#add_schedule') });
+                    $('.lessons-container .teacher_id:not(.select2-hidden-accessible)').select2({ dropdownParent: $('#add_schedule') });
+                }
             });
 
             $(document).on('click' , '.del-element' , function () {
