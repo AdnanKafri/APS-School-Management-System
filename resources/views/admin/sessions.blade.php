@@ -294,9 +294,8 @@
     <div class="modal fade" id="store_session" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered session-modal__dialog">
             <div class="modal-content session-modal__content">
-                <form id="form_update" method="POST" action="{{ route('session_store1') }}" enctype="multipart/form-data">
+                <form id="form_store_session" method="POST" action="{{ route('session_store1') }}" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="class_id" id="class_id">
                     <div class="modal-header session-modal__header">
                         <h4 class="session-modal__title">إضافة حصة</h4>
                         <button type="button" class="close session-modal__close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -346,10 +345,9 @@
     <div class="modal fade" id="edit_session" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered session-modal__dialog">
             <div class="modal-content session-modal__content">
-                <form id="form_update" method="POST" action="{{ route('session_update') }}" enctype="multipart/form-data">
+                <form id="form_update_session" method="POST" action="{{ route('session_update') }}">
                     @csrf
-                    <input type="text" hidden name="id" id="edit_id">
-                    <input type="hidden" name="class_id" id="class_id">
+                    <input type="hidden" name="id" id="edit_id" required>
                     <div class="modal-header session-modal__header">
                         <h4 class="session-modal__title">تعديل الحصة</h4>
                         <button type="button" class="close session-modal__close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -390,22 +388,19 @@
     <div class="modal fade" id="delete_session" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered session-modal__dialog">
             <div class="modal-content session-modal__content">
-                <form id="form_update" method="POST" action="{{ route('session_delete') }}">
+                <form id="form_delete_session" method="POST" action="{{ route('session_delete') }}">
                     @csrf
-                    <input type="text" hidden name="id" id="delete_id">
+                    <input type="hidden" name="id" id="delete_id" required>
                     <div class="modal-header session-modal__header">
                         <h4 class="session-modal__title">حذف الحصة</h4>
                         <button type="button" class="close session-modal__close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     </div>
                     <div class="modal-body session-modal__body">
-                        <div class="session-field">
-                            <label>اسم الحصة</label>
-                            <input type="text" name="session_name_delete" class="form-control" id="session_name_delete" readonly>
-                        </div>
+                        <p class="mb-0 text-center font-weight-bold">هل أنت متأكد من حذف هذه الحصة؟</p>
                     </div>
                     <div class="modal-footer session-modal__footer">
-                        <a class="btn btn-light" data-dismiss="modal">إلغاء</a>
-                        <button class="btn btn-danger">تأكيد</button>
+                        <button type="button" class="btn btn-light" data-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
                     </div>
                 </form>
             </div>
@@ -419,41 +414,33 @@
 $('.alert-success').hide(5000);
 
 $(document).ready(function () {
-    $('.js-example-basic-multiple').select2();
-
-    $('.delete').on('click', function () {
-        var id = $(this).data('id');
-        var url = "{{URL::to('SMARMANger/admin/students')}}";
-        $('#form_delete').attr("action", url);
-    });
+    if ($.fn.select2) {
+        $('.js-example-basic-multiple').select2();
+    }
 
     $(document).on('click', ".edit_see", function () {
         var data = $(this).data('data');
-        $('#end_time').val(data.end_time);
+        $('#end_time').val(String(data.end_time).substring(0, 5));
         $('#edit_type').val(data.type);
         $('#edit_id').val(data.id);
-        $('#start_time').val(data.start_time);
+        $('#start_time').val(String(data.start_time).substring(0, 5));
         $('#session_name').val(data.name);
     });
 
     $(document).on('click', ".delete_session", function () {
         var data = $(this).data('data');
         $('#delete_id').val(data.id);
-        $('#session_name_delete').val(data.name);
     });
 
-    $('.edit').on('click', function () {
-        var id = $(this).data('id');
-        var name = $(this).data('name');
-        var name_en = $(this).data('name_en');
-        var image = $(this).data('image');
-        var cost = $(this).data('cost');
-        $('#class_id').val(id);
-        $('#name').val(name);
-        $('#name_en').val(name_en);
-        $('#image').attr('src', `{{asset('storage/${image}')}}`);
-        $('#cost').val(cost);
+    $('#edit_session').on('hidden.bs.modal', function () {
+        this.querySelector('form').reset();
+        $('#edit_id').val('');
     });
+
+    $('#delete_session').on('hidden.bs.modal', function () {
+        $('#delete_id').val('');
+    });
+
 });
 
 var loadFile = function(event) {

@@ -7144,9 +7144,17 @@ public function class_update(Request $request)
 
     public function session_delete(Request $request)
     {
-        // return $request ;
-        $session = Lecture_time::find($request->id);
-        if (isset($session)) {
+        $validated = $request->validate([
+            'id' => ['required', 'integer', 'exists:lecture_times,id'],
+        ], [
+            'id.required' => __('timetable.validation.session_required'),
+            'id.integer' => __('timetable.validation.session_invalid'),
+            'id.exists' => __('timetable.validation.session_invalid'),
+        ]);
+
+        $session = $this->resolveCurrentYearLectureTime($validated['id']);
+
+        DB::transaction(function () use ($session) {
             $to_delete1 = Lesson_room_teacher_lecture_time::where('lecture_time_id', $session->id)->get();
             foreach ($to_delete1 as $x) {
                 $old_teacher = $x->teacher_id;
@@ -7167,9 +7175,9 @@ public function class_update(Request $request)
             Student_schedule_tracer::where('lecture_time_id', $session->id)->delete();
 
             $session->delete();
-        }
+        });
 
-        return redirect()->back()->with('success', 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­');
+        return redirect()->back()->with('success', __('timetable.deleted'));
     }
 
     public function class_delete(Request $request)
@@ -9388,21 +9396,27 @@ public function class_update(Request $request)
 
 
     public function sessions()
-    {  $year = Year::where('current_year', '1')->first();
+    {
+        $year = Year::where('current_year', '1')->first();
         $class = Classe::all();
-        $room = Room::where('year_id',$year->id)->get();
+        $room = $year ? Room::where('year_id', $year->id)->get() : collect();
 
         return view('admin.sessions', compact('room', 'class'));
     }
 
     public function session_class($id)
-    {    $year = Year::where('current_year', '1')->first();
-        $classes = Lecture_time::WhereHas('room' ,function($q) use ($year){
-            $q->where('year_id',$year->id);
-        })->where('class_id', $id)->get();
-        $class = Classe::find($id);
+    {
+        $year = Year::where('current_year', '1')->first();
+        $class = Classe::findOrFail($id);
+        $classes = $year
+            ? Lecture_time::whereHas('room', function ($query) use ($year) {
+                $query->where('year_id', $year->id);
+            })->where('class_id', $id)->get()
+            : collect();
+        $room = $year
+            ? $class->room()->where('year_id', $year->id)->get()
+            : collect();
 
-        $room = $class->room->where('year_id',$year->id);
         return view('admin.sessions2', compact('room', 'classes', 'id'));
     }
 
@@ -11215,7 +11229,17 @@ public function class_update(Request $request)
             'end_time.after' => __('timetable.validation.end_after_start'),
         ]);
 
-        $rooms = Room::whereIn('id', $validated['room'])->get()->keyBy('id');
+        $year = Year::where('current_year', '1')->first();
+        if (!$year) {
+            throw ValidationException::withMessages([
+                'room' => __('timetable.validation.year_required'),
+            ]);
+        }
+
+        $rooms = Room::whereIn('id', $validated['room'])
+            ->where('year_id', $year->id)
+            ->get()
+            ->keyBy('id');
         if ($rooms->count() !== count($validated['room'])) {
             throw ValidationException::withMessages([
                 'room' => __('timetable.validation.room_invalid'),
@@ -11237,6 +11261,33 @@ public function class_update(Request $request)
         }
 
         return $validated;
+    }
+
+    /**
+     * Resolve a session only within the active academic year's sections.
+     */
+    private function resolveCurrentYearLectureTime($sessionId)
+    {
+        $year = Year::where('current_year', '1')->first();
+        if (!$year) {
+            throw ValidationException::withMessages([
+                'id' => __('timetable.validation.year_required'),
+            ]);
+        }
+
+        $session = Lecture_time::whereKey($sessionId)
+            ->whereHas('room', function ($query) use ($year) {
+                $query->where('year_id', $year->id);
+            })
+            ->first();
+
+        if (!$session) {
+            throw ValidationException::withMessages([
+                'id' => __('timetable.validation.session_invalid'),
+            ]);
+        }
+
+        return $session;
     }
 
     public function getDay($day)
@@ -11320,15 +11371,36 @@ public function class_update(Request $request)
 
     public function session_update(Request $request)
     {
+        $validated = $request->validate([
+            'id' => ['required', 'integer', 'exists:lecture_times,id'],
+            'session_name' => ['required', 'string', 'max:20'],
+            'type' => ['required', 'in:1,2'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+        ], [
+            'id.required' => __('timetable.validation.session_required'),
+            'id.integer' => __('timetable.validation.session_invalid'),
+            'id.exists' => __('timetable.validation.session_invalid'),
+            'session_name.required' => __('timetable.validation.name_required'),
+            'session_name.string' => __('timetable.validation.name_invalid'),
+            'session_name.max' => __('timetable.validation.name_max'),
+            'type.required' => __('timetable.validation.type_required'),
+            'type.in' => __('timetable.validation.type_invalid'),
+            'start_time.required' => __('timetable.validation.start_required'),
+            'start_time.date_format' => __('timetable.validation.start_invalid'),
+            'end_time.required' => __('timetable.validation.end_required'),
+            'end_time.date_format' => __('timetable.validation.end_invalid'),
+            'end_time.after' => __('timetable.validation.end_after_start'),
+        ]);
 
-        $session = Lecture_time::find($request->id);
-        $session->name = $request->session_name;
-        $session->start_time = $request->start_time;
-        $session->type = $request->type;
-        $session->end_time = $request->end_time;
+        $session = $this->resolveCurrentYearLectureTime($validated['id']);
+        $session->name = $validated['session_name'];
+        $session->start_time = $validated['start_time'];
+        $session->type = $validated['type'];
+        $session->end_time = $validated['end_time'];
         $session->save();
 
-        return redirect()->back();
+        return redirect()->back()->with('success', __('timetable.updated'));
     }
 
 
