@@ -7200,9 +7200,11 @@ public function class_update(Request $request)
             'room_id' => 'required|integer|exists:rooms,id',
             'day_id' => 'required|integer|exists:days,id',
             'lecture_time_id' => 'required|integer|exists:lecture_times,id',
+            'schedule_context' => 'nullable|in:normal,exam',
             'lesson' => 'required|array|min:1',
             'lesson.*.lesson_id' => 'required|integer|distinct|exists:lessons,id',
             'lesson.*.teacher_id' => 'required|integer|exists:teachers,id',
+            'lesson.*.schedule_id' => 'nullable|integer',
         ], [
             'room_id.required' => __('timetable.schedule.room_required'),
             'room_id.exists' => __('timetable.schedule.room_invalid'),
@@ -7262,8 +7264,37 @@ public function class_update(Request $request)
             return [
                 'lesson_id' => (int) $assignment['lesson_id'],
                 'teacher_id' => (int) $assignment['teacher_id'],
+                'schedule_id' => isset($assignment['schedule_id']) && $assignment['schedule_id'] !== ''
+                    ? (int) $assignment['schedule_id']
+                    : null,
             ];
         });
+
+        $existingSlotAssignments = Lesson_room_teacher_lecture_time::where('room_id', $room->id)
+            ->where('lecture_time_id', $lectureTime->id)
+            ->where('day_id', $request->day_id)
+            ->where('year_id', $year->id)
+            ->where('term_id', $term->id)
+            ->get();
+        $submittedScheduleIds = $requestedAssignments->pluck('schedule_id')->filter()->values();
+        $validScheduleIds = $existingSlotAssignments->pluck('id');
+
+        if ($submittedScheduleIds->count() !== $submittedScheduleIds->unique()->count()
+            || $submittedScheduleIds->diff($validScheduleIds)->isNotEmpty()) {
+            return $this->scheduleValidationFailure($request, [
+                'lesson' => [__('timetable.schedule.assignment_context_invalid')],
+            ]);
+        }
+
+        $removedLinkedAssignment = $existingSlotAssignments
+            ->whereNotIn('id', $submittedScheduleIds->all())
+            ->contains(function ($assignment) {
+                return trim((string) $assignment->meeting_link) !== '';
+            });
+
+        if ($removedLinkedAssignment) {
+            return $this->scheduleBusinessFailure($request, false, __('timetable.schedule.linked_assignment_preserved'));
+        }
 
         $lessons = Lesson::whereIn('id', $requestedAssignments->pluck('lesson_id'))
             ->where('class_id', $room->class_id)
@@ -7319,11 +7350,31 @@ public function class_update(Request $request)
             }
         }
 
-        DB::transaction(function () use ($request, $room, $year, $term, $requestedAssignments) {
+        $preservationError = null;
+        try {
+            DB::transaction(function () use ($request, $room, $year, $term, $requestedAssignments, $submittedScheduleIds, &$preservationError) {
             $oldAssignments = Lesson_room_teacher_lecture_time::where('room_id', $room->id)
                 ->where('lecture_time_id', $request->lecture_time_id)
                 ->where('day_id', $request->day_id)
+                ->where('year_id', $year->id)
+                ->where('term_id', $term->id)
+                ->lockForUpdate()
                 ->get();
+
+            if ($submittedScheduleIds->diff($oldAssignments->pluck('id'))->isNotEmpty()) {
+                $preservationError = __('timetable.schedule.assignment_context_invalid');
+                return;
+            }
+
+            $removesLinkedAssignment = $oldAssignments
+                ->whereNotIn('id', $submittedScheduleIds->all())
+                ->contains(function ($assignment) {
+                    return trim((string) $assignment->meeting_link) !== '';
+                });
+            if ($removesLinkedAssignment) {
+                $preservationError = __('timetable.schedule.linked_assignment_preserved');
+                return;
+            }
 
             $oldPairs = $oldAssignments->map(function ($assignment) {
                 return [
@@ -7335,7 +7386,9 @@ public function class_update(Request $request)
             });
 
             foreach ($oldAssignments as $oldAssignment) {
-                $oldAssignment->delete();
+                if (!$submittedScheduleIds->contains((int) $oldAssignment->id)) {
+                    $oldAssignment->delete();
+                }
             }
 
             foreach ($oldPairs as $oldPair) {
@@ -7366,7 +7419,14 @@ public function class_update(Request $request)
                     'year_id' => $year->id,
                 ]);
 
-                $schedule = new Lesson_room_teacher_lecture_time;
+                $schedule = $assignment['schedule_id']
+                    ? $oldAssignments->firstWhere('id', $assignment['schedule_id'])
+                    : null;
+
+                if (!$schedule) {
+                    $schedule = new Lesson_room_teacher_lecture_time;
+                }
+
                 $schedule->lesson_id = $assignment['lesson_id'];
                 $schedule->room_id = $room->id;
                 $schedule->teacher_id = $assignment['teacher_id'];
@@ -7376,18 +7436,69 @@ public function class_update(Request $request)
                 $schedule->year_id = $year->id;
                 $schedule->save();
             }
-        });
+            });
+            if ($preservationError) {
+                return $this->scheduleBusinessFailure($request, false, $preservationError);
+            }
+        } catch (\Throwable $exception) {
+            \Log::error('Unable to save admin work schedule assignment.', [
+                'room_id' => $room->id,
+                'day_id' => (int) $request->day_id,
+                'lecture_time_id' => (int) $request->lecture_time_id,
+                'exception' => $exception,
+            ]);
+
+            return $this->scheduleSaveFailure($request);
+        }
+
+        $savedScheduleRecords = Lesson_room_teacher_lecture_time::with('lesson', 'teacher')
+            ->where('room_id', $room->id)
+            ->where('lecture_time_id', $lectureTime->id)
+            ->where('day_id', $request->day_id)
+            ->where('year_id', $year->id)
+            ->where('term_id', $term->id)
+            ->get();
+        $savedAssignments = $savedScheduleRecords->map(function ($schedule) {
+            return [
+                'schedule_id' => (int) $schedule->id,
+                'lesson_id' => (int) $schedule->lesson_id,
+                'lesson_name' => optional($schedule->lesson)->name,
+                'teacher_id' => (int) $schedule->teacher_id,
+                'teacher_name' => trim(optional($schedule->teacher)->first_name.' '.optional($schedule->teacher)->last_name),
+                'meeting_link' => $schedule->meeting_link,
+            ];
+        })->values();
+
+        $returnRoute = $request->input('schedule_context') === 'exam'
+            ? route('workschedule_exam', $room->id)
+            : route('workschedule', $room->id);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'status' => true,
                 'msg' => __('timetable.schedule.saved'),
-                'redirect' => route('workschedule', $room->id),
+                'redirect' => $returnRoute,
+                'assignments' => $savedAssignments,
             ]);
         }
 
-        return redirect()->route('workschedule', $room->id)
+        return redirect($returnRoute)
             ->with('success', __('timetable.schedule.saved'));
+    }
+
+    private function scheduleSaveFailure(Request $request)
+    {
+        $message = __('timetable.schedule.save_failed');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => false,
+                'message' => $message,
+                'errors' => ['schedule' => [$message]],
+            ], 500);
+        }
+
+        return redirect()->back()->withInput()->with('error', $message);
     }
 
     private function scheduleValidationFailure(Request $request, array $errors)
@@ -7654,10 +7765,23 @@ public function class_update(Request $request)
 
     public function workschedule_exam($room_id)
     {
-        // return $student_id ;
+        $year = Year::where('current_year', '1')->first();
+        if (!$year) {
+            return redirect()->back()->with('error', __('timetable.schedule.year_required'));
+        }
 
-        $room = Room::findOrFail($room_id);
-        $class_id = Room::findOrFail($room_id)->class_id;
+        $term = Term_year::where('year_id', $year->id)
+            ->where('current_term', '1')
+            ->first();
+        if (!$term) {
+            return redirect()->back()->with('error', __('timetable.schedule.term_required'));
+        }
+
+        $room = Room::with('classes')
+            ->whereKey($room_id)
+            ->where('year_id', $year->id)
+            ->firstOrFail();
+        $class_id = $room->class_id;
         $lessons = Lesson::where('class_id', $class_id)->get();
         // pring teachers
         $teachers = DB::table('teachers')
@@ -7671,7 +7795,10 @@ public function class_update(Request $request)
         $days = Day::all();
         // pring romm schedule
         $schedule = Lesson_room_teacher_lecture_time::with('lesson', 'teacher')
-            ->where('room_id', $room_id)->get();
+            ->where('room_id', $room->id)
+            ->where('year_id', $year->id)
+            ->where('term_id', $term->id)
+            ->get();
 
         $room_name = $room->name;
         $room_id = $room->id;

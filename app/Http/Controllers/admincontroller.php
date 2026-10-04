@@ -1719,11 +1719,45 @@ $class->image=null;
 
 
         $request->validate([
-            'name'=>'required|max:30',
-            'name_en'=>'required|max:30',
-
-            'class_id'=>'required|numeric',
+            'name' => 'required|string|max:30',
+            'name_en' => 'required|string|max:30',
+            'class_id' => 'required|integer|exists:classes,id',
+            'base_subject_id' => 'required|integer|exists:base_subjects,id',
+            'mark_base_subject_id' => 'nullable|integer|exists:base_subjects,id',
+            'max_mark' => 'required|numeric|min:0',
+            'min_mark' => 'required|numeric|min:0|lte:max_mark',
+            'is_english' => 'nullable|in:0,1',
+            'is_addable' => 'nullable|in:0,1',
+            'is_behavior' => 'nullable|in:0,1',
+            'certificate_order' => 'nullable|integer|min:0|max:16',
+            'is_project' => 'nullable|in:0,1',
+            'first_total' => 'nullable|in:0,1',
+            'is_neutral' => 'nullable|in:1,2,3,4',
+            'image' => 'nullable|image|max:10240',
+        ], [
+            'name.required' => __('timetable.lesson.name_required'),
+            'name.max' => __('timetable.lesson.name_max'),
+            'name_en.required' => __('timetable.lesson.name_en_required'),
+            'name_en.max' => __('timetable.lesson.name_max'),
+            'class_id.required' => __('timetable.lesson.class_required'),
+            'class_id.exists' => __('timetable.lesson.class_invalid'),
+            'base_subject_id.required' => __('timetable.lesson.base_subject_required'),
+            'base_subject_id.exists' => __('timetable.lesson.base_subject_invalid'),
+            'max_mark.required' => __('timetable.lesson.max_mark_required'),
+            'max_mark.numeric' => __('timetable.lesson.mark_invalid'),
+            'min_mark.required' => __('timetable.lesson.min_mark_required'),
+            'min_mark.numeric' => __('timetable.lesson.mark_invalid'),
+            'min_mark.lte' => __('timetable.lesson.min_mark_exceeds_max'),
+            'image.image' => __('timetable.lesson.image_invalid'),
+            'image.max' => __('timetable.lesson.image_too_large'),
         ]);
+
+        $year = Year::where('current_year', '1')->first();
+        if (!$year) {
+            return redirect()->back()->withInput()->withErrors([
+                'academic_year' => __('timetable.lesson.year_required'),
+            ]);
+        }
 
         $lesson=new Lesson;
 
@@ -1861,21 +1895,34 @@ $lesson->type_file4='1';
 $lesson->name=$request->name;
 $lesson->name_en=$request->name_en;
 
-$lesson->name_book1_ar=$request->name_book1_ar;
-$lesson->name_book1_en=$request->name_book1_en;
-$lesson->name_book2_ar=$request->name_book2_ar;
-$lesson->name_book2_en=$request->name_book2_en;
-$lesson->name_book3_ar=$request->name_book3_ar;
-$lesson->name_book3_en=$request->name_book3_en;
-$lesson->name_book4_ar=$request->name_book4_ar;
-$lesson->name_book4_en=$request->name_book4_en;
+$lesson->is_english=$request->input('is_english', 0);
+$lesson->base_subject_id=$request->base_subject_id;
+$lesson->mark_base_subject_id=$request->input('mark_base_subject_id');
+$lesson->max_mark=$request->max_mark;
+$lesson->min_mark=$request->min_mark;
+$lesson->certificate_order=$request->input('certificate_order');
+if ($request->has('is_addable')) {
+    $lesson->is_addable=$request->input('is_addable');
+}
+$lesson->is_behavior=$request->input('is_behavior');
+$lesson->is_project=$request->input('is_project');
+$lesson->first_total=$request->input('first_total');
+if ($request->input('is_neutral') === '4') {
+    $lesson->not_affect_and_collect = null;
+    $lesson->is_neutral = '2';
+} elseif ($request->input('is_neutral') === '2') {
+    $lesson->not_affect_and_collect = '1';
+    $lesson->is_neutral = '2';
+} else {
+    $lesson->is_neutral = $request->input('is_neutral');
+}
+
+if ($request->hasFile('image')) {
+    $lesson->img = $request->image->store('classimages', 'public');
+}
 
 $lesson->type=null;
 $lesson->class_id=$request->class_id;
-
-
-$lesson->type_file1=$request->type_file1;
-$lesson->type_file2=$request->type_file2;
 
 
 
@@ -1902,8 +1949,9 @@ $lesson->type_file2=$request->type_file2;
 }
 
 
-$lesson->save();
-$year=Year::where('current_year','1')->first();
+\Illuminate\Support\Facades\DB::beginTransaction();
+try {
+    $lesson->save();
 
 
 
@@ -2147,7 +2195,26 @@ foreach($cont as $room){
 
 
 
-return redirect()->back()->with('success', 'تمت العملية بنجاح');
+    \Illuminate\Support\Facades\DB::commit();
+} catch (\Throwable $exception) {
+    if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+        \Illuminate\Support\Facades\DB::rollBack();
+    }
+
+    if ($lesson->img) {
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($lesson->img);
+    }
+
+    \Log::error('Unable to create lesson from the Admin lesson form.', [
+        'class_id' => $request->class_id,
+        'base_subject_id' => $request->base_subject_id,
+        'exception' => $exception,
+    ]);
+
+    return redirect()->back()->withInput()->with('error', __('timetable.lesson.create_failed'));
+}
+
+return redirect()->back()->with('success', __('timetable.lesson.created'));
 
     }
 

@@ -745,47 +745,49 @@
                                     <th scope="row" class="teacher-timetable__day-head">{{ $day->name }}</th>
                                     @foreach($instructionLectureTimes as $lecture_time)
                                         @php $lesson_time = $scheduleLookup[$lecture_time->id][$day->id] ?? null; @endphp
-                                        <td class="teacher-timetable__cell">
-                                            @if($lesson_time)
-                                                <a class="btn btn-info btn-sm add_time teacher-timetable__lesson-box"
-                                                   data-toggle="modal"
-                                                   data-target="#add_schedule"
-                                                   data-day_id="{{ $day->id }}"
-                                                   data-day="{{ $day->name }}"
-                                                   data-time_id="{{ $lecture_time->id }}"
-                                                   data-time="{{ $lecture_time->name }}"
-                                                   data-lesson_id="{{ $lesson_time->lesson->id }}"
-                                                   data-teacher_id="{{ $lesson_time->teacher->id }}"
-                                                   title="تحديد الحصة">
-                                                    <p class="lesson_name-schedule{{ $day->id . $lecture_time->id }} teacher-timetable__lesson-title">{{ $lesson_time->lesson->name }}</p>
-                                                    <p class="teacher_name-schedule{{ $day->id . $lecture_time->id }} teacher-timetable__meta">{{ $lesson_time->teacher->first_name }} {{ $lesson_time->teacher->last_name }}</p>
-                                                    <p class="teacher-timetable__meta">{{ $lecture_time->start_time." - ".$lecture_time->end_time }}</p>
+                                        <td class="teacher-timetable__cell">                                            @php
+                                                $slotAssignments = $schedule->where('day_id', $day->id)
+                                                    ->where('lecture_time_id', $lecture_time->id)
+                                                    ->values();
+                                                $slotPayload = $slotAssignments->map(function ($assignment) {
+                                                    return ['schedule_id' => (int) $assignment->id, 'lesson_id' => (int) $assignment->lesson_id, 'teacher_id' => (int) $assignment->teacher_id];
+                                                })->values();
+                                                $slotKey = $day->id . '-' . $lecture_time->id;
+                                            @endphp
+                                            <div class="schedule-slot-content" id="schedule-slot-{{ $slotKey }}">
+                                                <a class="btn btn-info btn-sm add_time teacher-timetable__lesson-box js-schedule-slot"
+                                                   data-toggle="modal" data-target="#add_schedule"
+                                                   data-day_id="{{ $day->id }}" data-day="{{ $day->name }}"
+                                                   data-time_id="{{ $lecture_time->id }}" data-time="{{ $lecture_time->name }}"
+                                                   data-time_label="{{ $lecture_time->start_time . ' - ' . $lecture_time->end_time }}"
+                                                   data-schedule_context="exam" data-assignments='@json($slotPayload)'
+                                                   title="{{ __('timetable.schedule.choose_lesson') }}">
+                                                    <div class="schedule-assignment-labels">
+                                                        @forelse($slotAssignments as $slotAssignment)
+                                                            <div class="schedule-assignment-label">
+                                                                <p class="teacher-timetable__lesson-title lesson_name-schedule{{ $day->id . $lecture_time->id }}">{{ optional($slotAssignment->lesson)->name }}</p>
+                                                                <p class="teacher-timetable__meta teacher_name-schedule{{ $day->id . $lecture_time->id }}">{{ trim(optional($slotAssignment->teacher)->first_name . ' ' . optional($slotAssignment->teacher)->last_name) }}</p>
+                                                            </div>
+                                                        @empty
+                                                            <p class="schedule-empty-label">{{ __('timetable.schedule.choose_lesson') }}</p>
+                                                        @endforelse
+                                                        <p class="teacher-timetable__meta">{{ $lecture_time->start_time . ' - ' . $lecture_time->end_time }}</p>
+                                                    </div>
                                                 </a>
-                                                <a class="teacher-timetable__aux-action"
-                                                   data-toggle="modal"
-                                                   data-target="#add_schedule1"
-                                                   data-day_id="{{ $day->id }}"
-                                                   data-day="{{ $day->name }}"
-                                                   data-time_name="{{ $lecture_time->name }}"
-                                                   data-time_id="{{ $lecture_time->id }}"
-                                                   data-lesson_id="{{ $lesson_time->lesson->id }}"
-                                                   data-lesson_name="{{ $lesson_time->lesson->name }}"
-                                                   data-lesson_time_id="{{ $lesson_time->id }}"
-                                                   data-meeting_link="{{ $lesson_time->meeting_link }}"
-                                                   title="إضافة رابط"><i class="fas fa-link"></i></a>
-                                            @else
-                                                <a class="teacher-timetable__empty add_time"
-                                                   data-toggle="modal"
-                                                   data-target="#add_schedule"
-                                                   data-day_id="{{ $day->id }}"
-                                                   data-day="{{ $day->name }}"
-                                                   data-time_id="{{ $lecture_time->id }}"
-                                                   data-time="{{ $lecture_time->name }}"
-                                                   data-lesson_id=""
-                                                   data-teacher_id=""
-                                                   title="تحديد الحصة">لا يوجد حصة</a>
-                                            @endif
-                                        </td>
+                                                <div class="schedule-meeting-actions" data-link-class="teacher-timetable__aux-action" data-meeting-title="{{ __('timetable.schedule.add_meeting_link') }}">
+                                                    @foreach($slotAssignments as $meetingSchedule)
+                                                        <a class="teacher-timetable__aux-action js-meeting-link"
+                                                           data-toggle="modal" data-target="#add_schedule1"
+                                                           data-day_id="{{ $day->id }}" data-day="{{ $day->name }}"
+                                                           data-time_name="{{ $lecture_time->name }}" data-time_id="{{ $lecture_time->id }}"
+                                                           data-lesson_id="{{ $meetingSchedule->lesson_id }}"
+                                                           data-lesson_name="{{ optional($meetingSchedule->lesson)->name }}"
+                                                           data-lesson_time_id="{{ $meetingSchedule->id }}"
+                                                           data-meeting_link="{{ $meetingSchedule->meeting_link }}"
+                                                           title="{{ __('timetable.schedule.add_meeting_link') }}"><i class="fas fa-link"></i></a>
+                                                    @endforeach
+                                                </div>
+                                            </div></td>
                                     @endforeach
                                 </tr>
                             @endforeach
@@ -809,9 +811,10 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ route('dashboard.room.save.schedule') }}" method="post" class="w-100 this-form">
+                <form action="{{ route('save.schedule') }}" method="post" class="w-100 this-form" id="examScheduleAssignmentForm">
                     @csrf
                     <input type="hidden" name="room_id" id="room_id" value="{{ $room_id }}" class="room_id">
+                    <input type="hidden" name="schedule_context" value="exam">
 
                     <div class="form-group row">
                         <label for="courseCost" class="col-sm-2 col-form-label">اليوم:</label>
@@ -827,36 +830,31 @@
                             <input type="hidden" name="lecture_time_id" class="form-control time_id">
                         </div>
                     </div>
-                    <div class="lessons-container">
-                        <div class="form-group row">
-                            <label for="courseCost" class="col-sm-2 col-form-label">حدد المادة:</label>
-                            <div class="col-sm-10">
-                                <select class="form-control wide lesson_id" style="width: 100%;" name="lesson[0][lesson_id]" id="lesson_id">
-                                    <option value="">حدد المادة</option>
+                                        <div class="lessons-container"></div>
+                    <template id="scheduleAssignmentRowTemplate">
+                        <div class="schedule-assignment-row border rounded p-3 mb-3">
+                            <input type="hidden" class="schedule_id">
+                            <div class="form-group mb-2">
+                                <label>{{ __('timetable.schedule.choose_lesson') }}</label>
+                                <select class="form-control lesson_id" style="width: 100%;">
+                                    <option value="">{{ __('timetable.schedule.choose_lesson') }}</option>
                                     @foreach ($lessons as $lesson)
-                                        <option value="{{ $lesson->id }}">
-                                            {{ $lesson->name }} ({{ $lesson->base_subject->name }})
-                                        </option>
+                                        <option value="{{ $lesson->id }}">{{ $lesson->name }}@if(optional($lesson->base_subject)->name) ({{ $lesson->base_subject->name }})@endif</option>
                                     @endforeach
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-group row">
-                            <label for="courseCost" class="col-sm-2 col-form-label">حدد الاستاذ:</label>
-                            <div class="col-sm-10">
-                                <select class="form-control teacher_id" style="width: 100%;" name="lesson[0][teacher_id]" id="teacher_id">
-                                    <option value="">حدد الاستاذ</option>
+                            <div class="form-group mb-2">
+                                <label>{{ __('timetable.schedule.choose_teacher') }}</label>
+                                <select class="form-control teacher_id" style="width: 100%;">
+                                    <option value="">{{ __('timetable.schedule.choose_teacher') }}</option>
                                     @foreach ($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}">
-                                            {{ $teacher->first_name }} {{ $teacher->last_name }}
-                                        </option>
+                                        <option value="{{ $teacher->id }}">{{ $teacher->first_name }} {{ $teacher->last_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-schedule-assignment">{{ __('timetable.schedule.remove_lesson') }}</button>
                         </div>
-                    </div>
-
-                    <span><a href="#" class="btn btn-info btn-sm add_another_lesson">إضافة مادة أخرى لهذ التوقيت</a></span>
+                    </template><span><a href="#" class="btn btn-info btn-sm add_another_lesson">إضافة مادة أخرى لهذ التوقيت</a></span>
                     <div class="form-group modal-footer row justify-content-around px-3">
                         <button class="btn btn-success save_lecture_time" type="submit" style="width: 35%">تأكيد</button>
                         <button class="btn btn-light text-dark" data-dismiss="modal" style="width: 35%">خروج</button>
@@ -962,141 +960,184 @@
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.js"></script>-->
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.min.js"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
-    <script>
-        $(document).ready(function(){
-            let counter = 0 ;
+        <script>
+    $(function () {
+        var $modal = $('#add_schedule');
+        var $form = $('#examScheduleAssignmentForm');
+        var $container = $form.find('.lessons-container');
+        var activeTrigger = null;
+        var feedback = {
+            success: @json(__('timetable.schedule.saved')),
+            error: @json(__('timetable.schedule.save_failed')),
+            errorTitle: @json(__('timetable.schedule.error_title'))
+        };
 
-            $('.teacher_id').select2();
-        //     $.ajaxSetup({
-        //     headers: {
-        //         'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-        //     }
-        // });
-            let xx ;
-            let my_room = {{ $room_id }} ;
-            $('.add_time').on('click',function(){
-                xx = $(this).data('xx');
-                day = $(this).data('day');
-                time2 = $(this).data('time');
-                day_id = $(this).data('day_id');
-                time_id = $(this).data('time_id');
-                time_name = $(this).data('time_name');
-                $(`.day`).val(day);
-               $(`.time`).val(time2);
-                $(`.day_id`).val(day_id);
-               $(`.time_id`).val(time_id);
-               $(`.time_name`).val(time_name);
+        function notify(message, isError) {
+            if (typeof window.swal === 'function') {
+                window.swal({title: isError ? feedback.errorTitle : '', text: message, icon: isError ? 'error' : 'success'});
+            } else {
+                window.alert(message);
+            }
+        }
+
+        function destroySelect2() {
+            if (!$.fn.select2) return;
+            $container.find('select.select2-hidden-accessible').each(function () { $(this).select2('destroy'); });
+        }
+
+        function reindexRows() {
+            $container.find('.schedule-assignment-row').each(function (index) {
+                $(this).find('.schedule_id').attr('name', 'lesson[' + index + '][schedule_id]');
+                $(this).find('.lesson_id').attr('name', 'lesson[' + index + '][lesson_id]');
+                $(this).find('.teacher_id').attr('name', 'lesson[' + index + '][teacher_id]');
             });
+        }
 
-            $('.save_lecture_time').on('click',function(e){
-                e.preventDefault() ;
-                // let lesson_id = $('select.lesson_id').val();
-                // let teacher_id = $('select.teacher_id').val();
-                // let day_id = $(`.day_id`).val();
-                // let lecture_time_id = $(`.time_id`).val();
-                var form = $('.this-form');
-                $.ajax({
-                    url:"{{ route('save.schedule') }}",
-                    type: "POST",
+        function addRow(assignment) {
+            var template = document.getElementById('scheduleAssignmentRowTemplate');
+            var row = template.content.firstElementChild.cloneNode(true);
+            var $row = $(row);
+            $container.append($row);
+            if (assignment) {
+                $row.find('.schedule_id').val(assignment.schedule_id || '');
+                $row.find('.lesson_id').val(assignment.lesson_id);
+                $row.find('.teacher_id').val(assignment.teacher_id);
+            }
+            if ($.fn.select2) $row.find('.lesson_id, .teacher_id').select2({dropdownParent: $modal});
+            reindexRows();
+        }
 
-                    data: form.serialize(),
-                    success: function (response2) {
-                        console.log(response2);
-                        if (response2.status == false) {
-                            swal({title:"خطأ",text:`<p> هذا التوقيت محجوز للاستاذ</p>`,html:!0});
-                        }else if (response2.status == 2){
-                            swal({title:"خطأ",text:`<p> لايمكن إضافة مادنتين بنفس الوقت   </p>`,html:!0});
-                        }else if (response2.status == 3){
-                            swal({title:"خطأ",text:`<p> مسموح إضافة مادة واحدة   فقط      </p>`,html:!0});
-                        }else{
-                            let lesson_name = $( ".wide option:selected" ).text();
-                            let lesson_id = $( ".wide " ).val();
-                            let teacher_name = $( ".teacher_id option:selected" ).text();
-                            // let lesson_id = $( ".wide " ).val();
+        function resetRows(assignments) {
+            destroySelect2();
+            $container.empty();
+            if (assignments && assignments.length) assignments.forEach(addRow);
+            else addRow(null);
+        }
 
-                            $(`.${xx}`).val(lesson_name);
-                            $(`.id-${xx}`).val(lesson_id);
-                            $(`.lesson_name-${xx}`).text(lesson_name);
-                            $(`.teacher_name-${xx}`).text(`(${teacher_name})`);
-
-                            $("#add_schedule").modal('hide');
-                            swal({title:"نجاح",text:`<p>تم الإضافة  بنجاح</p>`,html:!0});
-                            window.location.reload();
-
-                            console.log('content name',response2);
-                    }
-                    },error: function(error){
-                    console.log('insider function',error);
-                    var x = JSON.parse(error.responseText);
-                        $.each(x.errors, function(key,value) {
-                            swal({title:"خطأ",text:`<p>${value}</p>`,html:!0});
-                        });
-                    }
-                });
-
-            })
-            $('.add_another_lesson').on('click',function(){
-                counter++ ;
-                $('.lessons-container').append(`
-                <div >
-                    <span class="del-element"  style=" text-align:right;color:red">  <i class="fa fa-window-close fa-3x " style="cursor:pointer" title="الغاء" aria-hidden="true"></i> </span>
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label"> حدد المادة     :</label>
-                        <div class="col-sm-10">
-                            <select class="form-control wide lesson_id" style="width: 100%;" name="lesson[${counter}][lesson_id]" id="lesson_id">
-                                <option value="">حدد المادة</option>
-                                @foreach ($lessons as $lesson)
-                                <option value="{{ $lesson->id }}"><span>{{ $lesson->name }} </span></option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="courseCost" class="col-sm-2 col-form-label"> حدد الاستاذ     :</label>
-                        <div class="col-sm-10">
-                            <select class="form-control  teacher_id" style="width: 100%;" name="lesson[${counter}][teacher_id]" id="teacher_id">
-                                <option value="">حدد الاستاذ</option>
-                                @foreach ($teachers as $teacher)
-                                <option value="{{ $teacher->id }}">{{ $teacher->first_name }}  {{ $teacher->last_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                `)
-            });
-
-            $(document).on('click' , '.del-element' , function () {
-                $(this).parent().remove();
-                counter-- ;
-            });
-
+        $modal.on('show.bs.modal', function (event) {
+            var trigger = event.relatedTarget;
+            if (!trigger) return;
+            activeTrigger = trigger;
+            var $trigger = $(trigger);
+            $form.find('.day').val($trigger.attr('data-day') || '');
+            $form.find('.time').val($trigger.attr('data-time') || '');
+            $form.find('.day_id').val($trigger.attr('data-day_id') || '');
+            $form.find('.time_id').val($trigger.attr('data-time_id') || '');
+            $form.find('[name="schedule_context"]').val('exam');
+            var assignments = [];
+            try { assignments = JSON.parse($trigger.attr('data-assignments') || '[]'); } catch (error) { assignments = []; }
+            resetRows(assignments);
         });
-    </script>
-<script>
-    $(document).ready(function() {
-        $('.add_time').on('click', function() {
-            var day = $(this).data('day');
-            var time = $(this).data('time');
-            var time_name = $(this).data('time_name');
-            var day_id = $(this).data('day_id');
-            var time_id = $(this).data('time_id');
-            var lesson_id = $(this).data('lesson_id'); // Lesson ID
-            var teacher_id = $(this).data('teacher_id'); // Teacher ID
 
-            // Set the values in the modal
-            $('.day').val(day);
-            $('.time').val(time);
-            $('.time_name').val(time-name);
-            $('.day_id').val(day_id);
-            $('.time_id').val(time_id);
+        $modal.on('hidden.bs.modal', function () {
+            destroySelect2();
+            $container.empty();
+            $form.find('.day, .time, .day_id, .time_id').val('');
+            activeTrigger = null;
+        });
 
-            // Select the lesson and teacher in the dropdowns
-            $('.lesson_id').val(lesson_id).trigger('change'); // Use trigger('change') to update UI if needed
-            $('.teacher_id').val(teacher_id).trigger('change'); // Use trigger('change') to update UI if needed
+        $form.on('click', '.add_another_lesson', function (event) {
+            event.preventDefault();
+            addRow(null);
+        });
+
+        $form.on('click', '.remove-schedule-assignment', function () {
+            if ($container.find('.schedule-assignment-row').length === 1) {
+                $(this).closest('.schedule-assignment-row').find('select').val('').trigger('change');
+                return;
+            }
+            var $row = $(this).closest('.schedule-assignment-row');
+            if ($.fn.select2) $row.find('select.select2-hidden-accessible').select2('destroy');
+            $row.remove();
+            reindexRows();
+        });
+
+        function refreshSlot(assignments) {
+            var $trigger = $(activeTrigger);
+            var $labels = $trigger.find('.schedule-assignment-labels').empty();
+            assignments.forEach(function (assignment) {
+                var $item = $('<div class="schedule-assignment-label"></div>');
+                $('<p class="teacher-timetable__lesson-title"></p>').text(assignment.lesson_name).appendTo($item);
+                $('<p class="teacher-timetable__meta"></p>').text(assignment.teacher_name).appendTo($item);
+                $labels.append($item);
+            });
+            var timeText = $trigger.attr('data-time_label') || '';
+            if (timeText) $labels.append($('<p class="teacher-timetable__meta"></p>').text(timeText));
+            $trigger.attr('data-assignments', JSON.stringify(assignments.map(function (item) {
+                return {schedule_id: item.schedule_id, lesson_id: item.lesson_id, teacher_id: item.teacher_id};
+            })));
+
+            var $actions = $trigger.closest('.schedule-slot-content').find('.schedule-meeting-actions');
+            var linkClass = $actions.attr('data-link-class') || 'teacher-timetable__aux-action';
+            var meetingTitle = $actions.attr('data-meeting-title') || '';
+            $actions.empty();
+            assignments.forEach(function (assignment) {
+                var $link = $('<a></a>').attr({
+                    'class': linkClass + ' js-meeting-link',
+                    'data-toggle': 'modal',
+                    'data-target': '#add_schedule1',
+                    'data-day_id': $trigger.attr('data-day_id'),
+                    'data-day': $trigger.attr('data-day'),
+                    'data-time_id': $trigger.attr('data-time_id'),
+                    'data-time_name': $trigger.attr('data-time'),
+                    'data-lesson_name': assignment.lesson_name,
+                    'data-lesson_id': assignment.lesson_id,
+                    'data-lesson_time_id': assignment.schedule_id,
+                    'data-meeting_link': assignment.meeting_link || '',
+                    'title': meetingTitle
+                }).append('<i class="fas fa-link" aria-hidden="true"></i>');
+                $actions.append($link);
+            });
+        }
+
+        $form.on('submit', function (event) {
+            event.preventDefault();
+            var $button = $form.find('.save_lecture_time');
+            if (!activeTrigger || $button.prop('disabled')) return;
+            reindexRows();
+            $button.prop('disabled', true);
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: $form.serialize(),
+                dataType: 'json',
+                headers: {'Accept': 'application/json'}
+            }).done(function (response) {
+                if (!response || response.status !== true || !Array.isArray(response.assignments)) {
+                    notify((response && (response.msg || response.message)) || feedback.error, true);
+                    return;
+                }
+                refreshSlot(response.assignments);
+                $modal.modal('hide');
+                notify(response.msg || feedback.success, false);
+            }).fail(function (xhr) {
+                var body = xhr.responseJSON || {};
+                var errors = body.errors || {};
+                var message = body.message || feedback.error;
+                Object.keys(errors).some(function (key) {
+                    var value = errors[key];
+                    message = Array.isArray(value) ? value[0] : value;
+                    return true;
+                });
+                notify(message, true);
+            }).always(function () { $button.prop('disabled', false); });
+        });
+
+        $('#add_schedule1').on('show.bs.modal', function (event) {
+            var $button = $(event.relatedTarget);
+            var $meetingModal = $(this);
+            $meetingModal.find('.day').val($button.attr('data-day') || '');
+            $meetingModal.find('.day_id').val($button.attr('data-day_id') || '');
+            $meetingModal.find('.time_name').val($button.attr('data-time_name') || '');
+            $meetingModal.find('.time_id').val($button.attr('data-time_id') || '');
+            $meetingModal.find('.lesson').val($button.attr('data-lesson_name') || '');
+            $meetingModal.find('.lesson_id').val($button.attr('data-lesson_id') || '');
+            $meetingModal.find('.lesson_time_id').val($button.attr('data-lesson_time_id') || '');
+            $meetingModal.find('.meeting_link').val($button.attr('data-meeting_link') || '');
         });
     });
-</script>
+    </script>
+
 
 
 
@@ -1142,39 +1183,6 @@
     });
 </script>
 
-<script>
-    $('#add_schedule1').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget);
-    var lessonTimeId = button.data('lesson_time_id');  // Ensure this has the correct value
-    var lessonId = button.data('lesson_id');  // This should extract the correct lesson ID
 
-    var modal = $(this);
-    modal.find('.lesson_time_id').val(lessonTimeId);
-
-    // Extract the correct data
-    var dayId = button.data('day_id');
-    var day = button.data('day');
-    var timeId = button.data('time_id');  // Correct time ID
-    var timeName = button.data('time_name');  // Correct time ID
-    var lessonName = button.data('lesson_name');
-    var lessonID = button.data('lesson_id');
-
-    var lessonTimeId = button.data('lesson_time_id');
-    var meetingLink = button.data('meeting_link');
-
-    // Assign these values to the modal inputs
-    var modal = $(this);
-    modal.find('.day').val(day);
-    modal.find('.day_id').val(dayId);
-    modal.find('.time').val(timeId);
-    modal.find('.time_name').val(timeName);
-    modal.find('.time_id').val(timeId);  // Make sure time_id gets the correct time value
-    modal.find('.lesson').val(lessonName);
-    modal.find('.lesson_id').val(lessonID);
-
-    modal.find('.lesson_time_id').val(lessonTimeId);
-    modal.find('.meeting_link').val(meetingLink);
-});
-</script>
 
     @endsection

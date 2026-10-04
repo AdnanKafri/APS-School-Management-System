@@ -751,7 +751,7 @@ button.close{
                 <div class="modal fade createLessonModal">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <form id="" action="{{ route('lesson_store') }}" method="POST" enctype="multipart/form-data">
+                            <form id="createLessonForm" action="{{ route('lesson_store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="modal-header">
@@ -768,6 +768,15 @@ button.close{
 
 
                                 <div class="modal-body">
+                                    @if ($errors->any())
+                                        <div class="alert alert-danger" role="alert">
+                                            <ul class="mb-0">
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
 
                                     <div class="form-group" style="text-align:right;direction:rtl">
                                         <label> مادة انكليزي : </label>
@@ -781,7 +790,7 @@ button.close{
                                     <div class="form-group" style="text-align:right">
                                         <label>الاسم بالعربية</label>
                                         <input type="text" name="name" class="form-control a"
-                                            value="" style="direction:rtl"
+                                            value="{{ old('name') }}" style="direction:rtl"
                                             placeholder="اكتب الاسم"  required>
                                     </div>
 
@@ -789,20 +798,20 @@ button.close{
                                     <div class="form-group" style="text-align:right">
                                         <label> الاسم بالانكليزية</label>
                                         <input type="text" name="name_en" class="form-control a"
-                                            value=""
+                                            value="{{ old('name_en') }}"
                                             placeholder="اكتب الاسم"  required>
                                     </div>
 
                                     <div class="form-group" style="text-align:right">
                                         <label> العلامة  العظمى للمادة </label>
                                         <input type="text" id="max_markc" name="max_mark" class="form-control a"
-                                            value=""
+                                            value="{{ old('max_mark') }}"
                                             placeholder=" أدخل العلامة" maxlength="30" required>
                                     </div>
                                     <div class="form-group" style="text-align:right">
                                         <label> العلامة  الدنيا للمادة </label>
                                         <input type="text" id="min_markc" name="min_mark" class="form-control a"
-                                            value=""
+                                            value="{{ old('min_mark') }}"
                                             placeholder=" أدخل العلامة" maxlength="30" required>
                                     </div>
 
@@ -816,7 +825,7 @@ button.close{
                                             <option value="">اختر القسم </option>
 
                                             @foreach ($base_subjects as $base_subject)
-                                                <option value="{{ $base_subject->id }}">{{ $base_subject->name }}</option>
+                                                <option value="{{ $base_subject->id }}" {{ old('base_subject_id') == $base_subject->id ? 'selected' : '' }}>{{ $base_subject->name }}</option>
                                             @endforeach
 
                                         </select>
@@ -1754,5 +1763,22 @@ console.log(value);
 
 });
 </script>
+<script>
+    $(function () {
+        $('#createLessonForm').on('submit', function () {
+            var $form = $(this);
+            if ($form.data('submitting')) return false;
+            $form.data('submitting', true);
+            $form.find('button[type="submit"]').prop('disabled', true);
+        });
+    });
+</script>
+                @if ($errors->any())
+                    <script>
+                        $(function () {
+                            $('.createLessonModal').modal('show');
+                        });
+                    </script>
+                @endif
 
                 @endsection
