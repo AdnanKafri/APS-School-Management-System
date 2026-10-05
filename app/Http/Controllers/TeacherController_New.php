@@ -2462,6 +2462,7 @@ class TeacherController_New extends Controller
         if (!$year) {
             abort(422, __('teacher_portal.dashboard.no_current_assignments_title'));
         }
+        $term = $this->currentTeacherTerm($year->id);
          $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
         // return $student_id ;
         $user_id = auth()->user()->id ;
@@ -2481,26 +2482,35 @@ class TeacherController_New extends Controller
           // pring days
         $days = Day::all();
         // pring teacher schedule
-        $schedule = Lesson_room_teacher_lecture_time::with('lesson','lecture_time')
-        ->WhereHas('room' ,function($q) use ($year){
-            $q->where('year_id',$year->id);
-        })
-        ->with(['room.classes' => function($query){
-            $query->select("id","name");
-        }])
-         ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
-        ->orderBy('lecture_times.start_time')
-        ->select("lesson_room_teacher_lecture_time.*")
-         ->where('lesson_room_teacher_lecture_time.teacher_id',$teacher_id)
-         ->whereExists(function ($query) use ($teacher_id, $year) {
-             $query->select(DB::raw(1))
-                 ->from('teacher_room_lesson as current_assignment')
-                 ->whereColumn('current_assignment.room_id', 'lesson_room_teacher_lecture_time.room_id')
-                 ->whereColumn('current_assignment.lesson_id', 'lesson_room_teacher_lecture_time.lesson_id')
-                 ->where('current_assignment.teacher_id', $teacher_id)
-                 ->where('current_assignment.year_id', $year->id);
-         })
-         ->get();
+        $schedule = collect();
+        if ($term) {
+            $schedule = Lesson_room_teacher_lecture_time::with('lesson','lecture_time')
+                ->whereHas('room', function ($query) use ($year) {
+                    $query->where('year_id', $year->id);
+                })
+                ->whereHas('lecture_time', function ($query) {
+                    $query->where('type', 1)
+                        ->whereColumn('lecture_times.room_id', 'lesson_room_teacher_lecture_time.room_id');
+                })
+                ->with(['room.classes' => function ($query) {
+                    $query->select('id', 'name');
+                }])
+                ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
+                ->orderBy('lecture_times.start_time')
+                ->select('lesson_room_teacher_lecture_time.*')
+                ->where('lesson_room_teacher_lecture_time.teacher_id', $teacher_id)
+                ->where('lesson_room_teacher_lecture_time.year_id', $year->id)
+                ->where('lesson_room_teacher_lecture_time.term_id', $term->id)
+                ->whereExists(function ($query) use ($teacher_id, $year) {
+                    $query->select(DB::raw(1))
+                        ->from('teacher_room_lesson as current_assignment')
+                        ->whereColumn('current_assignment.room_id', 'lesson_room_teacher_lecture_time.room_id')
+                        ->whereColumn('current_assignment.lesson_id', 'lesson_room_teacher_lecture_time.lesson_id')
+                        ->where('current_assignment.teacher_id', $teacher_id)
+                        ->where('current_assignment.year_id', $year->id);
+                })
+                ->get();
+        }
 
         // pring student schedule tracer
         $student_schedule_tracer = Student_schedule_tracer::whereDate('created_at', Carbon::today())->

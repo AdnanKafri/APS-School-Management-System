@@ -22,7 +22,9 @@
     .teacher-assignment-v2 .assignment-row__remove { min-width: 44px; min-height: 44px; border-radius: 10px; }
     .teacher-assignment-v2 .assignment-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; margin-top: 1.25rem; }
     .teacher-assignment-v2 .assignment-existing { margin: 0; padding-right: 1.15rem; color: var(--v2-muted); }
-    .teacher-assignment-v2 .assignment-existing li { margin-bottom: .45rem; }
+    .teacher-assignment-v2 .assignment-existing li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: .55rem; padding: .75rem .85rem; border: 1px solid var(--v2-border); border-radius: 12px; }
+    .teacher-assignment-v2 .assignment-existing__copy { min-width: 0; }
+    .teacher-assignment-v2 .assignment-existing__status { display: block; margin-top: .25rem; color: var(--v2-muted); font-size: .82rem; }
     .teacher-assignment-v2 .assignment-feedback { margin-top: .55rem; color: #b42318; font-size: .85rem; font-weight: 700; }
     @media (max-width: 991px) { .teacher-assignment-v2 .assignment-row { grid-template-columns: 1fr; } .teacher-assignment-v2 .assignment-row__remove { width: 100%; } }
 </style>
@@ -84,9 +86,25 @@
         <section class="card v2-card assignment-card">
             <div class="card-body">
                 <h3 class="h5 font-weight-bold mb-3">التكليفات الحالية</h3>
+                @if(!$term)
+                    <p class="alert alert-warning assignment-notice">{{ __('teacher_assignment.messages.term_unavailable') }}</p>
+                @endif
                 <ul class="assignment-existing">
                     @foreach($currentAssignments as $assignment)
-                        <li>{{ optional($assignment->lesson)->name ?? 'مادة غير متاحة' }} — {{ $assignment->room_name ?? 'شعبة غير متاحة' }}</li>
+                        <li>
+                            <div class="assignment-existing__copy">
+                                <strong>{{ optional($assignment->lesson)->name ?? 'مادة غير متاحة' }}</strong>
+                                <span> — {{ $assignment->room_name ?? 'شعبة غير متاحة' }}</span>
+                                <span class="assignment-existing__status">
+                                    {{ $assignment->has_current_term_schedule ? __('teacher_assignment.messages.scheduled') : __('teacher_assignment.messages.not_scheduled') }}
+                                </span>
+                            </div>
+                            @if($assignment->can_open_schedule)
+                                <a class="btn btn-sm btn-outline-primary" href="{{ route('workschedule', $assignment->room_id) }}">
+                                    <i class="fas fa-calendar-alt ml-1" aria-hidden="true"></i>{{ __('teacher_assignment.messages.schedule_action') }}
+                                </a>
+                            @endif
+                        </li>
                     @endforeach
                 </ul>
             </div>

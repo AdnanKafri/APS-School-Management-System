@@ -4,6 +4,8 @@
 @section('page_subtitle', 'إدارة جدول الحصص الأسبوعي للشعبة وربط المواد والمدرسين')
 
 @section('style')
+    <link rel="stylesheet" href="{{ asset('admin/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/work-schedule-ui.css') }}">
      <style>
 
 .workschedule-v2 .card {
@@ -1176,9 +1178,12 @@
 </div>
 </div>
         {{-- end delete lesson time --}}
+    @include('admin.partials.work_schedule_feedback')
 
 	@endsection
     @section('js')
+    <script src="{{ asset('admin/js/select2.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/work-schedule-ui.js') }}"></script>
     <script>
     $(function () {
         var $modal = $('#add_schedule');
@@ -1190,16 +1195,12 @@
             error: @json(__('timetable.schedule.save_failed')),
             errorTitle: @json(__('timetable.schedule.error_title')),
             chooseLesson: @json(__('timetable.schedule.choose_lesson')),
-            chooseTeacher: @json(__('timetable.schedule.choose_teacher'))
+            chooseTeacher: @json(__('timetable.schedule.choose_teacher')),
+            searchEmpty: @json(__('timetable.schedule.teacher_search_empty')),
+            searchPrompt: @json(__('timetable.schedule.teacher_search_prompt')),
+            unavailable: @json(__('timetable.schedule.unavailable'))
         };
-
-        function notify(message, isError) {
-            if (typeof window.swal === 'function') {
-                window.swal({title: isError ? feedback.errorTitle : '', text: message, icon: isError ? 'error' : 'success'});
-            } else {
-                window.alert(message);
-            }
-        }
+        var scheduleUi = window.WorkScheduleUI.create($modal, $form, feedback);
 
         function destroySelect2() {
             if (!$.fn.select2) return;
@@ -1226,9 +1227,7 @@
                 $row.find('.lesson_id').val(assignment.lesson_id);
                 $row.find('.teacher_id').val(assignment.teacher_id);
             }
-            if ($.fn.select2) {
-                $row.find('.lesson_id, .teacher_id').select2({dropdownParent: $modal});
-            }
+            scheduleUi.initSelects($row);
             reindexRows();
         }
 
@@ -1245,6 +1244,7 @@
         $modal.on('show.bs.modal', function (event) {
             var trigger = event.relatedTarget;
             if (!trigger) return;
+            scheduleUi.clearError();
             activeTrigger = trigger;
             var $trigger = $(trigger);
             $form.find('.day').val($trigger.attr('data-day') || '');
@@ -1262,6 +1262,8 @@
         });
 
         $modal.on('hidden.bs.modal', function () {
+            if (scheduleUi.isSuspended()) return;
+            scheduleUi.clearError();
             destroySelect2();
             $container.empty();
             $form.find('.day, .time, .day_id, .time_id').val('');
@@ -1323,7 +1325,8 @@
         $form.on('submit', function (event) {
             event.preventDefault();
             var $button = $form.find('.save_lecture_time');
-            if (!activeTrigger || $button.prop('disabled')) return;
+            if (!activeTrigger || $button.prop('disabled') || scheduleUi.isSuspended()) return;
+            scheduleUi.clearError();
             reindexRows();
             $button.prop('disabled', true);
             $.ajax({
@@ -1334,12 +1337,12 @@
                 headers: {'Accept': 'application/json'}
             }).done(function (response) {
                 if (!response || response.status !== true || !Array.isArray(response.assignments)) {
-                    notify((response && (response.msg || response.message)) || feedback.error, true);
+                    scheduleUi.error(response, (response && (response.msg || response.message)) || feedback.error);
                     return;
                 }
                 refreshSlot(response.assignments);
                 $modal.modal('hide');
-                notify(response.msg || feedback.success, false);
+                scheduleUi.success(response.msg || feedback.success);
             }).fail(function (xhr) {
                 var body = xhr.responseJSON || {};
                 var errors = body.errors || {};
@@ -1349,7 +1352,7 @@
                     message = Array.isArray(value) ? value[0] : value;
                     return true;
                 });
-                notify(message, true);
+                scheduleUi.error(body, message);
             }).always(function () {
                 $button.prop('disabled', false);
             });

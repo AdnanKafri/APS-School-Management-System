@@ -272,8 +272,8 @@
 
     body.teacher-portal-body .teacher-schedule-lesson-item {
         display: grid;
-        gap: .55rem;
-        padding: .78rem .8rem;
+        gap: .65rem;
+        padding: .9rem .8rem;
         border-radius: 15px;
         border: 1px solid rgba(226, 232, 240, 0.95);
         background: #fff;
@@ -292,24 +292,26 @@
     body.teacher-portal-body .teacher-schedule-lesson-item.is-danger { background: #fff7f7; border-color: #fee2e2; }
     body.teacher-portal-body .teacher-schedule-lesson-item.is-warning { background: #fffaf3; border-color: #fde68a; }
 
-    body.teacher-portal-body .teacher-schedule-lesson-item__top {
+    body.teacher-portal-body .teacher-schedule-lesson-item__bottom {
         display: flex;
         flex-wrap: wrap;
         gap: .4rem;
         align-items: center;
         justify-content: space-between;
+        padding-top: .55rem;
+        border-top: 1px solid rgba(148, 163, 184, .18);
     }
 
     body.teacher-portal-body .teacher-schedule-lesson-item__time {
         display: inline-flex;
         align-items: center;
         gap: .3rem;
-        padding: .3rem .55rem;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.08);
+        padding: .25rem 0;
         color: #0f172a;
-        font-size: .75rem;
+        font-size: .82rem;
         font-weight: 700;
+        line-height: 1.5;
+        max-width: 100%;
         white-space: nowrap;
     }
 
@@ -321,7 +323,10 @@
         border-radius: 999px;
         font-size: .72rem;
         font-weight: 800;
-        white-space: nowrap;
+        max-width: 100%;
+        line-height: 1.5;
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 
     body.teacher-portal-body .teacher-schedule-lesson-item.is-default .teacher-schedule-lesson-item__badge {
@@ -351,23 +356,58 @@
 
     body.teacher-portal-body .teacher-schedule-lesson-item__title {
         margin: 0;
-        font-size: .94rem;
-        line-height: 1.4;
+        font-size: 1rem;
+        line-height: 1.55;
         font-weight: 800;
         color: #0f172a;
+        overflow-wrap: anywhere;
     }
 
-    body.teacher-portal-body .teacher-schedule-lesson-item__meta {
-        display: grid;
-        gap: .24rem;
+    body.teacher-portal-body .teacher-schedule-lesson-item__location {
+        display: flex;
+        align-items: baseline;
+        gap: .4rem;
+        min-width: 0;
         color: #475569;
-        font-size: .79rem;
-        line-height: 1.55;
+        line-height: 1.6;
     }
 
-    body.teacher-portal-body .teacher-schedule-lesson-item__meta strong {
-        color: #0f172a;
+    body.teacher-portal-body .teacher-schedule-lesson-item__location i {
+        flex-shrink: 0;
+        font-size: .86rem;
+        color: #64748b;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__slot {
+        display: grid;
+        gap: .15rem;
+        padding: .45rem .6rem;
+        border-radius: 8px;
+        background: rgba(148, 163, 184, .08);
+        min-width: 0;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__period {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .4rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__label {
+        font-size: .7rem;
+        font-weight: 500;
+        line-height: 1.6;
+        color: #64748b;
+    }
+
+    body.teacher-portal-body .teacher-schedule-lesson-item__value {
+        min-width: 0;
+        color: #475569;
+        font-size: .86rem;
         font-weight: 700;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
     }
 
     body.teacher-portal-body .teacher-schedule-lesson-item__action {
@@ -376,6 +416,8 @@
         justify-content: center;
         gap: .35rem;
         width: fit-content;
+        max-width: 100%;
+        min-height: 38px;
         padding: .42rem .72rem;
         border-radius: 999px;
         background: #111827;
@@ -383,6 +425,8 @@
         font-size: .75rem;
         font-weight: 700;
         text-decoration: none;
+        line-height: 1.5;
+        text-align: center;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
     }
 
@@ -401,6 +445,19 @@
 
     body.teacher-portal-body .teacher-schedule-empty i {
         font-size: 1.5rem;
+    }
+
+    body.teacher-portal-body .teacher-schedule-empty--day {
+        min-height: 72px;
+        padding: .65rem;
+        border-color: #e2e8f0;
+        background: transparent;
+        font-size: .76rem;
+        line-height: 1.6;
+    }
+
+    body.teacher-portal-body .teacher-schedule-empty--day i {
+        font-size: 1.05rem;
     }
 
     @media (max-width: 1199.98px) {
@@ -461,12 +518,16 @@
         : ($isRtl ? 'الأستاذ' : 'Teacher');
 
     $dayCollection = collect($days)->sortBy('id')->values();
-    $boardDays = $dayCollection->take(5)->values();
     $lessonsByDay = collect($schedule)
         ->sortBy(function ($entry) {
             return optional($entry->lecture_time)->start_time ?: '23:59:59';
         })
         ->groupBy('day_id');
+
+    // The Teacher weekly board is Sunday through Thursday (existing Day IDs 2-6).
+    $boardDays = $dayCollection->filter(function ($day) {
+        return (int) $day->id >= 2 && (int) $day->id <= 6;
+    })->values();
 
     $todayDayId = (int) $today + 1;
     $todaySessions = collect($schedule)->where('day_id', $todayDayId);
@@ -604,9 +665,9 @@
                                 </div>
 
                                 @if ($dayLessons->isEmpty())
-                                    <div class="teacher-schedule-empty" style="min-height: 130px;">
+                                    <div class="teacher-schedule-empty teacher-schedule-empty--day">
                                         <i class="mdi mdi-calendar-remove-outline" aria-hidden="true"></i>
-                                        <strong>{{ $labels['empty_day'] }}</strong>
+                                        <span>{{ $labels['empty_day'] }}</span>
                                     </div>
                                 @else
                                     <div class="teacher-schedule-lesson-list">
@@ -653,27 +714,33 @@
                                             @endphp
 
                                             <article class="teacher-schedule-lesson-item {{ $stateClass }}">
-                                                <div class="teacher-schedule-lesson-item__top">
-                                                    <span class="teacher-schedule-lesson-item__badge">{{ $stateLabel }}</span>
+                                                <h4 class="teacher-schedule-lesson-item__title">{{ $entry->lesson->name }}</h4>
+
+                                                <div class="teacher-schedule-lesson-item__location">
+                                                    <i class="mdi mdi-map-marker-outline" aria-hidden="true"></i>
+                                                    <span class="teacher-schedule-lesson-item__value">{{ $entry->room->classes->name }} / {{ $entry->room->name }}</span>
+                                                </div>
+
+                                                <div class="teacher-schedule-lesson-item__slot">
+                                                    <div class="teacher-schedule-lesson-item__period">
+                                                        <span class="teacher-schedule-lesson-item__label">{{ $labels['period_label'] }}</span>
+                                                        <span class="teacher-schedule-lesson-item__value">{{ $entry->lecture_time->name }}</span>
+                                                    </div>
                                                     <span class="teacher-schedule-lesson-item__time">
                                                         <i class="mdi mdi-clock-outline" aria-hidden="true"></i>
-                                                        {{ \Carbon\Carbon::parse($entry->lecture_time->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($entry->lecture_time->end_time)->format('H:i') }}
+                                                        <bdi dir="ltr">{{ \Carbon\Carbon::parse($entry->lecture_time->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($entry->lecture_time->end_time)->format('H:i') }}</bdi>
                                                     </span>
                                                 </div>
 
-                                                <h4 class="teacher-schedule-lesson-item__title">{{ $entry->lesson->name }}</h4>
-
-                                                <div class="teacher-schedule-lesson-item__meta">
-                                                    <span><strong>{{ $labels['room_label'] }}:</strong> {{ $entry->room->classes->name }} / {{ $entry->room->name }}</span>
-                                                    <span><strong>{{ $labels['period_label'] }}:</strong> {{ $entry->lecture_time->name }}</span>
+                                                <div class="teacher-schedule-lesson-item__bottom">
+                                                    <span class="teacher-schedule-lesson-item__badge">{{ $stateLabel }}</span>
+                                                    @if ($joinUrl)
+                                                        <a href="{{ $joinUrl }}" target="_blank" rel="noopener noreferrer" class="teacher-schedule-lesson-item__action">
+                                                            <i class="mdi mdi-arrow-top-right-thin" aria-hidden="true"></i>
+                                                            {{ $labels['open'] }}
+                                                        </a>
+                                                    @endif
                                                 </div>
-
-                                                @if ($joinUrl)
-                                                    <a href="{{ $joinUrl }}" target="_blank" rel="noopener noreferrer" class="teacher-schedule-lesson-item__action">
-                                                        <i class="mdi mdi-arrow-top-right-thin" aria-hidden="true"></i>
-                                                        {{ $labels['open'] }}
-                                                    </a>
-                                                @endif
                                             </article>
                                         @endforeach
                                     </div>

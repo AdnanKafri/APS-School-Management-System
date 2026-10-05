@@ -6,6 +6,7 @@ use ZipArchive;
 use App\About_us;
 use App\Applicant;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Blog;
 use App\Header_info;
 use App\Student;
@@ -40,6 +41,7 @@ use App\Backup;
 use Illuminate\Support\Facades\Session;
 use File;
 use App\Teacher_room_lesson;
+use App\Lesson_room_teacher_lecture_time;
 use App\Term;
 use App\Term_year;
 use App\User;
@@ -1296,19 +1298,38 @@ if($request->hasFile('image')){
      $teacher = Teacher::findOrFail($teacher_id);
      $classes = Classe::orderBy('name')->get();
      $year = Year::where('current_year', '1')->firstOrFail();
+     $term = Term_year::where('year_id', $year->id)
+         ->where('current_term', '1')
+         ->first();
      $currentAssignments = Teacher_room_lesson::with('lesson')
          ->where('teacher_id', $teacher->id)
          ->where('year_id', $year->id)
          ->get();
      $rooms = Room::whereIn('id', $currentAssignments->pluck('room_id'))
+         ->where('year_id', $year->id)
          ->get()
          ->keyBy('id');
 
-     foreach ($currentAssignments as $assignment) {
-         $assignment->room_name = optional($rooms->get($assignment->room_id))->name;
+     $scheduledKeys = collect();
+     if ($term && $currentAssignments->isNotEmpty()) {
+         $scheduledKeys = Lesson_room_teacher_lecture_time::where('teacher_id', $teacher->id)
+             ->where('year_id', $year->id)
+             ->where('term_id', $term->id)
+             ->whereIn('room_id', $currentAssignments->pluck('room_id')->unique())
+             ->get(['lesson_id', 'room_id'])
+             ->map(function ($scheduled) {
+                 return $scheduled->lesson_id . ':' . $scheduled->room_id;
+             });
      }
 
-    return view('admin.set_task', compact('teacher', 'classes', 'year', 'currentAssignments'));
+     foreach ($currentAssignments as $assignment) {
+         $assignment->room_name = optional($rooms->get($assignment->room_id))->name;
+         $assignment->has_current_term_schedule = $term
+             && $scheduledKeys->contains($assignment->lesson_id . ':' . $assignment->room_id);
+         $assignment->can_open_schedule = $term && $rooms->has($assignment->room_id);
+     }
+
+    return view('admin.set_task', compact('teacher', 'classes', 'year', 'term', 'currentAssignments'));
   }
 
 public function store_set_task(Request $request){
@@ -1435,6 +1456,34 @@ private function syncTeacherAssignmentPlan(Teacher $teacher, Year $year, array $
             ->where('year_id', $year->id)
             ->lockForUpdate()
             ->get();
+
+        $removedPairs = $existing->filter(function ($assignment) use ($assignments) {
+            $key = $assignment->lesson_id . ':' . $assignment->room_id;
+            return !isset($assignments[$key]);
+        })->unique(function ($assignment) {
+            return $assignment->lesson_id . ':' . $assignment->room_id;
+        });
+
+        if ($removedPairs->isNotEmpty()) {
+            $scheduledPairs = Lesson_room_teacher_lecture_time::where('teacher_id', $teacher->id)
+                ->where('year_id', $year->id)
+                ->whereIn('room_id', $removedPairs->pluck('room_id')->unique())
+                ->whereIn('lesson_id', $removedPairs->pluck('lesson_id')->unique())
+                ->get(['lesson_id', 'room_id'])
+                ->map(function ($scheduled) {
+                    return $scheduled->lesson_id . ':' . $scheduled->room_id;
+                })
+                ->unique();
+
+            if ($removedPairs->contains(function ($assignment) use ($scheduledPairs) {
+                return $scheduledPairs->contains($assignment->lesson_id . ':' . $assignment->room_id);
+            })) {
+                throw ValidationException::withMessages([
+                    'room_id' => __('teacher_assignment.validation.scheduled_assignment_removal'),
+                ]);
+            }
+        }
+
         $retained = [];
 
         foreach ($existing as $assignment) {
