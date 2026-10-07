@@ -85,12 +85,6 @@
                 <i class="fas fa-clipboard-list"></i>
                 <span>القبول والتسجيل</span>
             </a>
-            @can('manage_complaint_officers')
-                <a href="{{ route('admin.complaint-officers.index') }}" class="v2-menu-link {{ request()->routeIs('admin.complaint-officers.*') ? 'active' : '' }}">
-                    <i class="fas fa-user-shield"></i>
-                    <span>{{ __('complaint_portal.officers') }}</span>
-                </a>
-            @endcan
         </div>
 
         <div class="v2-menu-title">الإعدادات والإدارة</div>
