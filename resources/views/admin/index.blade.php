@@ -138,7 +138,7 @@
             ['permission' => 'workschedule', 'route' => 'workschedule_class', 'icon' => 'far fa-calendar-check', 'title' => 'برنامج الدوام', 'desc' => 'جدولة الحصص اليومية'],
             ['permission' => 'student_affairs_section', 'route' => 'students', 'icon' => 'fas fa-user-alt', 'title' => 'شؤون الطلاب', 'desc' => 'البيانات الأكاديمية والإدارية'],
             ['permission' => 'student_affairs_section', 'route' => 'admin.year_end.index', 'icon' => 'fas fa-level-up-alt', 'title' => 'الترحيل إلى العام الجديد', 'desc' => 'تجهيز ونقل الطلاب للعام التالي'],
-            ['permission' => null, 'route' => 'admin.complaints.index', 'icon' => 'fas fa-comments', 'title' => 'الشكاوى', 'desc' => 'مراجعة الشكاوى الدراسية وشكاوى النقل'],
+            ['permission' => 'manage_complaint_officers', 'route' => 'admin.complaint-officers.index', 'icon' => 'fas fa-user-shield', 'title' => __('complaint_portal.officers'), 'desc' => __('complaint_portal.account_management')],
             ['permission' => 'user_permissions', 'route' => 'admin.roles.index', 'icon' => 'far fa-id-badge', 'title' => 'صلاحيات المستخدم', 'desc' => 'الأدوار والصلاحيات'],
             ['permission' => 'lecture_time_section', 'route' => 'sessions', 'icon' => 'far fa-building', 'title' => 'الحصص', 'desc' => 'الجلسات والجدول الأسبوعي'],
             ['permission' => 'accepting_and_regstration_section', 'route' => 'studentadmission', 'icon' => 'far fa-edit', 'title' => 'التسجيل والقبول', 'desc' => 'طلبات التسجيل والمتابعة'],

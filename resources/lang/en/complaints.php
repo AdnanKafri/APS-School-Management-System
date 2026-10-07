@@ -30,6 +30,7 @@ return [
     'fields' => [
         'type' => 'Complaint type',
         'student_name' => 'Student name',
+        'student_identifier' => 'Student School ID',
         'applicant_name' => 'Applicant / guardian name',
         'phone' => 'Phone number',
         'class_name' => 'Grade / class',
@@ -38,6 +39,7 @@ return [
         'complaint_text' => 'Complaint description',
     ],
     'placeholders' => [
+        'student_identifier' => '233/3',
         'student_name' => 'Enter the student name',
         'applicant_name' => 'Enter the applicant or guardian name',
         'phone' => 'Example: 09xxxxxxxx',
@@ -57,11 +59,13 @@ return [
         'view' => 'View details',
     ],
     'form' => [
+        'student_identifier_hint' => 'Example: 233/3 or 233-2',
         'title' => 'Complaint form',
         'subtitle' => 'Fill in the fields below and send the complaint directly to the administration.',
         'note' => 'Required fields are marked. The bus number appears only for transport complaints.',
     ],
     'admin' => [
+        'unavailable' => 'Not available',
         'title' => 'Complaints Management',
         'subtitle' => 'Review academic and transport complaints while keeping a clear status trail.',
         'all' => 'All',
@@ -91,6 +95,7 @@ return [
         'handled_by' => 'Handled by',
     ],
     'validation' => [
+        'student_identifier_format' => 'The Student School ID must contain three digits, / or -, then one digit, such as 233/3 or 233-2.',
         'required' => 'This field is required.',
         'required_field' => 'The :field is required.',
         'min_complaint' => 'The :field must contain at least :min characters.',

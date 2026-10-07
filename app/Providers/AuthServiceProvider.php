@@ -26,6 +26,11 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::before(function ($auth, $ability) {
+            if ((string) $auth->type === \App\Services\ComplaintAccess::OFFICER_TYPE
+                && (!$auth->complaint_officer_active || !in_array($ability, \App\Services\ComplaintAccess::PERMISSIONS, true)
+                    || !$auth->role || !is_array($auth->role->permissions))) {
+                return false;
+            }
             // Legacy admin model: type=2 must retain full SMT/admin access.
             if ((string) $auth->type === '2') {
                 return true;

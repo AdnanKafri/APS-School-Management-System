@@ -51,6 +51,9 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         if ($exception instanceof \Illuminate\Session\TokenMismatchException ) {
+            if ($request->is('complaint-portal/*')) {
+                return redirect()->route('complaint-portal.login')->withErrors(['session' => __('complaint_portal.session_expired')]);
+            }
             return redirect()->route('login');
         }
         return parent::render($request, $exception);

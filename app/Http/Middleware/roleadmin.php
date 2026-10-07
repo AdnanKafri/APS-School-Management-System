@@ -19,6 +19,10 @@ class roleadmin
     {
         $this->registerSmtAdminRouteAliases();
 
+        if (Auth::check() && (string) auth()->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+            abort(403);
+        }
+
         if(Auth::check() && auth()->user()->type== '2'){
             return $next($request);
         }

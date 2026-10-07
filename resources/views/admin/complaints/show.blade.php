@@ -290,6 +290,10 @@
                     <div class="info-card__value">{{ $complaint->student_name }}</div>
                 </div>
                 <div class="info-card">
+                    <span class="info-card__label">{{ __('complaints.fields.student_identifier') }}</span>
+                    <div class="info-card__value"><bdi dir="ltr">{{ $complaint->student_identifier ?: __('complaints.admin.unavailable') }}</bdi></div>
+                </div>
+                <div class="info-card">
                     <span class="info-card__label">اسم ولي الأمر / المشتكي</span>
                     <div class="info-card__value">{{ $complaint->applicant_name }}</div>
                 </div>

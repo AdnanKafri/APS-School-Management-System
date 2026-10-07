@@ -85,13 +85,10 @@
                 <i class="fas fa-clipboard-list"></i>
                 <span>القبول والتسجيل</span>
             </a>
-            @can('manage_complaints')
-                <a href="{{ route('admin.complaints.index') }}" class="v2-menu-link {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }}">
-                    <i class="fas fa-comments"></i>
-                    <span>الشكاوى والملاحظات</span>
-                    @if(($adminComplaintNotificationSummary['operational_count'] ?? 0) > 0)
-                        <span class="v2-menu-count">{{ $adminComplaintNotificationSummary['operational_count'] > 99 ? '99+' : $adminComplaintNotificationSummary['operational_count'] }}</span>
-                    @endif
+            @can('manage_complaint_officers')
+                <a href="{{ route('admin.complaint-officers.index') }}" class="v2-menu-link {{ request()->routeIs('admin.complaint-officers.*') ? 'active' : '' }}">
+                    <i class="fas fa-user-shield"></i>
+                    <span>{{ __('complaint_portal.officers') }}</span>
                 </a>
             @endcan
         </div>

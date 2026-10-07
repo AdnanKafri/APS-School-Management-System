@@ -287,7 +287,10 @@
                             <tr>
                                 <td>#{{ $complaint->id }}</td>
                                 <td>{{ $typeText }}</td>
-                                <td class="text-wrap">{{ $complaint->student_name }}</td>
+                                <td class="text-wrap">
+                                    {{ $complaint->student_name }}
+                                    <small class="d-block text-muted">{{ __('complaints.fields.student_identifier') }}: <bdi dir="ltr">{{ $complaint->student_identifier ?: __('complaints.admin.unavailable') }}</bdi></small>
+                                </td>
                                 <td class="text-wrap">{{ $complaint->applicant_name }}</td>
                                 <td>{{ $complaint->phone }}</td>
                                 <td class="text-wrap">{{ $complaint->class_name }}</td>

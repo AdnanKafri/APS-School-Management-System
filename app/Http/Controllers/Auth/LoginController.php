@@ -30,6 +30,9 @@ class LoginController extends Controller
     // protected $redirectTo = RouteServiceProvider::HOME;
     public function redirectTo()
 {            
+     if ((string) auth()->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+         return route('complaint-portal.index');
+     }
 
      if (auth()->user()->type=='2') {
                    
@@ -67,6 +70,19 @@ class LoginController extends Controller
     
     dd(url()->previous());
 }
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        if ((string) $user->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+            if (!$user->complaint_officer_active) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('complaint-portal.login')->withErrors(['email' => __('complaint_portal.invalid_credentials')]);
+            }
+            $request->session()->put('complaint_auth_version', (int) $user->complaint_auth_version);
+            return redirect()->route('complaint-portal.index');
+        }
+    }
     /**
      * Create a new controller instance.
      *

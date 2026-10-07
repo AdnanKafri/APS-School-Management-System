@@ -4,6 +4,10 @@ return [
 
     'permessions' => [
 
+        'view_complaints'=>'عرض الشكاوى',
+        'archive_complaints'=>'أرشفة الشكاوى',
+        'receive_complaint_notifications'=>'إشعارات الشكاوى',
+        'manage_complaint_officers'=>'إدارة مسؤولي متابعة الشكاوى',
         'manage_complaints'=>'إدارة الشكاوى والملاحظات',
         'manage_student_follow_ups'=>'إدارة المتابعة الدورية للطلاب',
 

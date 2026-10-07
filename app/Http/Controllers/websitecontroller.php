@@ -177,6 +177,10 @@ class websitecontroller extends Controller
 
     $credentials = $request->only('email', 'password');
 
+    if ((string) User::where('email', $request->input('email'))->value('type') === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+        return app(ComplaintOfficerLoginController::class)->login($request);
+    }
+
     if (auth()->attempt($credentials, (bool) $request->get('remember'))) {
         $request->session()->regenerate();
 
@@ -200,6 +204,8 @@ class websitecontroller extends Controller
 protected function websiteLoginRedirectPath($user)
 {
     switch ((string) $user->type) {
+        case \App\Services\ComplaintAccess::OFFICER_TYPE:
+            return route('complaint-portal.index');
         case '0':
             return 'SMARMANger/dashboard/student';
         case '1':

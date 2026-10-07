@@ -10,6 +10,30 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($user) {
+            if ((string) $user->getOriginal('type') === \App\Services\ComplaintAccess::OFFICER_TYPE
+                && (string) $user->type !== \App\Services\ComplaintAccess::OFFICER_TYPE) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['account' => __('complaint_portal.immutable_type')]);
+            }
+            if ((string) $user->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+                $user->view_password = null;
+                if ($user->exists && ($user->isDirty('password') || $user->isDirty('complaint_officer_active'))
+                    && !$user->isDirty('complaint_auth_version')) {
+                    $user->complaint_auth_version = (int) $user->complaint_auth_version + 1;
+                    $user->remember_token = \Illuminate\Support\Str::random(60);
+                }
+            }
+        });
+        static::deleting(function ($user) {
+            if ((string) $user->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['account' => __('complaint_portal.deactivate_instead')]);
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -100,6 +124,7 @@ return true;
      */
     protected $hidden = [
         'password', 'remember_token', 'view_password',
+        'complaint_officer_active', 'complaint_auth_version',
     ];
 
     /**
@@ -109,5 +134,7 @@ return true;
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'complaint_officer_active' => 'boolean',
+        'complaint_auth_version' => 'integer',
     ];
 }

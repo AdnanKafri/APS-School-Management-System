@@ -122,6 +122,13 @@ Route::group(['middleware' => ['web', 'auth', 'roleadmin']], function () {
     Route::post('/studentadmission/setup', 'DashboardController@studentadmission_setup_store')->name('studentadmission_setup_store');
     Route::post('/studentadmission/request/status', 'DashboardController@update_studentadmission_status')->name('studentadmission_request_status');
     Route::get('/studentadmission/request/{id}', 'DashboardController@studentadmission_request_details')->name('studentadmission_request_details');
+    Route::prefix('complaint-officers')->name('admin.complaint-officers.')->middleware('can:manage_complaint_officers')->group(function () {
+        Route::get('/', 'Admin\ComplaintOfficerController@index')->name('index');
+        Route::post('/', 'Admin\ComplaintOfficerController@store')->name('store');
+        Route::post('{id}/update', 'Admin\ComplaintOfficerController@update')->name('update');
+        Route::post('{id}/state', 'Admin\ComplaintOfficerController@state')->name('state');
+        Route::post('{id}/password', 'Admin\ComplaintOfficerController@password')->name('password');
+    });
     Route::group(['middleware' => 'can:manage_complaints'], function () {
         Route::get('/complaints', 'ComplaintController@index')->name('admin.complaints.index');
         Route::get('/complaints/notifications/poll', 'ComplaintController@pollNotifications')->name('admin.complaints.notifications.poll');

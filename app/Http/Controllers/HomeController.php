@@ -23,6 +23,9 @@ class HomeController extends Controller
      */
     public function index()
     {
+        if ((string) auth()->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+            return redirect()->route('complaint-portal.index');
+        }
         // return view('home');
     }
 }

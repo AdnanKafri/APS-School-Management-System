@@ -19,6 +19,9 @@ class RedirectIfAuthenticated
     public function handle($request, Closure $next, $guard = null)
     {
         if (Auth::guard($guard)->check()) {
+            if ((string) Auth::guard($guard)->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+                return redirect()->route('complaint-portal.index');
+            }
             return redirect(RouteServiceProvider::HOME);
         }
 

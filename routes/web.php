@@ -194,6 +194,9 @@ Route::group([
 
 Route::get('/SMARMANger', function () {
   if (Auth::check()) {
+    if ((string) auth()->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
+      return redirect()->route('complaint-portal.index');
+    }
 
     if (auth()->user()->type == '2') {
       return redirect()->route('dashboard.index');
@@ -234,6 +237,7 @@ require base_path('routes/administrator.php');
 require base_path('routes/teacher_legacy.php');
 require base_path('routes/teacher.php');
 require base_path('routes/admin.php');
+require base_path('routes/complaint_portal.php');
 
 
 

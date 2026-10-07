@@ -344,6 +344,14 @@
                     <input id="student_name" name="student_name" type="text" value="{{ old('student_name') }}" placeholder="{{ __('complaints.placeholders.student_name') }}">
                 </div>
                 <div class="complaints-field">
+                    <label for="student_identifier">{{ __('complaints.fields.student_identifier') }}</label>
+                    <input id="student_identifier" name="student_identifier" type="text" dir="ltr" maxlength="5" pattern="[0-9]{3}(?:/|-)[0-9]" required autocomplete="off" value="{{ old('student_identifier') }}" placeholder="{{ __('complaints.placeholders.student_identifier') }}" aria-describedby="student-identifier-hint{{ $errors->has('student_identifier') ? ' student-identifier-error' : '' }}" aria-invalid="{{ $errors->has('student_identifier') ? 'true' : 'false' }}">
+                    <small id="student-identifier-hint">{{ __('complaints.form.student_identifier_hint') }}</small>
+                    @error('student_identifier')
+                        <small id="student-identifier-error" class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+                <div class="complaints-field">
                     <label for="applicant_name">{{ __('complaints.fields.applicant_name') }}</label>
                     <input id="applicant_name" name="applicant_name" type="text" value="{{ old('applicant_name') }}" placeholder="{{ __('complaints.placeholders.applicant_name') }}">
                 </div>
