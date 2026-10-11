@@ -11,9 +11,13 @@ class ComplaintPortalController extends Controller
 {
     public function index(Request $request, ComplaintWorkflowService $workflow)
     {
-        $filters = $request->only('type', 'status');
+        $filters = $request->only('source', 'type', 'status');
+        if (($filters['source'] ?? '') === 'staff') {
+            $filters['type'] = 'all';
+        }
         return view('complaint_portal.index', [
             'complaints' => $workflow->listing($request->user(), $filters)->paginate(15)->appends($filters),
+            'sourceFilter' => $filters['source'] ?? 'all',
             'typeFilter' => $filters['type'] ?? 'all', 'statusFilter' => $filters['status'] ?? 'all',
             'notifications' => app(AdminComplaintNotificationService::class)->summaryFor($request->user()),
         ]);
@@ -35,13 +39,13 @@ class ComplaintPortalController extends Controller
             'status.required' => __('complaints.messages.invalid_status'), 'status.in' => __('complaints.messages.invalid_status'),
         ]);
         $workflow->transition($request->user(), $id, $data['status']);
-        return redirect()->route('complaint-portal.show', $id)->with('success', __('complaints.messages.status_updated'));
+        return redirect()->route('complaint-portal.show', array_merge(['id' => $id], \Illuminate\Support\Arr::only($request->query(), ['source', 'type', 'status', 'page'])))->with('success', __('complaints.messages.status_updated'));
     }
 
     public function archive(Request $request, $id, ComplaintWorkflowService $workflow)
     {
         $workflow->transition($request->user(), $id, 'archived');
-        return redirect()->route('complaint-portal.show', $id)->with('success', __('complaints.messages.archived'));
+        return redirect()->route('complaint-portal.show', array_merge(['id' => $id], \Illuminate\Support\Arr::only($request->query(), ['source', 'type', 'status', 'page'])))->with('success', __('complaints.messages.archived'));
     }
 
     public function openNotification(Request $request, $notificationId)

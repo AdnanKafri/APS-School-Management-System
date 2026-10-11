@@ -9,12 +9,13 @@
 </head>
 <body class="cp-shell">
 <header class="cp-header"><a href="{{ route('complaint-portal.index') }}" class="cp-brand">{{ __('complaint_portal.title') }}</a>
-    @auth
+    @if(auth()->check() && \App\Services\ComplaintAccess::allows(auth()->user(), 'view_complaints'))
     <div class="cp-account"><span>{{ auth()->user()->name }}</span>@include('complaint_portal.notifications')<form method="POST" action="{{ route('complaint-portal.logout') }}">@csrf<button class="cp-button cp-secondary">{{ __('complaint_portal.logout') }}</button></form></div>
-    @endauth
+    @endif
 </header>
 <main class="cp-main">
     @if(session('success'))<p class="cp-alert cp-success" role="status">{{ session('success') }}</p>@endif
+    @if(session('status'))<p class="cp-alert cp-success" role="status">{{ session('status') }}</p>@endif
     @if($errors->any())<div class="cp-alert" role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
     @yield('content')
 </main>

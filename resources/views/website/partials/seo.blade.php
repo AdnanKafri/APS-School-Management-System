@@ -61,7 +61,10 @@
             'description' => __('app_downloads.'.$appCopyKey.'_description'),
         ];
     }
-    $seoNoIndexRoutes = ['website.staff_apps', 'website.login', 'website.registration_wizard', 'website.register', 'website.register_legacy', 'website.registration_closed'];
+    if (in_array($seoRoute, ['website.staff_feedback.ar', 'website.staff_feedback.en'], true)) {
+        $seoCopy = ['title' => __('staff_feedback.title').' | '.$seoBrand, 'description' => __('staff_feedback.description')];
+    }
+    $seoNoIndexRoutes = ['website.staff_apps', 'website.staff_feedback.ar', 'website.staff_feedback.en', 'website.login', 'website.registration_wizard', 'website.register', 'website.register_legacy', 'website.registration_closed'];
     $seoRobots = in_array($seoRoute, $seoNoIndexRoutes, true) ? 'noindex, nofollow' : 'index, follow';
     $seoIsIndexable = $seoRobots === 'index, follow';
     $seoImageAlt = $seoLocale === 'ar' ? $seoBrandAr : $seoBrandEn;

@@ -6,7 +6,7 @@
         <form method="POST" action="{{ route('complaint-portal.notifications.open', $receipt->id) }}" class="cp-notice">
             @csrf
             <button class="cp-notification-button">
-                <span>@if(!$receipt->read_at)<span class="cp-dot" aria-label="{{ __('complaints.status.new') }}"></span>@endif {{ optional($receipt->complaint)->student_name ?: __('complaints.notifications.new') }} <bdi>#{{ $receipt->complaint_id }}</bdi></span>
+                <span>@if(!$receipt->read_at)<span class="cp-dot" aria-label="{{ __('complaints.status.new') }}"></span>@endif {{ optional($receipt->complaint)->submitterName() ?: __('complaints.notifications.new') }} <bdi>#{{ $receipt->complaint_id }}</bdi></span>
                 <time>{{ $receipt->created_at->copy()->timezone(config('app.timezone'))->locale('ar')->translatedFormat('j F Y - H:i') }}</time>
             </button>
         </form>

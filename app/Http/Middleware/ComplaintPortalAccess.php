@@ -24,7 +24,9 @@ class ComplaintPortalAccess
         if ($ability === 'logout') {
             abort_unless((string) $user->type === ComplaintAccess::OFFICER_TYPE, 403);
         } else {
-            ComplaintAccess::authorize($user, $ability);
+            if (!ComplaintAccess::allows($user, $ability)) {
+                return app(\App\Http\Controllers\ComplaintOfficerLoginController::class)->accessDenied();
+            }
         }
         app()->setLocale('ar');
         $response = $next($request);

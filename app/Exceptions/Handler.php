@@ -50,6 +50,22 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        $publicComplaintSubmission = $request->isMethod('POST') && $request->routeIs(
+            'website.complaints.store', 'website.staff_feedback.store.ar', 'website.staff_feedback.store.en'
+        );
+        if ($publicComplaintSubmission) {
+            if (in_array($request->segment(1), ['ar', 'en'], true)) {
+                app()->setLocale($request->segment(1));
+            }
+            if ($exception instanceof \Illuminate\Validation\ValidationException) {
+                $exception->redirectTo($request->url());
+            }
+            if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
+                return redirect()->to($request->url())
+                    ->withInput($request->except(array_merge($this->dontFlash, ['_token'])))
+                    ->withErrors(['complaint' => __('complaints.validation.session_expired')]);
+            }
+        }
         if ($exception instanceof \Illuminate\Session\TokenMismatchException ) {
             if ($request->is('complaint-portal/*')) {
                 return redirect()->route('complaint-portal.login')->withErrors(['session' => __('complaint_portal.session_expired')]);

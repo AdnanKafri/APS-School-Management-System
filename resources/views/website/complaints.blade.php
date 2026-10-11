@@ -182,6 +182,40 @@
         text-align: start;
     }
 
+    .complaints-type-label {
+        display: block;
+        margin-bottom: 10px;
+        color: #4d4762;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .complaints-required {
+        color: #a52e42;
+        margin-inline-start: 3px;
+        font-weight: 800;
+    }
+
+    .complaints-required-note {
+        margin: 0;
+        padding: 0 2px;
+        color: #645d73;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .complaints-visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
     .complaints-field input,
     .complaints-field select,
     .complaints-field textarea {
@@ -315,13 +349,16 @@
             <input id="website_url" name="website_url" type="text" tabindex="-1" autocomplete="off">
         </div>
 
+        <p class="complaints-required-note">{{ __('complaints.form.required_notice') }}</p>
+
         <div class="complaints-card">
             <div class="complaints-card__head">
                 <h3>{{ __('complaints.form.title') }}</h3>
                 <p>{{ __('complaints.form.subtitle') }}</p>
             </div>
 
-            <div class="complaints-type-grid">
+            <div id="complaint-type-label" class="complaints-type-label">{{ __('complaints.fields.type') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></div>
+            <div class="complaints-type-grid" role="group" aria-labelledby="complaint-type-label" aria-required="true">
                 <label class="complaints-type-card {{ $activeType === 'academic' ? 'is-active' : '' }}">
                     <input type="radio" name="type" value="academic" {{ $activeType === 'academic' ? 'checked' : '' }}>
                     <span class="complaints-type-card__meta">{{ __('complaints.types.academic') }}</span>
@@ -340,40 +377,40 @@
         <div class="complaints-card">
             <div class="complaints-grid">
                 <div class="complaints-field">
-                    <label for="student_name">{{ __('complaints.fields.student_name') }}</label>
-                    <input id="student_name" name="student_name" type="text" value="{{ old('student_name') }}" placeholder="{{ __('complaints.placeholders.student_name') }}">
+                    <label for="student_name">{{ __('complaints.fields.student_name') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <input id="student_name" name="student_name" type="text" aria-required="true" value="{{ old('student_name') }}" placeholder="{{ __('complaints.placeholders.student_name') }}">
                 </div>
                 <div class="complaints-field">
-                    <label for="student_identifier">{{ __('complaints.fields.student_identifier') }}</label>
-                    <input id="student_identifier" name="student_identifier" type="text" dir="ltr" maxlength="5" pattern="[0-9]{3}(?:/|-)[0-9]" required autocomplete="off" value="{{ old('student_identifier') }}" placeholder="{{ __('complaints.placeholders.student_identifier') }}" aria-describedby="student-identifier-hint{{ $errors->has('student_identifier') ? ' student-identifier-error' : '' }}" aria-invalid="{{ $errors->has('student_identifier') ? 'true' : 'false' }}">
+                    <label for="student_identifier">{{ __('complaints.fields.student_identifier') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <input id="student_identifier" name="student_identifier" type="text" dir="ltr" maxlength="5" pattern="[0-9]{3}(?:/|-)[0-9]" required aria-required="true" autocomplete="off" value="{{ old('student_identifier') }}" placeholder="{{ __('complaints.placeholders.student_identifier') }}" aria-describedby="student-identifier-hint{{ $errors->has('student_identifier') ? ' student-identifier-error' : '' }}" aria-invalid="{{ $errors->has('student_identifier') ? 'true' : 'false' }}">
                     <small id="student-identifier-hint">{{ __('complaints.form.student_identifier_hint') }}</small>
                     @error('student_identifier')
                         <small id="student-identifier-error" class="text-danger">{{ $message }}</small>
                     @enderror
                 </div>
                 <div class="complaints-field">
-                    <label for="applicant_name">{{ __('complaints.fields.applicant_name') }}</label>
-                    <input id="applicant_name" name="applicant_name" type="text" value="{{ old('applicant_name') }}" placeholder="{{ __('complaints.placeholders.applicant_name') }}">
+                    <label for="applicant_name">{{ __('complaints.fields.applicant_name') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <input id="applicant_name" name="applicant_name" type="text" aria-required="true" value="{{ old('applicant_name') }}" placeholder="{{ __('complaints.placeholders.applicant_name') }}">
                 </div>
                 <div class="complaints-field">
-                    <label for="phone">{{ __('complaints.fields.phone') }}</label>
-                    <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" placeholder="{{ __('complaints.placeholders.phone') }}" inputmode="tel">
+                    <label for="phone">{{ __('complaints.fields.phone') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <input id="phone" name="phone" type="tel" aria-required="true" value="{{ old('phone') }}" placeholder="{{ __('complaints.placeholders.phone') }}" inputmode="tel">
                 </div>
                 <div class="complaints-field">
-                    <label for="class_name">{{ __('complaints.fields.class_name') }}</label>
-                    <input id="class_name" name="class_name" type="text" value="{{ old('class_name') }}" placeholder="{{ __('complaints.placeholders.class_name') }}">
+                    <label for="class_name">{{ __('complaints.fields.class_name') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <input id="class_name" name="class_name" type="text" aria-required="true" value="{{ old('class_name') }}" placeholder="{{ __('complaints.placeholders.class_name') }}">
                 </div>
                 <div class="complaints-field">
-                    <label for="section_name">{{ __('complaints.fields.section_name') }}</label>
-                    <input id="section_name" name="section_name" type="text" value="{{ old('section_name') }}" placeholder="{{ __('complaints.placeholders.section_name') }}">
+                    <label for="section_name">{{ __('complaints.fields.section_name') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <input id="section_name" name="section_name" type="text" aria-required="true" value="{{ old('section_name') }}" placeholder="{{ __('complaints.placeholders.section_name') }}">
                 </div>
                 <div class="complaints-field {{ $activeType === 'transport' ? '' : 'is-hidden' }}" data-transport-field>
-                    <label for="bus_number">{{ __('complaints.fields.bus_number') }}</label>
+                    <label for="bus_number">{{ __('complaints.fields.bus_number') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
                     <input id="bus_number" name="bus_number" type="text" value="{{ old('bus_number') }}" placeholder="{{ __('complaints.placeholders.bus_number') }}">
                 </div>
                 <div class="complaints-field col-12">
-                    <label for="complaint_text">{{ __('complaints.fields.complaint_text') }}</label>
-                    <textarea id="complaint_text" name="complaint_text" placeholder="{{ __('complaints.placeholders.complaint_text') }}">{{ old('complaint_text') }}</textarea>
+                    <label for="complaint_text">{{ __('complaints.fields.complaint_text') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
+                    <textarea id="complaint_text" name="complaint_text" aria-required="true" placeholder="{{ __('complaints.placeholders.complaint_text') }}">{{ old('complaint_text') }}</textarea>
                 </div>
             </div>
 
@@ -404,6 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (busInput) {
             busInput.required = active === 'transport';
+            busInput.setAttribute('aria-required', active === 'transport' ? 'true' : 'false');
         }
     }
 
@@ -412,6 +450,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     syncComplaintTypeUI();
+
+    const form = document.querySelector('.complaints-form');
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            if (form.dataset.submitting) { event.preventDefault(); return; }
+            form.dataset.submitting = '1';
+            form.querySelector('[type="submit"]').disabled = true;
+        });
+        window.addEventListener('pageshow', function () {
+            delete form.dataset.submitting;
+            form.querySelector('[type="submit"]').disabled = false;
+        });
+    }
 });
 </script>
 @endsection

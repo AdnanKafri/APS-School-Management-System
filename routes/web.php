@@ -73,6 +73,10 @@ Route::get('/robots.txt', 'PublicSeoController@robots')->name('seo.robots');
 Route::get('/sitemap.xml', 'PublicSeoController@sitemap')->name('seo.sitemap');
 Route::get('/site.webmanifest', 'PublicSeoController@manifest')->name('seo.manifest');
 Route::get('/favicon.ico', 'PublicSeoController@favicon')->name('seo.favicon');
+foreach (['ar', 'en'] as $staffFeedbackLocale) {
+    Route::get('/' . $staffFeedbackLocale . '/staff-feedback', 'StaffFeedbackController@create')->name('website.staff_feedback.' . $staffFeedbackLocale);
+    Route::post('/' . $staffFeedbackLocale . '/staff-feedback', 'StaffFeedbackController@store')->name('website.staff_feedback.store.' . $staffFeedbackLocale);
+}
 Route::get('/downloads/apps/{slug}', 'MobileApplicationDistributionController@download')->name('mobile-applications.download');
 
 Route::post('/stu_register2', 'websitecontroller@stu_register')->name('website.stu_register');

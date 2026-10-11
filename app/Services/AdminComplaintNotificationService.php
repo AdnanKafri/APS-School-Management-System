@@ -47,7 +47,7 @@ class AdminComplaintNotificationService
         return [
             'unread_count' => (clone $base)->whereNull('read_at')->count(),
             'recent' => (clone $base)
-                ->with(['complaint:id,type,status,student_name'])
+                ->with(['complaint:id,type,status,source,student_name,staff_name'])
                 ->latest('id')
                 ->limit(self::RECENT_LIMIT)
                 ->get(),

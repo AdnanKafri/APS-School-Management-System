@@ -8,7 +8,13 @@ class Complaint extends Model
 {
     protected $table = 'complaints';
 
-    protected $guarded = [];
+    protected $attributes = ['status' => 'new', 'source' => 'parent'];
+
+    protected $fillable = [
+        'source', 'type', 'student_name', 'student_identifier', 'applicant_name',
+        'staff_name', 'phone', 'class_name', 'section_name', 'bus_number',
+        'complaint_text',
+    ];
 
     protected $casts = [
         'viewed_at' => 'datetime',
@@ -39,9 +45,22 @@ class Complaint extends Model
 
     public function typeLabel()
     {
+        if ($this->source === 'staff') {
+            return __('staff_feedback.feedback');
+        }
         return $this->type === 'transport'
             ? __('complaints.types.transport')
             : __('complaints.types.academic');
+    }
+
+    public function sourceLabel()
+    {
+        return __('staff_feedback.sources.' . ($this->source === 'staff' ? 'staff' : 'parent'));
+    }
+
+    public function submitterName()
+    {
+        return $this->source === 'staff' ? $this->staff_name : $this->student_name;
     }
 
     public function statusLabel()

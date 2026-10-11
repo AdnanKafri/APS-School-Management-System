@@ -11,14 +11,31 @@ class ComplaintWorkflowService
     public function submit(array $validated)
     {
         $complaint = Complaint::create([
+            'source' => 'parent',
             'type' => $validated['type'], 'student_name' => $validated['student_name'],
             'student_identifier' => $validated['student_identifier'] ?? null,
             'applicant_name' => $validated['applicant_name'], 'phone' => $validated['phone'],
             'class_name' => $validated['class_name'], 'section_name' => $validated['section_name'],
             'bus_number' => $validated['type'] === 'transport' ? ($validated['bus_number'] ?? null) : null,
-            'complaint_text' => $validated['complaint_text'], 'status' => 'new',
-            'viewed_at' => null, 'archived_at' => null,
+            'complaint_text' => $validated['complaint_text'],
         ]);
+        return $this->notify($complaint);
+    }
+
+    public function submitStaff(array $validated)
+    {
+        $complaint = Complaint::create([
+            'source' => 'staff',
+            'type' => 'staff_feedback',
+            'staff_name' => $validated['staff_name'],
+            'phone' => $validated['phone'],
+            'complaint_text' => $validated['complaint_text'],
+        ]);
+        return $this->notify($complaint);
+    }
+
+    private function notify(Complaint $complaint)
+    {
         try {
             app(AdminComplaintNotificationService::class)->notifyAuthorizedOfficers($complaint);
         } catch (\Throwable $exception) {
@@ -31,10 +48,13 @@ class ComplaintWorkflowService
     {
         ComplaintAccess::authorize($actor, 'view_complaints');
         $query = Complaint::query();
-        foreach (['type' => ['academic', 'transport'], 'status' => ['new', 'viewed', 'in_progress', 'resolved', 'archived']] as $field => $values) {
+        foreach (['source' => ['parent', 'staff'], 'type' => ['academic', 'transport'], 'status' => ['new', 'viewed', 'in_progress', 'resolved', 'archived']] as $field => $values) {
             if (in_array($filters[$field] ?? '', $values, true)) {
                 $query->where($field, $filters[$field]);
             }
+        }
+        if (($filters['source'] ?? '') !== 'staff' && in_array($filters['type'] ?? '', ['academic', 'transport'], true)) {
+            $query->where('source', 'parent');
         }
         return $query->orderByDesc('id');
     }

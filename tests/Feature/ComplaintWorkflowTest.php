@@ -38,11 +38,11 @@ class ComplaintWorkflowTest extends TestCase
         Schema::create('complaints', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('type', 20)->index();
-            $table->string('student_name');
-            $table->string('applicant_name');
+            $table->string('student_name')->nullable();
+            $table->string('applicant_name')->nullable();
             $table->string('phone', 50);
-            $table->string('class_name');
-            $table->string('section_name');
+            $table->string('class_name')->nullable();
+            $table->string('section_name')->nullable();
             $table->string('bus_number')->nullable();
             $table->text('complaint_text');
             $table->string('status', 20)->default('new')->index();
@@ -55,6 +55,8 @@ class ComplaintWorkflowTest extends TestCase
 
         require_once database_path('migrations/2026_10_06_000001_add_student_identifier_to_complaints.php');
         (new \AddStudentIdentifierToComplaints)->up();
+        require_once database_path('migrations/2026_10_11_000001_add_staff_feedback_to_complaints.php');
+        (new \AddStaffFeedbackToComplaints)->up();
         require_once database_path('migrations/2026_10_06_000002_add_complaint_officer_foundation.php');
         (new \AddComplaintOfficerFoundation)->up();
         $this->withSession(['complaint_auth_version' => 1]);
@@ -312,6 +314,52 @@ class ComplaintWorkflowTest extends TestCase
         $this->get('/complaint-portal')->assertRedirect('/complaint-portal/login');
     }
 
+    public function test_admin_session_has_clear_denial_and_explicit_account_switch()
+    {
+        $admin = User::create(['name' => 'School Admin', 'email' => 'switch-admin@example.test', 'password' => 'secret', 'type' => '2']);
+        $officer = $this->admin('switch-officer');
+        $this->actingAs($admin)->get('/complaint-portal')->assertForbidden()
+            ->assertSee(__('complaint_portal.switch_account'))->assertDontSee('cp-notification-list');
+        $this->get('/complaint-portal/login')->assertForbidden()->assertSee(__('complaint_portal.access_denied_title'));
+        $this->post('/complaint-portal/login', ['email' => $officer->email, 'password' => 'Isolated-password-123'])
+            ->assertForbidden();
+        $this->assertAuthenticatedAs($admin);
+        $this->post('/complaint-portal/switch-account')->assertRedirect('/complaint-portal/login');
+        $this->assertGuest();
+        $this->get('/complaint-portal/login')->assertOk();
+        $this->post('/complaint-portal/login', ['email' => $officer->email, 'password' => 'Isolated-password-123'])
+            ->assertRedirect('/complaint-portal');
+        $this->get('/complaint-portal')->assertOk();
+    }
+
+    public function test_invalid_and_unpermitted_officer_logins_have_recovery()
+    {
+        $officer = $this->admin('unpermitted');
+        $this->post('/complaint-portal/login', ['email' => $officer->email, 'password' => 'wrong-password'])
+            ->assertSessionHasErrors('email');
+        $this->assertGuest();
+        $officer->role->permissions = null;
+        $officer->role->save();
+        $this->post('/complaint-portal/login', ['email' => $officer->email, 'password' => 'Isolated-password-123'])
+            ->assertForbidden()->assertSee(__('complaint_portal.switch_account'));
+        $this->assertAuthenticatedAs($officer);
+        $this->get('/complaint-portal/login')->assertForbidden();
+        $this->post('/complaint-portal/switch-account')->assertRedirect('/complaint-portal/login');
+        $this->assertGuest();
+    }
+
+    public function test_inactive_officer_gets_specific_error_only_with_correct_password()
+    {
+        $officer = $this->admin('inactive-recovery');
+        $officer->complaint_officer_active = false;
+        $officer->save();
+        $this->post('/complaint-portal/login', ['email' => $officer->email, 'password' => 'wrong-password'])
+            ->assertSessionHasErrors(['email' => __('complaint_portal.invalid_credentials')]);
+        $this->post('/complaint-portal/login', ['email' => $officer->email, 'password' => 'Isolated-password-123'])
+            ->assertSessionHasErrors(['email' => __('complaint_portal.inactive_account')]);
+        $this->assertGuest();
+    }
+
     public function test_generic_website_login_supports_officers_without_admin_redirect()
     {
         $officer = $this->admin('generic');
@@ -544,6 +592,208 @@ class ComplaintWorkflowTest extends TestCase
             'bus_number' => $type === 'transport' ? '1' : null,
             'complaint_text' => 'An isolated test complaint with sufficient details.',
         ];
+    }
+
+    public function test_public_expired_csrf_returns_to_form_without_persistence()
+    {
+        $officer = $this->admin('public-expired');
+        $this->actingAs($officer)->withSession(['_token' => 'new-session-token']);
+        $this->app['env'] = 'local';
+        try {
+            $this->from('/complaint-portal')->post('/ar/staff-feedback', [
+                '_token' => 'old-session-token', 'staff_name' => 'Test staff',
+                'phone' => '0900000000', 'complaint_text' => 'A complete staff message with sufficient detail.',
+            ])->assertRedirect('/ar/staff-feedback')->assertSessionHasErrors('complaint');
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+        $this->assertSame(0, Complaint::count());
+        $this->assertSame(0, AdminComplaintNotification::count());
+        $this->assertAuthenticatedAs($officer);
+    }
+
+    public function test_public_validation_ignores_portal_previous_url()
+    {
+        $this->from('/complaint-portal')->post('/en/staff-feedback', ['staff_name' => 'Retained name'])
+            ->assertRedirect('/en/staff-feedback')->assertSessionHasErrors(['phone', 'complaint_text'])
+            ->assertSessionHasInput('staff_name', 'Retained name');
+        $this->from('/complaint-portal')->post('/complaints', ['type' => 'academic', 'student_name' => 'Retained student'])
+            ->assertRedirect('/complaints')->assertSessionHasErrors('student_identifier')
+            ->assertSessionHasInput('student_name', 'Retained student');
+        $this->assertSame(0, Complaint::count());
+    }
+
+    public function test_public_submission_redirects_are_session_independent()
+    {
+        $officer = $this->admin('redirect-matrix');
+        $admin = User::create(['name' => 'Test admin', 'email' => 'redirect-admin@example.test', 'password' => 'unused', 'type' => '2']);
+        $locale = getenv('ROUTING_LOCALE') ?: 'ar';
+        $forms = [
+            route('website.complaints.store', [], false) => $this->submission('transport', '233-2'),
+            '/'.$locale.'/staff-feedback' => ['staff_name' => 'Test staff', 'phone' => '0900000000', 'complaint_text' => 'A staff message with sufficient detail.'],
+        ];
+        foreach ([null, $admin, $officer] as $actor) {
+            \Illuminate\Support\Facades\Auth::logout();
+            if ($actor) { $this->actingAs($actor); }
+            foreach ($forms as $path => $payload) {
+                app(\Illuminate\Cache\RateLimiter::class)->clear('complaints:127.0.0.1');
+                $before = Complaint::count();
+                $this->withSession(['url.intended' => '/complaint-portal', '_token' => 'fresh-token']);
+                $this->app['env'] = 'local';
+                try {
+                    $this->from('/complaint-portal/login')->post($path, $payload + ['_token' => 'stale-token'])
+                        ->assertRedirect($path)->assertSessionHasErrors('complaint')->assertSessionMissing('success');
+                    $this->assertSame($before, Complaint::count());
+                    $this->from('/complaint-portal')->post($path, ['_token' => 'fresh-token'])
+                        ->assertRedirect($path)->assertSessionHasErrors();
+                    $this->assertSame($before, Complaint::count());
+                    $this->from('/complaint-portal')->post($path, $payload + ['_token' => 'fresh-token'])
+                        ->assertRedirect($path)->assertSessionHas('success');
+                } finally {
+                    $this->app['env'] = 'testing';
+                }
+                $this->assertSame($before + 1, Complaint::count());
+                $record = Complaint::orderByDesc('id')->firstOrFail();
+                $this->assertSame(1, AdminComplaintNotification::where('complaint_id', $record->id)->count());
+            }
+        }
+    }
+
+    public function test_public_form_opened_before_account_switch_recovers_without_insert()
+    {
+        $officer = $this->admin('switch-public');
+        $this->actingAs($officer)->withSession(['_token' => 'token-before-switch']);
+        $this->post('/complaint-portal/switch-account')->assertRedirect('/complaint-portal/login');
+        $this->assertGuest();
+        $this->app['env'] = 'local';
+        try {
+            $this->from('/complaint-portal/login')->post('/ar/staff-feedback', [
+                '_token' => 'token-before-switch', 'staff_name' => 'Retained staff',
+                'phone' => '0900000000', 'complaint_text' => 'The form was open before account switching.',
+            ])->assertRedirect('/ar/staff-feedback')->assertSessionHasErrors('complaint')
+                ->assertSessionHasInput('staff_name', 'Retained staff');
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+        $this->assertSame(0, Complaint::count());
+        $this->assertSame(0, AdminComplaintNotification::count());
+    }
+
+    public function test_staff_feedback_validates_and_preserves_parent_columns()
+    {
+        $officerA = $this->admin('staff-a');
+        $officerB = $this->admin('staff-b');
+        $payload = [
+            'staff_name' => 'Staff Member', 'phone' => '09 123 456 789',
+            'type' => 'staff_complaint',
+            'complaint_text' => 'A staff complaint with enough detailed information.',
+            'source' => 'parent', 'status' => 'resolved',
+            'student_name' => 'Forged student', 'handled_by' => $officerA->id,
+        ];
+        $this->post('/ar/staff-feedback', $payload)->assertRedirect('/ar/staff-feedback');
+        $complaint = Complaint::firstOrFail();
+        $this->assertSame('staff', $complaint->source);
+        $this->assertSame('staff_feedback', $complaint->type);
+        $this->assertSame('new', $complaint->status);
+        $this->assertSame('Staff Member', $complaint->staff_name);
+        $this->assertSame('09 123 456 789', $complaint->phone);
+        $this->assertNull($complaint->student_name);
+        $this->assertNull($complaint->student_identifier);
+        $this->assertNull($complaint->applicant_name);
+        $this->assertNull($complaint->class_name);
+        $this->assertNull($complaint->section_name);
+        $this->assertNull($complaint->handled_by);
+        $this->assertSame(2, AdminComplaintNotification::where('complaint_id', $complaint->id)->count());
+        $this->assertSame(1, app(AdminComplaintNotificationService::class)->summaryFor($officerA)['unread_count']);
+        $this->assertSame(1, app(AdminComplaintNotificationService::class)->summaryFor($officerB)['unread_count']);
+    }
+
+    public function test_staff_suggestion_and_parent_filtering_keep_original_workflow()
+    {
+        $officer = $this->admin('staff-filter');
+        $parent = $this->complaint();
+        $legacyStaff = Complaint::create([
+            'source' => 'staff', 'type' => 'staff_suggestion',
+            'staff_name' => 'Earlier Staff', 'phone' => '0900000000',
+            'complaint_text' => 'An earlier staff submission that must remain intact.',
+        ]);
+        $this->post('/en/staff-feedback', [
+            'staff_name' => 'Teacher Example', 'phone' => '+963 9 1234 5678',
+            'complaint_text' => 'This is a suggestion for a better school process.',
+        ])->assertRedirect('/en/staff-feedback');
+        $staff = Complaint::where('type', 'staff_feedback')->firstOrFail();
+        $this->assertSame('staff_suggestion', $legacyStaff->fresh()->type);
+        $this->assertSame('parent', $parent->fresh()->source);
+        $this->assertSame([$staff->id, $legacyStaff->id], app(\App\Services\ComplaintWorkflowService::class)->listing($officer, ['source' => 'staff'])->pluck('id')->all());
+        $this->assertSame([$parent->id], app(\App\Services\ComplaintWorkflowService::class)->listing($officer, ['source' => 'parent'])->pluck('id')->all());
+        $this->assertSame([$parent->id], app(\App\Services\ComplaintWorkflowService::class)->listing($officer, ['type' => 'academic'])->pluck('id')->all());
+        $this->actingAs($officer)->get('/complaint-portal?source=staff')->assertOk()->assertSee('Teacher Example')
+            ->assertSee('Earlier Staff')->assertDontSee('Student Private Name')->assertDontSee('staff_suggestion');
+        $this->get('/complaint-portal/complaints/'.$staff->id.'?source=staff')->assertOk()
+            ->assertSee('Teacher Example')
+            ->assertSee(__('staff_feedback.category'))->assertDontSee('staff_feedback.kind')
+            ->assertDontSee(__('complaints.fields.student_identifier'))
+            ->assertDontSee(__('complaints.fields.class_name'));
+        $this->post('/complaint-portal/complaints/'.$staff->id.'/status', ['status' => 'viewed'])->assertRedirect();
+        $this->post('/complaint-portal/complaints/'.$staff->id.'/archive')->assertRedirect();
+        $this->assertSame('archived', $staff->fresh()->status);
+        $this->assertSame(2, DB::table('complaint_action_audits')->where('complaint_id', $staff->id)->count());
+    }
+
+    public function test_staff_feedback_rejects_invalid_and_spam_payloads()
+    {
+        $this->post('/ar/staff-feedback', [
+            'staff_name' => '', 'phone' => '', 'complaint_text' => 'short',
+        ])->assertSessionHasErrors(['staff_name', 'phone', 'complaint_text']);
+        $this->post('/ar/staff-feedback', [
+            'staff_name' => 'Example', 'phone' => '0900000000',
+            'complaint_text' => 'A complaint with enough detailed information.',
+            'website_url' => 'https://spam.example',
+        ])->assertSessionHasErrors('feedback');
+        $this->assertSame(0, Complaint::count());
+    }
+
+    public function test_staff_feedback_uses_public_csrf_and_shared_rate_limit()
+    {
+        $payload = [
+            'staff_name' => 'Example', 'phone' => '0900000000',
+            'complaint_text' => 'A complaint with enough detailed information.',
+        ];
+        $this->withSession(['_token' => 'staff-csrf-token']);
+        $this->app['env'] = 'local';
+        try {
+            $this->post('/en/staff-feedback', $payload)->assertRedirect('/en/staff-feedback')->assertSessionHasErrors('complaint');
+            $this->assertSame(0, Complaint::count());
+            $this->post('/en/staff-feedback', $payload + ['_token' => 'staff-csrf-token'])->assertRedirect('/en/staff-feedback');
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+        $this->assertSame(1, Complaint::count());
+
+        for ($attempt = 0; $attempt < 9; $attempt++) {
+            $this->post('/ar/staff-feedback', ['website_url' => 'spam'])->assertSessionHasErrors('feedback');
+        }
+        $this->post('/ar/staff-feedback', $payload)->assertSessionHasErrors('feedback');
+        $this->assertSame(1, Complaint::count());
+    }
+
+    public function test_staff_filters_remain_selected_across_pages()
+    {
+        $officer = $this->admin('staff-pagination');
+        $this->complaint();
+        for ($number = 1; $number <= 16; $number++) {
+            Complaint::create([
+                'source' => 'staff', 'type' => 'staff_feedback',
+                'staff_name' => 'Staff member '.$number,
+                'phone' => '0900000000',
+                'complaint_text' => 'A suggestion with enough detailed information.',
+            ]);
+        }
+        $this->actingAs($officer)->get('/complaint-portal?source=staff&status=new')
+            ->assertOk()->assertSee('Staff member 16')->assertDontSee('Student Private Name')
+            ->assertSee('source=staff')->assertSee('page=2');
+        $this->get('/complaint-portal?source=staff&status=new&page=2')
+            ->assertOk()->assertSee('Staff member 1')->assertDontSee('Student Private Name');
     }
 
     private function admin($suffix)

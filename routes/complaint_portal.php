@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('complaint-portal')->name('complaint-portal.')->group(function () {
     Route::get('login', 'ComplaintOfficerLoginController@showLoginForm')->name('login');
-    Route::post('login', 'ComplaintOfficerLoginController@login')->middleware('guest')->name('authenticate');
+    Route::post('login', 'ComplaintOfficerLoginController@login')->name('authenticate');
+    Route::post('switch-account', 'ComplaintOfficerLoginController@switchAccount')->middleware('auth')->name('switch-account');
     Route::post('logout', 'ComplaintOfficerLoginController@logout')->middleware('complaint.portal:logout')->name('logout');
     Route::middleware('complaint.portal:view_complaints')->group(function () {
         Route::get('/', 'ComplaintPortalController@index')->name('index');

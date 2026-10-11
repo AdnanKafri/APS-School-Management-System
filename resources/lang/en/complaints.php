@@ -59,10 +59,12 @@ return [
         'view' => 'View details',
     ],
     'form' => [
-        'student_identifier_hint' => 'Example: 233/3 or 233-2',
+        'student_identifier_hint' => "The Student School ID is printed on the student's ID card. Example: 233/3 or 233-2.",
+        'required_notice' => 'All fields are required to submit a complaint.',
+        'required_label' => 'Required',
         'title' => 'Complaint form',
         'subtitle' => 'Fill in the fields below and send the complaint directly to the administration.',
-        'note' => 'Required fields are marked. The bus number appears only for transport complaints.',
+        'note' => 'The bus number appears only for transport complaints.',
     ],
     'admin' => [
         'unavailable' => 'Not available',
@@ -95,6 +97,7 @@ return [
         'handled_by' => 'Handled by',
     ],
     'validation' => [
+        'session_expired' => 'Your form session expired and the request was not sent. Please review your details and submit again.',
         'student_identifier_format' => 'The Student School ID must contain three digits, / or -, then one digit, such as 233/3 or 233-2.',
         'required' => 'This field is required.',
         'required_field' => 'The :field is required.',

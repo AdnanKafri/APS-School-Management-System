@@ -2,6 +2,12 @@
 
 return [
     'invalid_credentials' => 'Invalid credentials or unavailable account.',
+    'inactive_account' => 'This Complaint Officer account is inactive. Contact the administrator to reactivate it.',
+    'access_denied_title' => 'This account cannot open the complaint portal',
+    'access_denied_message' => 'An active, authorized Complaint Officer account is required. You can switch accounts.',
+    'signed_in_as' => 'Current account:',
+    'switch_account' => 'Sign out and switch account',
+    'account_switched' => 'You can now sign in with a Complaint Officer account.',
     'login_throttle' => 'Too many login attempts. Please retry in :seconds seconds.',
     'validation' => [
         'required' => 'The :attribute field is required.', 'string' => 'Enter valid text for :attribute.',
