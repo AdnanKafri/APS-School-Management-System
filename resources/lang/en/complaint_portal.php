@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'new_filter' => 'New',
     'invalid_credentials' => 'Invalid credentials or unavailable account.',
     'inactive_account' => 'This Complaint Officer account is inactive. Contact the administrator to reactivate it.',
     'access_denied_title' => 'This account cannot open the complaint portal',

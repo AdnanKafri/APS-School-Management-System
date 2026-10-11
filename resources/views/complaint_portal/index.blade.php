@@ -4,9 +4,9 @@
 <form method="GET" class="cp-filters">
     <label>{{ __('staff_feedback.source') }}<select name="source"><option value="all">{{ __('complaint_portal.all') }}</option>@foreach(['parent','staff'] as $source)<option value="{{ $source }}" {{ $sourceFilter === $source ? 'selected' : '' }}>{{ __('staff_feedback.sources.'.$source) }}</option>@endforeach</select></label>
     <label data-parent-type {{ $sourceFilter === 'staff' ? 'hidden' : '' }}>{{ __('staff_feedback.parent_category') }}<select name="type" {{ $sourceFilter === 'staff' ? 'disabled' : '' }}><option value="all">{{ __('staff_feedback.all_kinds') }}</option>@foreach(['academic','transport'] as $type)<option value="{{ $type }}" {{ $typeFilter === $type ? 'selected' : '' }}>{{ __('complaints.types.'.$type) }}</option>@endforeach</select></label>
-    <label>{{ __('complaints.admin.status') }}<select name="status"><option value="all">{{ __('complaint_portal.all') }}</option>@foreach(['new','viewed','in_progress','resolved','archived'] as $status)<option value="{{ $status }}" {{ $statusFilter === $status ? 'selected' : '' }}>{{ __('complaints.status.'.$status) }}</option>@endforeach</select></label>
+    <label>{{ __('complaints.admin.status') }}<select name="status"><option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>{{ __('complaint_portal.all') }}</option>@foreach(['new','viewed','in_progress','resolved','archived'] as $status)<option value="{{ $status }}" {{ $statusFilter === $status ? 'selected' : '' }}>{{ $status === 'new' ? __('complaint_portal.new_filter') : __('complaints.status.'.$status) }}</option>@endforeach</select></label>
     <button class="cp-button">{{ __('complaint_portal.filter') }}</button>
-    @if($sourceFilter !== 'all' || $typeFilter !== 'all' || $statusFilter !== 'all')<a class="cp-button cp-secondary" href="{{ route('complaint-portal.index') }}">{{ __('complaint_portal.reset') }}</a>@endif
+    @if($sourceFilter !== 'all' || $typeFilter !== 'all' || $statusFilter !== 'new')<a class="cp-button cp-secondary" href="{{ route('complaint-portal.index') }}">{{ __('complaint_portal.reset') }}</a>@endif
 </form></section>
 <script>
 document.addEventListener('DOMContentLoaded', function () {

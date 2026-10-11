@@ -12,6 +12,9 @@ class ComplaintPortalController extends Controller
     public function index(Request $request, ComplaintWorkflowService $workflow)
     {
         $filters = $request->only('source', 'type', 'status');
+        if (!array_key_exists('status', $request->query())) {
+            $filters['status'] = 'new';
+        }
         if (($filters['source'] ?? '') === 'staff') {
             $filters['type'] = 'all';
         }

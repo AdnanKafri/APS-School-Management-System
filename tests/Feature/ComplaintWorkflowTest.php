@@ -290,6 +290,62 @@ class ComplaintWorkflowTest extends TestCase
         $this->get('/complaint-portal/complaints/99999')->assertNotFound();
     }
 
+    public function test_portal_defaults_to_new_only_when_status_is_absent()
+    {
+        $officer = $this->admin('default-status');
+        $records = [];
+        foreach (['new', 'viewed', 'in_progress', 'resolved', 'archived'] as $status) {
+            $record = $this->complaint();
+            $record->status = $status;
+            $record->save();
+            $records[$status] = $record->id;
+        }
+        $before = Complaint::orderBy('id')->get()->toArray();
+        $this->actingAs($officer)->get('/complaint-portal')->assertOk()
+            ->assertViewHas('statusFilter', 'new')
+            ->assertViewHas('complaints', function ($rows) use ($records) { return $rows->pluck('id')->all() === [$records['new']]; })
+            ->assertSee('value="new" selected', false)->assertSee(__('complaint_portal.new_filter'));
+        $all = $this->get('/complaint-portal?status=all')->assertOk()
+            ->assertViewHas('statusFilter', 'all')
+            ->assertViewHas('complaints', function ($rows) { return $rows->total() === 5; })
+            ->assertSee('value="all" selected', false)->assertSee(__('complaint_portal.reset'));
+        $this->assertStringContainsString('href="'.route('complaint-portal.index').'"', $all->getContent());
+        foreach ($records as $status => $id) {
+            $this->get('/complaint-portal?status='.$status)->assertOk()
+                ->assertViewHas('complaints', function ($rows) use ($id) { return $rows->pluck('id')->all() === [$id]; });
+        }
+        $this->get('/complaint-portal?status=')->assertOk()
+            ->assertViewHas('complaints', function ($rows) { return $rows->total() === 5; });
+        $this->get('/complaint-portal')->assertViewHas('statusFilter', 'new');
+        $this->assertSame($before, Complaint::orderBy('id')->get()->toArray());
+    }
+
+    public function test_default_new_combines_with_source_category_and_pagination()
+    {
+        $officer = $this->admin('default-pages');
+        for ($i = 0; $i < 16; $i++) {
+            Complaint::create(['source' => 'staff', 'type' => 'staff_feedback', 'staff_name' => 'Staff '.$i,
+                'phone' => '0900000000', 'complaint_text' => 'Staff feedback for pagination verification.']);
+        }
+        $parent = $this->complaint();
+        $archived = $this->complaint();
+        $archived->status = 'archived';
+        $archived->save();
+        $this->actingAs($officer)->get('/complaint-portal?source=staff')->assertOk()
+            ->assertViewHas('statusFilter', 'new')
+            ->assertViewHas('complaints', function ($rows) { return $rows->total() === 16; })
+            ->assertSee('source=staff')->assertSee('status=new')->assertSee('page=2');
+        $this->get('/complaint-portal?source=staff&status=new&page=2')->assertOk()
+            ->assertViewHas('statusFilter', 'new')
+            ->assertViewHas('complaints', function ($rows) { return $rows->count() === 1 && $rows->first()->source === 'staff'; });
+        $this->get('/complaint-portal?source=parent&type=academic')->assertOk()
+            ->assertViewHas('complaints', function ($rows) use ($parent) { return $rows->pluck('id')->all() === [$parent->id]; });
+        $this->get('/complaint-portal?source=parent&type=academic&status=all')->assertOk()
+            ->assertViewHas('complaints', function ($rows) { return $rows->total() === 2; });
+        $this->get('/complaint-portal?source=parent&type=academic&status=archived')->assertOk()
+            ->assertViewHas('complaints', function ($rows) use ($archived) { return $rows->pluck('id')->all() === [$archived->id]; });
+    }
+
     public function test_officer_is_denied_admin_school_and_account_routes()
     {
         $this->actingAs($this->admin('isolation'));
