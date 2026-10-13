@@ -75,7 +75,7 @@ return [
         9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December',
     ],
     'levels' => ['weak' => 'Weak', 'average' => 'Average', 'good' => 'Good', 'excellent' => 'Excellent'],
-    'messages' => ['created' => 'Follow-up created successfully.', 'updated' => 'Follow-up updated successfully.'],
+    'messages' => ['created' => 'Follow-up created successfully.', 'updated' => 'Follow-up updated successfully.', 'saved' => 'Follow-up saved successfully.'],
     'errors' => [
         'no_active_year' => 'There is no active academic year. Please contact Administration.',
         'assignment_not_allowed' => 'You cannot access this teaching assignment.',
@@ -84,5 +84,7 @@ return [
         'invalid_level' => 'The selected level is invalid.',
         'note_too_long' => 'The note may not exceed 1000 characters.',
         'edit_window_expired' => 'The edit window for this follow-up has expired.',
+        'session_expired' => 'Your session has expired. Sign in again, then retry.',
+        'save_failed' => 'The follow-up could not be saved. Check your connection and retry.',
     ],
 ];

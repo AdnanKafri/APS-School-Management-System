@@ -127,14 +127,51 @@
         gap: 15px;
         min-height: 220px;
         padding: 19px;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
         transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
 
-    .fu-assignment-card:hover {
+    .fu-assignment-card:hover,
+    .fu-assignment-card:focus-visible {
         transform: translateY(-2px);
         border-color: #cbd8ee;
         box-shadow: 0 16px 34px rgba(23, 32, 51, .085);
     }
+
+    .fu-assignment-card:focus-visible {
+        outline: 3px solid rgba(37, 99, 235, .55);
+        outline-offset: 3px;
+    }
+
+    .fu-ajax-toast {
+        position: fixed;
+        z-index: 2100;
+        inset-block-start: max(20px, env(safe-area-inset-top));
+        inset-inline-end: 20px;
+        max-width: min(360px, calc(100vw - 32px));
+        padding: 12px 18px;
+        border: 1px solid #a7dfbf;
+        border-radius: 12px;
+        background: #e9f8ef;
+        color: #166534;
+        box-shadow: 0 12px 28px rgba(16, 74, 42, .14);
+        line-height: 1.7;
+    }
+
+    .fu-ajax-toast[hidden],
+    .js-follow-up-server-error[hidden],
+    .js-follow-up-field-errors[hidden],
+    [data-month-records][hidden] { display: none !important; }
+
+    .js-follow-up-field-errors:not([hidden]) {
+        color: #9f2525;
+        line-height: 1.6;
+    }
+
+    .js-follow-up-field-errors p { margin: 4px 0; }
+    .sfu-followup-modal .is-invalid { border-color: #c63c3c !important; }
 
     .fu-assignment-card__icon {
         display: inline-grid;

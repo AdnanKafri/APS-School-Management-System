@@ -12,6 +12,7 @@
 <div class="main-panel student-follow-up-module">
     <div class="content-wrapper">
         <div class="fu-shell">
+            <div class="fu-ajax-toast" role="status" aria-live="polite" hidden></div>
             @if(session('success'))
                 <div class="fu-flash" role="status">
                     <i class="mdi mdi-check-circle-outline" aria-hidden="true"></i>
@@ -52,15 +53,15 @@
             <section class="fu-summary-grid" aria-label="{{ __('student_follow_up.monthly_summary') }}">
                 <article class="fu-surface fu-summary-card">
                     <span class="fu-summary-card__icon"><i class="mdi mdi-account-group" aria-hidden="true"></i></span>
-                    <div class="fu-summary-card__content"><strong dir="ltr">{{ $summary['total'] }}</strong><span>{{ __('student_follow_up.total_students') }}</span></div>
+                    <div class="fu-summary-card__content"><strong dir="ltr" data-summary="total">{{ $summary['total'] }}</strong><span>{{ __('student_follow_up.total_students') }}</span></div>
                 </article>
                 <article class="fu-surface fu-summary-card fu-summary-card--success">
                     <span class="fu-summary-card__icon"><i class="mdi mdi-check-circle-outline" aria-hidden="true"></i></span>
-                    <div class="fu-summary-card__content"><strong dir="ltr">{{ $summary['complete'] }}</strong><span>{{ __('student_follow_up.completed_month') }}</span></div>
+                    <div class="fu-summary-card__content"><strong dir="ltr" data-summary="complete">{{ $summary['complete'] }}</strong><span>{{ __('student_follow_up.completed_month') }}</span></div>
                 </article>
                 <article class="fu-surface fu-summary-card fu-summary-card--pending">
                     <span class="fu-summary-card__icon"><i class="mdi mdi-clock-outline" aria-hidden="true"></i></span>
-                    <div class="fu-summary-card__content"><strong dir="ltr">{{ $summary['needs_current'] }}</strong><span>{{ __('student_follow_up.needs_current_period') }}</span></div>
+                    <div class="fu-summary-card__content"><strong dir="ltr" data-summary="needs_current">{{ $summary['needs_current'] }}</strong><span>{{ __('student_follow_up.needs_current_period') }}</span></div>
                 </article>
             </section>
 
@@ -111,7 +112,7 @@
                                     @php($status = $statusByStudent[$student->id] ?? ['first' => false, 'second' => false, 'count' => 0, 'last' => null])
                                     @php($minimumCompleted = min(2, ($status['first'] ? 1 : 0) + ($status['second'] ? 1 : 0)))
                                     @php($lastFollowUp = $status['last'] ? \Carbon\Carbon::parse($status['last'])->timezone('Asia/Damascus')->format('Y/m/d H:i') : null)
-                                    <tr>
+                                    <tr data-student-id="{{ $student->id }}">
                                         <td data-label="{{ __('student_follow_up.student') }}">
                                             <div class="fu-student-name">
                                                 <span class="fu-student-avatar" aria-hidden="true"><i class="mdi mdi-account"></i></span>
@@ -119,27 +120,25 @@
                                             </div>
                                         </td>
                                         <td data-label="{{ __('student_follow_up.first_half') }}">
-                                            <span class="fu-status {{ $status['first'] ? 'fu-status--complete' : 'fu-status--pending' }}">
+                                            <span class="fu-status {{ $status['first'] ? 'fu-status--complete' : 'fu-status--pending' }}" data-half="first">
                                                 <i class="mdi {{ $status['first'] ? 'mdi-check-circle-outline' : 'mdi-clock-outline' }}" aria-hidden="true"></i>
                                                 {{ $status['first'] ? __('student_follow_up.period_complete') : __('student_follow_up.period_pending') }}
                                             </span>
                                         </td>
                                         <td data-label="{{ __('student_follow_up.second_half') }}">
-                                            <span class="fu-status {{ $status['second'] ? 'fu-status--complete' : 'fu-status--pending' }}">
+                                            <span class="fu-status {{ $status['second'] ? 'fu-status--complete' : 'fu-status--pending' }}" data-half="second">
                                                 <i class="mdi {{ $status['second'] ? 'mdi-check-circle-outline' : 'mdi-clock-outline' }}" aria-hidden="true"></i>
                                                 {{ $status['second'] ? __('student_follow_up.period_complete') : __('student_follow_up.period_pending') }}
                                             </span>
                                         </td>
                                         <td data-label="{{ __('student_follow_up.monthly_status') }}">
                                             <div class="fu-month-progress">
-                                                <strong>{{ $minimumCompleted }} {{ __('student_follow_up.of') }} 2 {{ __('student_follow_up.minimum_follow_ups') }}</strong>
-                                                @if($status['count'] > 2)
-                                                    <small>{{ __('student_follow_up.month_records', ['count' => $status['count']]) }}</small>
-                                                @endif
+                                                <strong data-month-progress>{{ $minimumCompleted }} {{ __('student_follow_up.of') }} 2 {{ __('student_follow_up.minimum_follow_ups') }}</strong>
+                                                <small data-month-records {{ $status['count'] > 2 ? '' : 'hidden' }}>{{ __('student_follow_up.month_records', ['count' => $status['count']]) }}</small>
                                             </div>
                                         </td>
                                         <td data-label="{{ __('student_follow_up.last_follow_up') }}">
-                                            <span class="fu-last-follow-up">
+                                            <span class="fu-last-follow-up" data-last-follow-up>
                                                 {{ $lastFollowUp ?: __('student_follow_up.no_follow_up_yet') }}
                                             </span>
                                         </td>
@@ -184,6 +183,8 @@
 
             <div class="modal-body">
                 <div class="sfu-inline-error js-follow-up-client-error" role="alert">{{ __('student_follow_up.errors.content_required') }}</div>
+                <div class="sfu-inline-error js-follow-up-server-error" role="alert" hidden></div>
+                <div class="js-follow-up-field-errors" role="alert" hidden></div>
 
                 <section class="sfu-context" aria-label="{{ __('student_follow_up.assignment_context') }}">
                     <article class="sfu-context__item"><small>{{ __('student_follow_up.student') }}</small><strong id="followUpStudentName">{{ __('student_follow_up.student') }}</strong></article>
@@ -232,17 +233,78 @@
 @section('js')
 <script>
 (function ($) {
+    var messages = {
+        save: @json(__('student_follow_up.save')),
+        complete: @json(__('student_follow_up.period_complete')),
+        pending: @json(__('student_follow_up.period_pending')),
+        progress: @json(__('student_follow_up.of') . ' 2 ' . __('student_follow_up.minimum_follow_ups')),
+        records: @json(__('student_follow_up.month_records', ['count' => 'COUNT'])),
+        noHistory: @json(__('student_follow_up.no_follow_up_yet')),
+        denied: @json(__('student_follow_up.errors.student_not_allowed')),
+        expired: @json(__('student_follow_up.errors.session_expired')),
+        failed: @json(__('student_follow_up.errors.save_failed'))
+    };
+
     function updateNoteCount(scope) {
         var input = scope.find('.js-note-input');
         scope.find('.js-note-count').text((input.val() || '').length);
     }
 
+    function showToast(message) {
+        var toast = $('.fu-ajax-toast');
+        toast.text(message).prop('hidden', false).show();
+        window.clearTimeout(toast.data('timer'));
+        toast.data('timer', window.setTimeout(function () { toast.hide().prop('hidden', true); }, 5000));
+    }
+
+    function clearErrors(form) {
+        form.find('.js-follow-up-client-error, .js-follow-up-server-error, .js-follow-up-field-errors').hide().prop('hidden', true).empty();
+        form.find('.js-follow-up-client-error').text(@json(__('student_follow_up.errors.content_required')));
+        form.find('.is-invalid').removeClass('is-invalid');
+    }
+
+    function showErrors(form, xhr) {
+        var errors = xhr.responseJSON && xhr.responseJSON.errors;
+        if (xhr.status === 422 && errors) {
+            var box = form.find('.js-follow-up-field-errors').empty();
+            $.each(errors, function (field, entries) {
+                $.each(entries, function (_, message) { $('<p>').text(message).appendTo(box); });
+                form.find('[name="' + field + '"]').addClass('is-invalid');
+            });
+            box.prop('hidden', false).show();
+            return;
+        }
+        form.find('.js-follow-up-server-error')
+            .text(xhr.status === 403 ? messages.denied : (xhr.status === 419 ? messages.expired : messages.failed))
+            .prop('hidden', false).show();
+    }
+
+    function updateStudent(state, summary) {
+        var row = $('.fu-roster-table tbody tr[data-student-id="' + state.id + '"]');
+        $.each(['first', 'second'], function (_, half) {
+            var badge = row.find('[data-half="' + half + '"]');
+            var done = !!state[half];
+            badge.toggleClass('fu-status--complete', done).toggleClass('fu-status--pending', !done);
+            badge.find('i').attr('class', 'mdi ' + (done ? 'mdi-check-circle-outline' : 'mdi-clock-outline'));
+            badge.contents().filter(function () { return this.nodeType === 3; }).remove();
+            badge.append(document.createTextNode(' ' + (done ? messages.complete : messages.pending)));
+        });
+        row.find('[data-month-progress]').text(Math.min(2, Number(state.first) + Number(state.second)) + ' ' + messages.progress);
+        row.find('[data-month-records]').text(messages.records.replace('COUNT', state.count)).prop('hidden', state.count <= 2).toggle(state.count > 2);
+        row.find('[data-last-follow-up]').text(state.last || messages.noHistory);
+        $.each(summary, function (name, value) { $('[data-summary="' + name + '"]').text(value); });
+        if (@json($filter === 'needs_follow_up') && state[@json($now->day <= 15 ? 'first' : 'second')]) {
+            row.remove();
+        }
+    }
+
     $(document).on('click', '.js-add-follow-up', function () {
         var button = $(this);
         var modal = $('#followUpModal');
+        modal.data('return-focus', button);
         modal.find('form').data('submitting', false);
-        modal.find('.js-follow-up-submit').prop('disabled', false).find('.sfu-button__label').text(@json(__('student_follow_up.save')));
-        modal.find('.js-follow-up-client-error').hide();
+        modal.find('.js-follow-up-submit').prop('disabled', false).find('.sfu-button__label').text(messages.save);
+        clearErrors(modal.find('form'));
         modal.find('input[name="level"]').prop('checked', false);
         modal.find('.js-note-input').val('');
         $('#followUpStudentId').val(button.data('student-id'));
@@ -255,20 +317,42 @@
         updateNoteCount($(this).closest('.sfu-followup-modal'));
     });
 
-    $(document).on('submit', '.js-follow-up-form', function () {
+    $('#followUpModal').on('hidden.bs.modal', function () {
+        var button = $(this).data('return-focus');
+        if (button && document.contains(button[0])) {
+            button.trigger('focus');
+        } else {
+            $('#follow-up-search').trigger('focus');
+        }
+    });
+
+    $(document).on('submit', '.js-follow-up-form', function (event) {
+        event.preventDefault();
         var form = $(this);
+        clearErrors(form);
         var hasLevel = form.find('input[name="level"]:checked').length > 0;
         var hasNote = $.trim(form.find('textarea[name="note"]').val()).length > 0;
         if (!hasLevel && !hasNote) {
-            form.find('.js-follow-up-client-error').show();
-            return false;
+            form.find('.js-follow-up-client-error').prop('hidden', false).show();
+            return;
         }
-        if (form.data('submitting')) {
-            return false;
-        }
+        if (form.data('submitting')) { return; }
         form.data('submitting', true);
         var submit = form.find('.js-follow-up-submit');
         submit.prop('disabled', true).find('.sfu-button__label').text(submit.data('loading-text'));
+        $.ajax({
+            url: form.attr('action'), type: 'POST', data: form.serialize(), dataType: 'json',
+            headers: { 'Accept': 'application/json' }
+        }).done(function (response) {
+            updateStudent(response.student, response.summary);
+            $('#followUpModal').modal('hide');
+            showToast(@json(__('student_follow_up.messages.saved')));
+        }).fail(function (xhr) {
+            showErrors(form, xhr);
+        }).always(function () {
+            form.data('submitting', false);
+            submit.prop('disabled', false).find('.sfu-button__label').text(messages.save);
+        });
     });
 
     @if($formErrors && $formErrors->any() && old('student_id'))

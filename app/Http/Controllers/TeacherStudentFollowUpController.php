@@ -84,12 +84,7 @@ class TeacherStudentFollowUpController extends Controller
         $filter = request('filter', 'all');
         $search = trim((string) request('search', ''));
 
-        $studentsQuery = Student::query()
-            ->select('students.*')
-            ->join('room_student', 'room_student.student_id', '=', 'students.id')
-            ->where('room_student.room_id', $room->id)
-            ->where('room_student.year_id', $year->id)
-            ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
+        $studentsQuery = $this->followUps->eligibleStudentsQuery($assignment, $year, $now)
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($studentQuery) use ($search) {
                     $studentQuery->where('students.first_name', 'like', '%' . $search . '%')
@@ -148,18 +143,14 @@ class TeacherStudentFollowUpController extends Controller
             if (!isset($allStatusByStudent[$row->student_id])) {
                 $allStatusByStudent[$row->student_id] = ['first' => false, 'second' => false, 'count' => 0, 'last' => null];
             }
-            $allStatusByStudent[$row->student_id][$row->compliance_half === 1 ? 'first' : 'second'] = true;
+            $allStatusByStudent[$row->student_id][(int) $row->compliance_half === 1 ? 'first' : 'second'] = true;
             $allStatusByStudent[$row->student_id]['count'] += (int) $row->total;
             if (!$allStatusByStudent[$row->student_id]['last'] || $row->last_observed_at > $allStatusByStudent[$row->student_id]['last']) {
                 $allStatusByStudent[$row->student_id]['last'] = $row->last_observed_at;
             }
         }
 
-        $activeStudentIds = Student::query()
-            ->join('room_student', 'room_student.student_id', '=', 'students.id')
-            ->where('room_student.room_id', $room->id)
-            ->where('room_student.year_id', $year->id)
-            ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
+        $activeStudentIds = $this->followUps->eligibleStudentsQuery($assignment, $year, $now)
             ->distinct()
             ->pluck('students.id');
         $activeStatuses = array_intersect_key($allStatusByStudent, array_flip($activeStudentIds->all()));
@@ -191,7 +182,17 @@ class TeacherStudentFollowUpController extends Controller
         ]);
 
         $teacher = $this->teacherOrFail();
-        $this->followUps->create(Auth::id(), $teacher->id, $request->assignment_id, $request->student_id, $request->only('level', 'note'));
+        $record = $this->followUps->create(Auth::id(), $teacher->id, $request->assignment_id, $request->student_id, $request->only('level', 'note'));
+
+        if ($request->expectsJson()) {
+            $year = $this->followUps->activeYearOrFail();
+            $assignment = $this->followUps->assignmentForTeacherOrFail($request->assignment_id, $teacher->id, $year);
+            return response()->json([
+                'message' => __('student_follow_up.messages.created'),
+                'student' => $this->studentState($record),
+                'summary' => $this->assignmentProgress(collect([$assignment]), $teacher->id, $year, $this->followUps->schoolNow())[$assignment->id],
+            ], 201);
+        }
 
         return redirect()->back()->with('success', __('student_follow_up.messages.created'));
     }
@@ -242,9 +243,43 @@ class TeacherStudentFollowUpController extends Controller
 
         $teacher = $this->teacherOrFail();
         $followUp = StudentFollowUp::whereKey($followUp)->where('teacher_id', $teacher->id)->firstOrFail();
-        $this->followUps->update($followUp, Auth::id(), $teacher->id, $request->only('level', 'note'));
+        $record = $this->followUps->update($followUp, Auth::id(), $teacher->id, $request->only('level', 'note'));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('student_follow_up.messages.updated'),
+                'record' => [
+                    'id' => (int) $record->id,
+                    'level' => $record->level,
+                    'level_label' => $record->level ? __('student_follow_up.levels.' . $record->level) : null,
+                    'note' => $record->note,
+                    'edited_at' => $record->edited_at->copy()->timezone('Asia/Damascus')->format('Y/m/d H:i'),
+                ],
+            ]);
+        }
 
         return redirect()->back()->with('success', __('student_follow_up.messages.updated'));
+    }
+
+    private function studentState(StudentFollowUp $record)
+    {
+        $rows = StudentFollowUp::where('teacher_id', $record->teacher_id)
+            ->where('lesson_id', $record->lesson_id)
+            ->where('year_id', $record->year_id)
+            ->where('room_id', $record->room_id)
+            ->where('student_id', $record->student_id)
+            ->whereDate('compliance_month', $record->compliance_month->toDateString())
+            ->whereNull('voided_at')
+            ->orderByDesc('observed_at')
+            ->get();
+
+        return [
+            'id' => (int) $record->student_id,
+            'first' => $rows->contains(function ($row) { return (int) $row->compliance_half === 1; }),
+            'second' => $rows->contains(function ($row) { return (int) $row->compliance_half === 2; }),
+            'count' => $rows->count(),
+            'last' => $rows->isEmpty() ? null : $rows->first()->observed_at->copy()->timezone('Asia/Damascus')->format('Y/m/d H:i'),
+        ];
     }
 
     private function teacherOrFail()
@@ -263,29 +298,35 @@ class TeacherStudentFollowUpController extends Controller
             return [];
         }
 
-        $roomIds = $assignments->pluck('room_id')->unique()->values();
-        $studentCounts = DB::table('room_student')
-            ->join('students', 'students.id', '=', 'room_student.student_id')
-            ->where('room_student.year_id', $year->id)
-            ->whereIn('room_student.room_id', $roomIds)
-            ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
-            ->select('room_student.room_id', DB::raw('count(distinct room_student.student_id) as total'))
-            ->groupBy('room_student.room_id')
-            ->pluck('total', 'room_id');
+        $assignmentModels = Teacher_room_lesson::whereIn('id', $assignments->pluck('id')->all())
+            ->get()
+            ->keyBy('id');
+        $eligibleIdsByAssignment = [];
+        $allEligibleStudentIds = [];
 
-        $followUps = DB::table('student_follow_ups')
-            ->join('room_student', function ($join) {
-                $join->on('room_student.student_id', '=', 'student_follow_ups.student_id')
-                    ->on('room_student.room_id', '=', 'student_follow_ups.room_id')
-                    ->on('room_student.year_id', '=', 'student_follow_ups.year_id');
-            })
-            ->join('students', 'students.id', '=', 'student_follow_ups.student_id')
+        foreach ($assignments as $assignment) {
+            $assignmentModel = $assignmentModels->get($assignment->id);
+            $eligibleIds = $assignmentModel
+                ? $this->followUps->eligibleStudentsQuery($assignmentModel, $year, $now)
+                    ->distinct()
+                    ->pluck('students.id')
+                    ->map(function ($id) { return (int) $id; })
+                    ->all()
+                : [];
+
+            $eligibleIdsByAssignment[$assignment->id] = array_fill_keys($eligibleIds, true);
+            $allEligibleStudentIds = array_merge($allEligibleStudentIds, $eligibleIds);
+        }
+
+        $allEligibleStudentIds = array_values(array_unique($allEligibleStudentIds));
+        $followUps = empty($allEligibleStudentIds) ? collect() : DB::table('student_follow_ups')
             ->where('student_follow_ups.teacher_id', $teacherId)
             ->where('student_follow_ups.year_id', $year->id)
-            ->where('student_follow_ups.compliance_month', $now->copy()->startOfMonth()->toDateString())
+            ->whereDate('student_follow_ups.compliance_month', $now->copy()->startOfMonth()->toDateString())
             ->whereNull('student_follow_ups.voided_at')
-            ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
-            ->whereIn('student_follow_ups.room_id', $roomIds)
+            ->whereIn('student_follow_ups.student_id', $allEligibleStudentIds)
+            ->whereIn('student_follow_ups.room_id', $assignments->pluck('room_id')->unique()->all())
+            ->whereIn('student_follow_ups.lesson_id', $assignments->pluck('lesson_id')->unique()->all())
             ->select([
                 'student_follow_ups.lesson_id', 'student_follow_ups.room_id', 'student_follow_ups.student_id',
                 DB::raw('max(case when student_follow_ups.compliance_half = 1 then 1 else 0 end) as first_done'),
@@ -300,8 +341,11 @@ class TeacherStudentFollowUpController extends Controller
         $progress = [];
         foreach ($assignments as $assignment) {
             $key = $assignment->lesson_id . ':' . $assignment->room_id;
-            $rows = $followUps->get($key, collect());
-            $total = (int) ($studentCounts[$assignment->room_id] ?? 0);
+            $eligibleIds = $eligibleIdsByAssignment[$assignment->id] ?? [];
+            $rows = $followUps->get($key, collect())->filter(function ($row) use ($eligibleIds) {
+                return isset($eligibleIds[(int) $row->student_id]);
+            });
+            $total = count($eligibleIds);
             $completed = $rows->filter(function ($row) {
                 return (int) $row->first_done === 1 && (int) $row->second_done === 1;
             })->count();

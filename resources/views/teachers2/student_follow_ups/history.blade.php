@@ -12,6 +12,7 @@
 <div class="main-panel student-follow-up-module">
     <div class="content-wrapper">
         <div class="fu-shell">
+            <div class="fu-ajax-toast" role="status" aria-live="polite" hidden></div>
             @if(session('success'))
                 <div class="fu-flash" role="status">
                     <i class="mdi mdi-check-circle-outline" aria-hidden="true"></i>
@@ -46,7 +47,7 @@
 
             @forelse($followUps as $followUp)
                 @if($loop->first)<section class="fu-timeline" aria-label="{{ __('student_follow_up.history') }}">@endif
-                <article class="fu-surface fu-history-item">
+                <article class="fu-surface fu-history-item" data-follow-up-id="{{ $followUp->id }}">
                     <div class="fu-history-item__top">
                         <div>
                             <time class="fu-history-date" datetime="{{ $followUp->observed_at->toIso8601String() }}">
@@ -54,13 +55,13 @@
                             </time>
                             <div class="fu-history-meta">
                                 @if($followUp->level)
-                                    <span class="fu-level-badge">
+                                    <span class="fu-level-badge" data-level-badge>
                                         <i class="mdi mdi-chart-line" aria-hidden="true"></i>
                                         {{ __('student_follow_up.levels.' . $followUp->level) }}
                                     </span>
                                 @endif
                                 @if($followUp->edited_at)
-                                    <span class="fu-edited-badge" title="{{ $followUp->edited_at->timezone('Asia/Damascus')->format('Y/m/d H:i') }}">
+                                    <span class="fu-edited-badge" data-edited-badge title="{{ $followUp->edited_at->timezone('Asia/Damascus')->format('Y/m/d H:i') }}">
                                         <i class="mdi mdi-pencil-outline" aria-hidden="true"></i>
                                         {{ __('student_follow_up.edited') }}
                                     </span>
@@ -77,9 +78,9 @@
                     </div>
 
                     @if($followUp->note)
-                        <p class="fu-history-note">{{ $followUp->note }}</p>
+                        <p class="fu-history-note" data-history-note>{{ $followUp->note }}</p>
                     @else
-                        <p class="fu-history-note">{{ __('student_follow_up.level_only_entry') }}</p>
+                        <p class="fu-history-note" data-history-note>{{ __('student_follow_up.level_only_entry') }}</p>
                     @endif
                 </article>
                 @if($loop->last)</section>@endif
@@ -112,6 +113,8 @@
 
             <div class="modal-body">
                 <div class="sfu-inline-error js-follow-up-client-error" role="alert">{{ __('student_follow_up.errors.content_required') }}</div>
+                <div class="sfu-inline-error js-follow-up-server-error" role="alert" hidden></div>
+                <div class="js-follow-up-field-errors" role="alert" hidden></div>
 
                 <section class="sfu-context" aria-label="{{ __('student_follow_up.assignment_context') }}">
                     <article class="sfu-context__item"><small>{{ __('student_follow_up.student') }}</small><strong>{{ $student->first_name }} {{ $student->last_name }}</strong></article>
@@ -159,25 +162,56 @@
 <script>
 (function ($) {
     var updateUrl = @json(route('teacher.student_follow_ups.update', ['followUp' => 'FOLLOW_UP_ID']));
+    var messages = {
+        save: @json(__('student_follow_up.save_changes')),
+        denied: @json(__('student_follow_up.errors.edit_window_expired')),
+        expired: @json(__('student_follow_up.errors.session_expired')),
+        failed: @json(__('student_follow_up.errors.save_failed')),
+        levelOnly: @json(__('student_follow_up.level_only_entry')),
+        edited: @json(__('student_follow_up.edited'))
+    };
 
     function updateNoteCount(scope) {
         var input = scope.find('.js-note-input');
         scope.find('.js-note-count').text((input.val() || '').length);
     }
 
+    function clearErrors(form) {
+        form.find('.js-follow-up-client-error, .js-follow-up-server-error, .js-follow-up-field-errors').hide().prop('hidden', true);
+        form.find('.js-follow-up-field-errors').empty();
+        form.find('.is-invalid').removeClass('is-invalid');
+    }
+
+    function showErrors(form, xhr) {
+        var errors = xhr.responseJSON && xhr.responseJSON.errors;
+        if (xhr.status === 422 && errors) {
+            var box = form.find('.js-follow-up-field-errors');
+            $.each(errors, function (field, entries) {
+                $.each(entries, function (_, message) { $('<p>').text(message).appendTo(box); });
+                form.find('[name="' + field + '"]').addClass('is-invalid');
+            });
+            box.prop('hidden', false).show();
+            return;
+        }
+        form.find('.js-follow-up-server-error')
+            .text(xhr.status === 403 ? messages.denied : (xhr.status === 419 ? messages.expired : messages.failed))
+            .prop('hidden', false).show();
+    }
+
     $(document).on('click', '.js-edit-follow-up', function () {
         var button = $(this);
         var modal = $('#editFollowUpModal');
+        modal.data('return-focus', button);
         var form = $('#editFollowUpForm');
-        form.attr('action', updateUrl.replace('FOLLOW_UP_ID', button.data('id'))).data('submitting', false);
+        form.attr('action', updateUrl.replace('FOLLOW_UP_ID', button.attr('data-id'))).data('submitting', false);
         form.find('input[name="level"]').prop('checked', false);
-        if (button.data('level')) {
-            form.find('input[name="level"][value="' + button.data('level') + '"]').prop('checked', true);
+        if (button.attr('data-level')) {
+            form.find('input[name="level"][value="' + button.attr('data-level') + '"]').prop('checked', true);
         }
         $('#editFollowUpNote').val(button.attr('data-note') || '');
         modal.find('.js-edit-observed-at').text(button.attr('data-observed-at') || '--');
-        form.find('.js-follow-up-client-error').hide();
-        form.find('.js-edit-submit').prop('disabled', false).find('.sfu-button__label').text(@json(__('student_follow_up.save_changes')));
+        clearErrors(form);
+        form.find('.js-edit-submit').prop('disabled', false).find('.sfu-button__label').text(messages.save);
         updateNoteCount(modal);
         modal.modal('show');
     });
@@ -190,20 +224,56 @@
         updateNoteCount($(this).closest('.sfu-followup-modal'));
     });
 
-    $(document).on('submit', '.js-edit-follow-up-form', function () {
+    $('#editFollowUpModal').on('hidden.bs.modal', function () {
+        var button = $(this).data('return-focus');
+        if (button && document.contains(button[0])) { button.trigger('focus'); }
+    });
+
+    $(document).on('submit', '.js-edit-follow-up-form', function (event) {
+        event.preventDefault();
         var form = $(this);
+        clearErrors(form);
         var hasLevel = form.find('input[name="level"]:checked').length > 0;
         var hasNote = $.trim(form.find('textarea[name="note"]').val()).length > 0;
         if (!hasLevel && !hasNote) {
-            form.find('.js-follow-up-client-error').show();
-            return false;
+            form.find('.js-follow-up-client-error').prop('hidden', false).show();
+            return;
         }
-        if (form.data('submitting')) {
-            return false;
-        }
+        if (form.data('submitting')) { return; }
         form.data('submitting', true);
         var submit = form.find('.js-edit-submit');
         submit.prop('disabled', true).find('.sfu-button__label').text(submit.data('loading-text'));
+        $.ajax({
+            url: form.attr('action'), type: 'POST', data: form.serialize(), dataType: 'json',
+            headers: { 'Accept': 'application/json' }
+        }).done(function (response) {
+            var record = response.record;
+            var item = $('.fu-history-item[data-follow-up-id="' + record.id + '"]');
+            var badge = item.find('[data-level-badge]');
+            if (record.level_label) {
+                if (!badge.length) {
+                    badge = $('<span class="fu-level-badge" data-level-badge>').appendTo(item.find('.fu-history-meta'));
+                }
+                badge.text(record.level_label).show();
+            } else { badge.remove(); }
+            var edited = item.find('[data-edited-badge]');
+            if (!edited.length) {
+                edited = $('<span class="fu-edited-badge" data-edited-badge>').appendTo(item.find('.fu-history-meta'));
+            }
+            edited.attr('title', record.edited_at).text(messages.edited);
+            item.find('[data-history-note]').text(record.note || messages.levelOnly);
+            item.find('.js-edit-follow-up').attr('data-level', record.level || '').attr('data-note', record.note || '');
+            $('#editFollowUpModal').modal('hide');
+            var toast = $('.fu-ajax-toast');
+            toast.text(@json(__('student_follow_up.messages.saved'))).prop('hidden', false).show();
+            window.clearTimeout(toast.data('timer'));
+            toast.data('timer', window.setTimeout(function () { toast.hide().prop('hidden', true); }, 5000));
+        }).fail(function (xhr) {
+            showErrors(form, xhr);
+        }).always(function () {
+            form.data('submitting', false);
+            submit.prop('disabled', false).find('.sfu-button__label').text(messages.save);
+        });
     });
 })(jQuery);
 </script>

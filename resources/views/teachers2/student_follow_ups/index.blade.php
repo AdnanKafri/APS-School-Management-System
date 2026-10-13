@@ -46,7 +46,7 @@
                                 ? min(100, (int) round(($progress['complete'] / $progress['total']) * 100))
                                 : 0;
                         @endphp
-                        <article class="fu-surface fu-assignment-card">
+                        <a class="fu-surface fu-assignment-card" href="{{ route('teacher.student_follow_ups.roster', $assignment->id) }}" aria-label="{{ __('student_follow_up.open') }}: {{ $assignment->lesson_name }} - {{ $assignment->class_name }} - {{ __('student_follow_up.section') }} {{ $assignment->room_name }}">
                             <div>
                                 <span class="fu-assignment-card__icon"><i class="mdi mdi-book-open-variant" aria-hidden="true"></i></span>
                                 <h2 class="fu-assignment-card__title">{{ $assignment->lesson_name }}</h2>
@@ -71,12 +71,12 @@
                                 <span class="fu-need-label">
                                     {{ __('student_follow_up.needs_count', ['count' => $progress['needs_current']]) }}
                                 </span>
-                                <a class="fu-btn fu-btn--primary" href="{{ route('teacher.student_follow_ups.roster', $assignment->id) }}">
+                                <span class="fu-btn fu-btn--primary" aria-hidden="true">
                                     {{ __('student_follow_up.open') }}
                                     <i class="mdi mdi-arrow-left" aria-hidden="true"></i>
-                                </a>
+                                </span>
                             </div>
-                        </article>
+                        </a>
                     @endforeach
                 </section>
             @endif

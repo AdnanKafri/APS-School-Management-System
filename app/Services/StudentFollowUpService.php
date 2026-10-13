@@ -15,6 +15,7 @@ use App\Term_year;
 use App\Year;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class StudentFollowUpService
@@ -79,6 +80,72 @@ class StudentFollowUpService
         return $period;
     }
 
+    public function eligibleStudentsQuery(Teacher_room_lesson $assignment, Year $year, Carbon $at)
+    {
+        $atValue = $at->format('Y-m-d H:i:s');
+
+        return Student::operational()
+            ->whereExists(function ($query) use ($assignment, $year) {
+                $query->select(DB::raw(1))
+                    ->from('room_student')
+                    ->whereColumn('room_student.student_id', 'students.id')
+                    ->where('room_student.room_id', $assignment->room_id)
+                    ->where('room_student.year_id', $year->id);
+            })
+            ->where(function ($query) use ($assignment, $year, $atValue) {
+                $query->whereExists(function ($placement) use ($assignment, $year, $atValue) {
+                    $placement->select(DB::raw(1))->from('student_academic_placements as p')
+                        ->whereColumn('p.student_id', 'students.id')
+                        ->where('p.year_id', $year->id)
+                        ->where('p.class_id', $assignment->class_id)
+                        ->where('p.room_id', $assignment->room_id)
+                        ->where('p.status', StudentAcademicPlacement::STATUS_ACTIVE)
+                        ->where('p.effective_from', '<=', $atValue)
+                        ->where(function ($period) use ($atValue) {
+                            $period->whereNull('p.effective_to')->orWhere('p.effective_to', '>', $atValue);
+                        });
+                })->orWhereExists(function ($placement) use ($assignment, $year, $atValue) {
+                    // Legacy same-class section edits updated room_student but left the creation placement behind.
+                    $placement->select(DB::raw(1))->from('student_academic_placements as p')
+                        ->join('room_student as enrollment', function ($join) use ($assignment, $year) {
+                            $join->on('enrollment.student_id', '=', 'p.student_id')
+                                ->where('enrollment.year_id', $year->id)
+                                ->where('enrollment.room_id', $assignment->room_id);
+                        })
+                        ->whereColumn('p.student_id', 'students.id')
+                        ->where('p.year_id', $year->id)
+                        ->where('p.class_id', $assignment->class_id)
+                        ->where('p.room_id', '<>', $assignment->room_id)
+                        ->where('p.status', StudentAcademicPlacement::STATUS_ACTIVE)
+                        ->where('p.action_source', 'admin_student_creation')
+                        ->where('p.reason', 'student_creation')
+                        ->whereColumn('enrollment.updated_at', '>', 'p.updated_at')
+                        ->whereNotExists(function ($other) use ($assignment, $year) {
+                            $other->select(DB::raw(1))->from('room_student as other_enrollment')
+                                ->whereColumn('other_enrollment.student_id', 'p.student_id')
+                                ->where('other_enrollment.year_id', $year->id)
+                                ->where('other_enrollment.room_id', '<>', $assignment->room_id);
+                        })
+                        ->where('p.effective_from', '<=', $atValue)
+                        ->where(function ($period) use ($atValue) {
+                            $period->whereNull('p.effective_to')->orWhere('p.effective_to', '>', $atValue);
+                        })
+                        ->whereNotExists(function ($other) use ($year) {
+                            $other->select(DB::raw(1))->from('student_academic_placements as other_placement')
+                                ->whereColumn('other_placement.student_id', 'p.student_id')
+                                ->whereColumn('other_placement.id', '<>', 'p.id')
+                                ->where('other_placement.year_id', $year->id)
+                                ->where('other_placement.status', StudentAcademicPlacement::STATUS_ACTIVE);
+                        })
+                        ->whereNotExists(function ($transfer) use ($year) {
+                            $transfer->select(DB::raw(1))->from('student_transfer_histories as transfer')
+                                ->whereColumn('transfer.student_id', 'p.student_id')
+                                ->where('transfer.year_id', $year->id);
+                        });
+                });
+            });
+    }
+
     public function resolveCreationContext($teacherId, $assignmentId, $studentId)
     {
         $now = $this->schoolNow();
@@ -86,9 +153,9 @@ class StudentFollowUpService
         $assignment = $this->assignmentForTeacherOrFail($assignmentId, $teacherId, $year);
         $period = $this->openAssignmentPeriod($assignment, $now);
 
-        $student = Student::operational()->whereKey($studentId)->first();
-        if (!$student) {
-            abort(403, __('student_follow_up.errors.student_not_allowed'));
+        $student = Student::find($studentId);
+        if (!$student || !$student->isActiveLifecycle()) {
+            $this->denyStudent($teacherId, $studentId, $year, $assignment, !$student ? 'student_missing' : 'student_not_operational');
         }
 
         $enrollment = Room_student::where('student_id', $student->id)
@@ -96,26 +163,47 @@ class StudentFollowUpService
             ->where('year_id', $year->id)
             ->first();
         if (!$enrollment) {
-            abort(403, __('student_follow_up.errors.student_not_allowed'));
+            $this->denyStudent($teacherId, $studentId, $year, $assignment, 'current_year_enrollment_missing');
+        }
+
+        if (!$this->eligibleStudentsQuery($assignment, $year, $now)->whereKey($student->id)->exists()) {
+            $this->denyStudent($teacherId, $studentId, $year, $assignment, 'eligibility_context_mismatch');
         }
 
         $placement = StudentAcademicPlacement::where('student_id', $student->id)
             ->where('year_id', $year->id)
             ->where('class_id', $assignment->class_id)
             ->where('room_id', $assignment->room_id)
+            ->where('status', StudentAcademicPlacement::STATUS_ACTIVE)
             ->where('effective_from', '<=', $now)
             ->where(function ($query) use ($now) {
                 $query->whereNull('effective_to')->orWhere('effective_to', '>', $now);
             })
-            ->where('status', StudentAcademicPlacement::STATUS_ACTIVE)
+            ->orderByDesc('id')
             ->first();
         if (!$placement) {
-            abort(403, __('student_follow_up.errors.student_not_allowed'));
+            Log::warning('Teacher follow-up uses enrollment context with a stale creation placement.', [
+                'teacher_id' => (int) $teacherId, 'student_id' => (int) $studentId,
+                'year_id' => (int) $year->id, 'assignment_id' => (int) $assignment->id,
+            ]);
         }
 
         $term = Term_year::where('year_id', $year->id)->where('current_term', 1)->first();
 
         return compact('now', 'year', 'assignment', 'period', 'student', 'placement', 'term');
+    }
+
+    private function denyStudent($teacherId, $studentId, Year $year, Teacher_room_lesson $assignment, $condition)
+    {
+        Log::warning('Teacher student follow-up authorization denied for student context.', [
+            'teacher_id' => (int) $teacherId,
+            'student_id' => (int) $studentId,
+            'year_id' => (int) $year->id,
+            'assignment_id' => (int) $assignment->id,
+            'condition' => $condition,
+        ]);
+
+        abort(403, __('student_follow_up.errors.student_not_allowed'));
     }
 
     public function create($teacherUserId, $teacherId, $assignmentId, $studentId, array $input)
@@ -145,7 +233,7 @@ class StudentFollowUpService
                 'term_id' => optional($context['term'])->id,
                 'class_id' => $context['assignment']->class_id,
                 'room_id' => $context['assignment']->room_id,
-                'student_academic_placement_id' => $context['placement']->id,
+                'student_academic_placement_id' => optional($context['placement'])->id,
                 'teacher_assignment_period_id' => $context['period']->id,
                 'level' => $level,
                 'note' => $note,
