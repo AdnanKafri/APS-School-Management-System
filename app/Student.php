@@ -38,6 +38,11 @@ class Student extends Authenticatable
         return $query->where('lifecycle_status', self::LIFECYCLE_ACTIVE);
     }
 
+    public function scopeCurrentMembership($query, $yearId = null, $roomId = null)
+    {
+        return app(\App\Services\CurrentStudentMembership::class)->constrain($query, $yearId, $roomId);
+    }
+
     /**
      * Resolve a student for a current operational action without changing
      * the default model scope used by historical and identity views.

@@ -25,27 +25,7 @@ class StudentFollowUpController extends Controller
         $room = null;
 
         if ($year) {
-            $placement = StudentAcademicPlacement::where('student_id', $student->id)
-                ->where('year_id', $year->id)
-                ->where('status', StudentAcademicPlacement::STATUS_ACTIVE)
-                ->orderByDesc('id')
-                ->first();
-
-            if ($placement && $placement->room_id) {
-                $room = Room::whereKey($placement->room_id)
-                    ->where('year_id', $year->id)
-                    ->first();
-            }
-
-            if (!$room) {
-                $roomStudent = Room_student::where('student_id', $student->id)
-                    ->where('year_id', $year->id)
-                    ->orderByDesc('id')
-                    ->first();
-                $room = $roomStudent
-                    ? Room::whereKey($roomStudent->room_id)->where('year_id', $year->id)->first()
-                    : null;
-            }
+            $room = app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $year->id);
         }
 
         $roomId = optional($room)->id;

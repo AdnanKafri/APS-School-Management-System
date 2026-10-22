@@ -27,7 +27,7 @@ return [
     'no_subject_records_title' => 'No follow-ups for this subject',
     'no_subject_records' => 'There are no follow-ups for the selected subject in the current period.',
     'unknown' => 'Not specified',
-    'levels' => ['weak' => 'Weak', 'average' => 'Average', 'good' => 'Good', 'excellent' => 'Excellent'],
+    'levels' => ['weak' => 'Weak', 'average' => 'Average', 'good' => 'Good', 'very_good' => 'Very Good', 'excellent' => 'Excellent'],
     'months' => [
         1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
         5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',

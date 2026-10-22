@@ -177,7 +177,7 @@ class TeacherStudentFollowUpController extends Controller
         $request->validate([
             'assignment_id' => 'required|integer',
             'student_id' => 'required|integer',
-            'level' => 'nullable|in:weak,average,good,excellent',
+            'level' => 'nullable|in:' . implode(',', StudentFollowUp::LEVELS),
             'note' => 'nullable|string',
         ]);
 
@@ -206,10 +206,8 @@ class TeacherStudentFollowUpController extends Controller
         $room = Room::whereKey($assignment->room_id)->where('year_id', $year->id)->firstOrFail();
         $class = Classe::findOrFail($assignment->class_id);
         $lesson = Lesson::findOrFail($assignment->lesson_id);
-        $isCurrentStudent = Room_student::where('student_id', $student->id)
-            ->where('room_id', $assignment->room_id)
-            ->where('year_id', $year->id)
-            ->exists();
+        $isCurrentStudent = $this->followUps->eligibleStudentsQuery($assignment, $year, $this->followUps->schoolNow())
+            ->whereKey($student->id)->exists();
         $hasAuthoredHistory = StudentFollowUp::where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
             ->where('lesson_id', $assignment->lesson_id)
@@ -237,7 +235,7 @@ class TeacherStudentFollowUpController extends Controller
     public function update(Request $request, $followUp)
     {
         $request->validate([
-            'level' => 'nullable|in:weak,average,good,excellent',
+            'level' => 'nullable|in:' . implode(',', StudentFollowUp::LEVELS),
             'note' => 'nullable|string',
         ]);
 

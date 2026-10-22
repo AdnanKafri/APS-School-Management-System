@@ -60,6 +60,14 @@
     .sfu-admin .sfu-observation { border:1px solid #ebe7f5; border-radius:14px; padding:1rem; margin-bottom:.75rem; background:#fff; }
     .sfu-admin .sfu-observation-head { display:flex; align-items:flex-start; justify-content:space-between; gap:.8rem; margin-bottom:.65rem; }
     .sfu-admin .sfu-note { white-space:pre-wrap; overflow-wrap:anywhere; color:#4a4457; line-height:1.85; margin:0; }
+    .sfu-admin .sfu-observation-head { flex-wrap:wrap; }
+    .sfu-admin .sfu-observation-head > div { min-width:0; overflow-wrap:anywhere; }
+    .sfu-admin .sfu-evaluation { display:grid; gap:.8rem; margin-top:.7rem; min-width:0; }
+    .sfu-admin .sfu-evaluation-label { display:block; margin-bottom:.3rem; font-size:.8rem; color:#6b6477; }
+    .sfu-admin .sfu-evaluation-rating { padding:.75rem 1rem; border:1px solid #ded8eb; border-radius:10px; background:#f6f4fa; overflow-wrap:anywhere; }
+    .sfu-admin .sfu-evaluation-rating strong { display:block; color:#342c52; font-size:1.2rem; line-height:1.6; }
+    .sfu-admin .sfu-evaluation-note { min-width:0; padding:.2rem .2rem .5rem; }
+    .sfu-admin .sfu-evaluation-muted { color:#6b6477; font-size:.9rem; }
     @media (max-width:1100px) { .sfu-admin .sfu-summary{grid-template-columns:repeat(3,minmax(0,1fr));}.sfu-admin .sfu-filters{grid-template-columns:repeat(3,minmax(0,1fr));}.sfu-admin .sfu-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
     @media (max-width:650px) { .sfu-admin .sfu-shell{padding:.8rem;}.sfu-admin .sfu-intro{display:block;}.sfu-admin .sfu-intro>.sfu-actions{margin-top:.75rem}.sfu-admin .sfu-year{display:inline-block;margin-top:.7rem;}.sfu-admin .sfu-summary,.sfu-admin .sfu-filters,.sfu-admin .sfu-branches{grid-template-columns:1fr 1fr;gap:.55rem;}.sfu-admin .sfu-branches,.sfu-admin .sfu-card-grid{grid-template-columns:1fr;}.sfu-admin .sfu-filter-action{grid-column:span 2;}.sfu-admin .sfu-search{flex-wrap:wrap}.sfu-admin .sfu-search .form-control{flex:1 0 100%}.sfu-context-grid{grid-template-columns:1fr}.sfu-context-grid .wide{grid-column:auto}.sfu-modal .modal-dialog{margin:.55rem}.sfu-modal .modal-footer .btn{flex:1}.sfu-admin .sfu-detail-filters{grid-template-columns:1fr 1fr;} }
     @media (max-width:360px) { .sfu-admin .sfu-summary,.sfu-admin .sfu-filters{grid-template-columns:1fr;}.sfu-admin .sfu-filter-action{grid-column:span 1;} }

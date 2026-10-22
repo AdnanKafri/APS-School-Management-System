@@ -78,6 +78,7 @@ return [
         'weak' => 'ضعيف',
         'average' => 'وسط',
         'good' => 'جيد',
+        'very_good' => 'جيد جداً',
         'excellent' => 'ممتاز',
     ],
     'messages' => [

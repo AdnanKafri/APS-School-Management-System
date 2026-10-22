@@ -20,6 +20,22 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminStudentFollowUpController extends Controller
 {
+    private function currentEnrollmentRows(Year $year)
+    {
+        return DB::table('room_student as enrollment')
+            ->join('rooms as enrollment_room', 'enrollment_room.id', '=', 'enrollment.room_id')
+            ->where('enrollment.year_id', $year->id)->where('enrollment_room.year_id', $year->id)
+            ->whereIn('enrollment.student_id', Student::currentMembership($year->id,
+                DB::raw('enrollment.room_id'))->select('students.id'))
+            ->select('enrollment.student_id', 'enrollment.room_id', 'enrollment.year_id', 'enrollment_room.class_id')->distinct();
+    }
+
+    private function currentStudentLabel($studentId, Year $year)
+    {
+        $room = app(\App\Services\CurrentStudentMembership::class)->roomForStudent($studentId, $year->id);
+        return $room ? (object) ['class_name' => optional($room->classes)->name, 'room_name' => $room->name] : null;
+    }
+
     public function index(Request $request)
     {
         $year = $this->activeYearOrFail();
@@ -69,8 +85,8 @@ class AdminStudentFollowUpController extends Controller
             ->select('student_id', DB::raw('COUNT(*) AS observation_count'), DB::raw('COUNT(DISTINCT CONCAT(teacher_id, ":", lesson_id)) AS teacher_subject_count'))
             ->groupBy('student_id');
         $studentQuery = Student::query()->select(['students.id', 'students.first_name', 'students.last_name', 'classes.name as class_name', 'rooms.name as room_name', DB::raw('COALESCE(month_rows.observation_count, 0) AS observation_count'), DB::raw('COALESCE(month_rows.teacher_subject_count, 0) AS teacher_subject_count')])
-            ->join('student_academic_placements as placements', function ($join) use ($year, $now) {
-                $join->on('placements.student_id', '=', 'students.id')->where('placements.year_id', $year->id)->where('placements.effective_from', '<=', $now->toDateTimeString())->where(function ($placement) use ($now) { $placement->whereNull('placements.effective_to')->orWhere('placements.effective_to', '>', $now->toDateTimeString()); });
+            ->joinSub($this->currentEnrollmentRows($year), 'placements', function ($join) {
+                $join->on('placements.student_id', '=', 'students.id');
             })->join('rooms', function ($join) use ($year) { $join->on('rooms.id', '=', 'placements.room_id')->where('rooms.year_id', $year->id); })->join('classes', 'classes.id', '=', 'placements.class_id')->leftJoinSub($followUps, 'month_rows', function ($join) { $join->on('month_rows.student_id', '=', 'students.id'); })
             ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
             ->when($filters['class_id'], function ($query, $id) { $query->where('placements.class_id', $id); })
@@ -80,9 +96,9 @@ class AdminStudentFollowUpController extends Controller
         $students = ($search !== '' || $filters['room_id']) ? $studentQuery->paginate(30)->appends($request->query()) : null;
         $browseClasses = Classe::query()->select('classes.id', 'classes.name', DB::raw('COUNT(DISTINCT rooms.id) AS room_count'), DB::raw('COUNT(DISTINCT placements.student_id) AS student_count'))
             ->join('rooms', function ($join) use ($year) { $join->on('rooms.class_id', '=', 'classes.id')->where('rooms.year_id', $year->id); })
-            ->leftJoin('student_academic_placements as placements', function ($join) use ($year, $now) { $join->on('placements.class_id', '=', 'classes.id')->on('placements.room_id', '=', 'rooms.id')->where('placements.year_id', $year->id)->where('placements.effective_from', '<=', $now)->where(function ($q) use ($now) { $q->whereNull('placements.effective_to')->orWhere('placements.effective_to', '>', $now); }); })
+            ->leftJoinSub($this->currentEnrollmentRows($year), 'placements', function ($join) { $join->on('placements.class_id', '=', 'classes.id')->on('placements.room_id', '=', 'rooms.id'); })
             ->groupBy('classes.id', 'classes.name')->havingRaw('COUNT(DISTINCT placements.student_id) > 0')->orderBy('classes.name')->get();
-        $browseRooms = $filters['class_id'] ? Room::query()->select('rooms.id', 'rooms.name', 'rooms.class_id', DB::raw('COUNT(DISTINCT placements.student_id) AS student_count'))->leftJoin('student_academic_placements as placements', function ($join) use ($year, $now) { $join->on('placements.room_id', '=', 'rooms.id')->where('placements.year_id', $year->id)->where('placements.effective_from', '<=', $now)->where(function ($q) use ($now) { $q->whereNull('placements.effective_to')->orWhere('placements.effective_to', '>', $now); }); })->where('rooms.year_id', $year->id)->where('rooms.class_id', $filters['class_id'])->groupBy('rooms.id', 'rooms.name', 'rooms.class_id')->havingRaw('COUNT(DISTINCT placements.student_id) > 0')->orderBy('rooms.name')->get() : collect();
+        $browseRooms = $filters['class_id'] ? Room::query()->select('rooms.id', 'rooms.name', 'rooms.class_id', DB::raw('COUNT(DISTINCT placements.student_id) AS student_count'))->leftJoinSub($this->currentEnrollmentRows($year), 'placements', function ($join) { $join->on('placements.room_id', '=', 'rooms.id'); })->where('rooms.year_id', $year->id)->where('rooms.class_id', $filters['class_id'])->groupBy('rooms.id', 'rooms.name', 'rooms.class_id')->havingRaw('COUNT(DISTINCT placements.student_id) > 0')->orderBy('rooms.name')->get() : collect();
         return view('admin.student_follow_ups.students', compact('year', 'now', 'months', 'month', 'filters', 'students', 'search', 'browseClasses', 'browseRooms') + ['filterOptions' => $this->filterOptions($year)]);
     }
 
@@ -122,7 +138,7 @@ class AdminStudentFollowUpController extends Controller
 
     public function storeOnBehalf(Request $request, $teacher, $student, StudentFollowUpService $followUps)
     {
-        $request->validate(['assignment_id'=>'required|integer','level'=>'nullable|in:weak,average,good,excellent','note'=>'nullable|string']);
+        $request->validate(['assignment_id'=>'required|integer','level'=>'nullable|in:' . implode(',', StudentFollowUp::LEVELS),'note'=>'nullable|string']);
         $year = $this->activeYearOrFail(); $now = Carbon::now('Asia/Damascus');
         $teacher = Teacher::findOrFail((int) $teacher); $student = Student::operational()->findOrFail((int) $student);
         $assignment = $this->adminAssignmentOrFail($request, $teacher->id, $student->id, $year, $now);
@@ -134,7 +150,7 @@ class AdminStudentFollowUpController extends Controller
     {
         $year=$this->activeYearOrFail(); $student=Student::operational()->findOrFail((int)$student); $now=Carbon::now('Asia/Damascus'); $months=$this->availableMonths($year,$now); $month=$this->selectedMonth($request,$months,$now); $range=$this->monthRange($month);
         $followUps=StudentFollowUp::with(['teacher','lesson','room','classRoom'])->where('student_id',$student->id)->where('year_id',$year->id)->whereNull('voided_at')->whereBetween('compliance_month',[$range['start']->toDateString(),$range['end']->toDateString()])->orderBy('lesson_id')->orderBy('teacher_id')->orderBy('observed_at')->get();
-        $placement=DB::table('student_academic_placements as p')->join('rooms','rooms.id','=','p.room_id')->join('classes','classes.id','=','p.class_id')->where('p.student_id',$student->id)->where('p.year_id',$year->id)->where('p.effective_from','<=',$now)->where(function($q)use($now){$q->whereNull('p.effective_to')->orWhere('p.effective_to','>',$now);})->select('classes.name as class_name','rooms.name as room_name')->first();
+        $placement=$this->currentStudentLabel($student->id, $year);
         $school=School_data::first();
         return view('admin.student_follow_ups.report', compact('year','student','month','followUps','placement','school'));
     }
@@ -175,7 +191,7 @@ class AdminStudentFollowUpController extends Controller
             ->paginate(50)
             ->appends($request->query());
 
-        $placement=DB::table('student_academic_placements as p')->join('rooms','rooms.id','=','p.room_id')->join('classes','classes.id','=','p.class_id')->where('p.student_id',$student->id)->where('p.year_id',$year->id)->where('p.effective_from','<=',$now)->where(function($q)use($now){$q->whereNull('p.effective_to')->orWhere('p.effective_to','>',$now);})->select('classes.name as class_name','rooms.name as room_name')->first();
+        $placement=$this->currentStudentLabel($student->id, $year);
         return view('admin.student_follow_ups.student', compact('year', 'student', 'now', 'months', 'month', 'followUps', 'placement'));
     }
 
@@ -444,7 +460,8 @@ class AdminStudentFollowUpController extends Controller
         $assignment = Teacher_room_lesson::whereKey($assignmentId)->where('teacher_id', $teacherId)->where('year_id', $year->id)->firstOrFail();
         $period = TeacherAssignmentPeriod::where('teacher_room_lesson_id', $assignment->id)->where('teacher_id', $teacherId)->where('year_id', $year->id)->where('effective_from','<=',$now)->where(function($q)use($now){$q->whereNull('effective_to')->orWhere('effective_to','>',$now);})->exists();
         abort_unless($period, 403);
-        $enrolled = DB::table('room_student')->where('student_id',$studentId)->where('room_id',$assignment->room_id)->where('year_id',$year->id)->exists();
+        $enrolled = app(\App\Services\StudentFollowUpService::class)->eligibleStudentsQuery($assignment, $year, $now)
+            ->whereKey($studentId)->exists();
         abort_unless($enrolled, 403);
         return $assignment;
     }

@@ -658,7 +658,8 @@ public function student_details($student_id){
     }
 
     $student->setRelation('room', $room);
-    $student_mark=Students_mark::where('student_id',$student_id)->where('year_id',$contextYear->id)->first();
+    $student_mark=Students_mark::where('student_id',$student_id)->where('year_id',$contextYear->id)
+        ->where('room_id', $room->first()->id)->first();
 
      $lessons=  $room[0]->classes->lessons;
     $classes=Classe::all();
@@ -689,7 +690,7 @@ public function student_details($student_id){
 
 
 public function student_update(Request $request , $student_id){
-
+    return DB::transaction(function () use ($request, $student_id) {
 
     $user=User::where('student_id',$student_id)->first();
 
@@ -715,6 +716,19 @@ public function student_update(Request $request , $student_id){
     ]);
 
     $student=Student::find($student_id);
+    $currentRoom = app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student_id, optional($year)->id);
+    abort_unless($currentRoom, 422);
+    $targetRoom = Room::whereKey($request->input('room_id', $currentRoom->id))->where('year_id', $year->id)->firstOrFail();
+    if ((int) $targetRoom->id !== (int) $currentRoom->id) {
+        $transfer = app(\App\Services\StudentTransferService::class);
+        $response = $transfer->handle(Request::create('', 'POST', [
+            'student_id' => $student_id, 'class_change_id' => $targetRoom->class_id, 'room_change_id' => $targetRoom->id,
+        ]), false);
+        if (!$transfer->succeeded()) {
+            return $response;
+        }
+    }
+    $request->merge(['student_id' => $student_id, 'room_id' => $targetRoom->id, 'class_id' => $targetRoom->class_id]);
     $student_detail = Student_detail::firstOrNew(['student_id' => $student_id]);
     $student_religion=$student->religion;
 
@@ -758,7 +772,7 @@ public function student_update(Request $request , $student_id){
         if ($lesson->religion!=null) {
 
 
-            $student_mark=Students_mark::where('student_id',$student->id)->where('religion',$student_religion)->where('year_id',$year->id)->first();
+            $student_mark=Students_mark::where('student_id',$student->id)->where('religion',$student_religion)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
 
       if (isset($student_mark) && $student_mark!="") {
 
@@ -811,7 +825,7 @@ public function student_update(Request $request , $student_id){
 
                                     $student_mark->save();
 
-                 $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->first();
+                 $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
 
                             $result_term1=0;
                                                 $result_term2=0;
@@ -838,7 +852,7 @@ public function student_update(Request $request , $student_id){
 
                     $student_mark->term_result=json_encode($objec_term_result);
                                     $student_mark->save();
-                 $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->first();
+                 $student_mark=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
 
 
                 $year_result=(json_decode($student_mark->term_result,true)['term1']
@@ -872,7 +886,7 @@ public function student_update(Request $request , $student_id){
 
                 foreach ($lessons as $lesson) {
 
-                    $item=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->first();
+                    $item=Students_mark::where('student_id',$student->id)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
 
                     $a1=json_decode($item->mark,true);
 
@@ -941,7 +955,7 @@ public function student_update(Request $request , $student_id){
             }
 
 
-            $student_mark_new=Students_mark::where('student_id',$request->student_id)->where('year_id',$year->id)->first();
+            $student_mark_new=Students_mark::where('student_id',$request->student_id)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
 
             $student_mark_new->religion=$request->religion;
 
@@ -997,11 +1011,6 @@ $student->image=null;
 
 
             $year=Year::where('current_year','1')->first();
-
-
-    $room_student=Room_student::where('student_id',$student->id)->where('year_id',$year->id)->first();
-    $room_student->room_id=$request->room_id;
-    $room_student->save();
 
 
     $user=User::where('student_id',$student_id)->first();
@@ -1083,7 +1092,7 @@ $user=User::where('student_id',$student->id)->first();
 $user->email=$request->email;
 $user->save();
 return redirect()->back()->with('success', __('admin.students.notifications.updated'));
-
+    });
 }
 
 
@@ -3435,7 +3444,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
         }])->find($room_id);
         $year=Year::where('current_year','1')->first();
 
-        $students=Room::with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])->find($room_id);
+        $students=Room::with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])->find($room_id);
 
     //     $students=$students->student()->get();
     //     $students=collect($students);
@@ -3452,8 +3461,8 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
                 $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('lang', '1')->orderBy('first_name');
-            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
+            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
+                ->with(['student'=>fn($q1)=>$q1->currentMembership(null, $room_id)->orderBy('first_name')])->find($room_id);
 
         } elseif (isset($students) && $lesson->lang=='0') {
 
@@ -3461,15 +3470,15 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
                 $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('lang', '0')->orderBy('first_name');
-            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
+            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
+                ->with(['student'=>fn($q1)=>$q1->currentMembership(null, $room_id)->orderBy('first_name')])->find($room_id);
 
         } elseif (isset($students) && $lesson->religion=='1') {
             $students = Room::whereHas('student', function ($query) use ($year) {
                 $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('religion', '1')->orderBy('first_name');
-            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                 ->with(['student'=>fn($q1)=>$q1->operational()->where('religion', '1')->orderBy('first_name')])->find($room_id);
 
         } elseif (isset($students) && $lesson->religion=='0') {
@@ -3478,16 +3487,16 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
                 $query->operational();
                 $query->where('year_id', $year->id);
                 $query->where('religion', '0')->orderBy('first_name');
-            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
+            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
+                ->with(['student'=>fn($q1)=>$q1->currentMembership(null, $room_id)->orderBy('first_name')])->find($room_id);
 
         } else {
 
             $students = Room::whereHas('student', function ($query) use ($year) {
                 $query->operational();
                 $query->where('year_id', $year->id);
-            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
-                ->with(['student'=>fn($q1)=>$q1->operational()->orderBy('first_name')])->find($room_id);
+            })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
+                ->with(['student'=>fn($q1)=>$q1->currentMembership(null, $room_id)->orderBy('first_name')])->find($room_id);
         }
 
         $count = isset($students) ? count($students->student) : 0;
@@ -3505,7 +3514,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
 
                 $lesson = Lesson::find($lesson_id);
-                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
                 $object1 = json_decode($student_mark->mark, true);
 
                 $object1[$lesson_id]['oral'] = $request->mark * 0.1;
@@ -3644,7 +3653,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
 
 
-                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
 
                 $result_term1 = 0;
                 $count = 0;
@@ -3729,7 +3738,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
                 $lesson = Lesson::find($lesson_id);
 
-                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
                 $object2 = json_decode($student_mark->mark2, true);
 
                 $object2[$lesson_id]['oral'] = $request->mark * 0.1;
@@ -3858,7 +3867,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
                         $student_mark->save();
                     }
                 }
-                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
 
                 $result_term2 = 0;
                 $count = 0;
@@ -3950,12 +3959,20 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
     {
         $this->requireOperationalStudent($request->student_id);
         $year = Year::where('current_year', '1')->first();
+        abort_unless($year, 422);
+        $currentRoom = Room::whereKey($request->room_id)->where('year_id', $year->id)->firstOrFail();
+        abort_unless(Student::currentMembership($year->id, $currentRoom->id)->whereKey($request->student_id)->exists(), 403);
+        if ((string) auth()->user()->type === '1') {
+            abort_unless(Teacher_room_lesson::where('teacher_id', auth()->user()->teacher_id)
+                ->where('year_id', $year->id)->where('class_id', $currentRoom->class_id)
+                ->where('room_id', $currentRoom->id)->where('lesson_id', $request->lesson_id)->exists(), 403);
+        }
 
         $lesson_id = $request->lesson_id;
         $student_id = $request->student_id;
         $room_id=$request->room_id;
-        $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->first();
-          $report_card=Report_card::where('student_id',$request->student_id)->where('year_id',$year->id)->first();
+        $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
+          $report_card=Report_card::where('student_id',$request->student_id)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
 
 
         if ($request->term == 'term1') {
@@ -3969,7 +3986,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
         }
 
             $lesson = Lesson::find($lesson_id);
-            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
             $object1 = json_decode($student_mark->mark, true);
 
             $object1[$lesson_id]['oral'] = $request->oral;
@@ -4108,7 +4125,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
 
 
-            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
 
             $result_term1 = 0;
             $count = 0;
@@ -4191,7 +4208,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
             return redirect()->back();
         } else {
 
-            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
             if (isset($report_card) && $report_card->adjustable != 1){
                 session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
                 return redirect()->back()->with('error','  لا يمكن التعديل تأكد من حالة الجلاء    !  ') ;
@@ -4343,7 +4360,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
                     $student_mark->save();
                 }
             }
-            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
 
             $result_term2 = 0;
             $count = 0;
@@ -4439,7 +4456,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
         $lesson_id = $request->lesson_id;
         $studens = $students;
         foreach ($studens as $student) {
-            $report_card=Report_card::where('student_id',$student->id)->where('year_id',$year->id)->first();
+            $report_card=Report_card::where('student_id',$student->id)->where('year_id',$year->id)->where('room_id', $request->room_id)->first();
             if ($request->term == 'term1') {
 
        if (isset($report_card) && $report_card->adjustable != 0){
@@ -4447,7 +4464,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
             return redirect()->back()->with('error','  لا يمكن تعديل العلامات بعد استصدار الجلاء !  ') ;
         }
             $lesson = Lesson::find($lesson_id);
-            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
             if (auth()->user()->type == 1 && $student_mark->adjustable != 0){
                 session()->flash('error22',' لا يمكن التعديل تم تثبيت العلامات من قبل الإدارة  ' ) ;
             return redirect()->back()->with('error','   لا يمكن التعديل   تم تثبيت العلامات من قبل الإدارة    !  ') ;
@@ -4596,7 +4613,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
 
 
-            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
 
             $result_term1 = 0;
             $count = 0;
@@ -4677,7 +4694,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
 
 
             } else {
-            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
             if (isset($report_card) && $report_card->adjustable != 1){
                 session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
                 return redirect()->back()->with('error','  لا يمكن التعديل تأكد من حالة الجلاء    !  ') ;
@@ -4841,7 +4858,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
                     $student_mark->save();
                 }
             }
-            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->firstOrFail();
 
             $result_term2 = 0;
             $count = 0;

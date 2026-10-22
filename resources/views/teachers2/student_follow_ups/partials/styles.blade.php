@@ -877,7 +877,7 @@
 
     .sfu-level-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 90px), 1fr));
         gap: 8px;
         min-width: 0;
     }
@@ -910,7 +910,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 42px;
+        min-height: 44px;
         padding: 7px;
         border: 1px solid #cfd8e7;
         border-radius: 10px;
@@ -919,6 +919,8 @@
         font-size: .78rem;
         font-weight: 800;
         transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+        text-align: center;
+        line-height: 1.5;
     }
 
     .sfu-level-option input:checked + b {

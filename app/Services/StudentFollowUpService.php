@@ -82,68 +82,7 @@ class StudentFollowUpService
 
     public function eligibleStudentsQuery(Teacher_room_lesson $assignment, Year $year, Carbon $at)
     {
-        $atValue = $at->format('Y-m-d H:i:s');
-
-        return Student::operational()
-            ->whereExists(function ($query) use ($assignment, $year) {
-                $query->select(DB::raw(1))
-                    ->from('room_student')
-                    ->whereColumn('room_student.student_id', 'students.id')
-                    ->where('room_student.room_id', $assignment->room_id)
-                    ->where('room_student.year_id', $year->id);
-            })
-            ->where(function ($query) use ($assignment, $year, $atValue) {
-                $query->whereExists(function ($placement) use ($assignment, $year, $atValue) {
-                    $placement->select(DB::raw(1))->from('student_academic_placements as p')
-                        ->whereColumn('p.student_id', 'students.id')
-                        ->where('p.year_id', $year->id)
-                        ->where('p.class_id', $assignment->class_id)
-                        ->where('p.room_id', $assignment->room_id)
-                        ->where('p.status', StudentAcademicPlacement::STATUS_ACTIVE)
-                        ->where('p.effective_from', '<=', $atValue)
-                        ->where(function ($period) use ($atValue) {
-                            $period->whereNull('p.effective_to')->orWhere('p.effective_to', '>', $atValue);
-                        });
-                })->orWhereExists(function ($placement) use ($assignment, $year, $atValue) {
-                    // Legacy same-class section edits updated room_student but left the creation placement behind.
-                    $placement->select(DB::raw(1))->from('student_academic_placements as p')
-                        ->join('room_student as enrollment', function ($join) use ($assignment, $year) {
-                            $join->on('enrollment.student_id', '=', 'p.student_id')
-                                ->where('enrollment.year_id', $year->id)
-                                ->where('enrollment.room_id', $assignment->room_id);
-                        })
-                        ->whereColumn('p.student_id', 'students.id')
-                        ->where('p.year_id', $year->id)
-                        ->where('p.class_id', $assignment->class_id)
-                        ->where('p.room_id', '<>', $assignment->room_id)
-                        ->where('p.status', StudentAcademicPlacement::STATUS_ACTIVE)
-                        ->where('p.action_source', 'admin_student_creation')
-                        ->where('p.reason', 'student_creation')
-                        ->whereColumn('enrollment.updated_at', '>', 'p.updated_at')
-                        ->whereNotExists(function ($other) use ($assignment, $year) {
-                            $other->select(DB::raw(1))->from('room_student as other_enrollment')
-                                ->whereColumn('other_enrollment.student_id', 'p.student_id')
-                                ->where('other_enrollment.year_id', $year->id)
-                                ->where('other_enrollment.room_id', '<>', $assignment->room_id);
-                        })
-                        ->where('p.effective_from', '<=', $atValue)
-                        ->where(function ($period) use ($atValue) {
-                            $period->whereNull('p.effective_to')->orWhere('p.effective_to', '>', $atValue);
-                        })
-                        ->whereNotExists(function ($other) use ($year) {
-                            $other->select(DB::raw(1))->from('student_academic_placements as other_placement')
-                                ->whereColumn('other_placement.student_id', 'p.student_id')
-                                ->whereColumn('other_placement.id', '<>', 'p.id')
-                                ->where('other_placement.year_id', $year->id)
-                                ->where('other_placement.status', StudentAcademicPlacement::STATUS_ACTIVE);
-                        })
-                        ->whereNotExists(function ($transfer) use ($year) {
-                            $transfer->select(DB::raw(1))->from('student_transfer_histories as transfer')
-                                ->whereColumn('transfer.student_id', 'p.student_id')
-                                ->where('transfer.year_id', $year->id);
-                        });
-                });
-            });
+        return app(CurrentStudentMembership::class)->studentsQuery($year->id, $assignment->room_id, true, $at);
     }
 
     public function resolveCreationContext($teacherId, $assignmentId, $studentId)
@@ -182,7 +121,7 @@ class StudentFollowUpService
             ->orderByDesc('id')
             ->first();
         if (!$placement) {
-            Log::warning('Teacher follow-up uses enrollment context with a stale creation placement.', [
+            Log::warning('Teacher follow-up uses current enrollment with a stale same-grade placement.', [
                 'teacher_id' => (int) $teacherId, 'student_id' => (int) $studentId,
                 'year_id' => (int) $year->id, 'assignment_id' => (int) $assignment->id,
             ]);

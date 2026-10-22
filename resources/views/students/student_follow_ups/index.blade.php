@@ -97,7 +97,7 @@
                                                         <span>{{ __('student_follow_up_student.teacher') }}</span>
                                                         <strong>{{ $teacherName ?: __('student_follow_up_student.unknown') }}</strong>
                                                     </div>
-                                                    @php $levelKey = in_array($followUp->level, ['weak', 'average', 'good', 'excellent'], true) ? $followUp->level : null; @endphp
+                                                    @php $levelKey = in_array($followUp->level, \App\StudentFollowUp::LEVELS, true) ? $followUp->level : null; @endphp
                                                     @if ($levelKey)
                                                         <span class="sfu-student-level">
                                                             <span>{{ __('student_follow_up_student.level') }}</span>

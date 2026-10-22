@@ -671,7 +671,7 @@ class studentscontroller extends Controller
 
         $certificates = Certificate::find($request->id);
         if (!$certificates || (int) $certificates->student_id !== (int) auth()->user()->student_id
-            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $certificates->room_id)) {
+            || !$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $certificates->room_id)) {
             abort(403);
         }
         $certificates->certificate = $request->certi;
@@ -1494,7 +1494,7 @@ class studentscontroller extends Controller
     {
         $student = Student::find(auth()->user()->student_id);
         $content = Lesson_teacher_room_term_exam::findOrFail($exam_id);
-        if (!$this->studentHasActivePlacementForRoom($student->id, $content->room_id)) {
+        if (!$this->studentHasCurrentMembershipForRoom($student->id, $content->room_id)) {
             return redirect()->back()->with('warning', 'لا يمكن فتح سجل أكاديمي مغلق للتعديل');
         }
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
@@ -1592,7 +1592,7 @@ class studentscontroller extends Controller
     {
 
         $exam = Lesson_teacher_room_term_exam::findOrFail($request->content_id);
-        if (!$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $exam->room_id)) {
+        if (!$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $exam->room_id)) {
             return redirect()->back()->with('warning', 'لا يمكن تعديل سجل أكاديمي مغلق');
         }
 
@@ -1832,7 +1832,7 @@ class studentscontroller extends Controller
 
         $student = Student::find(auth()->user()->student_id);
         $content = Exams2::findOrFail($exam_id);
-        if (!$this->studentHasActivePlacementForRoom($student->id, $content->room_id)) {
+        if (!$this->studentHasCurrentMembershipForRoom($student->id, $content->room_id)) {
             return redirect()->back()->with('error', 'لا يمكن فتح سجل أكاديمي مغلق للتعديل');
         }
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
@@ -1943,7 +1943,7 @@ class studentscontroller extends Controller
     {
 
         $exam = Exams2::findOrFail($request->content_id);
-        if (!$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $exam->room_id)) {
+        if (!$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $exam->room_id)) {
             return redirect()->back()->with('error', 'لا يمكن تعديل سجل أكاديمي مغلق');
         }
 
@@ -2418,7 +2418,7 @@ class studentscontroller extends Controller
         $student_id = auth()->user()->student_id;
         $student = Student::find($student_id);
         $content = Lesson_teacher_room_term_exam::findOrFail($request->item_id);
-        if (!$this->studentHasActivePlacementForRoom($student_id, $content->room_id)) {
+        if (!$this->studentHasCurrentMembershipForRoom($student_id, $content->room_id)) {
             return redirect()->back()->with('error', 'لا يمكن تعديل ملفات سجل أكاديمي مغلق');
         }
 
@@ -2478,7 +2478,7 @@ class studentscontroller extends Controller
         $student_id = auth()->user()->student_id;
         $student = Student::find($student_id);
         $content = Exams2::findOrFail($request->exam_id);
-        if (!$this->studentHasActivePlacementForRoom($student_id, $content->room_id)) {
+        if (!$this->studentHasCurrentMembershipForRoom($student_id, $content->room_id)) {
             return redirect()->back()->with('error', 'لا يمكن تعديل ملفات سجل أكاديمي مغلق');
         }
 
@@ -2562,7 +2562,7 @@ class studentscontroller extends Controller
         $question = Lesson_teacher_room_term_exam::find($request->file_id);
         if (!$question || (int) $request->student_id !== (int) auth()->user()->student_id
             || (int) $request->room_id !== (int) $question->room_id
-            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $question->room_id)) {
+            || !$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $question->room_id)) {
             return redirect()->back()->with('warning', 'لا يمكن تعديل سجل أكاديمي مغلق');
         }
 
@@ -2618,7 +2618,7 @@ class studentscontroller extends Controller
 
         $answer = Student_lesson_teacher_room_term_exam::find($id);
         if (!$answer || (int) $answer->student_id !== (int) auth()->user()->student_id
-            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $answer->room_id)) {
+            || !$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $answer->room_id)) {
             abort(403);
         }
         Storage::disk('public')->delete($answer->file);
@@ -2633,7 +2633,7 @@ class studentscontroller extends Controller
 
         $answer = Student_lesson_teacher_room_term_exam::find($request->id);
         if (!$answer || (int) $answer->student_id !== (int) auth()->user()->student_id
-            || !$this->studentHasActivePlacementForRoom(auth()->user()->student_id, $answer->room_id)) {
+            || !$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $answer->room_id)) {
             return response()->json(['status' => false, 'msg' => 'لا يمكن تعديل سجل أكاديمي مغلق'], 403);
         }
         Storage::disk('public')->delete($answer->file);
@@ -3381,18 +3381,14 @@ class studentscontroller extends Controller
         ));
     }
 
-    private function studentHasActivePlacementForRoom($studentId, $roomId)
+    private function studentHasCurrentMembershipForRoom($studentId, $roomId)
     {
         $year = Year::where('current_year', '1')->first();
         if (!$year) {
             return false;
         }
 
-        return StudentAcademicPlacement::where('student_id', $studentId)
-            ->where('room_id', $roomId)
-            ->where('year_id', $year->id)
-            ->where('status', 'active')
-            ->exists();
+        return Student::currentMembership($year->id, $roomId)->whereKey($studentId)->exists();
     }
     public function student_view_report_card()
     {
@@ -3401,19 +3397,9 @@ class studentscontroller extends Controller
             return redirect()->back()->with('error66', ' يجب تحديد العام الدراسي, تواصل مع الإدارة');
         }
         $student_id = Auth::user()->student_id;
-        $placement = StudentAcademicPlacement::where('student_id', $student_id)
-            ->where('year_id', $year->id)
-            ->where('status', 'active')
-            ->orderByDesc('id')
-            ->first();
-        $placementRoomId = $placement ? $placement->room_id : null;
-        $student = Student::with(['room' => function ($q1) use ($year, $placementRoomId) {
-            $q1->where('rooms.year_id', $year->id);
-            if ($placementRoomId) {
-                $q1->where('rooms.id', $placementRoomId);
-            }
-        }])->findOrFail($student_id);
-        $room = $student->room->first();
+        $student = Student::findOrFail($student_id);
+        $room = app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student_id, $year->id);
+        $student->setRelation('room', $room ? collect([$room]) : collect());
         if (!$room) {
             return redirect()->back()->with('error66', 'الطالب لا يملك قيداً أكاديمياً نشطاً');
         }
@@ -3688,6 +3674,12 @@ class studentscontroller extends Controller
     }
     public function edit_student_info(Request $request, $student_id)
     {
+        abort_unless((int) $student_id === (int) Auth::user()->student_id, 403);
+        $profileYear = Year::where('current_year', 1)->first();
+        $profileRoom = app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student_id, optional($profileYear)->id);
+        abort_unless($profileRoom, 422);
+        abort_unless((int) $request->input('room_id', $profileRoom->id) === (int) $profileRoom->id, 403);
+        $request->merge(['student_id' => $student_id, 'room_id' => $profileRoom->id, 'class_id' => $profileRoom->class_id]);
 
         $user = User::where('student_id', $student_id)->first();
 
@@ -3883,7 +3875,7 @@ class studentscontroller extends Controller
 
                     if ($lesson->religion != null) {
 
-                        $student_mark = Students_mark::where('student_id', $student->id)->where('religion', $student_religion)->where('year_id', $year->id)->first();
+                        $student_mark = Students_mark::where('student_id', $student->id)->where('religion', $student_religion)->where('year_id', $year->id)->where('room_id', $request->room_id)->first();
 
                         if (isset($student_mark) && $student_mark != "") {
 
@@ -3928,7 +3920,7 @@ class studentscontroller extends Controller
 
                             $student_mark->save();
 
-                            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->first();
 
                             $result_term1 = 0;
                             $result_term2 = 0;
@@ -3953,7 +3945,7 @@ class studentscontroller extends Controller
 
                             $student_mark->term_result = json_encode($objec_term_result);
                             $student_mark->save();
-                            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->first();
 
 
                             $year_result = (json_decode($student_mark->term_result, true)['term1'] + json_decode($student_mark->term_result, true)['term2']) / 2;
@@ -3979,7 +3971,7 @@ class studentscontroller extends Controller
 
             foreach ($lessons as $lesson) {
 
-                $item = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
+                $item = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $request->room_id)->first();
 
                 $a1 = json_decode($item->mark, true);
 
@@ -4036,7 +4028,7 @@ class studentscontroller extends Controller
         }
 
 
-        $student_mark_new = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->first();
+        $student_mark_new = Students_mark::where('student_id', $request->student_id)->where('year_id', $year->id)->where('room_id', $request->room_id)->first();
 
         $student_mark_new->religion = $request->religion;
 
@@ -4048,30 +4040,6 @@ class studentscontroller extends Controller
 
         $year = Year::where('current_year', '1')->first();
 
-        $room_student = Room_student::where('student_id', $student->id)->where('year_id', $year->id)->first();
-        if ($room_student->room_id != $request->room_id) {
-            // change room
-            $room_student->room_id = $request->room_id;
-            $room_student->save();
-            // change student exams result to the new room
-            $exam_result = Exam_result::where('user_id', $student->id)->get();
-            foreach ($exam_result as $item) {
-                $item->room_id = $request->room_id;
-                $item->save();
-            }
-            // change student marks to the new room
-            $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->first();
-            $student_mark->room_id = $request->room_id;
-            $student_mark->save();
-
-
-            // change student uploaded files to the new room
-            $saved_files = Student_lesson_teacher_room_term_exam::where('student_id', $student->id)->get();
-            foreach ($saved_files as $item2) {
-                $item2->room_id = $request->room_id;
-                $item2->save();
-            }
-        }
 
 
         $user = User::where('student_id', $student_id)->first();

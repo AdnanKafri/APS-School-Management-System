@@ -14,9 +14,27 @@ use App\Term_year;
 use App\Services\GradebookConfigService;
 use App\Exams2;
 use App\Exam_result2;
+use App\Teacher_room_lesson;
 
 class TeacherGradebookController extends Controller
 {
+    private function currentContext($roomId, $subjectId, $studentId = null)
+    {
+        $year = Year::where('current_year', 1)->first();
+        abort_unless($year, 422);
+        $room = Room::whereKey($roomId)->where('year_id', $year->id)->firstOrFail();
+        abort_unless(Teacher_room_lesson::where('teacher_id', Auth::user()->teacher_id)
+            ->where('year_id', $year->id)->where('class_id', $room->class_id)
+            ->where('room_id', $room->id)->where('lesson_id', $subjectId)->exists(), 403);
+        if ($studentId !== null) {
+            abort_unless(Student::currentMembership($year->id, $room->id)->whereKey($studentId)->exists(), 403);
+        }
+        $term = Term_year::where('year_id', $year->id)->where('current_term', 1)->first();
+        abort_unless($term, 422);
+
+        return [$year, $term, $room];
+    }
+
     /**
      * Show the Gradebook Grid for a specific Class & Subject
      * Matches Admin Logic but for Teachers
@@ -28,10 +46,9 @@ class TeacherGradebookController extends Controller
         // Security: Verify Teacher owns this Room/Lesson
         // (Simplified check for now - can be enhanced)
         
-        $room = Room::findOrFail($room_id);
+        [$year, $term, $room] = $this->currentContext($room_id, $subject_id);
+        abort_unless((int) $class_id === (int) $room->class_id, 403);
         $subject = Lesson::findOrFail($subject_id);
-        $year = Year::where('current_year', '1')->first();
-        $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
 
         // 1. Get Gradebook Configuration (Dynamic Sections)
         // CRITICAL: getConfig() returns Collection directly
@@ -47,7 +64,7 @@ class TeacherGradebookController extends Controller
 
 
         // 2. Fetch Students
-        $students = $room->student()->orderBy('first_name')->get();
+        $students = $room->operationalStudents()->orderBy('first_name')->get();
 
         // 3. Fetch Existing Marks for this Term & Room & Subject
         // Strategy:
@@ -200,8 +217,7 @@ class TeacherGradebookController extends Controller
         $teacherId = Auth::user()->teacher_id;
         $roomId = $request->room_id;
         $subjectId = $request->subject_id;
-        $year = Year::where('current_year', '1')->first();
-        $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
+        [$year, $term, $room] = $this->currentContext($roomId, $subjectId, $request->student_id);
 
         // 0. GATEKEEPER: Check Gradebook Status
         $currentClassId = Room::find($roomId)->class_id;

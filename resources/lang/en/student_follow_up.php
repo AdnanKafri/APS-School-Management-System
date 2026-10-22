@@ -74,7 +74,7 @@ return [
         5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
         9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December',
     ],
-    'levels' => ['weak' => 'Weak', 'average' => 'Average', 'good' => 'Good', 'excellent' => 'Excellent'],
+    'levels' => ['weak' => 'Weak', 'average' => 'Average', 'good' => 'Good', 'very_good' => 'Very Good', 'excellent' => 'Excellent'],
     'messages' => ['created' => 'Follow-up created successfully.', 'updated' => 'Follow-up updated successfully.', 'saved' => 'Follow-up saved successfully.'],
     'errors' => [
         'no_active_year' => 'There is no active academic year. Please contact Administration.',

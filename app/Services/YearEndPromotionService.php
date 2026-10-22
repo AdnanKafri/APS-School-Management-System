@@ -137,7 +137,7 @@ class YearEndPromotionService
                 ->where('status', 'active')
                 ->lockForUpdate()
                 ->first();
-            if ($existing) {
+            if ($existing || Room_student::where('student_id', $student->id)->where('year_id', $targetYear->id)->exists()) {
                 throw new RuntimeException('year_end.errors.already_prepared');
             }
 
@@ -234,6 +234,11 @@ class YearEndPromotionService
         $student = $sourceEnrollment->student;
         if (!$student || !$student->isActiveLifecycle()) {
             throw new RuntimeException('student_lifecycle.errors.student_not_operational');
+        }
+        $targetEnrollments = Room_student::where('student_id', $student->id)->where('year_id', $targetYear->id)->lockForUpdate()->get();
+        if ($targetEnrollments->count() > 1 || ($targetEnrollments->count() === 1
+            && (int) $targetEnrollments->first()->room_id !== (int) $targetRoom->id)) {
+            throw new RuntimeException('year_end.errors.existing_destination_conflict');
         }
         $existing = StudentAcademicPlacement::where('student_id', $student->id)
             ->where('year_id', $targetYear->id)

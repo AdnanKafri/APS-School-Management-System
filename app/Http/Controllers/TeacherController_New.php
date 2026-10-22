@@ -130,9 +130,8 @@ class TeacherController_New extends Controller
     private function filterOperationalRelation($room)
     {
         if ($room) {
-            $room->setRelation('student', $room->student->filter(function ($student) {
-                return $student->isActiveLifecycle();
-            })->values());
+            $ids = Student::currentMembership($room->year_id, $room->id)->pluck('students.id');
+            $room->setRelation('student', $room->student->whereIn('id', $ids)->unique('id')->values());
         }
 
         return $room;
@@ -189,7 +188,7 @@ class TeacherController_New extends Controller
             ->with([
                 'classes',
                 'student' => function ($query) use ($yearId) {
-                    $query->operational()->where('room_student.year_id', $yearId);
+                    $query->currentMembership($yearId, DB::raw('room_student.room_id'))->distinct();
                 },
             ])
             ->get();
@@ -233,15 +232,52 @@ class TeacherController_New extends Controller
     {
         [$year, $assignment, $room] = $this->requireCurrentTeacherAssignment($roomId, $lessonId);
 
-        if (!Room_student::query()
-            ->where('room_id', $roomId)
-            ->where('year_id', $year->id)
-            ->where('student_id', $studentId)
-            ->exists()) {
+        if (!Student::currentMembership($year->id, $roomId)->whereKey($studentId)->exists()) {
             abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
         }
 
         return [$year, $assignment, $room];
+    }
+
+    private function requireCurrentAssessment($exam, $studentId = null)
+    {
+        abort_unless($exam, 404);
+        $context = $studentId === null
+            ? $this->requireCurrentTeacherAssignment($exam->room_id, $exam->lesson_id)
+            : $this->requireCurrentTeacherStudent($exam->room_id, $exam->lesson_id, $studentId);
+        $term = $this->requireCurrentTeacherTerm($context[0]->id);
+        if ((int) $exam->term_id !== (int) $term->id
+            || ($exam instanceof Lesson_teacher_room_term_exam && (int) $exam->teacher_id !== (int) Auth::user()->teacher_id)) {
+            abort(403);
+        }
+
+        return $context;
+    }
+
+    private function currentAssessmentRows($records, $exam)
+    {
+        $students = Student::currentMembership(null, $exam->room_id)
+            ->with(['exams_files' => function ($query) use ($exam) {
+                $query->where('exam_id', $exam->id)->where('room_id', $exam->room_id);
+            }])->orderBy('first_name')->orderBy('last_name')->get();
+        $records = $records->whereIn('user_id', $students->pluck('id'))->values();
+        foreach ($students as $student) {
+            if (!$records->contains('user_id', $student->id)) {
+                // Display a newly-enrolled student without inventing a saved result.
+                $record = $exam instanceof Exams2 ? new Exam_result2() : new Exam_result();
+                $record->forceFill([
+                    'user_id' => $student->id, 'room_id' => $exam->room_id,
+                    'class_id' => $exam->class_id, 'exam_id' => $exam->id,
+                    'lesson_id' => $exam->lesson_id, 'term_id' => $exam->term_id,
+                ]);
+                $record->setRelation('student', $student);
+                $records->push($record);
+            }
+        }
+
+        return $records->sortBy(function ($record) {
+            return optional($record->student)->first_name . ' ' . optional($record->student)->last_name;
+        })->values();
     }
 
     private function resolveMedalByMaxMark($maxMark, $score)
@@ -682,10 +718,11 @@ class TeacherController_New extends Controller
 
     public function examstudent($lec,$home ,Request $request)
     {
+        $this->requireCurrentAssessment(Lesson_teacher_room_term_exam::findOrFail($home));
         if ($lec == 1) {
             $ro1=[];
             $student=[];
-	     $exam_id=Exam_result::where('exam_id',$home)->where('result','!=',null)->get();
+	     $exam_id=Exam_result::currentRoster()->where('exam_id',$home)->where('result','!=',null)->get();
 
          if($exam_id){
             foreach( $exam_id as $item ){
@@ -696,7 +733,7 @@ class TeacherController_New extends Controller
 
                $room = Room::whereIn('id',$ro1)->first();
 
-            $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
+            $students = Student::currentMembership(null, Lesson_teacher_room_term_exam::findOrFail($home)->room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
                whereIn('id',$student)->get();
 
                $exam1 = Lesson_teacher_room_term_exam::find($lec);
@@ -712,7 +749,7 @@ class TeacherController_New extends Controller
             $ro1=[];
             $student=[];
             $student123=[];
-                  $exam_id=Exam_result::where('exam_id',$home)->where('result','!=',null)->get();
+                  $exam_id=Exam_result::currentRoster()->where('exam_id',$home)->where('result','!=',null)->get();
          if($exam_id->count()>0) {
 
             foreach( $exam_id as $item ){
@@ -734,7 +771,7 @@ class TeacherController_New extends Controller
 
                $student123=  array_diff($student123,$student);
 
-            $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
+            $students = Student::currentMembership(null, Lesson_teacher_room_term_exam::findOrFail($home)->room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
 
             whereIn("id",$student123)->get();
 
@@ -760,7 +797,7 @@ class TeacherController_New extends Controller
 
                 $ro1=[];
                 $student=[];
-               $exam_id=Exam_result::where('exam_id',$home)->where('result',null)->get();
+               $exam_id=Exam_result::currentRoster()->where('exam_id',$home)->where('result',null)->get();
 
              if($exam_id){
                 foreach( $exam_id as $item ){
@@ -772,7 +809,7 @@ class TeacherController_New extends Controller
 
                      $room = Room::whereIn('id',$ro1)->first();
 
-                $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
+                $students = Student::currentMembership(null, Lesson_teacher_room_term_exam::findOrFail($home)->room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
                    whereIn('id',$student)->get();
 
 
@@ -816,7 +853,7 @@ class TeacherController_New extends Controller
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-                'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+                'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
             $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
             $count = $count->count();
@@ -1283,11 +1320,14 @@ class TeacherController_New extends Controller
 
     public function examstudent2($lec,$home,$room_id ,Request $request)
     {
+        $currentAssessment = Exams2::findOrFail($home);
+        $this->requireCurrentAssessment($currentAssessment);
+        abort_unless((int) $currentAssessment->room_id === (int) $room_id, 403);
 
         if ($lec == 1) {
             $ro1=[];
             $student=[];
-	        $exam_id=Exam_result2::where('exam_id',$home)->where('result','!=',null)->get();
+	        $exam_id=Exam_result2::currentRoster()->where('exam_id',$home)->where('result','!=',null)->get();
 
         if($exam_id){
             foreach( $exam_id as $item ){
@@ -1295,7 +1335,7 @@ class TeacherController_New extends Controller
                 $student[]=$item->user_id;
             }
             $room = Room::where('id',$room_id)->first();
-            $students = Student::operational()->with('exams_files')->with('exam_result2');
+            $students = Student::currentMembership(null, $room_id)->with('exams_files')->with('exam_result2');
             $students = $this->orderStudentsByName($students)
             ->whereIn('id',$student)->get();
             $exam1 = Exam_file::find($lec);
@@ -1311,7 +1351,7 @@ class TeacherController_New extends Controller
             $ro1=[];
             $student=[];
             $student123=[];
-            $exam_id=Exam_result2::where('exam_id',$home)->where('result','!=',null)->get();
+            $exam_id=Exam_result2::currentRoster()->where('exam_id',$home)->where('result','!=',null)->get();
         if($exam_id->count()>0) {
             foreach( $exam_id as $item ){
                 $ro1[]=$item->room_id;
@@ -1325,12 +1365,12 @@ class TeacherController_New extends Controller
             //}
             $studen12t=[];
             $student12=[];
-            $exam_id1=Exam_result2::where('exam_id',$home)->where('room_id',$room_id)->get();
+            $exam_id1=Exam_result2::currentRoster()->where('exam_id',$home)->where('room_id',$room_id)->get();
             foreach($exam_id1 as $item){
                 $student12[]= $item->user_id;
             }
             $student12=  array_diff($student12,$student);
-            $students = Student::operational()->with('exams_files')->with('exam_result2');
+            $students = Student::currentMembership(null, $room_id)->with('exams_files')->with('exam_result2');
             $students = $this->orderStudentsByName($students)
             ->whereIn("id",$student12)->get();
             $exam1 = Lesson_teacher_room_term_exam::find($lec);
@@ -1341,12 +1381,12 @@ class TeacherController_New extends Controller
             }
             else{
                 $room = Room::find($request->room_id);
-                $exam_id1=Exam_result2::where('exam_id',$home)->where('room_id',$room_id)->get();
+                $exam_id1=Exam_result2::currentRoster()->where('exam_id',$home)->where('room_id',$room_id)->get();
                 foreach($exam_id1 as $item){
                     $student12[]= $item->user_id;
                 }
                 $student12=  array_diff($student12,$student);
-                $students = Student::operational()->with('exams_files')->with('exam_result2');
+                $students = Student::currentMembership(null, $room_id)->with('exams_files')->with('exam_result2');
                 $students = $this->orderStudentsByName($students)
                 ->whereIn("id",$student12)->get();
                 return  $students;
@@ -1355,14 +1395,14 @@ class TeacherController_New extends Controller
             else{
                 $ro1=[];
                 $student=[];
-                $exam_id=Exam_result2::where('exam_id',$home)->where('result',null)->get();
+                $exam_id=Exam_result2::currentRoster()->where('exam_id',$home)->where('result',null)->get();
             if($exam_id){
                 foreach( $exam_id as $item ){
                     $ro1[]=$item->room_id;
                     $student[]=$item->user_id;
                 }
                 $room = Room::whereIn('id',$room_id)->first();
-                $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result');
+                $students = Student::currentMembership(null, $room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result');
                 $students = $this->orderStudentsByName($students)
                 ->whereIn('id',$student)->get();
                 $exam1 = Lesson_teacher_room_term_exam::find($lec);
@@ -2654,6 +2694,8 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
     //for prizemark page
     public function medal($room_id, $teacher_id, $lesson_id)
     {
+        $this->requireCurrentTeacherAssignment($room_id, $lesson_id ?? null);
+        $teacher_id = Auth::user()->teacher_id;
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $exam = Lesson_teacher_room_term_exam::where('term_id', $term->id)->where('teacher_id', $teacher_id)->where('room_id', $room_id)->where('lesson_id', $lesson_id)->where('type', '3')->orwhere('type', '5')->get();
@@ -2671,6 +2713,8 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
     }
     public function medal_store(Request $request)
     {
+        [, , $placementRoom] = $this->requireCurrentTeacherStudent($request->room_id, $request->lesson_id, $request->student_id);
+        $request->merge(['class_id' => $placementRoom->class_id]);
         $this->requireOperationalStudent($request->student_id);
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
@@ -2752,7 +2796,7 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-                'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+                'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
@@ -3085,7 +3129,7 @@ $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('v
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
         $class_id = Classe::find($this->resolveRoomClassId($room));
         $students = $room->operationalStudents;
@@ -3123,7 +3167,7 @@ $message = Message::where('teacher_id', $teacher_id)->where('type', 1)->where('v
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
         $count = Messages_super::whereNull('view')->where('teacher_id', auth()->user()->teacher_id)->get();
         $count = $count->count();
@@ -3242,7 +3286,12 @@ public function file_update($file_id, Request $request)
 }
 public function file_answers($file_id, $lesson_id, $teacher_id, $room_id)
 {
-    $answers = Student_lesson_teacher_room_term_exam::where('file_id', $file_id)->where('room_id', $room_id)->where('teacher_id', $teacher_id)->where('lesson_id', $lesson_id)->get();
+    $file = Lesson_teacher_room_term_exam::findOrFail($file_id);
+    $this->requireCurrentAssessment($file);
+    abort_unless((int) $file->room_id === (int) $room_id && (int) $file->lesson_id === (int) $lesson_id, 403);
+    $teacher_id = Auth::user()->teacher_id;
+    $answers = Student_lesson_teacher_room_term_exam::where('file_id', $file_id)->where('room_id', $room_id)->where('teacher_id', $teacher_id)->where('lesson_id', $lesson_id)
+        ->whereIn('student_id', Student::currentMembership(null, $room_id)->select('students.id'))->get();
     $room = Room::find($room_id);
     $students = $room->operationalStudents;
     $file = Lesson_teacher_room_term_exam::find($file_id);
@@ -3304,6 +3353,7 @@ public function correct_exam($exam_id, $student_id)
 
 
     $exam = Lesson_teacher_room_term_exam::find($exam_id);
+    $this->requireCurrentAssessment($exam, $student_id);
     $student = Student::find($student_id);
     $room=Room::find($exam->room_id);
     $class_id=Room::find($exam->room_id)->class_id;
@@ -3322,7 +3372,7 @@ public function correct_exam($exam_id, $student_id)
     }
 
 
-    $exam_result = Exam_result::where('exam_id', $exam_id)->where('user_id', $student->id)->first();
+    $exam_result = Exam_result::currentRoster()->where('exam_id', $exam_id)->where('user_id', $student->id)->first();
 
 
     $class = $exam->class;
@@ -3346,6 +3396,7 @@ $year = Year::where('current_year', '1')->first()->name;
     public function correct_exam1($exam_id, $student_id)
     {
     $exam = Exams2::find($exam_id);
+    $this->requireCurrentAssessment($exam, $student_id);
     $student = Student::find($student_id);
     $room=Room::find($exam->room_id);
     $class_id=Room::find($exam->room_id)->class_id;
@@ -3360,7 +3411,7 @@ $year = Year::where('current_year', '1')->first()->name;
     $questions[] = Question::with(['exam_question'=>fn($q1)=>$q1->where('exam_id',$exam_id)])->with('option')->find($question_id);
         }
     }
-    $exam_result = Exam_result2::where('exam_id', $exam_id)->where('user_id', $student->id)->first();
+    $exam_result = Exam_result2::currentRoster()->where('exam_id', $exam_id)->where('user_id', $student->id)->first();
     $class = $exam->class;
     $max_result = 0;
     foreach ($questions as $item) {
@@ -3432,7 +3483,8 @@ public function update_result1(Request $request)
 
     $result2 = 0;
     $result3=0;
-    $exam_result = Exam_result2::find($request->exam_result_id);
+    $exam_result = Exam_result2::currentRoster()->findOrFail($request->exam_result_id);
+    $this->requireCurrentAssessment($exam_result->exam, $exam_result->user_id);
     $result=0;
     // $result = $exam_result->result;
 
@@ -3509,7 +3561,8 @@ public function update_result(Request $request)
     {
 
         $result2 = 0;
-        $exam_result = Exam_result::find($request->exam_result_id);
+        $exam_result = Exam_result::currentRoster()->findOrFail($request->exam_result_id);
+    $this->requireCurrentAssessment($exam_result->exam, $exam_result->user_id);
 
         $result = 0;
 //   $exam_result->traditional_result =  json_encode($request->traditional_result);
@@ -3660,6 +3713,9 @@ public function class_rooms($class_id, $teacher_id)
     ///Ã™ÂÃ™â€žÃ˜ÂªÃ˜Â±Ã˜Â© Ã˜ÂªÃ™â€šÃ˜Â¯Ã™Å Ã™â€¦ Ã™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ˜Â© Ã™â€¦Ã™â€  Ã™â€žÃ™Å Ã˜Â³ Ã™â€¦Ã™â€šÃ˜Â¯Ã™â€¦
      public function homeworkestudent($lec,$home,$room_id)
     {
+        $currentAssessment = Lesson_teacher_room_term_exam::findOrFail($home);
+        $this->requireCurrentAssessment($currentAssessment);
+        abort_unless((int) $currentAssessment->room_id === (int) $room_id, 403);
         
         if ($lec == 1) {
         // Ã˜ÂªÃ™â€šÃ˜Â¯Ã™Å Ã™â€¦
@@ -3677,7 +3733,7 @@ public function class_rooms($class_id, $teacher_id)
                 $student[]=$item->student_id;
 }
             }}
-                  $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
+                  $students = Student::currentMembership(null, $room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
                whereIn('id',$student)->get();
 
               }
@@ -3704,7 +3760,7 @@ public function class_rooms($class_id, $teacher_id)
                 }
                         $student123=  array_diff($student123,$student);
 
-            $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
+            $students = Student::currentMembership(null, $room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
 
             whereIn("id",$student123)->get();
               }
@@ -3715,7 +3771,7 @@ public function class_rooms($class_id, $teacher_id)
                     $student123[]=$item->student_id;
  
                 }
-                  $students = Student::operational()->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
+                  $students = Student::currentMembership(null, $room_id)->with('student_lesson_teacher_room_term_exam')->with('exam_result')->
 
             whereIn("id",$student123)->get();
               }
@@ -3737,7 +3793,7 @@ public function class_rooms($class_id, $teacher_id)
             }
            
        
-                  $students = Student::operational()->with(['student_lesson_teacher_room_term_exam' => function ($query) use ($home) {
+                  $students = Student::currentMembership(null, $room_id)->with(['student_lesson_teacher_room_term_exam' => function ($query) use ($home) {
                      $query->where('exam_id', $home);
                   }])->with('exam_result')->
                whereIn('id',$student)->get();
@@ -3876,7 +3932,7 @@ public function class_rooms($class_id, $teacher_id)
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
         if (!$lesson || !$teacher || !$room) {
             return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
@@ -3965,8 +4021,11 @@ public function class_rooms($class_id, $teacher_id)
     }
        public function studentselect($exam,$room)
     {
+        $definition = Exams2::findOrFail($exam);
+        abort_unless((int) $definition->room_id === (int) $room, 403);
+        $this->requireCurrentAssessment($definition);
         $student=[];
-        $exam_id=Exam_result2::where('exam_id',$exam)->where('room_id',$room)->get();
+        $exam_id=Exam_result2::currentRoster()->where('exam_id',$exam)->where('room_id',$room)->get();
          foreach( $exam_id as $item ){
 
                 $student[]=$item->user_id;
@@ -3995,7 +4054,7 @@ public function class_rooms($class_id, $teacher_id)
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
 
         if ($lesson->lang == '1') {
@@ -4003,7 +4062,7 @@ public function class_rooms($class_id, $teacher_id)
                               $query->where('room_student.year_id', $year->id);
                                $query->where('lang', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                          ->with(['student'=>fn($q1)=>$q1->where('room_student.year_id', $year->id)->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
 
          } elseif ($lesson->lang == '0') {
@@ -4012,14 +4071,14 @@ public function class_rooms($class_id, $teacher_id)
                               $query->where('room_student.year_id', $year->id);
                                $query->where('lang', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                          ->with(['student'=>fn($q1)=>$q1->where('room_student.year_id', $year->id)->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
          } elseif ($lesson->religion == '1') {
                $students=Room::whereHas('student', function ($query) use($year){
                               $query->where('room_student.year_id', $year->id);
                                $query->where('religion', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                          ->with(['student'=>fn($q1)=>$q1->where('room_student.year_id', $year->id)->where('religion', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
          } elseif ($lesson->religion == '0') {
 
@@ -4027,14 +4086,14 @@ public function class_rooms($class_id, $teacher_id)
                               $query->where('room_student.year_id', $year->id);
                                $query->where('religion', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                          ->with(['student'=>fn($q1)=>$q1->where('room_student.year_id', $year->id)->where('religion', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
          } else {
 
              $students=Room::whereHas('student', function ($query) use($year){
                               $query->where('room_student.year_id', $year->id);
 
-                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                         })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                          ->with(['student'=>fn($q1)=>$q1->where('room_student.year_id', $year->id)->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
          }
 
@@ -4088,7 +4147,7 @@ public function class_rooms($class_id, $teacher_id)
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
 
         if ($lesson->lang == '1') {
@@ -4096,7 +4155,7 @@ public function class_rooms($class_id, $teacher_id)
                              $query->where('year_id', $year->id);
                               $query->where('lang', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
 
         } elseif ($lesson->lang == '0') {
@@ -4105,14 +4164,14 @@ public function class_rooms($class_id, $teacher_id)
                              $query->where('year_id', $year->id);
                               $query->where('lang', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         } elseif ($lesson->religion == '1') {
               $students=Room::whereHas('student', function ($query) use($year){
                              $query->where('year_id', $year->id);
                               $query->where('religion', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->where('religion', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         } elseif ($lesson->religion == '0') {
 
@@ -4120,14 +4179,14 @@ public function class_rooms($class_id, $teacher_id)
                              $query->where('year_id', $year->id);
                               $query->where('religion', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->where('religion', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         } else {
 
             $students=Room::whereHas('student', function ($query) use($year){
                              $query->where('year_id', $year->id);
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         }
 
@@ -4177,7 +4236,7 @@ public function class_rooms($class_id, $teacher_id)
             'student' => function ($q) {
                 $this->orderStudentsByName($q);
             },
-            'student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'student.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
           $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
         if ($lesson->lang == '1') {
@@ -4185,7 +4244,7 @@ public function class_rooms($class_id, $teacher_id)
              $query->where('year_id', $year->id);
              $query->where('lang', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
 
         } elseif ($lesson->lang == '0') {
@@ -4194,14 +4253,14 @@ public function class_rooms($class_id, $teacher_id)
                              $query->where('year_id', $year->id);
                               $query->where('lang', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         } elseif ($lesson->religion == '1') {
               $students=Room::whereHas('student', function ($query) use($year){
                              $query->where('year_id', $year->id);
                               $query->where('religion', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->where('religion', '1')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         } elseif ($lesson->religion == '0') {
 
@@ -4209,14 +4268,14 @@ public function class_rooms($class_id, $teacher_id)
                              $query->where('year_id', $year->id);
                               $query->where('religion', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci");
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->where('religion', '0')->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         } else {
 
             $students=Room::whereHas('student', function ($query) use($year){
                              $query->where('year_id', $year->id);
 
-                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)])
+                        })->with(['student.student_mark'=>fn($q1)=>$q1->where('students_marks.year_id',$year->id)->where('students_marks.room_id', $room_id)])
                         ->with(['student'=>fn($q1)=>$q1->orderByRaw("COALESCE(first_name, '') COLLATE utf8_unicode_ci")])->find($room_id);
         }
 
@@ -4439,7 +4498,7 @@ public function class_rooms($class_id, $teacher_id)
         if (!$lesson || !$teacher || !$room) {
             return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
         }
-        $exam = Exam_result2::where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+        $exam = Exam_result2::currentRoster()->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
         foreach($exam as $item){
             $student[]= $item->user_id;
         }
@@ -4458,7 +4517,7 @@ public function class_rooms($class_id, $teacher_id)
     //         $q->where('id', '<>', null)->orderBy('type');
     //     }])->where('id', $room_id)->get();
 
-        $quize_result = Exam_result2::select('exam_result2.*')
+        $quize_result = Exam_result2::currentRoster()->select('exam_result2.*')
             ->join('students', 'students.id', '=', 'exam_result2.user_id')
             ->with('student')
             ->where('exam_result2.exam_id',$exam_id)
@@ -4472,7 +4531,7 @@ public function class_rooms($class_id, $teacher_id)
         //     ->where('teacher_id', $teacher_id)->orderBy('type')->get();
         $quize = $exam1;
       if($exam1->type=='2'&& $exam1->is_file == '0'){
-          $quize_result = Exam_result2::select('exam_result2.*')
+          $quize_result = Exam_result2::currentRoster()->select('exam_result2.*')
               ->join('students', 'students.id', '=', 'exam_result2.user_id')
               ->with('student')
               ->where('exam_result2.exam_id',$exam_id)
@@ -4483,10 +4542,11 @@ public function class_rooms($class_id, $teacher_id)
               ->get();
           $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
           $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
+           $quize_result = $this->currentAssessmentRows($quize_result, $exam1);
            return view('teachers2.teacher_quize_students_outo', compact('objection','students','message', 'exam1',  'quize_result','lesson','room' ,'teacher', 'exam_id', 'lesson_id', 'room_id'));
       }
       if($quize->type=='2'&& $quize->is_file == '1'){
-                 $quize_result =Exam_result2::select('exam_result2.*')
+                 $quize_result =Exam_result2::currentRoster()->select('exam_result2.*')
                     ->join('students', 'students.id', '=', 'exam_result2.user_id')
                     ->with('student')->with(['student.exams_files' => function ($query) use ($exam_id) {
                 $query->where('exam_id', $exam_id);
@@ -4506,6 +4566,7 @@ public function class_rooms($class_id, $teacher_id)
 
                  $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
                 $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
+               $quize_result = $this->currentAssessmentRows($quize_result, $exam1);
                return view('teachers2.teacher_quize_students', compact('objection','students','message', 'quize', 'quize_result','lesson','room' ,'teacher', 'exam_id', 'lesson_id', 'room_id'));
     }
 }
@@ -4743,7 +4804,7 @@ public function class_rooms($class_id, $teacher_id)
             },
             'student.exams_files',
             'student.exam_result2',
-        ])->get();
+        ])->whereKey($room_id)->get();
         $exam  = Exams2::where('term_id', $term->id)->where('room_id', $room_id)->where('lesson_id', $lesson_id)->get();
         $quize_result = Room::with([
             'student' => function ($q) {
@@ -4756,13 +4817,13 @@ public function class_rooms($class_id, $teacher_id)
         // $exam_title = Exams2::where('room_id', $room_id)->where('lesson_id', $lesson_id)
         //     ->where('teacher_id', $teacher_id)->orderBy('type')->get();
         if($exam->type=='1'&& $exam->is_file == '1'){
-            $quize_result = Exam_result2::with('student' )->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+            $quize_result = Exam_result2::currentRoster()->with('student' )->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
             $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
             $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
             return view('teachers.teacher_exammark', compact('objection','students','message', 'exam1',  'quize_result','lesson','room' ,'teacher', 'exam_id', 'lesson_id', 'room_id'));
         }
         if($exam->type=='1' && $exam->is_file == '0'){
-            $quize_result = Exam_result2::with('student' )->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+            $quize_result = Exam_result2::currentRoster()->with('student' )->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
             $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
             $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
             return view('teachers2.teacher_exam_mark', compact('objection','students','message', 'exam', 'quize_result','lesson','room' ,'teacher', 'exam_id', 'lesson_id', 'room_id'));
@@ -5010,6 +5071,9 @@ public function class_rooms($class_id, $teacher_id)
 
       public function quizestudent($lec,$home,$room_id)
     {
+        $currentAssessment = Exams2::findOrFail($home);
+        $this->requireCurrentAssessment($currentAssessment);
+        abort_unless((int) $currentAssessment->room_id === (int) $room_id, 403);
         $student12=[];
         if ($lec == 1) {
             $ro1=[];
@@ -5039,7 +5103,7 @@ public function class_rooms($class_id, $teacher_id)
                 $student[]=$item->student_id;
 }
             }}
-                  $students = Student::operational()->with(['exams_files' => function ($query) use ($home) {
+                  $students = Student::currentMembership(null, $room_id)->with(['exams_files' => function ($query) use ($home) {
                     $query->where('exam_id', $home);
                 }])->with('exam_result2')->
 
@@ -5093,11 +5157,11 @@ public function class_rooms($class_id, $teacher_id)
 
 
 
-            // $students = Student::operational()->with('exams_files')->with('exam_result2')->
+            // $students = Student::currentMembership(null, $room_id)->with('exams_files')->with('exam_result2')->
 
             // whereIn("id",$student123)->get();
              $studen12t=[];
-              $exam_id1=Exam_result2::where('exam_id',$home)->where('room_id',$room_id)->get();
+              $exam_id1=Exam_result2::currentRoster()->where('exam_id',$home)->where('room_id',$room_id)->get();
             foreach($exam_id1 as $item){
                         $student12[]= $item->user_id;
                      }
@@ -5106,7 +5170,7 @@ public function class_rooms($class_id, $teacher_id)
 
                $student12=  array_diff($student12,$student);
 
-            $students = Student::operational()->with('exams_files')->with('exam_result2');
+            $students = Student::currentMembership(null, $room_id)->with('exams_files')->with('exam_result2');
             $students = $this->orderStudentsByName($students)
             ->whereIn("id",$student12)->get();
                $exam1 = Exams2::find($lec);
@@ -5131,7 +5195,7 @@ public function class_rooms($class_id, $teacher_id)
                 foreach( $room_student as $item1 ){
                 $student[]=$item1->student_id;
             }
-                $students = Student::operational()->with(['exams_files' => function ($query) use ($home) {
+                $students = Student::currentMembership(null, $room_id)->with(['exams_files' => function ($query) use ($home) {
                      $query->where('exam_id', $home);
                   }])->with('exam_result2');
                 $students = $this->orderStudentsByName($students)
@@ -5279,7 +5343,7 @@ public function class_rooms($class_id, $teacher_id)
                     $q->where('room_student.year_id', $year->id);
                     $this->orderStudentsByName($q);
                 },
-            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)
+            'operationalStudents.student_mark' => fn ($q1) => $q1->where('students_marks.year_id', $year->id)->where('students_marks.room_id', $room_id)
         ])->find($room_id);
         if (!$lesson || !$teacher || !$room) {
             return redirect()->route('teacher.exams_quizes')->with('error', 'البيانات المطلوبة غير متاحة حالياً');
@@ -5337,7 +5401,7 @@ public function class_rooms($class_id, $teacher_id)
         // $exam_title = Exams2::where('room_id', $room_id)->where('lesson_id', $lesson_id)
         //     ->where('teacher_id', $teacher_id)->orderBy('type')->get();
         if($exam->type=='1'&& $exam->is_file == '1'){
-            $exam_result = Exam_result2::select('exam_result2.*')
+            $exam_result = Exam_result2::currentRoster()->select('exam_result2.*')
                 ->join('students', 'students.id', '=', 'exam_result2.user_id')
                 ->with('student')->with(['student.exams_files' => function ($query) use ($exam_id) {
                     $query->where('exam_id', $exam_id);
@@ -5354,12 +5418,14 @@ public function class_rooms($class_id, $teacher_id)
                 ->get();
             $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
             $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
+            $exam_result = $this->currentAssessmentRows($exam_result, $exam);
             return view('teachers2.teacher_exam_student', compact('objection','students','message', 'exam',  'exam_result','lesson','room' ,'teacher', 'exam_id', 'lesson_id', 'room_id'));
         }
         if($exam->type=='1' && $exam->is_file == '0'){
-            $exam_result  = Exam_result2::with('student' )->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+            $exam_result  = Exam_result2::currentRoster()->with('student' )->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
             $message=Message::where('teacher_id',Auth::user()->teacher_id)->where('type',1)->where('view',0)->count();
             $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view',0)->count();
+           $exam_result = $this->currentAssessmentRows($exam_result, $exam);
            return view('teachers2.teacher_exammark_auto', compact('objection','students','message', 'exam', 'exam_result','lesson','room' ,'teacher', 'exam_id', 'lesson_id', 'room_id'));
       }
 
@@ -5504,26 +5570,28 @@ public function class_rooms($class_id, $teacher_id)
      // Ã˜ÂªÃ˜ÂµÃ˜Â¯Ã™Å Ã˜Â± Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â© 
     public function export_exam($exam_id,$room_id,$lesson_id)
     {
+        $this->requireCurrentAssessment(Exams2::findOrFail($exam_id));
+        $student = [];
            $lesson=Lesson::find($lesson_id);
           $year=Year::where('current_year','1')->first();
           $term_id=Exams2::find($exam_id)->term_id;
           $term = Term_year::where('id', $term_id)->where('year_id', $year->id)->first();
          
-          $exam = Exam_result2::where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+          $exam = Exam_result2::currentRoster()->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
         foreach($exam as $item){
             $student[]= $item->user_id;
          }
      
 
            
-                 $student_mark=Students_mark::whereIn('student_id',$student)->where('year_id',$year->id)->get();
+                 $student_mark=Students_mark::whereIn('student_id',$student)->where('year_id',$year->id)->where('room_id', $room_id)->get();
                  if($term->type=="1"){
                     
               foreach($student_mark as $item){
             
              foreach($exam as $item1){
                        
-                    $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
+                    $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->where('room_id', $room_id)->first();
                     if (isset($report_card) && $report_card->adjustable != 0){
                             session()->flash('error',' لا يمكن التعديل بعد استصدار الجلاء  ' ) ;
                         return redirect()->back()->with('error','  لا يمكن تعديل العلامات بعد استصدار الجلاء !  ') ;
@@ -5771,7 +5839,7 @@ public function class_rooms($class_id, $teacher_id)
                   
                    foreach($exam as $item1){
                        
-                        $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
+                        $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->where('room_id', $room_id)->first();
                        if (isset($report_card) && $report_card->adjustable != 1){
                 session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
                 return redirect()->back()->with('error','  لا يمكن التعديل تأكد من حالة الجلاء    !  ') ;
@@ -6021,26 +6089,28 @@ public function class_rooms($class_id, $teacher_id)
     }
        public function export_exam1($exam_id,$room_id,$lesson_id)
     {
+        $this->requireCurrentAssessment(Exams2::findOrFail($exam_id));
+        $student = [];
            $lesson=Lesson::find($lesson_id);
           $year=Year::where('current_year','1')->first();
           $term_id=Exams2::find($exam_id)->term_id;
           $term = Term_year::where('id', $term_id)->where('year_id', $year->id)->first();
          
-          $exam = Exam_result2::where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+          $exam = Exam_result2::currentRoster()->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
         foreach($exam as $item){
             $student[]= $item->user_id;
          }
      
 
            
-                 $student_mark=Students_mark::whereIn('student_id',$student)->where('year_id',$year->id)->get();
+                 $student_mark=Students_mark::whereIn('student_id',$student)->where('year_id',$year->id)->where('room_id', $room_id)->get();
                  if($term->type=="1"){
                     
               foreach($student_mark as $item){
             
              foreach($exam as $item1){
                        
-                    $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
+                    $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->where('room_id', $room_id)->first();
                     if (isset($report_card) && $report_card->adjustable != 0){
                             session()->flash('error',' لا يمكن التعديل بعد استصدار الجلاء  ' ) ;
                         return redirect()->back()->with('error','  لا يمكن تعديل العلامات بعد استصدار الجلاء !  ') ;
@@ -6284,7 +6354,7 @@ public function class_rooms($class_id, $teacher_id)
                   
                    foreach($exam as $item1){
                        
-                        $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->first();
+                        $report_card=Report_card::where('student_id',$item->student_id)->where('year_id',$year->id)->where('room_id', $room_id)->first();
                        if (isset($report_card) && $report_card->adjustable != 1){
                 session()->flash('error22',' لا يمكن التعديل تأكد من حالة الجلاء ' ) ;
                 return redirect()->back()->with('error','  لا يمكن التعديل تأكد من حالة الجلاء    !  ') ;
@@ -6587,6 +6657,8 @@ public function class_rooms($class_id, $teacher_id)
     }
     public function teacher_rewads_and_sanction_subject($room_id, $teacher_id)
     {
+        $this->requireCurrentTeacherAssignment($room_id, $lesson_id ?? null);
+        $teacher_id = Auth::user()->teacher_id;
         $teacher_name = Auth::user()->name;
         $teacher = Teacher::find($teacher_id);
         //$lessons = $teacher->lessons;
@@ -6613,6 +6685,8 @@ public function class_rooms($class_id, $teacher_id)
     }
     public function teacher_rewads_students($room_id, $teacher_id, $lesson_id)
     {
+        $this->requireCurrentTeacherAssignment($room_id, $lesson_id ?? null);
+        $teacher_id = Auth::user()->teacher_id;
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $rewads_students = Rewad_and_sanction_student::where('term_id', $term->id)->where('teacher_id', $teacher_id)->where('room_id', $room_id)->where('lesson_id', $lesson_id)->where('type', '1')->get();
@@ -6630,6 +6704,8 @@ public function class_rooms($class_id, $teacher_id)
     }
     public function teacher_rewads_students_store(Request $request)
     {
+        [, , $placementRoom] = $this->requireCurrentTeacherStudent($request->room_id, $request->lesson_id, $request->student_id);
+        $request->merge(['class_id' => $placementRoom->class_id]);
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $rewads = new Rewad_and_sanction_student();
@@ -6674,6 +6750,8 @@ public function class_rooms($class_id, $teacher_id)
     }
     public function teacher_sanction_students($room_id, $teacher_id, $lesson_id)
     {
+        $this->requireCurrentTeacherAssignment($room_id, $lesson_id ?? null);
+        $teacher_id = Auth::user()->teacher_id;
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $rewads_students = Rewad_and_sanction_student::where('term_id', $term->id)->where('teacher_id', $teacher_id)->where('room_id', $room_id)->where('lesson_id', $lesson_id)->where('type', '2')->get();

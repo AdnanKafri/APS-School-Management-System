@@ -350,7 +350,8 @@ class websitecontroller extends Controller
 
     public function get_room_student($room_id)
     {
-        $room_students = Room::with(['student' => fn ($q1) => $q1->select('students.id', 'first_name', 'last_name')])->find($room_id)->student;
+        $room_students = Student::currentMembership(null, $room_id)
+            ->get(['students.id', 'first_name', 'last_name']);
         return response()->json(['room_students' => $room_students]);
     }
     public function key(Request $request)
@@ -3211,6 +3212,10 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
                 $query->whereHas('student', function ($studentQuery) {
                     $studentQuery->operational();
                 });
+            }, 'connections.student.room' => function ($query) use ($year) {
+                $query->where('room_student.year_id', $year ? $year->id : 0)
+                    ->whereIn('room_student.student_id', Student::currentMembership($year ? $year->id : 0,
+                        \Illuminate\Support\Facades\DB::raw('rooms.id'))->select('students.id'));
             }, 'connections.student.room.classes'])
             ->find($parent_id);
 

@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam_result2 extends Model
 {
+    public function scopeCurrentRoster($query)
+    {
+        return $query->whereIn('exam_result2.user_id', Student::currentMembership(null,
+            \Illuminate\Support\Facades\DB::raw('exam_result2.room_id'))->select('students.id'));
+    }
+
     protected $table = 'exam_result2' ;
     protected $fillable = [
         'class_id',

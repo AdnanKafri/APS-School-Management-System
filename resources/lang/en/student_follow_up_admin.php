@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'no_evaluation' => 'No evaluation has been recorded for this follow-up.',
+    'no_evaluation_note' => 'The teacher did not add a written note to this evaluation.',
+    'no_rating' => 'No rating selected; this follow-up contains a written note.',
     'nav' => 'Student follow-up',
     'title' => 'Student periodic follow-up',
     'subtitle' => 'Operational follow-up coverage for the active academic year only.',

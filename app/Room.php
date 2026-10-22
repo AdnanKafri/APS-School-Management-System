@@ -17,7 +17,8 @@ class Room extends Model
     public function operationalStudents()
     {
         return $this->belongsToMany(Student::class, 'room_student', 'room_id', 'student_id')
-            ->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE);
+            ->currentMembership(null, \Illuminate\Support\Facades\DB::raw('room_student.room_id'))
+            ->distinct();
     }
 
     public function year2(){

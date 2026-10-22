@@ -126,7 +126,7 @@
                 <section class="sfu-field">
                     <header class="sfu-field__heading"><b class="sfu-field__label">{{ __('student_follow_up.level') }}</b><small class="sfu-field__optional">{{ __('student_follow_up.optional') }}</small></header>
                     <div class="sfu-level-grid" role="radiogroup" aria-label="{{ __('student_follow_up.level') }}">
-                        @foreach(['weak', 'average', 'good', 'excellent'] as $level)
+                        @foreach(\App\StudentFollowUp::LEVELS as $level)
                             <label class="sfu-level-option">
                                 <input type="radio" name="level" value="{{ $level }}">
                                 <b>{{ __('student_follow_up.levels.' . $level) }}</b>

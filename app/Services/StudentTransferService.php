@@ -24,6 +24,11 @@ class StudentTransferService
     private $bulkMode = false;
     private $bulkLastSucceeded = false;
 
+    public function succeeded(): bool
+    {
+        return $this->bulkLastSucceeded;
+    }
+
     public function handleBulk(Request $request): RedirectResponse
     {
         $request->validate([
@@ -70,8 +75,9 @@ class StudentTransferService
         return redirect()->back()->with(count($failures) ? 'warning' : 'success', $message)->with('student_transfer_failures', $failures);
     }
 
-    public function handle(Request $request): RedirectResponse
+    public function handle(Request $request, bool $flashSuccess = true): RedirectResponse
     {
+        $this->bulkLastSucceeded = false;
         $request->validate([
             'student_id' => 'required|integer',
             'class_change_id' => 'required|integer',
@@ -167,12 +173,30 @@ class StudentTransferService
                 $currentReportCard,
                 $currentRoom
             ) {
-                $currentPlacement = StudentAcademicPlacement::where('student_id', $student->id)
+                Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+                $lockedEnrollment = Room_student::whereKey($currentEnrollment->id)->lockForUpdate()->firstOrFail();
+                if ((int) $lockedEnrollment->room_id !== (int) $currentRoom->id
+                    || Room_student::where('student_id', $student->id)->where('year_id', $year->id)->count() !== 1) {
+                    throw new \RuntimeException('student_transfer.validation.transfer_conflicting_enrollment');
+                }
+                // Room-scoped legacy academic rows cannot distinguish two visits
+                // to the same room in one year. Do not create duplicate scaffolds.
+                if (StudentAcademicPlacement::where('student_id', $student->id)
+                    ->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists()
+                    || Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists()
+                    || Report_card::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists()) {
+                    throw new \RuntimeException('student_transfer.validation.transfer_existing_assessments');
+                }
+                $activePlacements = StudentAcademicPlacement::where('student_id', $student->id)
                     ->where('year_id', $year->id)
                     ->where('status', 'active')
                     ->orderByDesc('id')
                     ->lockForUpdate()
-                    ->first();
+                    ->get();
+                if ($activePlacements->count() > 1) {
+                    throw new \RuntimeException('student_transfer.validation.transfer_conflicting_enrollment');
+                }
+                $currentPlacement = $activePlacements->first();
 
                 if (!$currentPlacement) {
                     $currentPlacement = StudentAcademicPlacement::create([
@@ -240,11 +264,13 @@ class StudentTransferService
         } catch (\Throwable $e) {
             report($e);
 
-            return $this->warning('student_transfer.notifications.transfer_failed');
+            $key = $e->getMessage();
+            return $this->warning(strpos($key, 'student_transfer.validation.') === 0
+                ? $key : 'student_transfer.notifications.transfer_failed');
         }
 
         $this->bulkLastSucceeded = true;
-        if ($this->bulkMode) {
+        if ($this->bulkMode || !$flashSuccess) {
             return redirect()->back();
         }
 

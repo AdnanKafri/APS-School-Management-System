@@ -101,6 +101,41 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         $this->assertSame(1, DB::table('student_follow_up_edit_audits')->count());
     }
 
+    public function test_all_ratings_and_very_good_ajax_and_form_fallback_remain_compatible()
+    {
+        $student = $this->enrolledStudent('rating-compatibility');
+        $this->placement($student, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDay());
+        $this->actingAs(\App\User::findOrFail($this->teacherUserId));
+        $url = '/SMARMANger/dashboard/teacher/student-follow-ups';
+        $this->assertSame(['weak', 'average', 'good', 'very_good', 'excellent'], StudentFollowUp::LEVELS);
+        foreach (StudentFollowUp::LEVELS as $level) {
+            $this->postJson($url, [
+                'assignment_id' => $this->assignment->id, 'student_id' => $student->id, 'level' => $level,
+            ])->assertStatus(201);
+            $this->assertSame($level, StudentFollowUp::orderByDesc('id')->firstOrFail()->level);
+        }
+        $oldValues = StudentFollowUp::orderBy('id')->pluck('level')->all();
+        $record = StudentFollowUp::orderByDesc('id')->firstOrFail();
+        app()->setLocale('en');
+        $this->postJson($url . '/' . $record->id . '/update', ['level' => 'very_good'])
+            ->assertOk()->assertJsonPath('record.level', 'very_good')
+            ->assertJsonPath('record.level_label', 'Very Good');
+        $this->assertSame('very_good', $record->fresh()->level);
+        $this->assertSame('excellent', DB::table('student_follow_up_edit_audits')->value('previous_level'));
+        $this->post($url, [
+            'assignment_id' => $this->assignment->id, 'student_id' => $student->id, 'level' => 'very_good',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $formRecord = StudentFollowUp::orderByDesc('id')->firstOrFail();
+        $this->assertSame('very_good', $formRecord->level);
+        $this->post($url . '/' . $formRecord->id . '/update', ['level' => 'very_good', 'note' => 'Updated'])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame('Updated', $formRecord->fresh()->note);
+        $this->assertSame(array_slice($oldValues, 0, 4), StudentFollowUp::orderBy('id')->limit(4)->pluck('level')->all());
+        $this->postJson($url, [
+            'assignment_id' => $this->assignment->id, 'student_id' => $student->id, 'level' => 'unknown',
+        ])->assertStatus(422)->assertJsonValidationErrors('level');
+    }
+
     public function test_json_validation_denial_and_normal_redirect_are_preserved()
     {
         $student = $this->enrolledStudent('valid');
@@ -167,6 +202,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         $this->placement($historical, $oldYear, $this->classId, $historicalRoomId, 'closed', $this->now->copy()->subYear(), $this->now->copy()->subMonths(2));
         $this->placement($historical, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDay());
         $duplicateEnrollment = $this->enrolledStudent('duplicate-enrollment', false);
+        $this->enroll($duplicateEnrollment, $this->roomId, $this->year->id);
         $this->enroll($duplicateEnrollment, $this->roomId, $this->year->id);
         $this->placement($duplicateEnrollment, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDay());
 
@@ -301,6 +337,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         $rosterIds = $this->rosterStudentIds();
         foreach ([$missingPlacement, $closed, $future, $wrongRoom, $archived, $otherYearStudent] as $student) {
             $this->assertNotContains((int) $student->id, $rosterIds);
+            $this->assertFalse(Student::currentMembership($this->year->id, $this->roomId)->whereKey($student->id)->exists());
         }
         foreach ([$missingPlacement, $closed, $future, $wrongRoom, $archived, $otherYearStudent] as $student) {
             try {
@@ -408,6 +445,342 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         return app(StudentFollowUpService::class)->eligibleStudentsQuery(
             $this->assignment, $this->year, $this->now
         )->orderBy('students.id');
+    }
+
+    public function test_same_grade_transfer_moves_current_rosters_and_preserves_academic_identity_and_history()
+    {
+        $this->createTransferSchema();
+        $student = $this->transferStudent();
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'B']);
+        $oldRows = $this->academicSnapshot($student->id);
+        $account = DB::table('users')->where('student_id', $student->id)->first();
+        $oldPlacement = StudentAcademicPlacement::where('student_id', $student->id)->first();
+
+        $this->moveStudent($student->id, $this->classId, 72);
+        $this->assertSame($oldRows, $this->academicSnapshot($student->id));
+        $this->assertEquals($account, DB::table('users')->where('student_id', $student->id)->first());
+        $this->assertSame('closed', $oldPlacement->fresh()->status);
+        $this->assertSame(72, (int) DB::table('room_student')->where('student_id', $student->id)->value('room_id'));
+        $this->assertSame(1, DB::table('room_student')->where('student_id', $student->id)->count());
+        $this->assertSame(72, (int) app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $this->year->id)->id);
+        $this->assertSame(0, \App\Room::find($this->roomId)->operationalStudents()->count());
+        $this->assertSame([$student->id], \App\Room::find(72)->operationalStudents->pluck('id')->all());
+        $this->assertSame(0, $this->eligibleQuery()->count());
+        $this->assertSame(1, StudentFollowUp::where('student_id', $student->id)->count());
+        $this->assertSame(1, \App\Exam_result2::where('user_id', $student->id)->count());
+        $this->assertSame(0, \App\Exam_result2::currentRoster()->where('user_id', $student->id)->count());
+        $freshMark = DB::table('students_marks')->where('student_id', $student->id)->where('room_id', 72)->first();
+        $this->assertNull(json_decode($freshMark->mark, true)[$this->lessonId]['exam']);
+        $this->assertSame(1, DB::table('students_marks')->where('student_id', $student->id)->where('room_id', 72)->count());
+
+        $this->actingAs(\App\User::find($this->teacherUserId));
+        $this->postJson('/SMARMANger/dashboard/teacher/student-follow-ups', [
+            'assignment_id' => $this->assignment->id, 'student_id' => $student->id, 'level' => 'good',
+        ])->assertStatus(403);
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark_bulk', [
+            'kind' => 'exam2', 'rows' => json_encode([['room_id' => $this->roomId, 'lesson_id' => $this->lessonId,
+                'user_id' => $student->id, 'exam_id' => 1, 'mark' => 90]]),
+        ])->assertStatus(403);
+        $this->get('/SMARMANger/dashboard/exam/correct_exam1/1/' . $student->id)->assertStatus(403);
+        $this->postJson('/SMARMANger/dashboard/exam/update_result1', ['exam_result_id' => 1])->assertStatus(404);
+
+        $newAssignment = $this->assignmentForRoom(72, 42);
+        $newTeacher = \App\User::create(['name' => 'New teacher', 'email' => 'new@test.local', 'password' => bcrypt('test'), 'type' => '1', 'teacher_id' => 42]);
+        $this->actingAs($newTeacher);
+        $this->postJson('/SMARMANger/dashboard/teacher/student-follow-ups', [
+            'assignment_id' => $newAssignment->id, 'student_id' => $student->id, 'note' => 'New section observation',
+        ])->assertStatus(201);
+        $this->assertSame(2, StudentFollowUp::where('student_id', $student->id)->count());
+        $this->assertSame($oldRows, $this->academicSnapshot($student->id));
+
+        $newExam = \App\Exams2::create(['room_id' => 72, 'class_id' => $this->classId, 'lesson_id' => $this->lessonId,
+            'term_id' => DB::table('term_years')->value('id'), 'name' => 'Target assessment', 'type' => '2', 'mark' => 100]);
+        $controller = app(\App\Http\Controllers\TeacherController_New::class);
+        $rowsMethod = new \ReflectionMethod($controller, 'currentAssessmentRows');
+        $rowsMethod->setAccessible(true);
+        $countBefore = \App\Exam_result2::count();
+        $rows = $rowsMethod->invoke($controller, collect(), $newExam);
+        $this->assertCount(1, $rows);
+        $this->assertSame((int) $student->id, (int) $rows->first()->user_id);
+        $this->assertFalse($rows->first()->exists);
+        $this->assertSame($countBefore, \App\Exam_result2::count());
+        $payload = ['kind' => 'exam2', 'rows' => json_encode([['room_id' => 72, 'lesson_id' => $this->lessonId,
+            'user_id' => $student->id, 'exam_id' => $newExam->id, 'mark' => 91]])];
+        $this->post('/SMARMANger/dashboard/teacher/student_save_mark_bulk', $payload)->assertRedirect();
+        $this->post('/SMARMANger/dashboard/teacher/student_save_mark_bulk', $payload)->assertRedirect();
+        $this->assertSame(1, \App\Exam_result2::where('exam_id', $newExam->id)->where('user_id', $student->id)->count());
+        $this->assertSame($oldRows, $this->academicSnapshot($student->id));
+
+        // Returning to an old room needs a separate period-aware reconciliation;
+        // its room/year academic rows must never become a second scaffold.
+        $response = app(\App\Services\StudentTransferService::class)->handle(\Illuminate\Http\Request::create('', 'POST', [
+            'student_id' => $student->id, 'class_change_id' => $this->classId, 'room_change_id' => $this->roomId,
+        ]));
+        $this->assertFalse(app(\App\Services\CurrentStudentMembership::class)->studentsQuery($this->year->id, $this->roomId)->whereKey($student->id)->exists());
+        $this->assertSame(2, StudentAcademicPlacement::where('student_id', $student->id)->count());
+    }
+
+    public function test_cross_grade_transfer_and_legacy_route_preserve_old_curriculum()
+    {
+        $this->createTransferSchema();
+        $student = $this->transferStudent();
+        DB::table('classes')->insert(['id' => 62, 'name' => 'Grade 3']);
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => 62, 'name' => 'Grade 3 A']);
+        DB::table('lessons')->insert(['id' => 52, 'name' => 'Grade 3 Math', 'class_id' => 62]);
+        $before = $this->academicSnapshot($student->id);
+        $request = \Illuminate\Http\Request::create('', 'POST', [
+            'student_id' => $student->id, 'class_change_id' => 62, 'room_change_id' => 72,
+        ]);
+        app(\App\Http\Controllers\DashboardController::class)->student_change($request);
+        $this->assertSame($before, $this->academicSnapshot($student->id));
+        $this->assertSame(72, (int) DB::table('room_student')->where('student_id', $student->id)->value('room_id'));
+        $mark = DB::table('students_marks')->where('student_id', $student->id)->where('room_id', 72)->first();
+        $this->assertArrayHasKey(52, json_decode($mark->mark, true));
+        $this->assertArrayNotHasKey($this->lessonId, json_decode($mark->mark, true));
+        $this->assertSame('cross_grade_current_year', DB::table('student_transfer_histories')->value('transfer_type'));
+        $this->assertSame(0, $this->eligibleQuery()->count());
+    }
+
+    public function test_new_year_preparation_uses_year_context_and_keeps_old_year_records()
+    {
+        $this->createTransferSchema();
+        $student = $this->transferStudent();
+        $targetYear = \App\Year::find(DB::table('years')->insertGetId(['name' => '2027/2028', 'current_year' => 0]));
+        DB::table('years')->where('id', $this->year->id)->update(['next_year' => $targetYear->id]);
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $targetYear->id, 'class_id' => $this->classId, 'name' => 'Next A']);
+        $before = $this->academicSnapshot($student->id);
+        $service = app(\App\Services\YearEndPromotionService::class);
+        $placement = $service->process($student, $this->year->fresh(), $targetYear, $this->classId, 72);
+        $this->assertSame($before, $this->academicSnapshot($student->id));
+        $this->assertSame(2, DB::table('room_student')->where('student_id', $student->id)->count());
+        $this->assertSame($this->roomId, (int) app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $this->year->id)->id);
+        $this->assertSame(0, Student::currentMembership(null, 72)->whereKey($student->id)->count());
+        try {
+            $service->process($student, $this->year->fresh(), $targetYear, $this->classId, 72);
+            $this->fail('Preparing the target year twice must fail.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('year_end.errors.already_prepared', $e->getMessage());
+        }
+        $this->assertSame(1, DB::table('room_student')->where('student_id', $student->id)->where('year_id', $targetYear->id)->count());
+        DB::table('years')->update(['current_year' => 0]);
+        DB::table('years')->where('id', $targetYear->id)->update(['current_year' => 1]);
+        $this->assertSame(0, \App\Room::find($this->roomId)->operationalStudents()->count());
+        $this->assertSame([$student->id], \App\Room::find(72)->operationalStudents->pluck('id')->all());
+        $this->assertSame($before, $this->academicSnapshot($student->id));
+    }
+
+    public function test_later_same_grade_enrollment_after_a_recorded_transfer_has_consistent_rosters_without_repairing_history()
+    {
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'New section']);
+        $student = $this->enrolledStudent('later-section-edit');
+        $placement = $this->placement($student, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDays(4));
+        DB::table('student_academic_placements')->where('id', $placement->id)->update(['reason' => 'manual_class_transfer', 'action_source' => 'admin_transfer', 'updated_at' => $this->now->copy()->subDays(4)]);
+        DB::table('student_transfer_histories')->insert(['student_id' => $student->id, 'year_id' => $this->year->id, 'created_at' => $this->now->copy()->subDays(4)]);
+        DB::table('room_student')->where('student_id', $student->id)->update(['room_id' => 72, 'updated_at' => $this->now->copy()->subDay()]);
+        $newAssignment = $this->assignmentForRoom(72, 42);
+        $before = $placement->fresh()->getAttributes();
+        $this->assertSame(0, $this->eligibleQuery()->whereKey($student->id)->count());
+        $this->assertEquals([$student->id], app(StudentFollowUpService::class)->eligibleStudentsQuery($newAssignment, $this->year, $this->now)->pluck('students.id')->all());
+        $context = app(StudentFollowUpService::class)->resolveCreationContext(42, $newAssignment->id, $student->id);
+        $this->assertNull($context['placement']);
+        $this->assertSame($before, $placement->fresh()->getAttributes());
+        $second = $this->placement($student, $this->year->id, $this->classId, 72, 'active', $this->now->copy()->subDay());
+        $this->assertSame(0, Student::currentMembership($this->year->id, 72)->whereKey($student->id)->count());
+        $second->delete(); // Isolated fixture only.
+        $this->enroll($student, $this->roomId, $this->year->id);
+        $this->assertSame(0, Student::currentMembership($this->year->id, 72)->whereKey($student->id)->count());
+    }
+
+    public function test_gradebook_and_student_profile_cannot_mutate_another_placement_or_student()
+    {
+        $this->createTransferSchema();
+        $student = $this->transferStudent();
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'Unassigned']);
+        $this->actingAs(\App\User::find($this->teacherUserId));
+        $this->get('/SMARMANger/dashboard/teacher/gradebook/' . $this->classId . '/72/' . $this->lessonId)->assertStatus(403);
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/save', ['student_id' => $student->id, 'component_id' => 'x', 'room_id' => 72, 'subject_id' => $this->lessonId])->assertStatus(403);
+        $account = \App\User::where('student_id', $student->id)->first();
+        $this->actingAs($account);
+        $before = $this->academicSnapshot($student->id);
+        $this->post('/SMARMANger/dashboard/student/edit_student_info/' . ($student->id + 1), ['room_id' => $this->roomId])->assertRedirect('/SMARMANger');
+        $this->actingAs($account);
+        $this->post('/SMARMANger/dashboard/student/edit_student_info/' . $student->id, ['room_id' => 72])->assertStatus(403);
+        $this->assertSame($before, $this->academicSnapshot($student->id));
+    }
+
+    public function test_admin_profile_section_change_uses_safe_transfer_and_scopes_profile_mark_updates()
+    {
+        $this->createTransferSchema();
+        Schema::table('students', function (Blueprint $t) {
+            foreach (['first_name_en','last_name_en','father_name','mother_name','email','date_birth','age','nationality','place_birth','box_birth','army_room','phone','address','country','public_record_number'] as $column) { $t->string($column)->nullable(); }
+        });
+        Schema::create('student_details', function (Blueprint $t) {
+            $t->increments('id'); $t->unsignedInteger('student_id');
+            foreach (['blood_type','city','city_alt','con_sch','father_job','father_name','father_phone','gender','grandfather_name','last_mother_name','mother_job','mother_name','mother_phone','other_name','other_phone','passport_number','phone','student_brather_and_sister','the_previous_school','the_ID_number'] as $column) { $t->string($column)->nullable(); }
+            $t->timestamps();
+        });
+        $student = $this->transferStudent();
+        DB::table('student_details')->insert(['student_id' => $student->id]);
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'B']);
+        $old = $this->academicSnapshot($student->id);
+        $controller = app(\App\Http\Controllers\admincontroller::class);
+        $request = \Illuminate\Http\Request::create('', 'PUT', [
+            'first_name' => $student->first_name, 'last_name' => $student->last_name, 'father_name' => 'Parent',
+            'email' => 'student@test.local', 'phone' => '12345', 'room_id' => 72, 'class_id' => $this->classId,
+            'religion' => '0', 'lang' => '0',
+        ]);
+        $controller->student_update($request, $student->id);
+        $this->assertSame(72, (int) DB::table('room_student')->where('student_id', $student->id)->value('room_id'));
+        $this->assertSame(72, (int) StudentAcademicPlacement::where('student_id', $student->id)->where('status', 'active')->value('room_id'));
+        $this->assertSame('same_class_room_current_year', DB::table('student_transfer_histories')->value('transfer_type'));
+        $this->assertSame($old, $this->academicSnapshot($student->id));
+        $this->assertSame(0, DB::connection()->transactionLevel());
+    }
+
+    public function test_enclosing_transaction_rolls_back_transfer_and_existing_target_enrollment_is_not_duplicated()
+    {
+        $this->createTransferSchema();
+        $student = $this->transferStudent();
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'B']);
+        $old = $this->academicSnapshot($student->id);
+        try {
+            DB::transaction(function () use ($student) {
+                $service = app(\App\Services\StudentTransferService::class);
+                $service->handle(\Illuminate\Http\Request::create('', 'POST', [
+                    'student_id' => $student->id, 'class_change_id' => $this->classId, 'room_change_id' => 72,
+                ]), false);
+                $this->assertTrue($service->succeeded());
+                throw new \RuntimeException('profile_write_failed');
+            });
+        } catch (\RuntimeException $e) {
+            $this->assertSame('profile_write_failed', $e->getMessage());
+        }
+        $this->assertSame($this->roomId, (int) DB::table('room_student')->value('room_id'));
+        $this->assertSame(1, StudentAcademicPlacement::count());
+        $this->assertSame(0, DB::table('student_transfer_histories')->count());
+        $this->assertSame($old, $this->academicSnapshot($student->id));
+
+        $targetYear = \App\Year::find(DB::table('years')->insertGetId(['current_year' => 0]));
+        DB::table('years')->where('id', $this->year->id)->update(['next_year' => $targetYear->id]);
+        DB::table('rooms')->insert(['id' => 73, 'year_id' => $targetYear->id, 'class_id' => $this->classId, 'name' => 'Next A']);
+        $this->enroll($student, 73, $targetYear->id);
+        try {
+            app(\App\Services\YearEndPromotionService::class)->process($student, $this->year->fresh(), $targetYear, $this->classId, 73);
+            $this->fail('An existing target-year enrollment without a placement needs reconciliation.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('year_end.errors.already_prepared', $e->getMessage());
+        }
+        $this->assertSame(1, DB::table('room_student')->where('year_id', $targetYear->id)->count());
+    }
+
+    public function test_bulk_transfer_only_moves_selected_students_and_preserves_old_academic_rows()
+    {
+        $this->createTransferSchema();
+        $first = $this->transferStudent();
+        $neighbor = $this->enrolledStudent('unselected');
+        $second = $this->enrolledStudent('selected');
+        foreach ([$neighbor, $second] as $student) {
+            $this->placement($student, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDay());
+        }
+        DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'B']);
+        $before = $this->academicSnapshot($first->id);
+        app(\App\Services\StudentTransferService::class)->handleBulk(\Illuminate\Http\Request::create('', 'POST', [
+            'student_ids' => [$first->id, $second->id, $first->id], 'class_change_id' => $this->classId, 'room_change_id' => 72,
+        ]));
+        foreach ([$first, $second] as $student) {
+            $this->assertSame(72, (int) DB::table('room_student')->where('student_id', $student->id)->value('room_id'));
+            $this->assertSame(1, DB::table('room_student')->where('student_id', $student->id)->count());
+            $this->assertSame(1, StudentAcademicPlacement::where('student_id', $student->id)->where('status', 'active')->count());
+        }
+        $this->assertSame($this->roomId, (int) DB::table('room_student')->where('student_id', $neighbor->id)->value('room_id'));
+        $this->assertSame(1, StudentAcademicPlacement::where('student_id', $neighbor->id)->count());
+        $this->assertSame(2, DB::table('student_transfer_histories')->count());
+        $this->assertSame($before, $this->academicSnapshot($first->id));
+    }
+
+    private function moveStudent($studentId, $classId, $roomId)
+    {
+        $service = app(\App\Services\StudentTransferService::class);
+        $service->handle(\Illuminate\Http\Request::create('', 'POST', [
+            'student_id' => $studentId, 'class_change_id' => $classId, 'room_change_id' => $roomId,
+        ]));
+        $this->assertTrue($service->succeeded());
+    }
+
+    private function assignmentForRoom($roomId, $teacherId)
+    {
+        if (!DB::table('teachers')->where('id', $teacherId)->exists()) {
+            DB::table('teachers')->insert(['id' => $teacherId, 'name' => 'Teacher']);
+        }
+        $assignment = Teacher_room_lesson::create(['teacher_id' => $teacherId, 'lesson_id' => $this->lessonId,
+            'year_id' => $this->year->id, 'class_id' => $this->classId, 'room_id' => $roomId]);
+        DB::table('teacher_assignment_periods')->insert(['teacher_room_lesson_id' => $assignment->id, 'teacher_id' => $teacherId,
+            'lesson_id' => $this->lessonId, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'room_id' => $roomId,
+            'effective_from' => $this->now->copy()->subDay(), 'source' => 'test']);
+        return $assignment;
+    }
+
+    private function transferStudent()
+    {
+        $student = $this->enrolledStudent('permanent-identity');
+        $this->placement($student, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDays(10));
+        \App\User::create(['name' => 'Student', 'email' => 'student@test.local', 'password' => bcrypt('unchanged'), 'type' => '0', 'student_id' => $student->id]);
+        DB::table('students_marks')->insert(['student_id' => $student->id, 'year_id' => $this->year->id, 'room_id' => $this->roomId, 'mark' => json_encode([$this->lessonId => ['exam' => 81]])]);
+        DB::table('report_cards')->insert(['student_id' => $student->id, 'year_id' => $this->year->id, 'room_id' => $this->roomId, 'teacher_notes' => 'Original teacher note']);
+        DB::table('exams2')->insert(['id' => 1, 'room_id' => $this->roomId, 'lesson_id' => $this->lessonId, 'class_id' => $this->classId, 'term_id' => DB::table('term_years')->value('id'), 'type' => '2', 'name' => 'Original quiz']);
+        DB::table('exam_result2')->insert(['id' => 1, 'user_id' => $student->id, 'room_id' => $this->roomId, 'class_id' => $this->classId, 'exam_id' => 1, 'lesson_id' => $this->lessonId, 'result' => 81]);
+        app(StudentFollowUpService::class)->create($this->teacherUserId, $this->teacherId, $this->assignment->id, $student->id, ['level' => 'good']);
+        DB::table('invoices')->insert(['student_id' => $student->id, 'year_id' => $this->year->id, 'amount' => 123]);
+        DB::table('student_lesson_teacher_room_term_exam')->insert(['student_id' => $student->id, 'room_id' => $this->roomId, 'file' => 'original-submission.pdf']);
+        return $student->fresh();
+    }
+
+    private function academicSnapshot($studentId)
+    {
+        $out = [];
+        foreach (['students_marks', 'report_cards', 'invoices', 'student_lesson_teacher_room_term_exam'] as $table) {
+            $out[$table] = DB::table($table)->where('student_id', $studentId)->where('id', 1)->get()->toJson();
+        }
+        $out['old_result'] = DB::table('exam_result2')->where('id', 1)->get()->toJson();
+        $out['old_follow_up'] = DB::table('student_follow_ups')->where('id', 1)->get()->toJson();
+        return $out;
+    }
+
+    private function createTransferSchema()
+    {
+        Schema::table('years', function (Blueprint $t) { $t->string('name')->nullable(); $t->unsignedInteger('next_year')->nullable(); });
+        Schema::table('students', function (Blueprint $t) { $t->string('lang')->default('0'); $t->string('religion')->default('0'); });
+        Schema::table('users', function (Blueprint $t) { $t->unsignedInteger('student_id')->nullable(); });
+        Schema::table('room_student', function (Blueprint $t) { $t->string('term')->nullable(); });
+        Schema::table('lessons', function (Blueprint $t) { $t->unsignedInteger('class_id')->nullable(); $t->string('lang')->nullable(); $t->string('religion')->nullable(); });
+        DB::table('lessons')->update(['class_id' => $this->classId]);
+        Schema::table('student_transfer_histories', function (Blueprint $t) {
+            foreach (['user_id','from_class_id','from_room_id','to_class_id','to_room_id','previous_room_student_id','previous_students_mark_id','previous_report_card_id','transferred_by_user_id','from_placement_id','to_placement_id'] as $column) { $t->unsignedInteger($column)->nullable(); }
+            foreach (['previous_room_student_snapshot','previous_students_mark_snapshot','previous_report_card_snapshot','transfer_type'] as $column) { $t->text($column)->nullable(); }
+        });
+        Schema::create('students_marks', function (Blueprint $t) {
+            $t->increments('id'); $t->unsignedInteger('student_id'); $t->unsignedInteger('room_id')->nullable(); $t->unsignedInteger('year_id');
+            foreach (['mark','mark2','result1','result2','result','term_result','year_result','status','lang','religion','estimation','estimation1','estimation2','worke_degree','notes'] as $column) { $t->text($column)->nullable(); }
+            $t->integer('adjustable')->default(0); $t->timestamps();
+        });
+        Schema::create('report_cards', function (Blueprint $t) {
+            $t->increments('id'); $t->unsignedInteger('student_id'); $t->unsignedInteger('room_id')->nullable(); $t->unsignedInteger('year_id');
+            foreach (['class','teacher','teacher_name','teacher_notes','manager_notes','parent_notes','final_result','actual_attendance','student_attendance','justified_absence','unjustified_absence'] as $column) { $t->text($column)->nullable(); }
+            $t->timestamps();
+        });
+        foreach (['exam_result','exam_result2'] as $table) { Schema::create($table, function (Blueprint $t) {
+            $t->increments('id'); $t->unsignedInteger('user_id'); $t->unsignedInteger('room_id')->nullable();
+            foreach (['class_id','lesson_id','term_id','exam_id'] as $column) { $t->unsignedInteger($column)->nullable(); }
+            foreach (['result','type','status','start_time','end_time','medal'] as $column) { $t->string($column)->nullable(); } $t->timestamps();
+        }); }
+        Schema::create('exams2', function (Blueprint $t) {
+            $t->increments('id'); foreach (['class_id','room_id','lesson_id','term_id'] as $column) { $t->unsignedInteger($column); }
+            foreach (['name','type','mark','start_date','end_date'] as $column) { $t->string($column)->nullable(); } $t->timestamps();
+        });
+        foreach (['student_lesson_teacher_room_term_exam','exams_files','certificates'] as $table) { Schema::create($table, function (Blueprint $t) {
+            $t->increments('id'); $t->unsignedInteger('student_id'); $t->unsignedInteger('room_id')->nullable(); $t->unsignedInteger('exam_id')->nullable(); $t->string('file')->nullable(); $t->timestamps();
+        }); }
+        Schema::create('invoices', function (Blueprint $t) { $t->increments('id'); $t->unsignedInteger('student_id'); $t->unsignedInteger('year_id'); $t->integer('amount'); });
     }
 
     private function rosterStudentIds($assignmentId = null)

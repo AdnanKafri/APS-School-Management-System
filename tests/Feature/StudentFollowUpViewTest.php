@@ -6,6 +6,41 @@ use Tests\TestCase;
 
 class StudentFollowUpViewTest extends TestCase
 {
+    public function test_all_rating_labels_and_admin_print_reports_support_very_good()
+    {
+        foreach (['ar' => 'جيد جداً', 'en' => 'Very Good'] as $locale => $label) {
+            foreach (['student_follow_up', 'student_follow_up_student'] as $namespace) {
+                $this->assertSame($label, trans($namespace . '.levels.very_good', [], $locale));
+                $labels = trans($namespace . '.levels', [], $locale);
+                $this->assertSame(\App\StudentFollowUp::LEVELS, array_keys($labels));
+            }
+            app()->setLocale($locale);
+            $row = (object) [
+                'student_id' => 1, 'lesson' => (object) ['name' => 'Arabic'],
+                'teacher' => (object) ['first_name' => 'Teacher', 'last_name' => 'Example'],
+                'classRoom' => (object) ['name' => 'Grade 2'], 'room' => (object) ['name' => 'A'],
+                'observed_at' => \Carbon\Carbon::parse('2026-10-12 10:00', 'Asia/Damascus'),
+                'compliance_half' => 1, 'level' => 'very_good', 'note' => null,
+            ];
+            $student = (object) ['first_name' => 'Student', 'last_name' => 'Example'];
+            $data = [
+                'school' => (object) ['name' => 'School'], 'student' => $student,
+                'year' => (object) ['name' => '2026/2027'], 'placement' => null, 'month' => '2026-10',
+                'followUps' => collect([$row]), 'teacher' => $row->teacher,
+                'students' => collect([1 => $student]), 'groups' => collect([collect([$row])]),
+            ];
+            foreach (['report', 'teacher_evaluations_report'] as $view) {
+                $html = view('admin.student_follow_ups.' . $view, $data)->render();
+                $this->assertStringContainsString($label, $html);
+                $this->assertStringNotContainsString('levels.very_good', $html);
+            }
+        }
+        foreach (['roster', 'history'] as $view) {
+            $source = file_get_contents(resource_path('views/teachers2/student_follow_ups/' . $view . '.blade.php'));
+            $this->assertStringContainsString('\\App\\StudentFollowUp::LEVELS', $source);
+        }
+    }
+
     public function test_student_follow_up_route_is_student_only_read_only_and_has_no_student_id_parameter()
     {
         $route = collect(app('router')->getRoutes()->getRoutes())

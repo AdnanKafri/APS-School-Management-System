@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class StudentFollowUp extends Model
 {
-    public const LEVELS = ['weak', 'average', 'good', 'excellent'];
+    public const LEVELS = ['weak', 'average', 'good', 'very_good', 'excellent'];
 
     protected $table = 'student_follow_ups';
 
