@@ -391,7 +391,7 @@
                 </div>
                 <div class="complaints-field">
                     <label for="student_identifier">{{ __('complaints.fields.student_identifier') }} <span class="complaints-required" aria-hidden="true">*</span><span class="complaints-visually-hidden">{{ __('complaints.form.required_label') }}</span></label>
-                    <input id="student_identifier" name="student_identifier" type="text" dir="ltr" maxlength="5" pattern="[0-9]{3}(?:/|-)[0-9]" required aria-required="true" autocomplete="off" value="{{ old('student_identifier') }}" placeholder="{{ __('complaints.placeholders.student_identifier') }}" aria-describedby="student-identifier-hint{{ $errors->has('student_identifier') ? ' student-identifier-error' : '' }}" aria-invalid="{{ $errors->has('student_identifier') ? 'true' : 'false' }}">
+                    <input id="student_identifier" name="student_identifier" type="text" dir="ltr" maxlength="{{ \App\Services\ComplaintStudentIdentifier::MAX_LENGTH }}" pattern="{{ \App\Services\ComplaintStudentIdentifier::HTML_PATTERN }}" required aria-required="true" autocomplete="off" value="{{ old('student_identifier') }}" placeholder="{{ __('complaints.placeholders.student_identifier') }}" aria-describedby="student-identifier-hint{{ $errors->has('student_identifier') ? ' student-identifier-error' : '' }}" aria-invalid="{{ $errors->has('student_identifier') ? 'true' : 'false' }}">
                     <small id="student-identifier-hint">{{ __('complaints.form.student_identifier_hint') }}</small>
                     @error('student_identifier')
                         <small id="student-identifier-error" class="text-danger">{{ $message }}</small>

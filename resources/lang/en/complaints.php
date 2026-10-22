@@ -39,7 +39,7 @@ return [
         'complaint_text' => 'Complaint description',
     ],
     'placeholders' => [
-        'student_identifier' => '233/3',
+        'student_identifier' => '333/2 or 2222/2',
         'student_name' => 'Enter the student name',
         'applicant_name' => 'Enter the applicant or guardian name',
         'phone' => 'Example: 09xxxxxxxx',
@@ -59,7 +59,7 @@ return [
         'view' => 'View details',
     ],
     'form' => [
-        'student_identifier_hint' => "The Student School ID is printed on the student's ID card. Example: 233/3 or 233-2.",
+        'student_identifier_hint' => "The Student School ID is printed on the student's ID card. Enter it as printed, for example 333/2 or 2222/2. Digits alone or separated by / or - are accepted, up to 15 characters.",
         'required_notice' => 'All fields are required to submit a complaint.',
         'required_label' => 'Required',
         'title' => 'Complaint form',
@@ -98,7 +98,7 @@ return [
     ],
     'validation' => [
         'session_expired' => 'Your form session expired and the request was not sent. Please review your details and submit again.',
-        'student_identifier_format' => 'The Student School ID must contain three digits, / or -, then one digit, such as 233/3 or 233-2.',
+        'student_identifier_format' => 'Enter digits alone or groups of digits separated by / or -, such as 333/2 or 2222/2, up to 15 characters.',
         'required' => 'This field is required.',
         'required_field' => 'The :field is required.',
         'min_complaint' => 'The :field must contain at least :min characters.',

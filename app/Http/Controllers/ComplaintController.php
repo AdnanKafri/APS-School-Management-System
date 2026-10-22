@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\PublicComplaintTrackingService;
 use App\Services\ComplaintReferenceGenerator;
+use App\Services\ComplaintStudentIdentifier;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Request;
 
@@ -53,7 +54,7 @@ class ComplaintController extends Controller
             [
                 'type' => ['required', 'in:academic,transport'],
                 'student_name' => ['required', 'string', 'max:190'],
-                'student_identifier' => ['nullable', 'required_if:type,academic,transport', 'string', 'max:5', 'regex:~\A[0-9]{3}[/-][0-9]\z~'],
+                'student_identifier' => ['nullable', 'required_if:type,academic,transport', 'string', 'max:' . ComplaintStudentIdentifier::MAX_LENGTH, 'regex:' . ComplaintStudentIdentifier::REGEX],
                 'applicant_name' => ['required', 'string', 'max:190'],
                 'phone' => ['required', 'string', 'max:50'],
                 'class_name' => ['required', 'string', 'max:190'],
@@ -136,7 +137,7 @@ class ComplaintController extends Controller
         $limiter->hit($referenceKey, 600);
 
         $valid = app(ComplaintReferenceGenerator::class)->isSupported($reference)
-            && (bool) preg_match('~\A[0-9]{3}[/-][0-9]\z~', $identifier);
+            && ComplaintStudentIdentifier::isValid($identifier);
         $complaint = $valid ? $tracking->find($reference, $identifier) : null;
 
         return $this->privateView('website.complaint_tracking', [

@@ -22,7 +22,8 @@
             </div>
             <div class="complaint-track-field">
                 <label for="tracking-student-identifier">{{ __('complaint_tracking.student_identifier') }}</label>
-                <input id="tracking-student-identifier" name="student_identifier" type="text" required maxlength="5" spellcheck="false" autocomplete="off" dir="ltr">
+                <input id="tracking-student-identifier" name="student_identifier" type="text" required maxlength="{{ \App\Services\ComplaintStudentIdentifier::MAX_LENGTH }}" pattern="{{ \App\Services\ComplaintStudentIdentifier::HTML_PATTERN }}" spellcheck="false" autocomplete="off" dir="ltr" aria-describedby="tracking-student-identifier-hint">
+                <small id="tracking-student-identifier-hint">{{ __('complaints.form.student_identifier_hint') }}</small>
             </div>
             <div class="complaint-track-actions">
                 <button class="btn btn-primary" type="submit">{{ __('complaint_tracking.lookup') }}</button>

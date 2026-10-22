@@ -67,6 +67,8 @@ class ComplaintWorkflowTest extends TestCase
         (new \AddPublicTrackingHashToComplaints)->up();
         require_once database_path('migrations/2026_10_19_000001_add_staff_reference_to_complaints.php');
         (new \AddStaffReferenceToComplaints)->up();
+        require_once database_path('migrations/2026_10_22_000001_expand_complaint_student_identifier.php');
+        (new \ExpandComplaintStudentIdentifier)->up();
         require_once database_path('migrations/2026_10_06_000002_add_complaint_officer_foundation.php');
         (new \AddComplaintOfficerFoundation)->up();
         $this->withSession(['complaint_auth_version' => 1]);
@@ -409,9 +411,46 @@ class ComplaintWorkflowTest extends TestCase
         }
     }
 
+    public function test_long_identifier_submission_and_tracking_share_rules_without_changing_records()
+    {
+        foreach (['ar', 'en'] as $locale) {
+            app()->setLocale($locale);
+            $this->post('/complaints', $this->submission('academic', ' 2222/2 '))
+                ->assertRedirect(route('website.complaints.confirmation', [], false))->assertSessionHasNoErrors();
+            $complaint = Complaint::orderByDesc('id')->firstOrFail();
+            $reference = session('complaint_confirmation.reference');
+            $before = $complaint->getAttributes();
+            $this->assertSame('2222/2', $complaint->student_identifier);
+            $this->post('/complaints/track', ['reference' => strtolower($reference), 'student_identifier' => ' 2222/2 '])
+                ->assertOk()->assertSee($reference)->assertDontSee($complaint->complaint_text)
+                ->assertDontSee($complaint->student_name);
+            $this->post('/complaints/track', ['reference' => $reference, 'student_identifier' => '2222/3'])
+                ->assertOk()->assertSee(__('complaint_tracking.invalid'))->assertDontSee($reference);
+            $this->post('/complaints/track', ['student_identifier' => '2222/2'])
+                ->assertOk()->assertSee(__('complaint_tracking.invalid'));
+            $this->assertSame($before, $complaint->fresh()->getAttributes());
+            $this->get('/complaints')->assertOk()->assertSee('maxlength="15"', false)
+                ->assertSee(__('complaints.form.student_identifier_hint'));
+            $this->get('/complaints/track')->assertOk()->assertSee('maxlength="15"', false);
+        }
+    }
+
+    public function test_identifier_schema_expansion_is_repeatable_and_does_not_rewrite_values()
+    {
+        $complaint = $this->complaint();
+        $complaint->student_identifier = '333/2';
+        $complaint->save();
+        $before = $complaint->fresh()->getAttributes();
+        $migration = new \ExpandComplaintStudentIdentifier;
+        $migration->up();
+        $migration->up();
+        $migration->down();
+        $this->assertSame($before, $complaint->fresh()->getAttributes());
+    }
+
     public function validStudentIdentifiers()
     {
-        return [['233/3', '233/3'], ['233-2', '233-2'], ['001/4', '001/4'], ['999-9', '999-9'], [' 233/3 ', '233/3']];
+        return [['233/3', '233/3'], ['233-2', '233-2'], ['001/4', '001/4'], ['999-9', '999-9'], [' 233/3 ', '233/3'], ['333/2', '333/2'], ['2222/2', '2222/2'], ['2222-2', '2222-2'], ['23/3', '23/3'], ['233/333', '233/333'], ['10000', '10000'], ['1', '1'], ['1234567890123/4', '1234567890123/4'], ['123456789012345', '123456789012345']];
     }
 
     /** @dataProvider invalidStudentIdentifiers */
@@ -427,14 +466,14 @@ class ComplaintWorkflowTest extends TestCase
 
     public function invalidStudentIdentifiers()
     {
-        return [['23/3'], ['2333/3'], ['233/33'], ['233 3'], ['233_3'], ['abc/3'], [''], [null], [['233/3']], ["233/3\nextra"]];
+        return [['12345678901234/5'], ['1234567890123456'], ['233 3'], ['233_3'], ['abc/3'], [''], [null], [['233/3']], ["233/3\nextra"], ['233//3'], ['233--3'], ['/233'], ['233/'], ['233\\3']];
     }
 
     public function test_identifier_validation_retains_old_input()
     {
-        $this->post('/complaints', $this->submission('academic', '23/3'))
+        $this->post('/complaints', $this->submission('academic', '23//3'))
             ->assertSessionHasErrors('student_identifier')
-            ->assertSessionHas('_old_input.student_identifier', '23/3');
+            ->assertSessionHas('_old_input.student_identifier', '23//3');
     }
 
     public function test_old_complaint_without_identifier_keeps_existing_workflow()
