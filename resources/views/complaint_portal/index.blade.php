@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @forelse($complaints as $complaint)
 <article class="cp-card cp-record"><div class="cp-row"><span class="cp-badge cp-status-{{ $complaint->status }}">{{ $complaint->statusLabel() }}</span><span class="cp-badge cp-source-{{ $complaint->source === 'staff' ? 'staff' : 'parent' }}">{{ $complaint->sourceLabel() }}</span><time>{{ $complaint->created_at->copy()->timezone(config('app.timezone'))->locale('ar')->translatedFormat('j F Y - H:i') }}</time></div>
 <h2><a href="{{ route('complaint-portal.show', array_merge(['id' => $complaint->id], request()->only('source', 'type', 'status', 'page'))) }}">{{ $complaint->submitterName() }}</a></h2>
-<p>{{ $complaint->typeLabel() }} @if($complaint->source === 'staff')<span class="cp-preview">{{ \Illuminate\Support\Str::limit($complaint->complaint_text, 90) }}</span>@else · {{ $complaint->class_name }} / {{ $complaint->section_name }}@endif</p>
+<p>{{ $complaint->typeLabel() }} @if($complaint->source === 'staff')@if($complaint->staff_reference) · {{ __('staff_feedback.reference') }}: <bdi>{{ $complaint->staff_reference }}</bdi>@endif <span class="cp-preview">{{ \Illuminate\Support\Str::limit($complaint->complaint_text, 90) }}</span>@else · {{ $complaint->class_name }} / {{ $complaint->section_name }}@endif</p>
 <p>@if($complaint->source === 'staff')<bdi>{{ $complaint->phone }}</bdi>@else {{ __('complaints.fields.student_identifier') }}: <bdi>{{ $complaint->student_identifier ?: __('complaints.admin.unavailable') }}</bdi>@endif</p>
 <a class="cp-button cp-secondary" href="{{ route('complaint-portal.show', array_merge(['id' => $complaint->id], request()->only('source', 'type', 'status', 'page'))) }}">{{ __('complaints.buttons.view') }}</a>
 </article>

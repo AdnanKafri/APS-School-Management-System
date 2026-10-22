@@ -1,0 +1,33 @@
+<?php
+
+return [
+    'previous_title' => 'Already submitted a complaint?',
+    'previous_text' => 'Check its status using your tracking reference and the student’s school ID.',
+    'previous_action' => 'Track an earlier complaint',
+    'confirmation_title' => 'Your complaint has been received',
+    'confirmation_text' => 'Keep this tracking reference to check your complaint status later.',
+    'save_reminder' => 'Save this reference now. You will need it and the Student School ID to check the status later.',
+    'reference' => 'Tracking reference',
+    'copy' => 'Copy reference',
+    'copied' => 'Tracking reference copied',
+    'copy_failed' => 'Automatic copying failed. You can select and copy the reference.',
+    'track_action' => 'Track complaint status',
+    'back_to_form' => 'Back to complaints',
+    'track_title' => 'Track a complaint',
+    'track_text' => 'Enter the tracking reference and Student School ID exactly as supplied with the complaint.',
+    'student_identifier' => 'Student School ID',
+    'lookup' => 'Check status',
+    'invalid' => 'No complaint was found with these details. Check both values and try again.',
+    'rate_limited' => 'Too many lookup attempts. Please try again later.',
+    'submitted_at' => 'Submitted on',
+    'current_status' => 'Current status',
+    'privacy_note' => 'Only the complaint status is shown here. Contact the school for further details.',
+    'status' => [
+        'new' => 'Complaint received',
+        'viewed' => 'Under review',
+        'in_progress' => 'Being handled',
+        'resolved' => 'Handled',
+        'archived' => 'Closed',
+        'unknown' => 'Status currently unavailable',
+    ],
+];

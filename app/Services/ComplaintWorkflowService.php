@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 class ComplaintWorkflowService
 {
-    public function submit(array $validated)
+    public function submit(array $validated, $publicTrackingHash = null)
     {
         $complaint = Complaint::create([
             'source' => 'parent',
@@ -18,11 +18,12 @@ class ComplaintWorkflowService
             'class_name' => $validated['class_name'], 'section_name' => $validated['section_name'],
             'bus_number' => $validated['type'] === 'transport' ? ($validated['bus_number'] ?? null) : null,
             'complaint_text' => $validated['complaint_text'],
+            'public_tracking_hash' => $publicTrackingHash,
         ]);
         return $this->notify($complaint);
     }
 
-    public function submitStaff(array $validated)
+    public function submitStaff(array $validated, $staffReference = null)
     {
         $complaint = Complaint::create([
             'source' => 'staff',
@@ -30,6 +31,8 @@ class ComplaintWorkflowService
             'staff_name' => $validated['staff_name'],
             'phone' => $validated['phone'],
             'complaint_text' => $validated['complaint_text'],
+            'staff_reference' => $staffReference,
+            'public_tracking_hash' => $staffReference ? hash('sha256', $staffReference) : null,
         ]);
         return $this->notify($complaint);
     }

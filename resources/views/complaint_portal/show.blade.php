@@ -4,6 +4,7 @@
 <section class="cp-card"><div class="cp-row"><h1>{{ $complaint->typeLabel() }} #{{ $complaint->id }}</h1><span class="cp-badge cp-status-{{ $complaint->status }}">{{ $complaint->statusLabel() }}</span><span class="cp-badge cp-source-{{ $complaint->source === 'staff' ? 'staff' : 'parent' }}">{{ $complaint->sourceLabel() }}</span></div>
 <dl class="cp-context">
 @if($complaint->source === 'staff')
+    @if($complaint->staff_reference)<div><dt>{{ __('staff_feedback.reference') }}</dt><dd><bdi>{{ $complaint->staff_reference }}</bdi></dd></div>@endif
     <div><dt>{{ __('staff_feedback.name') }}</dt><dd>{{ $complaint->staff_name }}</dd></div>
     <div><dt>{{ __('staff_feedback.phone') }}</dt><dd><bdi>{{ $complaint->phone }}</bdi></dd></div>
     <div><dt>{{ __('staff_feedback.category') }}</dt><dd>{{ $complaint->typeLabel() }}</dd></div>

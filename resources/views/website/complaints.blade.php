@@ -307,6 +307,9 @@
             width: 100%;
         }
     }
+    .complaints-previous { margin: 20px 0 26px; padding: 18px 22px; background: #f4f9f7; border: 1px solid #dbeae4; border-radius: 14px; }
+    .complaints-previous h2 { margin: 0 0 6px; font-size: 1.15rem; color: #1b4c49; }
+    .complaints-previous p { margin: 0 0 12px; color: #4d666b; line-height: 1.7; }
 </style>
 @endsection
 
@@ -327,6 +330,12 @@
             <p class="complaints-help__text">{{ __('complaints.help_text') }}</p>
         </div>
     </div>
+
+    <section class="complaints-previous" aria-labelledby="previous-complaint-title">
+        <h2 id="previous-complaint-title">{{ __('complaint_tracking.previous_title') }}</h2>
+        <p>{{ __('complaint_tracking.previous_text') }}</p>
+        <a class="btn btn-outline-primary" href="{{ route('website.complaints.track') }}">{{ __('complaint_tracking.previous_action') }}</a>
+    </section>
 
     @if(session('success'))
         <div class="alert alert-success complaints-alert">

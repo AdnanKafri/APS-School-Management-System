@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\AdminComplaintNotification;
+use App\Services\PublicComplaintTrackingService;
+use App\Services\ComplaintReferenceGenerator;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Request;
 
@@ -88,11 +89,71 @@ class ComplaintController extends Controller
             ]
         );
 
-        app(\App\Services\ComplaintWorkflowService::class)->submit($validated);
+        list(, $reference) = app(PublicComplaintTrackingService::class)->submit($validated);
+        $request->session()->put('complaint_confirmation', [
+            'reference' => $reference,
+            'issued_at' => now()->timestamp,
+        ]);
 
         return redirect()
-            ->route('website.complaints')
-            ->with('success', __('complaints.success'));
+            ->route('website.complaints.confirmation');
+    }
+
+    public function confirmation(Request $request)
+    {
+        $confirmation = $request->session()->get('complaint_confirmation');
+        if (!is_array($confirmation) || !isset($confirmation['reference'], $confirmation['issued_at'])
+            || now()->timestamp - (int) $confirmation['issued_at'] > 1800) {
+            $request->session()->forget('complaint_confirmation');
+            return redirect()->route('website.complaints');
+        }
+
+        return $this->privateView('website.complaint_confirmation', [
+            'reference' => $confirmation['reference'],
+        ]);
+    }
+
+    public function track()
+    {
+        return $this->privateView('website.complaint_tracking', ['complaint' => null, 'lookupFailed' => false]);
+    }
+
+    public function lookup(Request $request, PublicComplaintTrackingService $tracking)
+    {
+        $referenceInput = $request->input('reference', '');
+        $identifierInput = $request->input('student_identifier', '');
+        $reference = is_string($referenceInput) ? strtoupper(trim($referenceInput)) : '';
+        $identifier = is_string($identifierInput) ? trim($identifierInput) : '';
+        $limiter = app(RateLimiter::class);
+        $ipKey = 'complaint-lookup-ip:' . hash('sha256', (string) $request->ip());
+        $referenceKey = 'complaint-lookup-ref:' . $tracking->digest($reference);
+        if ($limiter->tooManyAttempts($ipKey, 10) || $limiter->tooManyAttempts($referenceKey, 5)) {
+            return $this->privateView('website.complaint_tracking', [
+                'complaint' => null, 'lookupFailed' => false, 'rateLimited' => true,
+            ], 429);
+        }
+        $limiter->hit($ipKey, 600);
+        $limiter->hit($referenceKey, 600);
+
+        $valid = app(ComplaintReferenceGenerator::class)->isSupported($reference)
+            && (bool) preg_match('~\A[0-9]{3}[/-][0-9]\z~', $identifier);
+        $complaint = $valid ? $tracking->find($reference, $identifier) : null;
+
+        return $this->privateView('website.complaint_tracking', [
+            'complaint' => $complaint, 'lookupFailed' => !$complaint,
+            'publicStatus' => $complaint ? $tracking->publicStatus($complaint->status) : null,
+            'reference' => $complaint ? $reference : null,
+        ]);
+    }
+
+    private function privateView($name, array $data, $status = 200)
+    {
+        return response()->view($name, $data, $status)->withHeaders([
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Pragma' => 'no-cache',
+            'Referrer-Policy' => 'no-referrer',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
     }
 
     // Retired Admin endpoints neither expose complaint data nor enter the officer portal.

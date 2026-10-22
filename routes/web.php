@@ -76,6 +76,7 @@ Route::get('/favicon.ico', 'PublicSeoController@favicon')->name('seo.favicon');
 foreach (['ar', 'en'] as $staffFeedbackLocale) {
     Route::get('/' . $staffFeedbackLocale . '/staff-feedback', 'StaffFeedbackController@create')->name('website.staff_feedback.' . $staffFeedbackLocale);
     Route::post('/' . $staffFeedbackLocale . '/staff-feedback', 'StaffFeedbackController@store')->name('website.staff_feedback.store.' . $staffFeedbackLocale);
+    Route::get('/' . $staffFeedbackLocale . '/staff-feedback/confirmation', 'StaffFeedbackController@confirmation')->name('website.staff_feedback.confirmation.' . $staffFeedbackLocale);
 }
 Route::get('/downloads/apps/{slug}', 'MobileApplicationDistributionController@download')->name('mobile-applications.download');
 
@@ -99,6 +100,9 @@ Route::group([
   Route::get('/contact_us', 'websitecontroller@contact_us')->name('website.contact_us');
   Route::get('/complaints', 'ComplaintController@create')->name('website.complaints');
   Route::post('/complaints', 'ComplaintController@store')->name('website.complaints.store');
+  Route::get('/complaints/confirmation', 'ComplaintController@confirmation')->name('website.complaints.confirmation');
+  Route::get('/complaints/track', 'ComplaintController@track')->name('website.complaints.track');
+  Route::post('/complaints/track', 'ComplaintController@lookup')->name('website.complaints.lookup');
 
   Route::get('/contact', function () {
     return redirect()->to(route('website.contact_us'), 301);

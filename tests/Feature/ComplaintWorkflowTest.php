@@ -17,6 +17,12 @@ class ComplaintWorkflowTest extends TestCase
     {
         parent::setUp();
 
+        // CLI route registration has no locale prefix; localized URLs are verified over HTTP.
+        $this->withoutMiddleware([
+            \Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect::class,
+            \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter::class,
+        ]);
+
         $this->assertSame('sqlite', DB::connection()->getDriverName());
 
         Schema::create('users', function (Blueprint $table) {
@@ -57,9 +63,23 @@ class ComplaintWorkflowTest extends TestCase
         (new \AddStudentIdentifierToComplaints)->up();
         require_once database_path('migrations/2026_10_11_000001_add_staff_feedback_to_complaints.php');
         (new \AddStaffFeedbackToComplaints)->up();
+        require_once database_path('migrations/2026_10_18_000001_add_public_tracking_hash_to_complaints.php');
+        (new \AddPublicTrackingHashToComplaints)->up();
+        require_once database_path('migrations/2026_10_19_000001_add_staff_reference_to_complaints.php');
+        (new \AddStaffReferenceToComplaints)->up();
         require_once database_path('migrations/2026_10_06_000002_add_complaint_officer_foundation.php');
         (new \AddComplaintOfficerFoundation)->up();
         $this->withSession(['complaint_auth_version' => 1]);
+
+        Schema::create('school_data', function (Blueprint $table) { $table->bigIncrements('id'); });
+        Schema::create('footer_website', function (Blueprint $table) {
+            $table->bigIncrements('id'); $table->string('title')->nullable();
+            $table->string('address')->nullable(); $table->string('phone')->nullable();
+            $table->string('email')->nullable(); $table->string('facebook')->nullable();
+            $table->string('twitter')->nullable(); $table->string('linkedin')->nullable();
+            $table->string('instgram')->nullable();
+        });
+        DB::table('footer_website')->insert(['title' => 'School']);
 
         Schema::create('admin_complaint_notifications', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -110,7 +130,7 @@ class ComplaintWorkflowTest extends TestCase
             'complaint_text' => 'This complaint must remain saved if notifications fail.',
         ]);
 
-        $response->assertRedirect('/complaints');
+        $response->assertRedirect(route('website.complaints.confirmation', [], false));
         $this->assertSame(1, Complaint::count());
         $this->assertDatabaseHas('complaints', ['status' => 'new']);
     }
@@ -203,9 +223,162 @@ class ComplaintWorkflowTest extends TestCase
             'website_url' => '',
         ]);
 
-        $response->assertRedirect('/complaints');
+        $response->assertRedirect(route('website.complaints.confirmation', [], false));
         $this->assertSame(1, Complaint::count());
         $this->assertSame(2, AdminComplaintNotification::count());
+    }
+
+    public function test_tracking_confirmation_and_private_lookup_follow_successful_submission()
+    {
+        $payload = $this->submission('academic', ' 233/3 ');
+        $this->post('/complaints', $payload)
+            ->assertRedirect(route('website.complaints.confirmation', [], false));
+        $complaint = Complaint::firstOrFail();
+        $reference = session('complaint_confirmation.reference');
+        $this->assertRegExp('/\AC-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}(?:-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}){2}\z/', $reference);
+        $this->assertSame(hash('sha256', $reference), $complaint->public_tracking_hash);
+        $this->assertSame('233/3', $complaint->student_identifier);
+        $confirmation = $this->get('/complaints/confirmation')->assertOk()
+            ->assertSee($reference)->assertDontSee($complaint->complaint_text);
+        $this->assertStringContainsString('no-store', $confirmation->headers->get('Cache-Control'));
+        $this->get('/complaints/confirmation')->assertOk()->assertSee($reference);
+        $this->assertSame(1, Complaint::count());
+        $result = $this->post('/complaints/track', [
+            'reference' => strtolower($reference), 'student_identifier' => ' 233/3 ',
+        ])->assertOk()->assertSee($reference)->assertSee(__('complaint_tracking.status.new'));
+        $this->assertSame('noindex, nofollow, noarchive', $result->headers->get('X-Robots-Tag'));
+        $result->assertDontSee($complaint->student_name)->assertDontSee($complaint->applicant_name)
+            ->assertDontSee($complaint->phone)->assertDontSee($complaint->complaint_text);
+    }
+
+    public function test_tracking_lookup_is_uniform_rate_limited_and_excludes_legacy_and_staff()
+    {
+        $this->post('/complaints', $this->submission('academic', '233/3'));
+        $reference = session('complaint_confirmation.reference');
+        $wrongIdentifier = $this->post('/complaints/track', [
+            'reference' => $reference, 'student_identifier' => '233/4',
+        ])->assertOk()->assertSee(__('complaint_tracking.invalid'));
+        $wrongReference = $this->post('/complaints/track', [
+            'reference' => 'C-' . str_repeat('F', 40), 'student_identifier' => '233/3',
+        ])->assertOk()->assertSee(__('complaint_tracking.invalid'));
+        $this->assertSame($wrongIdentifier->getContent(), $wrongReference->getContent());
+        $this->post('/complaints/track', ['reference' => ['invalid'], 'student_identifier' => ['invalid']])
+            ->assertOk()->assertSee(__('complaint_tracking.invalid'));
+        for ($attempt = 0; $attempt < 4; $attempt++) {
+            $this->post('/complaints/track', ['reference' => $reference, 'student_identifier' => '233/4'])->assertOk();
+        }
+        $this->post('/complaints/track', ['reference' => $reference, 'student_identifier' => '233/4'])
+            ->assertStatus(429)->assertSee(__('complaint_tracking.rate_limited'));
+
+        $legacy = $this->complaint();
+        $this->assertNull($legacy->public_tracking_hash);
+        $staffReference = 'C-' . str_repeat('A', 40);
+        Complaint::create([
+            'source' => 'staff', 'type' => 'staff_feedback', 'staff_name' => 'Private staff',
+            'phone' => '0900000000', 'complaint_text' => 'A staff message that stays private.',
+            'student_identifier' => '999/9', 'public_tracking_hash' => hash('sha256', $staffReference),
+        ]);
+        $this->post('/complaints/track', ['reference' => $staffReference, 'student_identifier' => '999/9'])
+            ->assertOk()->assertSee(__('complaint_tracking.invalid'))->assertDontSee('Private staff');
+    }
+
+    public function test_existing_long_parent_reference_still_tracks_without_rewriting_its_hash()
+    {
+        $reference = 'C-' . str_repeat('A9', 20);
+        $complaint = $this->complaint();
+        $complaint->student_identifier = '233/3';
+        $complaint->public_tracking_hash = hash('sha256', $reference);
+        $complaint->save();
+
+        $this->post('/complaints/track', [
+            'reference' => strtolower($reference), 'student_identifier' => '233/3',
+        ])->assertOk()->assertSee($reference)->assertSee(__('complaint_tracking.status.new'));
+        $this->assertSame(hash('sha256', $reference), $complaint->fresh()->public_tracking_hash);
+        $this->assertSame(1, Complaint::count());
+    }
+
+    public function test_short_reference_generator_uses_unambiguous_random_characters()
+    {
+        $generator = app(\App\Services\ComplaintReferenceGenerator::class);
+        $references = [];
+        for ($index = 0; $index < 100; $index++) {
+            $reference = $generator->generate();
+            $this->assertRegExp('/\AC-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}(?:-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}){2}\z/', $reference);
+            $this->assertTrue($generator->isSupported($reference));
+            $references[] = $reference;
+        }
+        $this->assertCount(100, array_unique($references));
+        $this->assertTrue($generator->isSupported('C-' . str_repeat('A9', 20)));
+        $this->assertFalse($generator->isSupported('C-0000-AAAA-1111'));
+    }
+
+    public function test_staff_reference_confirmation_is_private_and_never_publicly_trackable()
+    {
+        $this->post('/ar/staff-feedback', [
+            'staff_name' => 'Teacher Example', 'phone' => '0900000000',
+            'complaint_text' => 'A staff message with enough detail for submission.',
+        ])->assertRedirect('/ar/staff-feedback/confirmation');
+        $staff = Complaint::firstOrFail();
+        $reference = session('staff_feedback_confirmation.reference');
+        $this->assertRegExp('/\AC-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}(?:-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}){2}\z/', $reference);
+        $this->assertSame($reference, $staff->staff_reference);
+        $this->assertSame(hash('sha256', $reference), $staff->public_tracking_hash);
+
+        $confirmation = $this->get('/ar/staff-feedback/confirmation')->assertOk()
+            ->assertSee($reference)->assertSee(__('staff_feedback.save_reference'))
+            ->assertDontSee($staff->complaint_text)->assertDontSee('complaints/track');
+        $this->assertStringContainsString('no-store', $confirmation->headers->get('Cache-Control'));
+        $this->get('/ar/staff-feedback/confirmation')->assertOk()->assertSee($reference);
+        $this->assertSame(1, Complaint::count());
+        $this->post('/complaints/track', [
+            'reference' => $reference, 'student_identifier' => '233/3',
+        ])->assertOk()->assertSee(__('complaint_tracking.invalid'));
+    }
+
+    public function test_references_are_distinct_and_sessions_do_not_expose_other_complaints()
+    {
+        $this->post('/complaints', $this->submission('academic', '233/3'));
+        $firstReference = session('complaint_confirmation.reference');
+        $first = Complaint::firstOrFail();
+        $this->post('/complaints', $this->submission('transport', '233-2'));
+        $secondReference = session('complaint_confirmation.reference');
+        $this->assertNotSame($firstReference, $secondReference);
+        $this->assertSame(2, Complaint::count());
+
+        $this->get('/complaints/confirmation')->assertOk()
+            ->assertSee($secondReference)->assertDontSee($firstReference);
+        $this->post('/complaints/track', [
+            'reference' => $firstReference, 'student_identifier' => '233-2',
+        ])->assertOk()->assertSee(__('complaint_tracking.invalid'));
+        $this->post('/complaints/track', [
+            'reference' => $firstReference, 'student_identifier' => '233/3',
+        ])->assertOk()->assertSee($firstReference)->assertDontSee($secondReference);
+        $this->assertSame(hash('sha256', $firstReference), $first->fresh()->public_tracking_hash);
+
+        $this->withSession(['complaint_confirmation' => [
+            'reference' => $secondReference, 'issued_at' => now()->subMinutes(31)->timestamp,
+        ]])->get('/complaints/confirmation')->assertRedirect(route('website.complaints', [], false));
+        $this->assertSame(2, Complaint::count());
+    }
+
+    public function test_public_status_mapping_and_locale_pages_do_not_publish_internal_details()
+    {
+        $this->post('/complaints', $this->submission('transport', '233-2'));
+        $complaint = Complaint::firstOrFail();
+        $reference = session('complaint_confirmation.reference');
+        $this->assertNotNull($reference);
+        $this->get('/complaints')->assertOk()->assertSee('هل سبق أن قدمت شكوى؟');
+        $this->get('/complaints/track')->assertOk()->assertSee('متابعة شكوى');
+        $this->assertSame('Already submitted a complaint?', __('complaint_tracking.previous_title', [], 'en'));
+        $this->assertSame('Track a complaint', __('complaint_tracking.track_title', [], 'en'));
+        foreach (['new', 'viewed', 'in_progress', 'resolved', 'archived'] as $status) {
+            $this->assertNotEmpty(app(\App\Services\PublicComplaintTrackingService::class)->publicStatus($status));
+        }
+        $complaint->status = 'archived';
+        $complaint->save();
+        $this->post('/complaints/track', ['reference' => $reference, 'student_identifier' => '233-2'])
+            ->assertOk()->assertSee(__('complaint_tracking.status.archived'))
+            ->assertDontSee($complaint->complaint_text)->assertDontSee($complaint->student_name);
     }
 
     public function test_honeypot_rejects_a_submission_without_creating_a_complaint()
@@ -231,7 +404,7 @@ class ComplaintWorkflowTest extends TestCase
     {
         foreach (['academic', 'transport'] as $type) {
             $this->post('/complaints', $this->submission($type, $identifier))
-                ->assertRedirect('/complaints')->assertSessionHasNoErrors();
+                ->assertRedirect(route('website.complaints.confirmation', [], false))->assertSessionHasNoErrors();
             $this->assertDatabaseHas('complaints', ['type' => $type, 'student_identifier' => $stored]);
         }
     }
@@ -703,8 +876,14 @@ class ComplaintWorkflowTest extends TestCase
                     $this->from('/complaint-portal')->post($path, ['_token' => 'fresh-token'])
                         ->assertRedirect($path)->assertSessionHasErrors();
                     $this->assertSame($before, Complaint::count());
-                    $this->from('/complaint-portal')->post($path, $payload + ['_token' => 'fresh-token'])
-                        ->assertRedirect($path)->assertSessionHas('success');
+                    $success = $this->from('/complaint-portal')->post($path, $payload + ['_token' => 'fresh-token']);
+                    if ($path === route('website.complaints.store', [], false)) {
+                        $success->assertRedirect(route('website.complaints.confirmation', [], false))
+                            ->assertSessionHas('complaint_confirmation');
+                    } else {
+                        $success->assertRedirect('/'.$locale.'/staff-feedback/confirmation')
+                            ->assertSessionHas('staff_feedback_confirmation');
+                    }
                 } finally {
                     $this->app['env'] = 'testing';
                 }
@@ -746,7 +925,7 @@ class ComplaintWorkflowTest extends TestCase
             'source' => 'parent', 'status' => 'resolved',
             'student_name' => 'Forged student', 'handled_by' => $officerA->id,
         ];
-        $this->post('/ar/staff-feedback', $payload)->assertRedirect('/ar/staff-feedback');
+        $this->post('/ar/staff-feedback', $payload)->assertRedirect('/ar/staff-feedback/confirmation');
         $complaint = Complaint::firstOrFail();
         $this->assertSame('staff', $complaint->source);
         $this->assertSame('staff_feedback', $complaint->type);
@@ -776,7 +955,7 @@ class ComplaintWorkflowTest extends TestCase
         $this->post('/en/staff-feedback', [
             'staff_name' => 'Teacher Example', 'phone' => '+963 9 1234 5678',
             'complaint_text' => 'This is a suggestion for a better school process.',
-        ])->assertRedirect('/en/staff-feedback');
+        ])->assertRedirect('/en/staff-feedback/confirmation');
         $staff = Complaint::where('type', 'staff_feedback')->firstOrFail();
         $this->assertSame('staff_suggestion', $legacyStaff->fresh()->type);
         $this->assertSame('parent', $parent->fresh()->source);
@@ -786,7 +965,7 @@ class ComplaintWorkflowTest extends TestCase
         $this->actingAs($officer)->get('/complaint-portal?source=staff')->assertOk()->assertSee('Teacher Example')
             ->assertSee('Earlier Staff')->assertDontSee('Student Private Name')->assertDontSee('staff_suggestion');
         $this->get('/complaint-portal/complaints/'.$staff->id.'?source=staff')->assertOk()
-            ->assertSee('Teacher Example')
+            ->assertSee('Teacher Example')->assertSee($staff->staff_reference)
             ->assertSee(__('staff_feedback.category'))->assertDontSee('staff_feedback.kind')
             ->assertDontSee(__('complaints.fields.student_identifier'))
             ->assertDontSee(__('complaints.fields.class_name'));
@@ -820,7 +999,7 @@ class ComplaintWorkflowTest extends TestCase
         try {
             $this->post('/en/staff-feedback', $payload)->assertRedirect('/en/staff-feedback')->assertSessionHasErrors('complaint');
             $this->assertSame(0, Complaint::count());
-            $this->post('/en/staff-feedback', $payload + ['_token' => 'staff-csrf-token'])->assertRedirect('/en/staff-feedback');
+            $this->post('/en/staff-feedback', $payload + ['_token' => 'staff-csrf-token'])->assertRedirect('/en/staff-feedback/confirmation');
         } finally {
             $this->app['env'] = 'testing';
         }

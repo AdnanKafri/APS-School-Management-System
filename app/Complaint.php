@@ -13,7 +13,7 @@ class Complaint extends Model
     protected $fillable = [
         'source', 'type', 'student_name', 'student_identifier', 'applicant_name',
         'staff_name', 'phone', 'class_name', 'section_name', 'bus_number',
-        'complaint_text',
+        'complaint_text', 'public_tracking_hash', 'staff_reference',
     ];
 
     protected $casts = [
