@@ -6,6 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam_result2 extends Model
 {
+    use \App\Concerns\PreservesEarnedResult;
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($result) {
+            // Other Eloquent entry points (including automated attempts) must not
+            // create a second result for an already-earned equivalent assessment.
+            $exam = Exams2::find($result->exam_id);
+            if ($exam) app(\App\Services\AssessmentContinuityService::class)->assertWritable($exam, $result->user_id);
+        });
+    }
+
     public function scopeCurrentRoster($query)
     {
         return $query->whereIn('exam_result2.user_id', Student::currentMembership(null,

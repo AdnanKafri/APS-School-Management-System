@@ -78,6 +78,11 @@ class websitecontroller extends Controller
         $this->year = Year::where('current_year', '1')->first();
     }
 
+    private function requireTimetableAssignment($teacherId, $roomId, $lessonId = null)
+    {
+        abort_unless(app(\App\Services\CurrentTeacherAssignments::class)->has($teacherId, $roomId, $lessonId), 403);
+    }
+
     protected function studentResultsPagesEnabled(): bool
     {
         $value = config('student_results.student_pages_enabled', false);
@@ -128,7 +133,7 @@ class websitecontroller extends Controller
 
         $year = Year::where('current_year', '1')->first();
 
-        $teacher = Teacher::with(['rooms' => fn ($q1) => $q1->where('rooms.year_id', $year->id)])->find($teacher_id);
+        $teacher = Teacher::with(['rooms' => function ($q) use ($teacher_id) { $q->whereIn('rooms.id', app(\App\Services\CurrentTeacherAssignments::class)->schedule($teacher_id)->select('lesson_room_teacher_lecture_time.room_id'))->distinct(); }])->findOrFail($teacher_id);
         $classes = [];
         foreach ($teacher->rooms as $item) {
 
@@ -155,7 +160,7 @@ class websitecontroller extends Controller
 
         $year = Year::where('current_year', '1')->first();
 
-        $teacher = Teacher::with(['rooms' => fn ($q1) => $q1->where('rooms.year_id', $year->id)])->find($teacher_id);
+        $teacher = Teacher::with(['rooms' => function ($q) use ($teacher_id) { $q->whereIn('rooms.id', app(\App\Services\CurrentTeacherAssignments::class)->schedule($teacher_id)->select('lesson_room_teacher_lecture_time.room_id'))->distinct(); }])->findOrFail($teacher_id);
         $rooms = $teacher->rooms;
 
         $class_rooms = [];
@@ -183,7 +188,7 @@ class websitecontroller extends Controller
         $teacher = Teacher::find($teacher_id);
         $lessons = $teacher->lessons;
         $room_lessons = [];
-        $teacher_room_lessons = Teacher_room_lesson::where('room_id', $room_id)->where('teacher_id', $teacher_id)->get();
+        $teacher_room_lessons = Teacher_room_lesson::currentTimetable()->where('room_id', $room_id)->where('teacher_id', $teacher_id)->get();
         $teacher_lessons = [];
         foreach ($teacher_room_lessons as $teacher_room_lesson) {
 
@@ -199,7 +204,8 @@ class websitecontroller extends Controller
     public function teacher_lessons($subject_id, $room_id, $teacher_id)
     {
 
-        $term = Term_year::where('current_term', '1')->first();
+        abort_unless(app(\App\Services\CurrentTeacherAssignments::class)->has($teacher_id, $room_id, $subject_id), 403);
+        $term = app(\App\Services\CurrentTeacherAssignments::class)->term();
         $teacher = Teacher::find($teacher_id);
         $lesson = Lesson::find($subject_id);
         $lectures = $lesson->lectures()->where('room_id', $room_id)->where('term_id', $term->id)->where('active', 0)->get();
@@ -209,6 +215,10 @@ class websitecontroller extends Controller
 
     public function get_teacher_lesson_details($room_id, $teacher_id, $subject_id, $lesson_id, $type_id)
     {
+        $this->requireTimetableAssignment($teacher_id, $room_id, $subject_id);
+        $term = app(\App\Services\CurrentTeacherAssignments::class)->term();
+        abort_unless(Lecture::whereKey($lesson_id)->where('room_id', $room_id)
+            ->where('lesson_id', $subject_id)->where('term_id', $term->id)->exists(), 403);
 
         $teacher = Teacher::find($teacher_id);
         $room = Room::find($room_id);
@@ -223,7 +233,8 @@ class websitecontroller extends Controller
         $now = Carbon::now();
 
 
-        $lesson_details = Lesson_teacher_room_term_exam::where('room_id', $room_id)->where('lecture_id', $lesson_id)->where('type', $type_id)->orderBy("id", 'desc')->get();
+        $lesson_details = Lesson_teacher_room_term_exam::where('room_id', $room_id)->where('lesson_id', $subject_id)
+            ->where('term_id', $term->id)->where('lecture_id', $lesson_id)->where('type', $type_id)->orderBy("id", 'desc')->get();
 
 
 
@@ -279,17 +290,11 @@ class websitecontroller extends Controller
         $end_times_teacher_list = [];
         foreach ($days  as $day) {
 
-            $schedule_day = Lesson_room_teacher_lecture_time::with('lesson', 'lecture_time')
-                ->WhereHas('room', function ($q) use ($year) {
-                    $q->where('year_id', $year->id);
-                })
-                ->with(['room.classes' => function ($query) {
-                    $query->select("id", "name");
-                }])
+            $schedule_day = app(\App\Services\CurrentTeacherAssignments::class)->schedule($id)
+                ->with(['lesson', 'lecture_time', 'room.classes'])
                 ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
-                ->orderBy('lecture_times.start_time')
-                ->select("lesson_room_teacher_lecture_time.*")
-                ->where('teacher_id', $id)
+                ->orderBy('lecture_times.start_time')->orderBy('lesson_room_teacher_lecture_time.id')
+                ->select('lesson_room_teacher_lecture_time.*')
                 ->where('day_id', $day->id)->get();
 
 
@@ -350,6 +355,7 @@ class websitecontroller extends Controller
 
     public function get_room_student($room_id)
     {
+        abort_unless(app(\App\Services\CurrentTeacherAssignments::class)->schedule(null, $room_id)->exists(), 403);
         $room_students = Student::currentMembership(null, $room_id)
             ->get(['students.id', 'first_name', 'last_name']);
         return response()->json(['room_students' => $room_students]);
@@ -383,6 +389,9 @@ class websitecontroller extends Controller
 
     public function store_lecture(Request $request)
     {
+        abort_unless(app(\App\Services\CurrentTeacherAssignments::class)
+            ->has($request->teacher_id, $request->room_id, $request->lesson_id), 403);
+        abort_unless((int) $request->class_id === (int) Room::findOrFail($request->room_id)->class_id, 403);
 
         $year = Year::where('current_year', '1')->first();
 
@@ -408,7 +417,8 @@ class websitecontroller extends Controller
     {
 
         $now=Carbon::now() ;
-        $lectures = Lecture::find($request->lesson_id);
+        $lectures = Lecture::findOrFail($request->lesson_id);
+        $this->requireTimetableAssignment($lectures->teacher_id, $lectures->room_id, $lectures->lesson_id);
         if($lectures->lecture_time < $now ) {
             $room = Room::find($lectures->room_id);
             $students = $room->student;
@@ -445,6 +455,7 @@ class websitecontroller extends Controller
 
     public function store_items(Request $request)
     {
+        $this->requireTimetableAssignment($request->teacher_id, $request->room_id, $request->lesson_id);
 
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
@@ -1188,6 +1199,7 @@ class websitecontroller extends Controller
 
     public function teacher_book_details($lesson_id, $teacher_id, $room_id, $lecture_id, $type_id)
     {
+        $this->requireTimetableAssignment($teacher_id, $room_id, $lesson_id);
 
 
         $teacher = Teacher::find($teacher_id);
@@ -1195,7 +1207,8 @@ class websitecontroller extends Controller
             ->where('room_id', $room_id)->orderBy("id", 'desc')->get();
 
         $book_details = Lesson_teacher_room_term_exam::where('lesson_id', $lesson_id)->where('teacher_id', $teacher_id)
-            ->where('room_id', $room_id)->where('lecture_id', $lecture_id)->where('type', $type_id)->orderBy("id", 'desc')->get();
+            ->where('room_id', $room_id)->where('term_id', app(\App\Services\CurrentTeacherAssignments::class)->term()->id)
+            ->where('lecture_id', $lecture_id)->where('type', $type_id)->orderBy("id", 'desc')->get();
 
         $lesson = Lesson::find($lesson_id);
 
@@ -1428,6 +1441,7 @@ class websitecontroller extends Controller
 
     public function addprepare(Request $request)
     {
+        $this->requireTimetableAssignment($request->teacher_id, $request->room_id, $request->lesson_id);
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
 
@@ -1535,6 +1549,7 @@ class websitecontroller extends Controller
     }
     public function prepare($teacher_id, $class_id, $lesson_id, $room_id)
     {
+        $this->requireTimetableAssignment($teacher_id, $room_id, $lesson_id);
         $year = Year::where('current_year', '1')->first();
         $lesson_id = Lesson::find($lesson_id);
 
@@ -1637,6 +1652,7 @@ class websitecontroller extends Controller
 
     public function send_group_message(Request $request)
     {
+        $this->requireTimetableAssignment($request->teacher_id, $request->room_id);
 
         $year = Year::where('current_year', '1')->first();
         $room = Room::find($request->room_id);
@@ -3458,10 +3474,10 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
 
      public function go_to_stream_teacher($scheduler_id,$day_id,$lecture_time_id,$room_id,$teacher_id)
     {
+        $scheduler_record = app(\App\Services\CurrentTeacherAssignments::class)->schedule($teacher_id, $room_id)
+            ->whereKey($scheduler_id)->where('day_id', $day_id)->where('lecture_time_id', $lecture_time_id)->firstOrFail();
             
         $user_id = User::where('teacher_id',$teacher_id)->first()->id ;
-        $scheduler_record = Lesson_room_teacher_lecture_time::findOrFail($scheduler_id);
-
         $day = Day::findOrFail($day_id);
         $lecture_time = Lecture_time::findOrFail($lecture_time_id);
 

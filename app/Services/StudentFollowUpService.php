@@ -39,7 +39,7 @@ class StudentFollowUpService
 
     public function assignmentForTeacherOrFail($assignmentId, $teacherId, Year $year)
     {
-        $assignment = Teacher_room_lesson::whereKey($assignmentId)
+        $assignment = Teacher_room_lesson::currentTimetable()->whereKey($assignmentId)
             ->where('teacher_id', $teacherId)
             ->where('year_id', $year->id)
             ->first();
@@ -163,6 +163,9 @@ class StudentFollowUpService
         $this->validateContent($level, $note);
 
         return DB::transaction(function () use ($createdByUserId, $adminUserId, $createdVia, $context, $level, $note) {
+            Year::whereKey($context['year']->id)->lockForUpdate()->firstOrFail();
+            $context = $this->resolveCreationContext($context['assignment']->teacher_id,
+                $context['assignment']->id, $context['student']->id);
             $now = $context['now'];
             return StudentFollowUp::create([
                 'student_id' => $context['student']->id,
@@ -188,6 +191,12 @@ class StudentFollowUpService
 
     public function update(StudentFollowUp $followUp, $teacherUserId, $teacherId, array $input)
     {
+        $context = app(CurrentTeacherAssignments::class);
+        $term = $context->term();
+        if (!$term || (int) $followUp->term_id !== (int) $term->id
+            || !$context->has($teacherId, $followUp->room_id, $followUp->lesson_id)) {
+            abort(403, __('student_follow_up.errors.assignment_not_allowed'));
+        }
         $now = $this->schoolNow();
         if (!$followUp->isEditableBy($teacherId, $now)) {
             abort(403, __('student_follow_up.errors.edit_window_expired'));
@@ -198,7 +207,13 @@ class StudentFollowUpService
         $this->validateContent($level, $note);
 
         return DB::transaction(function () use ($followUp, $teacherUserId, $teacherId, $level, $note, $now) {
+            Year::where('current_year', 1)->lockForUpdate()->firstOrFail();
             $record = StudentFollowUp::whereKey($followUp->id)->lockForUpdate()->firstOrFail();
+            $authority = app(CurrentTeacherAssignments::class);
+            if (!$authority->has($teacherId, $record->room_id, $record->lesson_id)
+                || (int) $record->term_id !== (int) optional($authority->term())->id) {
+                abort(403, __('student_follow_up.errors.assignment_not_allowed'));
+            }
             if (!$record->isEditableBy($teacherId, $now)) {
                 abort(403, __('student_follow_up.errors.edit_window_expired'));
             }

@@ -78,7 +78,7 @@ class GradebookConfigService
             ],
             (object) [
                 'id' => 'legacy_homework', 
-                'name' => 'الوظائف (Homework)', 
+                'name' => 'المذاكرات (Quizzes)',
                 'weight' => 0, 
                 'data_source' => 'LEGACY_HOMEWORK', 
                 'sort_order' => 2

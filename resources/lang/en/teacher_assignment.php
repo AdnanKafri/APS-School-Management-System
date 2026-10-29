@@ -2,13 +2,15 @@
 
 return [
     'messages' => [
+        'timetable_authority' => 'Current assignments follow the current-term section timetable automatically. Add or end a responsibility by editing its scheduled periods; earlier history is preserved.',
         'saved' => 'The teacher assignments for the current academic year were saved successfully.',
         'scheduled' => 'Scheduled in the current term.',
         'not_scheduled' => 'No timetable session has been set for this assignment in the current term.',
         'schedule_action' => 'Set lesson times',
-        'term_unavailable' => 'There is no current term. Assignments can be saved, but a current term must be selected before configuring the timetable.',
+        'term_unavailable' => 'Select a current term and prepare section timetables to activate teacher assignments.',
     ],
     'validation' => [
+        'timetable_required' => 'Current assignments come from the section timetable. Schedule this teacher and subject in the current term first.',
         'teacher_required' => 'Please select a valid teacher before continuing.',
         'class_required' => 'Please select at least one class before continuing.',
         'lesson_room_required' => 'Please select a subject and section before saving.',

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exams2 extends Model
 {
+    use \App\Concerns\PreservesAssessmentResults;
     protected $table='exams2';
  protected $fillable=['id','user_id','class_id','room_id','lesson_id','term_id','name','question_picker','type',
                             'is_file','file','selected_ques',

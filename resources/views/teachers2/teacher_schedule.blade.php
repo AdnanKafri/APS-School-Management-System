@@ -537,7 +537,7 @@
     $attendedSessions = $todaySessions->filter(fn ($entry) => !empty($entry->attendance))->count();
     $currentDayName = optional($dayCollection->firstWhere('id', $todayDayId))->name ?: ($isRtl ? 'اليوم الحالي' : 'Today');
     $todayDate = \Carbon\Carbon::now()->locale($isRtl ? 'ar' : 'en')->translatedFormat($isRtl ? 'l، j F Y' : 'l, j F Y');
-    $roomCount = collect($teacher->rooms ?? [])->count();
+    $roomCount = collect($schedule)->pluck('room_id')->unique()->count();
 
     $labels = [
         'dashboard' => $isRtl ? 'لوحة الدوام' : 'Schedule Dashboard',

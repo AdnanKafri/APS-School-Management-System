@@ -29,20 +29,12 @@
                     </thead>
                     <tbody>
                         @forelse($subjects as $subject)
-                            @php
-                                // Configs are passed from controller. Robust against missing table.
-                                $configC = isset($configs) ? $configs->get($subject->id) : null;
-                                $hasConfig = $configC ? true : false;
-                                $configStr = $hasConfig 
-                                    ? "Oral: {$configC->oral_max}, HW: {$configC->homework_max}, Exam: {$configC->exam_max}" 
-                                    : "افتراضي";
-                            @endphp
                             <tr>
                                 <td class="font-weight-bold align-middle">{{ $subject->name }}</td>
-                                <td class="align-middle">{{ optional($subject->teacher)->full_name ?? '-' }}</td>
+                                <td class="align-middle">{{ $subject->teachers->unique('id')->map(function ($teacher) { return trim($teacher->first_name.' '.$teacher->last_name); })->implode('، ') ?: '-' }}</td>
                                 <td class="align-middle">
-                                    @if($hasConfig) 
-                                        <span class="badge badge-success p-2">{{ $configStr }}</span>
+                                    @if(in_array($subject->id, $configuredSubjects))
+                                        <span class="badge badge-success p-2">{{ __('gradebook.custom_configuration') }}</span>
                                     @else
                                         <span class="badge badge-warning p-2">غير محدد (افتراضي)</span>
                                     @endif

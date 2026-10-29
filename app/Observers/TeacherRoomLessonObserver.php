@@ -9,7 +9,7 @@ class TeacherRoomLessonObserver
 {
     public function created(Teacher_room_lesson $assignment)
     {
-        app(TeacherAssignmentPeriodService::class)->openForAssignment($assignment);
+        app(TeacherAssignmentPeriodService::class)->openForAssignment($assignment, null, 'admin_timetable');
     }
 
     public function deleted(Teacher_room_lesson $assignment)

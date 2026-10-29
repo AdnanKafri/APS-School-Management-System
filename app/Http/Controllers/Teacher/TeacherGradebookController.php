@@ -3,340 +3,134 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Classe;
+use App\Exam_result2;
+use App\Exams2;
 use App\Lesson;
 use App\Room;
 use App\Student;
-use App\Year;
-use App\Term_year;
-use App\Services\GradebookConfigService;
-use App\Exams2;
-use App\Exam_result2;
 use App\Teacher_room_lesson;
+use App\Term_year;
+use App\Year;
+use App\Services\AssessmentResultSafety;
+use App\Services\GradebookConfigService;
+use App\Services\GradebookReadService;
+use App\Services\GradebookStatusService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TeacherGradebookController extends Controller
 {
     private function currentContext($roomId, $subjectId, $studentId = null)
     {
-        $year = Year::where('current_year', 1)->first();
-        abort_unless($year, 422);
+        $yearQuery = Year::where('current_year', 1);
+        if (DB::transactionLevel() > 0) { $yearQuery->lockForUpdate(); }
+        $year = $yearQuery->first();
+        abort_unless($year, 422, __('gradebook.context_invalid'));
         $room = Room::whereKey($roomId)->where('year_id', $year->id)->firstOrFail();
-        abort_unless(Teacher_room_lesson::where('teacher_id', Auth::user()->teacher_id)
-            ->where('year_id', $year->id)->where('class_id', $room->class_id)
-            ->where('room_id', $room->id)->where('lesson_id', $subjectId)->exists(), 403);
+        $term = Term_year::where('year_id', $year->id)->where('current_term', 1)->first();
+        abort_unless($term, 422, __('gradebook.term_missing'));
+        abort_unless(Lesson::whereKey($subjectId)->where('class_id', $room->class_id)->exists()
+            && app(\App\Services\CurrentTeacherAssignments::class)->has(Auth::user()->teacher_id, $room->id, $subjectId), 403);
         if ($studentId !== null) {
             abort_unless(Student::currentMembership($year->id, $room->id)->whereKey($studentId)->exists(), 403);
         }
-        $term = Term_year::where('year_id', $year->id)->where('current_term', 1)->first();
-        abort_unless($term, 422);
-
         return [$year, $term, $room];
     }
 
-    /**
-     * Show the Gradebook Grid for a specific Class & Subject
-     * Matches Admin Logic but for Teachers
-     */
     public function index($class_id, $room_id, $subject_id)
     {
-        $teacherId = Auth::user()->teacher_id;
-        
-        // Security: Verify Teacher owns this Room/Lesson
-        // (Simplified check for now - can be enhanced)
-        
         [$year, $term, $room] = $this->currentContext($room_id, $subject_id);
         abort_unless((int) $class_id === (int) $room->class_id, 403);
         $subject = Lesson::findOrFail($subject_id);
-
-        // 1. Get Gradebook Configuration (Dynamic Sections)
-        // CRITICAL: getConfig() returns Collection directly
-        $components = GradebookConfigService::getConfig($subject->id, $year->id);
-        
-        // SORTING: Group Legacy (Read-Only) first, then Dynamic (Editable)
-        // This ensures the Table View is visually grouped as requested
-        $components = $components->sortBy(function($comp) {
-            $isLegacy = is_string($comp->data_source) && strpos($comp->data_source, 'LEGACY_') === 0;
-            // Legacy = 0, Dynamic = 1. Used for primary sort key.
-            return $isLegacy ? 0 : 1;
-        });
-
-
-        // 2. Fetch Students
         $students = $room->operationalStudents()->orderBy('first_name')->get();
-
-        // 3. Fetch Existing Marks for this Term & Room & Subject
-        // Strategy:
-        // - Dynamic Sections: Look up by name pattern "Dynamic_Section_{ID}"
-        // - Legacy Sections: Look up by exams2.type (1=Exam, 2=Homework/Quiz)
-        
+        $gradebook = app(GradebookReadService::class)->read($room, $subject, $students->pluck('id'), [$term->id]);
+        $components = $gradebook['components'];
         $existingMarks = [];
-        $studentIds = $students->pluck('id');
-        
-        // Build a map of exam_id to component_id for efficient lookup
-        $examIdToComponentId = [];
-        
-        foreach ($components as $comp) {
-            $dataSource = $comp->data_source;
-            $exams = collect();
-
-            if (is_numeric($dataSource) && $dataSource >= 100) {
-                // Dynamic Section: Look for exams named "Dynamic_Section_{ID}"
-                $containerName = "Dynamic_Section_{$dataSource}";
-                $exams = Exams2::where('room_id', $room->id)
-                    ->where('lesson_id', $subject->id)
-                    ->where('term_id', $term->id) // Use term filter here
-                    ->where('name', $containerName)
-                    ->get();
-            } elseif (is_string($dataSource) && strpos($dataSource, 'LEGACY_') === 0) {
-                 // Legacy Section: Look for exams by Type
-                 // LEGACY_EXAM = Type 1, LEGACY_HOMEWORK/QUIZ = Type 2
-                 $type = ($dataSource === 'LEGACY_EXAM') ? 1 : 2;
-                 
-                 $exams = Exams2::where('room_id', $room->id)
-                     ->where('lesson_id', $subject->id)
-                     ->where('term_id', $term->id)
-                     ->where('type', $type)
-                     ->where(function($q) {
-                         // Exclude Dynamic Sections to avoid double counting
-                         $q->where('name', 'NOT LIKE', 'Dynamic_Section_%')
-                           ->orWhereNull('name');
-                     })
-                     ->get();
-            }
-
-            foreach ($exams as $exam) {
-                $examIdToComponentId[$exam->id] = $comp->id;
-            }
+        foreach ($components as $component) {
+            $component->calculated_max = GradebookReadService::componentMaximum($component, $subject);
         }
-
-        
-        // Fetch all relevant exam results
-        // NOTE: We don't filter by term_id here because:
-        // 1. term_id is NOT in Exam_result2 fillable array
-        // 2. Term filtering is already handled via exam_id (exams2 has term_id)
-        $examIds = array_keys($examIdToComponentId);
-        $examRecords = Exam_result2::whereIn('user_id', $studentIds)
-                                   ->whereIn('exam_id', $examIds)
-                                   ->where('room_id', $room->id)
-                                   ->get();
-        
-        // 4. Check Gradebook Status (OPEN/LOCKED)
-        // Default to LOCKED if not explicitly opened by Admin
-        $gradebookStatus = \App\Services\GradebookStatusService::getStatus($room->class_id, $term->id);
-
-        // Map Marks: [StudentID][ComponentID] = Score
-        // Calculate Total: Sum(Mark * Weight / 100) or Sum(Mark) if weights are raw scores
-        
         foreach ($students as $student) {
-            $totalScore = 0;
-            $totalMaxWeight = 0; // To track if we have any data
-
-            foreach ($components as $comp) {
-                $score = null;
-                $source = $comp->data_source ?? null;
-
-                // Determine the exam_id(s) associated with this component
-                $componentExamIds = collect($examIdToComponentId)->filter(function ($value) use ($comp) {
-                    return $value === $comp->id;
-                })->keys()->toArray();
-
-                if (!empty($componentExamIds)) {
-                    // Filter exam records for the current student and component's exams
-                    $filteredRecords = $examRecords->where('user_id', $student->id)
-                                                   ->whereIn('exam_id', $componentExamIds);
-
-                    if ($filteredRecords->isNotEmpty()) {
-                        // For simplicity, taking the average of results for this component
-                        // This logic might need refinement based on how multiple exams for one component should be handled
-                        $score = $filteredRecords->avg('result');
-                    }
-                }
-                
-                if (!is_null($score)) {
-                    $existingMarks[$student->id][$comp->id] = round($score, 1);
-                    
-                    // Add to Total
-                    // Assuming 'weight' is the max score for that section
-                    // And the 'score' is the student's mark out of that weight.
-                    $totalScore += $score;
-                    $totalMaxWeight += $comp->weight;
-                }
-            }
-            
-            // Assign calculated total to student object for view display
-            $student->gradebook_total = ($totalMaxWeight > 0) ? $totalScore : 0;
+            $existingMarks[$student->id] = $gradebook['marks'][$student->id][$term->id] ?? [];
+            $student->gradebook_total = $existingMarks[$student->id]['total'] ?? null;
         }
-
-        // Fetch Teacher Model for Layout
-        $teacher = \App\Teacher::find($teacherId);
-        
-        // Fetch Unread Messages Count
-        // Correct Logic from TeacherController_New::get_message
-        // Columns: teacher_id, type=1 (Student->Teacher?), view=0 (Unread)
-        $message = \App\Message::where('teacher_id', $teacherId)
-                               ->where('type', 1)
-                               ->where('view', 0)
-                               ->count();
-        // Fallback: If Message model/logic fails, default to 0 to prevent crash.
-        // Actually, let's keep it simple to avoid errors. 
-        if (!$teacher) {
-            abort(403, 'Teacher profile not found.');
-        }
-
-        return view('teachers.gradebook.index', compact(
-            'room', 
-            'subject', 
-            'students', 
-            'components', 
-            'existingMarks',
-            'term',
-            'teacher', // Required by layout
-            'message',  // Required by layout
-            'year',
-            'gradebookStatus' // Pass status to view
-        ));
+        $gradebookStatus = GradebookStatusService::getStatus($room->class_id, $term->id);
+        $teacher = \App\Teacher::findOrFail(Auth::user()->teacher_id);
+        $message = \App\Message::where('teacher_id', $teacher->id)->where('type', 1)->where('view', 0)->count();
+        return view('teachers.gradebook.index', compact('room', 'subject', 'students', 'components',
+            'existingMarks', 'term', 'teacher', 'message', 'year', 'gradebookStatus', 'gradebook'));
     }
 
-    /**
-     * AJAX: Save a Student Mark
-     * Handles ONLY Dynamic Sections (ID >= 100)
-     * Legacy sections are rejected (read-only in this interface)
-     */
     public function saveMark(Request $request)
     {
         $request->validate([
-            'student_id' => 'required',
-            'component_id' => 'required',
-            'room_id' => 'required',
-            'subject_id' => 'required',
-            // value can be null or numeric
+            'student_id' => 'required|integer', 'component_id' => 'required|string',
+            'room_id' => 'required|integer', 'subject_id' => 'required|integer',
+            'value' => 'present|nullable|numeric|min:0',
         ]);
-
-        $teacherId = Auth::user()->teacher_id;
-        $roomId = $request->room_id;
-        $subjectId = $request->subject_id;
-        [$year, $term, $room] = $this->currentContext($roomId, $subjectId, $request->student_id);
-
-        // 0. GATEKEEPER: Check Gradebook Status
-        $currentClassId = Room::find($roomId)->class_id;
-        $status = \App\Services\GradebookStatusService::getStatus($currentClassId, $term->id);
-        
-        if ($status !== 'OPEN') {
-            return response()->json([
-                'error' => 'The Gradebook is currently LOCKED by the Administrator.'
-            ], 403);
-        }
-
-        // 1. Resolve Data Source (Exam Type) from Config
-        $components = GradebookConfigService::getConfig($subjectId, $year->id);
-        $component = null;
-        
-        foreach ($components as $comp) {
-            if ($comp->id === $request->component_id) {
-                $component = $comp;
-                break;
+        return DB::transaction(function () use ($request) {
+            // The shared section lock serializes container creation; the student
+            // lock serializes membership against the existing transfer service.
+            Student::whereKey($request->student_id)->lockForUpdate()->firstOrFail();
+            Room::whereKey($request->room_id)->lockForUpdate()->firstOrFail();
+            [$year, $term, $room] = $this->currentContext($request->room_id, $request->subject_id, $request->student_id);
+            abort_unless(GradebookStatusService::getStatus($room->class_id, $term->id) === 'OPEN', 403, __('gradebook.locked'));
+            $subject = Lesson::findOrFail($request->subject_id);
+            $component = GradebookConfigService::getConfig($subject->id, $year->id)->first(function ($c) use ($request) {
+                return (string) $c->id === (string) $request->component_id;
+            });
+            abort_unless($component, 404);
+            abort_unless(is_numeric($component->data_source) && (int) $component->data_source >= 100, 422, __('gradebook.read_only'));
+            $maximum = GradebookReadService::componentMaximum($component, $subject);
+            $value = $request->value;
+            if ($value !== null && $value !== '') {
+                AssessmentResultSafety::validateMark($value, $maximum, 'value');
             }
-        }
-
-        if (!$component) {
-            return response()->json(['error' => 'Component not found'], 404);
-        }
-
-        $dataSource = $component->data_source ?? null;
-
-        // 2. Reject Legacy Sections (They use separate entry flows)
-        if (is_string($dataSource) && strpos($dataSource, 'LEGACY_') === 0) {
-            return response()->json([
-                'error' => 'Legacy sections cannot be edited here. Use the dedicated Exam/Homework pages.'
-            ], 400);
-        }
-
-        // 3. Only Dynamic Sections (numeric ID >= 100) are allowed
-        if (!is_numeric($dataSource) || $dataSource < 100) {
-            return response()->json([
-                'error' => 'Only dynamic sections can be edited in this interface.'
-            ], 400);
-        }
-
-        $dynamicId = (int)$dataSource;
-
-        // 4. Find or Create "Container Exam" using NAME-based identification
-        // Pattern: "Dynamic_Section_{ID}"
-        // We use exams2.type = 1 (standard exam) to avoid breaking legacy code
-        $containerName = "Dynamic_Section_{$dynamicId}";
-        
-        $exam = Exams2::where('room_id', $roomId)
-                      ->where('lesson_id', $subjectId)
-                      ->where('term_id', $term->id)
-                      ->where('name', $containerName)
-                      ->where('type', 1)
-                      ->first();
-
-        if (!$exam) {
-            // Auto-Create Container Exam (Metadata Only)
-            // Based on legacy pattern from DashboardController::exam_store (lines 12168-12188)
-            
-            // Get latest exam for groupe increment
-            $latestExam = Exams2::where('id', '>', '0')->latest('id')->first();
-            
-            $exam = new Exams2();
-            
-            // REQUIRED FIELDS (Core Identity)
-            $exam->user_id = Auth::id(); // Creator's user account
-            $exam->class_id = Room::find($roomId)->class_id;
-            $exam->room_id = $roomId;
-            $exam->lesson_id = $subjectId;
-            $exam->term_id = $term->id;
-            
-            // REQUIRED FIELDS (Exam Definition)
-            $exam->name = $containerName; // Name-based identification (CRITICAL)
-            $exam->type = 1; // Standard exam type (avoid breaking legacy)
-            
-            // REQUIRED FIELDS (No Default Values)
-            $exam->is_file = 0; // No file attachment
-            $exam->question_picker = 0; // No question picker
-            $exam->required = 0; // Not required
-            $exam->groupe = isset($latestExam) ? $latestExam->groupe + 1 : 1; // Unique group ID
-            
-            // OPTIONAL FIELDS (Dates for record keeping)
-            $exam->start_date = now();
-            $exam->end_date = now()->addYear(); // Far future to never expire
-            
-            // OPTIONAL FIELDS (Can be NULL but good to set)
-            $exam->mark = 100; // Default max mark
-            $exam->period = 0; // No time limit
-            $exam->notes = 'Auto-generated container for dynamic gradebook section';
-            
-            $exam->save();
-        }
-
-        // 5. Update Result in Exam_result2 (Actual Student Mark)
-        $result = Exam_result2::where('user_id', $request->student_id)
-                              ->where('exam_id', $exam->id)
-                              ->first();
-
-        if ($request->value === null || $request->value === '') {
-            // Delete mark if cleared
-            if ($result) {
-                $result->delete();
+            $name = 'Dynamic_Section_' . (int) $component->data_source;
+            $containers = Exams2::where('class_id', $room->class_id)->where('room_id', $room->id)
+                ->where('lesson_id', $subject->id)->where('term_id', $term->id)->where('type', 1)
+                ->where('name', $name)->lockForUpdate()->get();
+            if ($containers->count() > 1) {
+                AssessmentResultSafety::reject('ambiguous_result');
             }
-        } else {
-            if (!$result) {
-                $result = new Exam_result2();
-                $result->user_id = $request->student_id;
-                $result->exam_id = $exam->id;
-                $result->room_id = $roomId;
-                $result->class_id = $exam->class_id;
-                $result->lesson_id = $subjectId;
+            $exam = $containers->first();
+            $result = null;
+            if ($exam) {
+                $rows = Exam_result2::where('exam_id', $exam->id)->where('user_id', $request->student_id)->lockForUpdate()->get();
+                if ($rows->count() > 1) {
+                    AssessmentResultSafety::reject('ambiguous_result');
+                }
+                $result = $rows->first();
+                if ($result) {
+                    AssessmentResultSafety::assertResultContext($result, $exam);
+                }
             }
-            
-            // Store the actual mark
-            $result->result = $request->value;
-            $result->save();
-        }
-
-        return response()->json(['success' => true]);
+            if ($value === null || $value === '') {
+                if ($result && AssessmentResultSafety::hasEarnedData($result)) {
+                    AssessmentResultSafety::reject('clear_protected', 'value');
+                }
+            } else {
+                if (!$exam) {
+                    $exam = new Exams2();
+                    $exam->forceFill([
+                        'user_id' => Auth::id(), 'class_id' => $room->class_id, 'room_id' => $room->id,
+                        'lesson_id' => $subject->id, 'term_id' => $term->id, 'name' => $name, 'type' => 1,
+                        'is_file' => 0, 'question_picker' => 0, 'required' => 0,
+                        'groupe' => ((int) Exams2::max('groupe')) + 1,
+                        'start_date' => now(), 'end_date' => now()->addYear(), 'mark' => $maximum,
+                        'period' => 0, 'notes' => 'Auto-generated container for dynamic gradebook section',
+                    ])->save();
+                }
+                $result = $result ?: new Exam_result2();
+                $result->forceFill([
+                    'user_id' => $request->student_id, 'exam_id' => $exam->id,
+                    'room_id' => $room->id, 'class_id' => $room->class_id, 'lesson_id' => $subject->id,
+                    'term_id' => $term->id, 'type' => (string) $exam->type, 'result' => $value, 'status' => '1',
+                ])->save();
+            }
+            $read = app(GradebookReadService::class)->read($room, $subject, [$request->student_id], [$term->id]);
+            return response()->json(['success' => true, 'value' => $result ? $result->result : null,
+                'total' => $read['marks'][$request->student_id][$term->id]['total'], 'message' => __('gradebook.saved')]);
+        }, 3);
     }
 }

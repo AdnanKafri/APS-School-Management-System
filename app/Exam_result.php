@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam_result extends Model
 {
+    use \App\Concerns\PreservesEarnedResult;
     public function scopeCurrentRoster($query)
     {
         return $query->whereIn('exam_result.user_id', Student::currentMembership(null,

@@ -54,7 +54,7 @@
     <section class="card v2-card assignment-card">
         <div class="card-body">
             <p class="alert alert-warning assignment-notice">
-                <strong>تنبيه:</strong> الحفظ يعتمد القائمة الكاملة أدناه لتكليفات هذا المدرس في العام الدراسي الحالي فقط. أي تكليف حالي لا يظهر في هذه القائمة سيتم إزالته، أما تكليفات الأعوام السابقة فلن تتغير.
+                {{ __('teacher_assignment.messages.timetable_authority') }}
             </p>
 
             @php($formErrors = $errors ?? session('errors'))

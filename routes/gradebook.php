@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Route;
 | Gradebook Module Routes - PHASE 2 CORRECTED
 |--------------------------------------------------------------------------
 */
-Route::group(['prefix' => 'SMT/admin/gradebook', 'middleware' => ['auth']], function () {
+Route::group(['prefix' => 'SMT/admin/gradebook', 'middleware' => ['auth', 'roleadmin', 'can:student_marks']], function () {
     // Main menu (NO forced redirect)
     Route::get('/', 'Admin\GradebookController@index')->name('admin.gradebook.index');
+    Route::get('/equivalence', 'Admin\AssessmentEquivalenceController@index')->name('admin.gradebook.equivalence');
+    Route::post('/equivalence', 'Admin\AssessmentEquivalenceController@store')->name('admin.gradebook.equivalence.store');
     Route::get('/view/options', 'Admin\GradebookController@viewOptions')->name('admin.gradebook.view_options');
     
     // View by Subject flow
@@ -37,6 +39,6 @@ Route::group(['prefix' => 'SMT/admin/gradebook', 'middleware' => ['auth']], func
     });
 });
 
-Route::group(['middleware' => ['auth', 'roleadmin']], function () {
+Route::group(['middleware' => ['auth', 'roleadmin', 'can:student_marks']], function () {
     Route::post('gradebook/status', 'Admin\GradebookController@toggleStatus')->name('admin.gradebook.status');
 });

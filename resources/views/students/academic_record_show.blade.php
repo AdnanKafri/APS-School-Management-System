@@ -71,9 +71,9 @@
                                                 </div>
                                             @endif
                                         </td>
-                                        <td data-label="الفصل الأول">{{ $row['term_one'] ?: '—' }}</td>
-                                        <td data-label="الفصل الثاني">{{ $row['term_two'] ?: '—' }}</td>
-                                        <td data-label="النتيجة السنوية"><strong>{{ $row['year'] ?: '—' }}</strong></td>
+                                        <td data-label="الفصل الأول">{{ $row['term_one'] ?? '—' }}</td>
+                                        <td data-label="الفصل الثاني">{{ $row['term_two'] ?? '—' }}</td>
+                                        <td data-label="النتيجة السنوية"><strong>{{ $row['year'] ?? '—' }}</strong></td>
                                     </tr>
                                 @endforeach
                                 </tbody>

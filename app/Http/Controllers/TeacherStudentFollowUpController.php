@@ -35,7 +35,7 @@ class TeacherStudentFollowUpController extends Controller
         $assignments = collect();
 
         if ($year) {
-            $assignments = Teacher_room_lesson::query()
+            $assignments = Teacher_room_lesson::currentTimetable()
                 ->join('rooms', 'rooms.id', '=', 'teacher_room_lesson.room_id')
                 ->join('classes', 'classes.id', '=', 'teacher_room_lesson.class_id')
                 ->join('lessons', 'lessons.id', '=', 'teacher_room_lesson.lesson_id')
@@ -200,13 +200,14 @@ class TeacherStudentFollowUpController extends Controller
     public function history($assignment, $student)
     {
         $teacher = $this->teacherOrFail();
-        $year = $this->followUps->activeYearOrFail();
-        $assignment = $this->followUps->assignmentForTeacherOrFail($assignment, $teacher->id, $year);
+        $assignment = Teacher_room_lesson::whereKey($assignment)->where('teacher_id', $teacher->id)->firstOrFail();
+        $year = Year::findOrFail($assignment->year_id);
         $student = Student::whereKey($student)->firstOrFail();
         $room = Room::whereKey($assignment->room_id)->where('year_id', $year->id)->firstOrFail();
         $class = Classe::findOrFail($assignment->class_id);
         $lesson = Lesson::findOrFail($assignment->lesson_id);
-        $isCurrentStudent = $this->followUps->eligibleStudentsQuery($assignment, $year, $this->followUps->schoolNow())
+        $isCurrentStudent = app(\App\Services\CurrentTeacherAssignments::class)->has($teacher->id, $assignment->room_id, $assignment->lesson_id)
+            && $this->followUps->eligibleStudentsQuery($assignment, $year, $this->followUps->schoolNow())
             ->whereKey($student->id)->exists();
         $hasAuthoredHistory = StudentFollowUp::where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
@@ -227,8 +228,12 @@ class TeacherStudentFollowUpController extends Controller
             ->paginate(20);
         $now = $this->followUps->schoolNow();
 
+        $currentTermId = optional(app(\App\Services\CurrentTeacherAssignments::class)->term())->id;
+        $canEditCurrentAssignment = app(\App\Services\CurrentTeacherAssignments::class)
+            ->has($teacher->id, $assignment->room_id, $assignment->lesson_id);
         return view('teachers2.student_follow_ups.history', compact(
-            'teacher', 'year', 'assignment', 'student', 'room', 'class', 'lesson', 'message', 'followUps', 'now'
+            'teacher', 'year', 'assignment', 'student', 'room', 'class', 'lesson', 'message', 'followUps', 'now',
+            'currentTermId', 'canEditCurrentAssignment'
         ));
     }
 

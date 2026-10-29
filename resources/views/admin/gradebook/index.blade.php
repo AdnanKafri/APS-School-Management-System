@@ -16,6 +16,10 @@
                     <h3 class="mb-0"><i class="fas fa-book"></i> دفتر العلامات</h3>
                 </div>
                 <div class="card-body p-5">
+                    <a class="btn btn-outline-secondary mb-3" href="{{ route('admin.gradebook.equivalence') }}">{{ __('gradebook.equivalence') }}</a>
+                    @if(session('error'))
+                        <div class="alert alert-warning" role="alert">{{ session('error') }}</div>
+                    @endif
                     <div class="row">
                         <!-- View Option -->
                         <div class="col-md-6 mb-4">

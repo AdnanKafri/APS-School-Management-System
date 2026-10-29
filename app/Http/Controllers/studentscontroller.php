@@ -3250,11 +3250,13 @@ class studentscontroller extends Controller
 
         $markRecord = $marks->first();
         $markValues = $markRecord ? $decodeAcademicValue($markRecord->mark) : [];
+        $secondTermMarkValues = $markRecord ? $decodeAcademicValue($markRecord->mark2) : [];
         $resultValues = $markRecord ? $decodeAcademicValue($markRecord->result) : [];
         $termOneValues = $markRecord ? $decodeAcademicValue($markRecord->result1) : [];
         $termTwoValues = $markRecord ? $decodeAcademicValue($markRecord->result2) : [];
         $lessonIds = array_unique(array_merge(
             array_keys($markValues),
+            array_keys($secondTermMarkValues),
             array_keys($resultValues),
             array_keys($termOneValues),
             array_keys($termTwoValues),
@@ -3276,10 +3278,12 @@ class studentscontroller extends Controller
         $markRows = [];
         foreach ($lessonIds as $lessonId) {
             $components = [];
-            foreach ($markLabels as $key => $label) {
-                $value = $readableValue(optional((object) ($markValues[$lessonId] ?? []))->{$key});
-                if ($value !== null) {
-                    $components[] = ['label' => $label, 'value' => $value];
+            foreach (['term_one' => $markValues, 'term_two' => $secondTermMarkValues] as $termLabel => $values) {
+                foreach ($markLabels as $key => $label) {
+                    $value = $readableValue(optional((object) ($values[$lessonId] ?? []))->{$key});
+                    if ($value !== null) {
+                        $components[] = ['label' => __('gradebook.'.$termLabel).' - '.$label, 'value' => $value];
+                    }
                 }
             }
             $yearValue = $readableValue(optional((object) ($resultValues[$lessonId] ?? []))->year_result);
@@ -3323,7 +3327,7 @@ class studentscontroller extends Controller
                 'name' => optional($assessment)->name_exam ?: optional($assessment)->name_quize ?: optional($assessment)->name_quize1 ?: 'تقييم محفوظ',
                 'type' => $assessmentType(optional($assessment)->type, true),
                 'term' => optional($termsById->get($termId))->term ?: 'فصل غير محدد',
-                'result' => $readableValue($result->result) ?: 'غير مرصودة',
+                'result' => $readableValue($result->result) ?? 'غير مرصودة',
                 'maximum' => null,
             ];
         }
@@ -3335,7 +3339,7 @@ class studentscontroller extends Controller
                 'name' => optional($assessment)->name ?: 'تقييم محفوظ',
                 'type' => $assessmentType(optional($assessment)->type, false),
                 'term' => optional($termsById->get($termId))->term ?: 'فصل غير محدد',
-                'result' => $readableValue($result->result) ?: 'غير مرصودة',
+                'result' => $readableValue($result->result) ?? 'غير مرصودة',
                 'maximum' => $readableValue(optional($assessment)->mark),
             ];
         }
@@ -3357,7 +3361,7 @@ class studentscontroller extends Controller
         $reportRows = $reportCards->map(function ($card) use ($readableValue) {
             $final = $readableValue($card->final_result);
             return [
-                'status' => $final ?: 'بطاقة نتائج محفوظة',
+                'status' => $final ?? 'بطاقة نتائج محفوظة',
                 'attendance' => $readableValue($card->student_attendance),
             ];
         });

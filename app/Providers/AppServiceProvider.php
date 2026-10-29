@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Teacher_room_lesson::observe(TeacherRoomLessonObserver::class);
+        \App\Term_year::observe(\App\Observers\TimetableTermObserver::class);
 
 
         $this->applyAdminRouteAliases();

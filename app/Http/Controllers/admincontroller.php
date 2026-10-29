@@ -1310,7 +1310,7 @@ if($request->hasFile('image')){
      $term = Term_year::where('year_id', $year->id)
          ->where('current_term', '1')
          ->first();
-     $currentAssignments = Teacher_room_lesson::with('lesson')
+     $currentAssignments = Teacher_room_lesson::currentTimetable()->with('lesson')
          ->where('teacher_id', $teacher->id)
          ->where('year_id', $year->id)
          ->get();
@@ -1439,6 +1439,11 @@ private function validatedTeacherAssignmentPlan(Request $request)
         }
 
         foreach ($rooms as $room) {
+            if (!app(\App\Services\CurrentTeacherAssignments::class)->has($teacher->id, $room->id, $lesson->id)) {
+                throw ValidationException::withMessages([
+                    'room_id' => __('teacher_assignment.validation.timetable_required'),
+                ]);
+            }
             $assignments[$lesson->id . ':' . $room->id] = [
                 'teacher_id' => $teacher->id,
                 'class_id' => $lesson->class_id,
@@ -1461,6 +1466,7 @@ private function validatedTeacherAssignmentPlan(Request $request)
 private function syncTeacherAssignmentPlan(Teacher $teacher, Year $year, array $assignments)
 {
     DB::transaction(function () use ($teacher, $year, $assignments) {
+        Year::whereKey($year->id)->where('current_year', 1)->lockForUpdate()->firstOrFail();
         $existing = Teacher_room_lesson::where('teacher_id', $teacher->id)
             ->where('year_id', $year->id)
             ->lockForUpdate()
@@ -1498,7 +1504,7 @@ private function syncTeacherAssignmentPlan(Teacher $teacher, Year $year, array $
         foreach ($existing as $assignment) {
             $key = $assignment->lesson_id . ':' . $assignment->room_id;
             if (!isset($assignments[$key]) || isset($retained[$key])) {
-                $assignment->delete();
+                app(\App\Services\TeacherAssignmentPeriodService::class)->closeForAssignment($assignment);
                 continue;
             }
 
@@ -3041,6 +3047,7 @@ return redirect()->back()->with('success', '! تمت العملية بنجاح')
 
 
 public function lesson_delete(Request $request){
+    \App\Services\AssessmentResultSafety::assertContextDeletable('lesson_id', $request->id);
 
 
 
@@ -3963,7 +3970,7 @@ $room=Room::with(['teachers.lessons'=>fn($q)=>$q->where('teacher_room_lesson.roo
         $currentRoom = Room::whereKey($request->room_id)->where('year_id', $year->id)->firstOrFail();
         abort_unless(Student::currentMembership($year->id, $currentRoom->id)->whereKey($request->student_id)->exists(), 403);
         if ((string) auth()->user()->type === '1') {
-            abort_unless(Teacher_room_lesson::where('teacher_id', auth()->user()->teacher_id)
+            abort_unless(Teacher_room_lesson::currentTimetable()->where('teacher_id', auth()->user()->teacher_id)
                 ->where('year_id', $year->id)->where('class_id', $currentRoom->class_id)
                 ->where('room_id', $currentRoom->id)->where('lesson_id', $request->lesson_id)->exists(), 403);
         }

@@ -168,7 +168,7 @@ class TeacherController_New extends Controller
 
     private function currentTeacherAssignments($teacherId, $yearId, $roomId = null, $lessonId = null)
     {
-        return Teacher_room_lesson::query()
+        return Teacher_room_lesson::currentTimetable()
             ->where('teacher_id', $teacherId)
             ->where('year_id', $yearId)
             ->whereIn('room_id', Room::query()->select('id')->where('year_id', $yearId))
@@ -184,7 +184,7 @@ class TeacherController_New extends Controller
     {
         return Room::query()
             ->where('rooms.year_id', $yearId)
-            ->whereIn('rooms.id', $this->currentTeacherAssignments($teacherId, $yearId)->select('room_id'))
+            ->whereIn('rooms.id', app(\App\Services\CurrentTeacherAssignments::class)->schedule($teacherId)->select('lesson_room_teacher_lecture_time.room_id'))
             ->with([
                 'classes',
                 'student' => function ($query) use ($yearId) {
@@ -209,6 +209,11 @@ class TeacherController_New extends Controller
         $assignment = $this->currentTeacherAssignments($teacherId, $year->id, $roomId, $lessonId)
             ->where('class_id', $room->class_id)
             ->first();
+
+        if (!$assignment && app(\App\Services\CurrentTeacherAssignments::class)->has($teacherId, $roomId, $lessonId)) {
+            $assignment = new Teacher_room_lesson(['teacher_id' => $teacherId, 'year_id' => $year->id,
+                'class_id' => $room->class_id, 'room_id' => $roomId, 'lesson_id' => $lessonId]);
+        }
 
         return [$year, $assignment, $room];
     }
@@ -251,7 +256,30 @@ class TeacherController_New extends Controller
             abort(403);
         }
 
+        if ($exam instanceof Exams2 && $studentId !== null) {
+            app(\App\Services\AssessmentContinuityService::class)->assertWritable($exam, $studentId);
+        }
         return $context;
+    }
+
+    private function assessmentFilterRows($students, $exam)
+    {
+        $continuity = app(\App\Services\AssessmentContinuityService::class)->resolve($exam, $students->pluck('id'));
+        foreach ($students as $student) {
+            $resolved = $continuity[$student->id] ?? [];
+            if (in_array($resolved['state'] ?? null, ['carried', 'conflict'], true)) {
+                $item = new Exam_result2();
+                $item->setAttribute('user_id', $student->id);
+                $item->setAttribute('continuity', $resolved);
+                $item->setRelation('student', $student);
+                $student->setAttribute('continuity_row', view('gradebook.continuity_row', [
+                    'item' => $item, 'continuityFile' => (int) $exam->is_file === 1,
+                ])->render());
+            }
+            // Do not return unrelated historical results in this current-roster endpoint.
+            $student->setRelation('exam_result2', $student->exam_result2->where('exam_id', $exam->id)->values());
+        }
+        return $students;
     }
 
     private function currentAssessmentRows($records, $exam)
@@ -275,6 +303,12 @@ class TeacherController_New extends Controller
             }
         }
 
+        if ($exam instanceof Exams2) {
+            $continuity = app(\App\Services\AssessmentContinuityService::class)->resolve($exam, $students->pluck('id'));
+            foreach ($records as $record) {
+                $record->setAttribute('continuity', $continuity[$record->user_id] ?? null);
+            }
+        }
         return $records->sortBy(function ($record) {
             return optional($record->student)->first_name . ' ' . optional($record->student)->last_name;
         })->values();
@@ -372,18 +406,21 @@ class TeacherController_New extends Controller
     //Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â±
     public function exam_delete(Request $request)
     {
+        return DB::transaction(function () use ($request) {
         $id = $request->exam_id;
         $exam = Lesson_teacher_room_term_exam::where('id', $id)
             ->where('teacher_id', Auth::user()->teacher_id)
-            ->first();
+            ->lockForUpdate()->first();
         if (!$exam) {
             abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
         }
-        $this->requireCurrentTeacherAssignment($exam->room_id, $exam->lesson_id);
+        $this->requireCurrentAssessment($exam);
+        \App\Services\AssessmentResultSafety::assertDeletable($exam);
         Exam_question::where('test_id',$id)->delete() ;
         $exam->delete();
         Exam_result::where('exam_id', $request->exam_id)->delete();
         return redirect()->back()->with('delete', 'تم حذف الامتحان بنجاح');
+        }, 3);
     }
     //Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â§Ã˜Â±
     public function exam_store(Request $request)
@@ -440,70 +477,27 @@ class TeacherController_New extends Controller
         ]);
         
         
-        $existingExam = Lesson_teacher_room_term_exam::find($request->exam_id);
+        return DB::transaction(function () use ($request) {
+        $existingExam = Lesson_teacher_room_term_exam::whereKey($request->exam_id)->lockForUpdate()->first();
         if (!$existingExam || (int) $existingExam->teacher_id !== (int) Auth::user()->teacher_id) {
             abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
         }
-        [$year] = $this->requireCurrentTeacherAssignment($existingExam->room_id, $existingExam->lesson_id);
+        [$year] = $this->requireCurrentAssessment($existingExam);
         $term = $this->requireCurrentTeacherTerm($year->id);
         $exam = $existingExam;
-        if (true) {
-           
-            $exam->class_id = $exam->class_id;
-            $exam->room_id = $exam->room_id;
-            $exam->teacher_id = auth()->user()->teacher_id;
-            if($request->name !=null){
-                $exam->name_exam = $request->name;
-            }
-            else{
-                $exam->name_exam = $request->name;
-            }
-            $exam->name_exam = $request->name;
-            $exam->name_quize1 = $request->name;
-            $exam->lesson_id = $exam->lesson_id;
-            $exam->success_mark = $request->success_mark;
-            $exam->lecture_id = $exam->lecture_id;
-            $exam->period = $request->period;
-            $exam->start_time = $request->start_time;
-            $exam->note = $request->note;
-            $exam->term_id = $term->id;
-            $exam->end_time = $request->end_time;
-            $exam->type = '8';
-            $exam->type_file = '2';
-            $exam->save();
-        } else {
-        }
-    
-        if ($request->room_id != $exam->room_id && $exam->type!=8) {
-             Exam_result::where('exam_id', $request->exam_id)->delete();
-            $studens = Room::find($exam->room_id)->operationalStudents;
-            foreach ($studens as $student) {
-                $item2 = new Exam_result;
-                $item2->class_id = $exam->class_id;
-                $item2->room_id = $exam->room_id;
-                $item2->exam_id = $exam->id;
-                $item2->user_id = $student->id;
-                $item2->type = $request->type;
-                // $item2->start_time = $request->start_time;
-                // $item2->end_time = $request->end_time;
-                $item2->save();
-            }
-            return redirect()->back()->with('update', 'تم تعديل الامتحان بنجاح ');
-        }
-        
-      
-        $results = Exam_result::where('exam_id', $exam->id)->get();
-        foreach ($results as $item) {
-            $item->update([
-                'class_id' => $request->class_id,
-                'room_id' => $request->room_id,
-                'type' => $request->type,
-            ]);
-        }
-        return redirect()->back()->with('update', 'تم تعديل الامتحان بنجاح ');
+        $exam->name_exam = $request->name;
+        $exam->name_quize1 = $request->name;
+        $exam->success_mark = $request->success_mark;
+        $exam->period = $request->period;
+        $exam->start_time = $request->start_time;
+        $exam->note = $request->note;
+        $exam->end_time = $request->end_time;
+        $exam->save();
+
+        return redirect()->back()->with('update', __('gradebook.saved'));
+        }, 3);
     }
 
-    //Ã˜ÂµÃ™ÂÃ˜Â­Ã˜Â© Ã˜Â¨Ã™â€ Ã™Æ’ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜Â¦Ã™â€žÃ˜Â©
     public function exams_addquestion($exam_id,$lecture_id,$room_id)
     {
         $teacher_id = Auth::user()->teacher_id;
@@ -1476,7 +1470,7 @@ class TeacherController_New extends Controller
         $teacher_name = Auth::user()->name;
         $teacher = Teacher::find($teacher_id);
         //$lessons = $teacher->lessons;
-        $teacher_lessons = Teacher_room_lesson::with('lesson')
+        $teacher_lessons = Teacher_room_lesson::currentTimetable()->with('lesson')
             ->where('room_id', $room_id)
             ->where('teacher_id', $teacher_id)
             ->where('year_id', $year->id)
@@ -1527,9 +1521,11 @@ class TeacherController_New extends Controller
     }
     public function search_lecture(Request $request)
     {
-
+        [$year] = $this->requireCurrentTeacherAssignment($request->room_id);
         $lectures = Lecture::with('teacher')
         ->where('active', 0)
+        ->where('year_id', $year->id)
+        ->whereIn('lesson_id', app(\App\Services\CurrentTeacherAssignments::class)->schedule(Auth::user()->teacher_id, $request->room_id)->select('lesson_room_teacher_lecture_time.lesson_id'))
         ->where('room_id', $request->room_id)
         ->where('name', 'LIKE','%'. $request->search .'%')
         ->get();
@@ -1537,7 +1533,7 @@ class TeacherController_New extends Controller
     }
     public function search_lecturetime(Request $request)
     {
-
+        [$year] = $this->requireCurrentTeacherAssignment($request->room_id, $request->lesson_id);
         // $year = Year::where('current_year', '1')->first();
         // $terms = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         if ($request->date == null) {
@@ -1545,6 +1541,7 @@ class TeacherController_New extends Controller
         }
         $lectures = Lecture::with('teacher')
         ->where('active', 0)
+        ->where('year_id', $year->id)
         ->where('lesson_id',$request->lesson_id)
         ->where('room_id', $request->room_id)
         ->where('lecture_time', 'LIKE','%'. $request->date .'%')
@@ -1637,8 +1634,11 @@ class TeacherController_New extends Controller
             abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
         }
         [$year] = $this->requireCurrentTeacherAssignment($item->room_id, $item->lesson_id);
+        $this->requireCurrentTeacherAssignment($request->room_id, $request->lesson_id);
+        abort_unless((int) $request->class_id === (int) Room::findOrFail($request->room_id)->class_id, 403);
         $terms = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
         $item->teacher_id = Auth::user()->teacher_id;
+        abort_unless($terms && (int) $item->term_id === (int) $terms->id && (int) $item->year_id === (int) $year->id, 403);
         $item->class_id = $request->class_id;
         $item->room_id = $request->room_id;
         $item->lesson_id = $request->lesson_id;
@@ -1827,7 +1827,7 @@ class TeacherController_New extends Controller
         foreach ($message as $item) {
             $st[] = $item->student_id;
         }
-        $rooms1 = Teacher_room_lesson::where('teacher_id', auth()->user()->teacher_id)->where('year_id', $year->id)->get();
+        $rooms1 = Teacher_room_lesson::currentTimetable()->where('teacher_id', auth()->user()->teacher_id)->where('year_id', $year->id)->get();
           $rooms1 = $rooms1->unique('room_id');
           foreach ($rooms1 as $room) {
 
@@ -1859,7 +1859,7 @@ class TeacherController_New extends Controller
         $teacher = Teacher::find(Auth::user()->teacher_id);
         $teacher->setRelation('rooms', $this->currentTeacherRooms($teacher->id, $year->id));
         $message = Message::where('teacher_id', Auth::user()->teacher_id)->orderBy("id", 'desc')->get();
-        $rooms1 = Teacher_room_lesson::where('teacher_id', auth()->user()->teacher_id)->where('year_id', $year->id)->get();
+        $rooms1 = Teacher_room_lesson::currentTimetable()->where('teacher_id', auth()->user()->teacher_id)->where('year_id', $year->id)->get();
          $rooms1 = $rooms1->unique('room_id');
           foreach ($rooms1 as $room) {
 
@@ -2001,7 +2001,7 @@ class TeacherController_New extends Controller
         $rooms = $classes->room;
         $rooms1 = [];
         foreach ($rooms as $room) {
-            $a = Teacher_room_lesson::where('teacher_id', $teacher_id)->where('room_id', $room->id)->where('year_id', $year->id)->first();
+            $a = Teacher_room_lesson::currentTimetable()->where('teacher_id', $teacher_id)->where('room_id', $room->id)->where('year_id', $year->id)->first();
             if ($a != null) {
                 $rooms1[] = $a;
             }
@@ -2524,32 +2524,11 @@ class TeacherController_New extends Controller
         // pring teacher schedule
         $schedule = collect();
         if ($term) {
-            $schedule = Lesson_room_teacher_lecture_time::with('lesson','lecture_time')
-                ->whereHas('room', function ($query) use ($year) {
-                    $query->where('year_id', $year->id);
-                })
-                ->whereHas('lecture_time', function ($query) {
-                    $query->where('type', 1)
-                        ->whereColumn('lecture_times.room_id', 'lesson_room_teacher_lecture_time.room_id');
-                })
-                ->with(['room.classes' => function ($query) {
-                    $query->select('id', 'name');
-                }])
+            $schedule = app(\App\Services\CurrentTeacherAssignments::class)->schedule($teacher_id)
+                ->with(['lesson', 'lecture_time', 'room.classes'])
                 ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
-                ->orderBy('lecture_times.start_time')
-                ->select('lesson_room_teacher_lecture_time.*')
-                ->where('lesson_room_teacher_lecture_time.teacher_id', $teacher_id)
-                ->where('lesson_room_teacher_lecture_time.year_id', $year->id)
-                ->where('lesson_room_teacher_lecture_time.term_id', $term->id)
-                ->whereExists(function ($query) use ($teacher_id, $year) {
-                    $query->select(DB::raw(1))
-                        ->from('teacher_room_lesson as current_assignment')
-                        ->whereColumn('current_assignment.room_id', 'lesson_room_teacher_lecture_time.room_id')
-                        ->whereColumn('current_assignment.lesson_id', 'lesson_room_teacher_lecture_time.lesson_id')
-                        ->where('current_assignment.teacher_id', $teacher_id)
-                        ->where('current_assignment.year_id', $year->id);
-                })
-                ->get();
+                ->orderBy('lecture_times.start_time')->orderBy('lesson_room_teacher_lecture_time.id')
+                ->select('lesson_room_teacher_lecture_time.*')->get();
         }
 
         // pring student schedule tracer
@@ -2585,9 +2564,12 @@ $objection=Objection::where('teacher_id',Auth::user()->teacher_id)->where('view'
     // Ã˜Â§Ã™â€žÃ˜Â­Ã˜ÂµÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â© Ã˜Â¨Ã˜Â§Ã™â€žnavbar
     public function go_to_stream($scheduler_id, $day_id, $lecture_time_id, $room_id, $student_id)
     {
+        $scheduler_record = app(\App\Services\CurrentTeacherAssignments::class)
+            ->schedule(Auth::user()->teacher_id, $room_id)->whereKey($scheduler_id)
+            ->where('day_id', $day_id)->where('lecture_time_id', $lecture_time_id)->firstOrFail();
+        abort_unless((int) $student_id === (int) Auth::user()->teacher_id, 403);
         $user_id = auth()->user()->id;
         $day = Day::findOrFail($day_id);
-        $scheduler_record = Lesson_room_teacher_lecture_time::findOrFail($scheduler_id);
 
         $lecture_time = Lecture_time::findOrFail($lecture_time_id);
         $hourMin = date('H:i');
@@ -3189,7 +3171,10 @@ public function addition_delete(Request $request){
 
 
 
-    $file=Lesson_teacher_room_term_exam::find($file_id);
+    $file=Lesson_teacher_room_term_exam::findOrFail($file_id);
+    abort_unless((int) $file->teacher_id === (int) Auth::user()->teacher_id, 403);
+    $this->requireCurrentAssessment($file);
+    \App\Services\AssessmentResultSafety::assertDeletable($file);
     $exam_id= Exam_result::where('exam_id',$file->id)->get();
     if($exam_id){
         foreach($exam_id as $item){
@@ -3687,14 +3672,22 @@ public function class_rooms($class_id, $teacher_id)
         ->get();
 }
 
+    public function class_lessons($class_id)
+    {
+        return Lesson::where('class_id', $class_id)
+            ->whereIn('id', app(\App\Services\CurrentTeacherAssignments::class)
+                ->schedule(Auth::user()->teacher_id)->select('lesson_room_teacher_lecture_time.lesson_id'))
+            ->orderBy('id')->get();
+    }
+
        public function available_schedule($teacher_id) {
         $timestamp = strtotime(now());
         $today = date('l', $timestamp);
         $today = $this->getDay($today);
 
 
-        $schedule_day = Lesson_room_teacher_lecture_time::with('lesson','room')
-            ->where('teacher_id',$teacher_id)->where('day_id',$today +1)->get();
+        $schedule_day = app(\App\Services\CurrentTeacherAssignments::class)->schedule($teacher_id)
+            ->with(['lesson', 'room', 'lecture_time'])->where('day_id', $today + 1)->orderBy('id')->get();
         $available_lecture = '';
         foreach($schedule_day  as $key => $today_lecture){
             $lecture_time = Lecture_time::findOrFail($today_lecture->lecture_time_id);
@@ -3970,6 +3963,7 @@ public function class_rooms($class_id, $teacher_id)
                   ->whereIn('room_id', $assignments->select('room_id'))
                   ->whereIn('lesson_id', $assignments->select('lesson_id'))
                   ->first();
+              if ($exam) { $this->requireCurrentAssessment($exam); }
               if (!$exam) {
                   abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
               }
@@ -4311,140 +4305,24 @@ public function class_rooms($class_id, $teacher_id)
 
     }
     /// Ã˜Â§Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â·Ã™â€žÃ˜Â§Ã˜Â¨ Ã™â€žÃ™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â©
- public function add_quize_student(Request $request){
-            $year = Year::where('current_year', '1')->first();
-            $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
-            $exam11=Exams2::find($request->exam);
-           
-        try {
-             $exam_result=Exam_result2 ::where('exam_id',$request->exam)->where('room_id',$request->room_id)->get();
-        foreach ($exam_result as $item) {
-            $item->delete();
-        }
-             if($request->all==1){
-            $studens = Room::find($request->room_id)->operationalStudents;
-
-                foreach ($studens as $student) {
-                    $item2 = new Exam_result2;
-                    $item2->class_id = $request->class_id;
-                    $item2->room_id = $request->room_id;
-                    $item2->exam_id = $request->exam;   
-                    $item2->user_id = $student->id;
-                    $item2->lesson_id = $request->lesson_id;
-
-                    $item2->show_result = $exam11->has_traditional == 0 ? 1 : 0;
-                    $item2->type =$exam11->type;
-                    $item2->save();
-                    if($exam11->type==2){
-                    $noti = new Notification;
-                    $noti->user_id = Auth::user()->id;
-                    $noti->student_id = $student->id;
-                    $noti->lesson_id = $request->lesson_id;
-                    $noti->room_id = $request->room_id;
-                    $noti->title ="تم اضافة  مذاكرة";
-                    $noti->body = $exam11->name;
-                    $noti->term_id = $term->id;
-                    $noti->type = 4;
-                    $noti->save();
-                    $tokens = Studentfcmtoken::where('s_fk',$student->id)->get();
-
-                    $devices = array();
-                    foreach($tokens as $t){
-                array_push($devices, $t['s_fcm_token']);
-                //array_push($devices['p_id'], $t['p_fk']);
-                    }
-                $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,$noti->room_id,$noti->lesson_id, 'null',$devices);
-                    }
-                    else{
-                    $noti = new Notification;
-                    $noti->user_id = Auth::user()->id;
-                    $noti->student_id = $student->id;
-                    $noti->lesson_id = $request->lesson_id;
-                    $noti->room_id = $request->room_id;
-                    $noti->title ="تم اضافة  امتحان";
-                    $noti->body = $exam11->name;
-                    $noti->term_id = $term->id;
-                    $noti->type = 5;
-                    $noti->save();
-                    $tokens = Studentfcmtoken::where('s_fk',$student->id)->get();
-                    $devices = array();
-                    foreach($tokens as $t){
-                array_push($devices, $t['s_fcm_token']);
-                //array_push($devices['p_id'], $t['p_fk']);
-                    }
-                $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,$noti->room_id,$noti->lesson_id, 'null',$devices);
-                    }
-
-
+    public function add_quize_student(Request $request)
+    {
+        $request->validate(['exam' => 'required|integer', 'room_id' => 'required|integer',
+            'lesson_id' => 'required|integer', 'class_id' => 'required|integer',
+            'all' => 'nullable|in:0,1', 'student' => 'nullable|array', 'student.*' => 'integer|distinct']);
+        $notifications = app(\App\Services\TeacherAssessmentService::class)->participants(
+            $request->exam, $request->room_id, $request->lesson_id, $request->class_id,
+            (int) $request->all === 1, $request->input('student', []));
+        foreach ($notifications as $notification) {
+            $devices = Studentfcmtoken::where('s_fk', $notification->student_id)->pluck('s_fcm_token')->all();
+            try {
+                $this->send_notification($notification->title, $notification->body, $notification->id,
+                    $notification->type, $notification->room_id, $notification->lesson_id, 'null', $devices);
+            } catch (\Throwable $e) {
+                \Log::warning('Assessment participation push delivery failed', ['notification_id' => $notification->id]);
             }
         }
-
-        else{
-
-            if($request->student){
-            $studens=Student::operational()->whereIn('id',$request->student)->get();
-
-        foreach ($studens as $student) {
-                $item2 = new Exam_result2;
-                $item2->class_id = $request->class_id;
-                $item2->room_id = $request->room_id;
-                $item2->exam_id = $request->exam;
-                $item2->user_id = $student->id;
-                $item2->lesson_id = $request->lesson_id;
-                $item2->show_result = $item2->show_result = $exam11->has_traditional == 0 ? 1 : 0;
-                $item2->type =$exam11->type;
-                $item2->save();
-
-                if($exam11->type==2){
-                $noti = new Notification;
-                    $noti->user_id = Auth::user()->id;
-                    $noti->student_id = $student->id;
-                    $noti->lesson_id = $request->lesson_id;
-                    $noti->room_id = $request->room_id;
-                    $noti->title ="تم اضافة  مذاكرة";
-                    $noti->body = $exam11->name;
-                    $noti->term_id = $term->id;
-                    $noti->type = 4;
-                    $noti->save();
-                    $tokens = Studentfcmtoken::where('s_fk',$student->id)->get();
-                    $devices = array();
-                    foreach($tokens as $t){
-                array_push($devices, $t['s_fcm_token']);
-                //array_push($devices['p_id'], $t['p_fk']);
-                    }
-                $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,$noti->room_id,$noti->lesson_id, 'null',$devices);
-                    }
-                    elseif($exam11->type==1){
-
-                    $noti = new Notification;
-                    $noti->user_id = Auth::user()->id;
-                    $noti->student_id = $student->id;
-                    $noti->lesson_id = $request->lesson_id;
-                    $noti->room_id = $request->room_id;
-                    $noti->title ="تم اضافة  امتحان";
-                    $noti->body = $exam11->name;
-                    $noti->term_id = $term->id;
-                    $noti->type = 5;
-                    $noti->save();
-                    $tokens = Studentfcmtoken::where('s_fk',$student->id)->get();
-                    $devices = array();
-                    foreach($tokens as $t){
-                array_push($devices, $t['s_fcm_token']);
-                //array_push($devices['p_id'], $t['p_fk']);
-                    }
-                $this->send_notification($noti->title,$noti->body,$noti->id,$noti->type,$noti->room_id,$noti->lesson_id, 'null',$devices);
-                    }
-            }
-            }
-        }
-            DB::commit();
-        } catch (\Exception $e) {
-           
-            DB::rollBack();
-        }
-       
-
-            return  redirect()->back()->with('success', '! تمت العملية بنجاح ');
+        return redirect()->back()->with('success', __('gradebook.saved'));
     }
     public function quest_exam1($exam_id,$class_id,$lesson_id) {
 
@@ -4670,82 +4548,8 @@ public function class_rooms($class_id, $teacher_id)
             abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
         }
 
-        $exam_result = Exam_result2::where('id', $request->exam_result_id)
-            ->where('exam_id', $request->exam_id)
-            ->where('room_id', $request->room_id)
-            ->where('user_id', $request->user_id)
-            ->first();
-        $room = Room::find($request->room_id);
-        if ($exam_result) {
-
-            $exam_result->result = $request->mark;
-            $exam_result->status = '1';
-            $exam_result->class_id = $this->resolveRoomClassId($room);
-            $exam_result->room_id = $request->room_id;
-            $exam_result->exam_id = $request->exam_id;
-            $exam_result->user_id = $request->user_id;
-            $exam_result->term_id = $term->id;
-         if ($exam) {
-            if($exam->mark == $request->mark){
-                $exam_result->medal ="1";
-            }
-            elseif($exam->mark-1 == $request->mark || $exam->mark-2 == $request->mark || $exam->mark-3 == $request->mark ){
-                $exam_result->medal ="2";
-            }
-            elseif($exam->mark-4 == $request->mark || $exam->mark-5 == $request->mark || $exam->mark-6 == $request->mark ){
-                $exam_result->medal ="3";
-            }
-            else{
-                $exam_result->medal = null;
-            }
-        } else {
-            $exam_result->medal = null;
-        }
-            if ($exam) {
-                $exam_result->type = $exam->type;
-                $exam_result->start_time = $exam->start_date;
-                $exam_result->end_time = $exam->end_date;
-            }
-
-
-            $exam_result->save();
-
-        } else {
-            $exam_result1 = new Exam_result2();
-            $exam_result1->class_id = $this->resolveRoomClassId($room);
-            $exam_result1->result = $request->mark;
-            $exam_result1->status = '1';
-            $exam_result1->class_id = $request->class_id;
-            $exam_result1->room_id = $request->room_id;
-            $exam_result1->exam_id = $request->exam_id;
-            $exam_result1->user_id = $request->user_id;
-            $exam_result1->term_id = $term->id;
-            if (!$exam) {
-                return redirect()->back()->with('warning', 'تعذر حفظ العلامة لعدم العثور على بيانات الامتحان');
-            }
-
-            $exam_result1->type = $exam->type;
-            $exam_result1->start_time = $exam->start_date;
-            $exam_result1->end_time = $exam->end_date;
-   if ($exam) {
-            if($exam->mark == $request->mark){
-                $exam_result1->medal ="1";
-            }
-            elseif($exam->mark-1 == $request->mark || $exam->mark-2 == $request->mark || $exam->mark-3 == $request->mark ){
-                $exam_result1->medal ="2";
-            }
-            elseif($exam->mark-4 == $request->mark || $exam->mark-5 == $request->mark || $exam->mark-6 == $request->mark ){
-                $exam_result1->medal ="3";
-            }
-            else{
-                $exam_result1->medal = null;
-            }
-        } else {
-            $exam_result1->medal = null;
-        }
-            $exam_result1->save();
-
-        }
+        app(\App\Services\TeacherAssessmentService::class)->save($exam->id, $request->user_id,
+            $request->room_id, $request->lesson_id, $request->mark, $request->exam_result_id);
         if($exam && $exam->type == 2){
           $noti = new Notification;
         $noti->user_id = Auth::user()->id;
@@ -4907,6 +4711,7 @@ public function class_rooms($class_id, $teacher_id)
 
     public function student_save_mark_bulk(Request $request)
     {
+        return DB::transaction(function () use ($request) {
         $request->validate([
             'kind' => 'required|in:exam,exam2',
             'rows' => 'required|string',
@@ -4968,6 +4773,11 @@ public function class_rooms($class_id, $teacher_id)
             }
 
             if ($request->kind === 'exam') {
+                Student::whereKey($userId)->lockForUpdate()->firstOrFail();
+                $this->requireCurrentTeacherStudent($roomId, $lessonId, $userId);
+                if (\App\Services\GradebookReadService::number($mark) === null) {
+                    \App\Services\AssessmentResultSafety::reject('mark_invalid', 'mark', ['max' => '-']);
+                }
                 $source = Lesson_teacher_room_term_exam::where('id', $examId)
                     ->where('teacher_id', Auth::user()->teacher_id)
                     ->where('room_id', $roomId)
@@ -4976,19 +4786,19 @@ public function class_rooms($class_id, $teacher_id)
                     ->first();
 
                 if (!$source) {
-                    continue;
+                    abort(403);
                 }
 
-                $record = $examResultId ? Exam_result::where('id', $examResultId)
-                    ->where('exam_id', $examId)
-                    ->where('room_id', $roomId)
-                    ->where('user_id', $userId)
-                    ->first() : null;
-                if (!$record) {
-                    $record = Exam_result::where('exam_id', $examId)
-                        ->where('room_id', $roomId)
-                        ->where('user_id', $userId)
-                        ->first();
+                $records = Exam_result::where('exam_id', $examId)->where('user_id', $userId)->lockForUpdate()->get();
+                if ($records->count() > 1) {
+                    \App\Services\AssessmentResultSafety::reject('ambiguous_result');
+                }
+                $record = $records->first();
+                if ($examResultId && (!$record || (int) $record->id !== (int) $examResultId)) {
+                    abort(403);
+                }
+                if ($record) {
+                    \App\Services\AssessmentResultSafety::assertResultContext($record, $source);
                 }
 
                 if (!$record) {
@@ -5012,53 +4822,8 @@ public function class_rooms($class_id, $teacher_id)
                 continue;
             }
 
-            $source = Exams2::where('id', $examId)
-                ->where('room_id', $roomId)
-                ->where('lesson_id', $lessonId)
-                ->where('term_id', $term->id)
-                ->first();
-            if (!$source) {
-                continue;
-            }
-
-            $record = $examResultId ? Exam_result2::where('id', $examResultId)
-                ->where('exam_id', $examId)
-                ->where('room_id', $roomId)
-                ->where('user_id', $userId)
-                ->first() : null;
-            if (!$record) {
-                $record = Exam_result2::where('exam_id', $examId)
-                    ->where('room_id', $roomId)
-                    ->where('user_id', $userId)
-                    ->first();
-            }
-
-            if (!$record) {
-                $record = new Exam_result2();
-            }
-
-            $record->class_id = $this->resolveRoomClassId($room);
-            $record->result = $mark;
-            $record->status = '1';
-            $record->room_id = $roomId;
-            $record->exam_id = $examId;
-            $record->user_id = $userId;
-            $record->term_id = $term->id;
-            $record->type = $source->type;
-            $record->start_time = $source->start_date;
-            $record->end_time = $source->end_date;
-
-            if ($source->mark == $mark) {
-                $record->medal = '1';
-            } elseif ($source->mark - 1 == $mark || $source->mark - 2 == $mark || $source->mark - 3 == $mark) {
-                $record->medal = '2';
-            } elseif ($source->mark - 4 == $mark || $source->mark - 5 == $mark || $source->mark - 6 == $mark) {
-                $record->medal = '3';
-            } else {
-                $record->medal = null;
-            }
-
-            $record->save();
+            app(\App\Services\TeacherAssessmentService::class)->save($examId, $userId,
+                $roomId, $lessonId, $mark, $examResultId);
             $saved++;
         }
 
@@ -5066,10 +4831,11 @@ public function class_rooms($class_id, $teacher_id)
             $saved ? 'success' : 'warning',
             $saved ? 'تم حفظ العلامات المعدلة بنجاح' : 'لا توجد علامات جاهزة للحفظ'
         );
-    }
-    ///  Ã™ÂÃ™â€žÃ˜ÂªÃ˜Â± Ã™â€žÃ™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â§Ã˜Âª Ã™Å Ã™â€žÃ™Å  Ã™â€¦Ã™â€šÃ˜Â¯Ã™â€¦Ã™Å Ã™â€ 
 
-      public function quizestudent($lec,$home,$room_id)
+        }, 3);
+    }
+
+    public function quizestudent($lec,$home,$room_id)
     {
         $currentAssessment = Exams2::findOrFail($home);
         $this->requireCurrentAssessment($currentAssessment);
@@ -5117,7 +4883,7 @@ public function class_rooms($class_id, $teacher_id)
                }
 
 
-                    return  $students;
+                    return $this->assessmentFilterRows($students, $currentAssessment);
 
               }}
 
@@ -5172,13 +4938,13 @@ public function class_rooms($class_id, $teacher_id)
 
             $students = Student::currentMembership(null, $room_id)->with('exams_files')->with('exam_result2');
             $students = $this->orderStudentsByName($students)
-            ->whereIn("id",$student12)->get();
+            ->whereNotIn("id",$student)->get();
                $exam1 = Exams2::find($lec);
             //   $quize_result = Room::with(['student.exam_result2' => function ($q) {
             //       $q->where('id', '<>', null)->orderBy('type');
             //   }])->where('id', $room->id)->get();
 
-                    return  $students;
+                    return $this->assessmentFilterRows($students, $currentAssessment);
 
               }
          }
@@ -5201,7 +4967,7 @@ public function class_rooms($class_id, $teacher_id)
                 $students = $this->orderStudentsByName($students)
                ->whereIn('id',$student)->get();
 
-                    return  $students;
+                    return $this->assessmentFilterRows($students, $currentAssessment);
 
               }
          }
@@ -5221,67 +4987,9 @@ public function class_rooms($class_id, $teacher_id)
           abort(403, __('teacher_portal.dashboard.no_current_assignments_title'));
       }
 
-        $exam_result = Exam_result2::where('id', $request->exam_result_id)
-            ->where('exam_id', $request->exam_id)
-            ->where('room_id', $request->room_id)
-            ->where('user_id', $request->user_id)
-            ->first();
-        $room = Room::find($request->room_id);
-        if ($exam_result) {
-   if($exam2->mark ==$request->mark){
-
-            $exam_result->medal ="1";
-        }
-        elseif($exam2->mark-1 ==$request->mark    || $exam2->mark-2 ==$request->mark || $exam2->mark-3 ==$request->mark ){
-            $exam_result->medal ="2";
-        }
-        elseif($exam2->mark-4 ==$request->mark    || $exam2->mark-5 ==$request->mark || $exam2->mark-6 ==$request->mark ){
-             $exam_result->medal ="3";
-        } else{
-            $exam_result->medal =null;
-        }
-            $exam_result->result = $request->mark;
-            $exam_result->status = '1';
-            $exam_result->class_id = $this->resolveRoomClassId($room);
-            $exam_result->room_id = $request->room_id;
-            $exam_result->exam_id = $request->exam_id;
-            $exam_result->user_id = $request->user_id;
-            $exam_result->term_id = $term->id;
-            $exam_result->type = $exam2->type;
-            $exam_result->start_time = $exam2->start_date;
-            $exam_result->end_time = $exam2->end_date;
-
-            $exam_result->save();
-        } else {
-
-            $exam_result1 = new Exam_result2();
-            $exam_result1->class_id = $this->resolveRoomClassId($room);
-            $exam_result1->result = $request->mark;
-            $exam_result1->status = '1';
-            $exam_result1->class_id = $request->class_id;
-            $exam_result1->room_id = $request->room_id;
-            $exam_result1->exam_id = $request->exam_id;
-            $exam_result1->user_id = $request->user_id;
-            $exam_result1->term_id = $term->id;
-            $exam_result1->type = $exam2->type;
-            $exam_result1->start_time = $exam2->start_date;
-            $exam_result1->end_time = $exam2->end_date;
-       if($exam2->mark ==$request->mark){
-
-            $exam_result1->medal ="1";
-        }
-        elseif($exam2->mark-1 ==$request->mark    || $exam2->mark-2 ==$request->mark || $exam2->mark-3 ==$request->mark ){
-            $exam_result1->medal ="2";
-        }
-        elseif($exam2->mark-4 ==$request->mark    || $exam2->mark-5 ==$request->mark || $exam2->mark-6 ==$request->mark ){
-             $exam_result1->medal ="3";
-        }
-         else{
-            $exam_result->medal =null;
-        }
-            $exam_result1->save();
-        }
-
+        app(\App\Services\TeacherAssessmentService::class)->save(
+            $exam2->id, $request->user_id, $request->room_id, $request->lesson_id,
+            $request->mark, $request->exam_result_id);
           if($exam2->type == 2){
           $noti = new Notification;
         $noti->user_id = Auth::user()->id;
@@ -5568,7 +5276,78 @@ public function class_rooms($class_id, $teacher_id)
         return view('teachers2.mark_room', compact('objection', 'teacher_lessons', 'teacher_name', 'room_name', 'message', 'teacher', 'room_id', 'count', 'count2', 'class'));
     }
      // Ã˜ÂªÃ˜ÂµÃ˜Â¯Ã™Å Ã˜Â± Ã˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â°Ã˜Â§Ã™Æ’Ã˜Â±Ã˜Â© 
-    public function export_exam($exam_id,$room_id,$lesson_id)
+    public function export_exam($exam_id, $room_id, $lesson_id)
+    {
+        return $this->importAssessmentReport($exam_id, $room_id, $lesson_id, 2);
+    }
+
+    public function export_exam1($exam_id, $room_id, $lesson_id)
+    {
+        return $this->importAssessmentReport($exam_id, $room_id, $lesson_id, 1);
+    }
+
+    private function importAssessmentReport($examId, $roomId, $lessonId, $type)
+    {
+        abort_unless(request()->isMethod('post'), 405);
+        return DB::transaction(function () use ($examId, $roomId, $lessonId, $type) {
+            $exam = Exams2::whereKey($examId)->lockForUpdate()->firstOrFail();
+            [$year] = app(\App\Services\TeacherAssessmentService::class)->context($exam);
+            abort_unless((int) $exam->room_id === (int) $roomId && (int) $exam->lesson_id === (int) $lessonId
+                && (int) $exam->type === $type && strpos((string) $exam->name, 'Dynamic_Section_') !== 0, 403);
+            $term = Term_year::findOrFail($exam->term_id);
+            abort_unless(in_array((int) $term->type, [1, 2]), 422);
+            $lesson = Lesson::findOrFail($lessonId);
+            $roster = Student::currentMembership($year->id, $roomId)->orderBy('students.id')
+                ->lockForUpdate()->pluck('students.id');
+            $continuity = app(\App\Services\AssessmentContinuityService::class)->resolve($exam, $roster);
+            $records = Exam_result2::currentRoster()->where('exam_id', $examId)->where('room_id', $roomId)
+                ->whereNotNull('result')->where('result', '<>', '')->lockForUpdate()->get();
+            foreach ($continuity as $resolved) {
+                if ($resolved['state'] === 'conflict') \App\Services\AssessmentResultSafety::reject('ambiguous_result');
+                if ($resolved['state'] === 'carried' && !$records->contains('id', $resolved['result_id'])) {
+                    $original = Exam_result2::whereKey($resolved['result_id'])->lockForUpdate()->firstOrFail();
+                    if (\App\Services\GradebookReadService::number($original->result) !== $resolved['value']) {
+                        \App\Services\AssessmentResultSafety::reject('ambiguous_result');
+                    }
+                    $records->push($original); // Read original provenance; never save it as a receiving result.
+                }
+            }
+            if ($records->isEmpty()) {
+                \App\Services\AssessmentResultSafety::reject('import_empty');
+            }
+            if ($records->groupBy('user_id')->contains(function ($rows) { return $rows->count() > 1; })) {
+                \App\Services\AssessmentResultSafety::reject('ambiguous_result');
+            }
+            foreach ($records as $record) {
+                Student::whereKey($record->user_id)->lockForUpdate()->firstOrFail();
+                app(\App\Services\TeacherAssessmentService::class)->context($exam, $record->user_id);
+                $originalExam = (int)$record->exam_id === (int)$exam->id ? $exam : Exams2::findOrFail($record->exam_id);
+                \App\Services\AssessmentResultSafety::assertResultContext($record, $originalExam);
+                // Retain the report's existing 20% quiz / 40% exam limits.
+                \App\Services\AssessmentResultSafety::validateMark($record->result, $lesson->max_mark * ($type === 2 ? 0.2 : 0.4));
+                $marks = Students_mark::where('student_id', $record->user_id)->where('year_id', $year->id)
+                    ->where('room_id', $roomId)->lockForUpdate()->get();
+                if ($marks->count() !== 1) {
+                    \App\Services\AssessmentResultSafety::reject('missing_scaffold');
+                }
+                $editableState = (int) $term->type - 1;
+                if ($marks->first()->adjustable != $editableState || Report_card::where('student_id', $record->user_id)
+                    ->where('year_id', $year->id)->where('room_id', $roomId)->where('adjustable', '<>', $editableState)->exists()) {
+                    \App\Services\AssessmentResultSafety::reject('report_locked');
+                }
+                $data = json_decode($term->type == 1 ? $marks->first()->mark : $marks->first()->mark2, true);
+                foreach (['oral', 'homework', 'activities', 'quize', 'exam'] as $key) {
+                    if (!isset($data[$lessonId]) || !is_array($data[$lessonId]) || !array_key_exists($key, $data[$lessonId])
+                        || ($data[$lessonId][$key] !== null && !is_numeric($data[$lessonId][$key]))) {
+                        \App\Services\AssessmentResultSafety::reject('missing_scaffold');
+                    }
+                }
+            }
+            return $type === 2 ? $this->persistQuizReportMarks($examId, $roomId, $lessonId, $records)
+                : $this->persistExamReportMarks($examId, $roomId, $lessonId, $records);
+        }, 3);
+    }
+    private function persistQuizReportMarks($exam_id,$room_id,$lesson_id,$records)
     {
         $this->requireCurrentAssessment(Exams2::findOrFail($exam_id));
         $student = [];
@@ -5577,7 +5356,7 @@ public function class_rooms($class_id, $teacher_id)
           $term_id=Exams2::find($exam_id)->term_id;
           $term = Term_year::where('id', $term_id)->where('year_id', $year->id)->first();
          
-          $exam = Exam_result2::currentRoster()->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+          $exam = $records;
         foreach($exam as $item){
             $student[]= $item->user_id;
          }
@@ -5604,7 +5383,7 @@ public function class_rooms($class_id, $teacher_id)
                        
                        if($item->student_id	==$item1->user_id){
                             $object1=json_decode($item->mark,true);
-                            if($item1->result== null){
+                            if($item1->result === null || $item1->result === ''){
                               
                                    $object1[$lesson_id]['quize']="0";
                             }else{
@@ -5853,7 +5632,7 @@ public function class_rooms($class_id, $teacher_id)
  if($item->student_id	==$item1->user_id){
 
             $object2 = json_decode($item->mark2, true);
-                      if($item1->result== null){
+                      if($item1->result === null || $item1->result === ''){
                               
                                    $object2[$lesson_id]['quize']="0";
                             }else{
@@ -5918,7 +5697,7 @@ public function class_rooms($class_id, $teacher_id)
 
             if ($item->result) {
                 $object_result = json_decode($item->result, true);
-                $decodedData = json_decode($item->result1);
+                $decodedData = json_decode($item->result1, true);
                   if (!$decodedData || !array_key_exists($lesson_id, $decodedData)) {
                     $object_result1[$lesson_id]['term1_result'] = 0;
                 }
@@ -6087,7 +5866,7 @@ public function class_rooms($class_id, $teacher_id)
    
         
     }
-       public function export_exam1($exam_id,$room_id,$lesson_id)
+       private function persistExamReportMarks($exam_id,$room_id,$lesson_id,$records)
     {
         $this->requireCurrentAssessment(Exams2::findOrFail($exam_id));
         $student = [];
@@ -6096,7 +5875,7 @@ public function class_rooms($class_id, $teacher_id)
           $term_id=Exams2::find($exam_id)->term_id;
           $term = Term_year::where('id', $term_id)->where('year_id', $year->id)->first();
          
-          $exam = Exam_result2::currentRoster()->where('exam_id',$exam_id)->where('room_id',$room_id)->get();
+          $exam = $records;
         foreach($exam as $item){
             $student[]= $item->user_id;
          }
@@ -6123,7 +5902,7 @@ public function class_rooms($class_id, $teacher_id)
                        
                        if($item->student_id	==$item1->user_id){
                             $object1=json_decode($item->mark,true);
-                            if($item1->result== null){
+                            if($item1->result === null || $item1->result === ''){
                               
                                    $object1[$lesson_id]['exam']="0";
                             }else{
@@ -6368,7 +6147,7 @@ public function class_rooms($class_id, $teacher_id)
  if($item->student_id	==$item1->user_id){
 
             $object2 = json_decode($item->mark2, true);
-                      if($item1->result== null){
+                      if($item1->result === null || $item1->result === ''){
                               
                                    $object2[$lesson_id]['exam']="0";
                             }else{
@@ -6435,7 +6214,7 @@ public function class_rooms($class_id, $teacher_id)
                 $object_result = json_decode($item->result, true);
 
 
-                $decodedData = json_decode($item->result1);
+                $decodedData = json_decode($item->result1, true);
 
                      if (!$decodedData || !array_key_exists($lesson_id, $decodedData)) {
                         $object_result1[$lesson_id]['term1_result'] = 0;
@@ -6663,7 +6442,7 @@ public function class_rooms($class_id, $teacher_id)
         $teacher = Teacher::find($teacher_id);
         //$lessons = $teacher->lessons;
         $room_lessons = [];
-        $teacher_room_lessons = Teacher_room_lesson::where('room_id', $room_id)->where('teacher_id', $teacher_id)->get();
+        $teacher_room_lessons = Teacher_room_lesson::currentTimetable()->where('room_id', $room_id)->where('teacher_id', $teacher_id)->get();
         $teacher_lessons = [];
 
         foreach ($teacher_room_lessons as $teacher_room_lesson) {

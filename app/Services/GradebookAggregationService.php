@@ -28,6 +28,10 @@ class GradebookAggregationService
             // 1. Context Validation
             $room = \App\Room::find($roomId);
             if (!$room) throw new \Exception("Room $roomId not found");
+            if ((int) $room->year_id !== (int) $yearId || !Year::whereKey($yearId)->where('current_year', 1)->exists()
+                || !\App\Lesson::whereKey($lessonId)->where('class_id', $room->class_id)->exists()) {
+                AssessmentResultSafety::reject('context_invalid');
+            }
             
             // 2. Identify Terms for this Year (ROBUST FIX)
             $terms = Term_year::where('year_id', $yearId)->get();
@@ -45,10 +49,13 @@ class GradebookAggregationService
 
             // 3. Iterate Students in Room
             // using exact relation: room -> students
-            $students = $room->student; 
+            $students = $room->operationalStudents()->orderBy('students.id')->lockForUpdate()->get();
             $count = 0;
 
             foreach ($students as $student) {
+                $existing = Students_mark::where('student_id', $student->id)->where('year_id', $yearId)
+                    ->where('room_id', $roomId)->lockForUpdate()->get();
+                if ($existing->count() > 1) AssessmentResultSafety::reject('ambiguous_result');
                 // 4. Fetch/Create Mark Row for (Student, Room, Year)
                 $markRow = Students_mark::firstOrCreate(
                     [
@@ -65,12 +72,18 @@ class GradebookAggregationService
                 // 5. Prepare JSON data
                 $markJson = json_decode($markRow->mark, true) ?? [];
                 $mark2Json = json_decode($markRow->mark2, true) ?? [];
+                foreach (['mark', 'mark2'] as $field) {
+                    if ($markRow->$field && !is_array(json_decode($markRow->$field, true))) {
+                        AssessmentResultSafety::reject('ambiguous_result');
+                    }
+                }
                 $updated = false;
 
                 // 6. Term 1 Aggregation
                 if ($term1Id) {
                     $vals = $this->calculateTermMarks($student->id, $lessonId, $roomId, $term1Id, $yearId);
                     if ($vals) {
+                        $this->assertReportEditable($markRow, 0);
                         // Merge into lesson_id key
                         if (!isset($markJson[$lessonId])) $markJson[$lessonId] = [];
                         foreach($vals as $k => $v) $markJson[$lessonId][$k] = $v;
@@ -82,6 +95,7 @@ class GradebookAggregationService
                 if ($term2Id) {
                     $vals = $this->calculateTermMarks($student->id, $lessonId, $roomId, $term2Id, $yearId);
                     if ($vals) {
+                        $this->assertReportEditable($markRow, 1);
                         if (!isset($mark2Json[$lessonId])) $mark2Json[$lessonId] = [];
                         foreach($vals as $k => $v) $mark2Json[$lessonId][$k] = $v;
                         $updated = true;
@@ -112,48 +126,29 @@ class GradebookAggregationService
      */
     private function calculateTermMarks($studentId, $lessonId, $roomId, $termId, $yearId)
     {
+        $read = app(GradebookReadService::class)->read(\App\Room::findOrFail($roomId),
+            \App\Lesson::findOrFail($lessonId), [$studentId], [$termId]);
+        if (count($read['issues'])) {
+            AssessmentResultSafety::reject('ambiguous_result');
+        }
         $data = [];
-
-        // A. ORAL / HOMEWORK (From Exam_result)
-        // Logic: lesson_id is direct.
-        $oralAvg = Exam_result::where('user_id', $studentId)
-                              ->where('lesson_id', $lessonId)
-                              ->where('term_id', $termId) // Important: Filter by Term
-                              ->where('status', '1')      // Confirmed
-                              ->avg('result');
-        
-        if (!is_null($oralAvg)) {
-            $data['oral'] = round($oralAvg, 1);
+        foreach (['oral' => 'LEGACY_ORAL', 'quize' => 'LEGACY_HOMEWORK', 'exam' => 'LEGACY_EXAM'] as $key => $source) {
+            $values = $read['assessments']->where('source', $source)->map(function ($assessment) use ($studentId) {
+                return $assessment['results'][$studentId]['value'] ?? null;
+            })->filter(function ($value) { return $value !== null; });
+            if ($values->isNotEmpty()) {
+                $data[$key] = round($key === 'exam' ? $values->max() : $values->avg(), 1);
+            }
         }
+        return $data ?: null;
+    }
 
-        // B. MID / QUIZ (From Exam_result2 JOIN exams2)
-        // Logic: type=2 (Quiz) --> Mapped to "quize" key in legacy JSON
-        $midAvg = Exam_result2::join('exams2', 'exam_result2.exam_id', '=', 'exams2.id')
-                              ->where('exam_result2.user_id', $studentId)
-                              ->where('exams2.lesson_id', $lessonId) // Link via Exam
-                              ->where('exams2.room_id', $roomId)     // Link via Room (Strict)
-                              ->where('exam_result2.term_id', $termId)
-                              ->where('exams2.type', '2') // Quiz
-                              ->avg('exam_result2.result');
-
-        if (!is_null($midAvg)) {
-            $data['quize'] = round($midAvg, 1); // FIXED: Key 'mid' -> 'quize'
+    private function assertReportEditable(Students_mark $marks, $editableState)
+    {
+        if ($marks->adjustable != $editableState || \App\Report_card::where('student_id', $marks->student_id)
+            ->where('year_id', $marks->year_id)->where('room_id', $marks->room_id)
+            ->where('adjustable', '<>', $editableState)->exists()) {
+            AssessmentResultSafety::reject('report_locked');
         }
-
-        // C. FINAL EXAM (From Exam_result2 JOIN exams2)
-        // Logic: type=1 (Exam) --> Mapped to "exam" key in legacy JSON
-        $examMax = Exam_result2::join('exams2', 'exam_result2.exam_id', '=', 'exams2.id')
-                               ->where('exam_result2.user_id', $studentId)
-                               ->where('exams2.lesson_id', $lessonId)
-                               ->where('exams2.room_id', $roomId)
-                               ->where('exam_result2.term_id', $termId)
-                               ->where('exams2.type', '1') // Exam
-                               ->max('exam_result2.result');
-
-        if (!is_null($examMax)) {
-            $data['exam'] = $examMax;
-        }
-
-        return count($data) > 0 ? $data : null;
     }
 }

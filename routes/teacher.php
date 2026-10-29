@@ -127,7 +127,7 @@ Route::get('dashboard/teacher/teacher_quize_students/{room_id}/{teacher_id}/{les
 Route::post('dashboard/teacher/student_save_mark_quize', 'TeacherController_New@student_save_mark_quize')->name('dashboard.teacher.student_save_mark_quize');
 //ÙÙ„ØªØ±Ø© Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø§Øª Ø§Ù„Ù…Ù‚Ø¯Ù… Ù…Ù† ØºÙŠØ±Ù‡
 Route::get('dashboard/teacher/quizestudent/{lec_id}/{home}/{room_id}', 'TeacherController_New@quizestudent')->name('dashboard.teacher.quizestudent');
-Route::get('dashboard/teacher/student_save_mark3', 'TeacherController_New@student_save_mark3')->name('dashboard.teacher.student_save_mark3');
+Route::post('dashboard/teacher/student_save_mark3', 'TeacherController_New@student_save_mark3')->name('dashboard.teacher.student_save_mark3');
 //Ø§Ø¶Ø§ÙØ© Ø¹Ù„Ø§Ù…Ø© Ù„Ù„Ù…Ø°Ø§ÙƒØ±Ø© Ø¨Ø¹Ø¯ Ø§Ù„ajax
 //Ø¹Ø±Ø¶ ØµÙØ­Ø© Ø¬Ù…ÙŠØ¹  Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª
 Route::get('dashboard/teacher/teacher_exam/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@teacher_exam_mark')->name('teacher_exam');
@@ -168,8 +168,8 @@ Route::get('dashboard/exam/quest_exam1/{id}/{class_id}/{lesson_id}', 'TeacherCon
 Route::get('dashboard/teacher/StudentsRoomLesson_exammark/{room_id}/{teacher_id}/{lesson_id}/{exam_id}', 'TeacherController_New@StudentsRoomLesson_exammark')->name('dashboard.StudentsRoomLesson_exammark');
 Route::get('dashboard/teacher/exams1_addquestion/{exam_id}/{room_id}/{class_id}/{lesson_id}', 'TeacherController_New@exams1_addquestion')->name('exams1_addquestion');
 Route::get('dashboard/teacher/StudentsRoomLesson_exam/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_exam')->name('dashboard.StudentsRoomLesson_exam');
-Route::get('dashboard/teacher/export_exam/{exam_id}/{room_id}/{lesson_id}', 'TeacherController_New@export_exam')->name('export_exam');
-Route::get('dashboard/teacher/export_exam1/{exam_id}/{room_id}/{lesson_id}', 'TeacherController_New@export_exam1')->name('export_exam1');
+Route::post('dashboard/teacher/export_exam/{exam_id}/{room_id}/{lesson_id}', 'TeacherController_New@export_exam')->name('export_exam');
+Route::post('dashboard/teacher/export_exam1/{exam_id}/{room_id}/{lesson_id}', 'TeacherController_New@export_exam1')->name('export_exam1');
 Route::get('dashboard/teacher/teacher_quize_mark/{room_id}/{teacher_id}/{lesson_id}/{exam_id}', 'TeacherController_New@teacher_quize_mark')->name('teacher_quize_mark');
 Route::get('dashboard/teacher/StudentsRoomLesson_quize/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_quize')->name('dashboard.StudentsRoomLesson_quize');
 Route::get('dashboard/teacher/StudentsRoomLesson_quize1/{room_id}/{teacher_id}/{lesson_id}', 'TeacherController_New@StudentsRoomLesson_quize1')->name('dashboard.StudentsRoomLesson_quize1');
@@ -219,7 +219,7 @@ Route::get('dashboard/teacher/teacher_sanction_students{room_id}/{teacher_id}/{l
 
 // Route::get('dashboard/teacher/classes_lessons/{teacher_id}', 'teacherscontroller@classes_lessons')->name('dashboard.classes_lessons');
 
-Route::get('dashboard/teacher/class/lessons/{class_id}', 'studentscontroller@class_lessons')->name('dashboard.class.lessons');
+Route::get('dashboard/teacher/class/lessons/{class_id}', 'TeacherController_New@class_lessons')->name('dashboard.class.lessons');
 
 
 

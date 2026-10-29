@@ -69,7 +69,7 @@
                             </div>
                         </div>
 
-                        @if($followUp->isEditableBy($teacher->id, $now))
+                        @if($canEditCurrentAssignment && (int) $followUp->term_id === (int) $currentTermId && $followUp->isEditableBy($teacher->id, $now))
                             <button type="button" class="fu-btn fu-btn--secondary js-edit-follow-up" data-id="{{ $followUp->id }}" data-level="{{ $followUp->level }}" data-note="{{ $followUp->note }}" data-observed-at="{{ $followUp->observed_at->timezone('Asia/Damascus')->format('Y/m/d H:i') }}">
                                 <i class="mdi mdi-pencil-outline" aria-hidden="true"></i>
                                 {{ __('student_follow_up.edit') }}

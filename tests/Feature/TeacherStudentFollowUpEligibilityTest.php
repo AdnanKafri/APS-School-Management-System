@@ -17,6 +17,7 @@ use Tests\TestCase;
 
 class TeacherStudentFollowUpEligibilityTest extends TestCase
 {
+    use \Tests\Concerns\TimetableFixtures;
     private $now;
     private $year;
     private $teacherId = 41;
@@ -34,6 +35,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         }
         $this->assertSame('sqlite', DB::connection()->getDriverName());
         $this->createSchema();
+        $this->createTimetableSchema();
         $this->now = Carbon::parse('2026-10-12 10:00:00', 'Asia/Damascus');
         Carbon::setTestNow($this->now);
 
@@ -57,6 +59,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
             'source' => 'test', 'created_at' => $this->now, 'updated_at' => $this->now,
         ]);
         DB::table('term_years')->insert(['year_id' => $this->year->id, 'current_term' => 1, 'term' => 1]);
+        $this->timetablePeriod($this->teacherId, $this->roomId, $this->lessonId, $this->year->id);
     }
 
     protected function tearDown(): void
@@ -420,6 +423,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         $this->enroll($otherSectionStudent, $otherRoomId, $this->year->id);
         $this->placement($otherSectionStudent, $this->year->id, $this->classId, $otherRoomId, 'active', $this->now->copy()->subDay());
 
+        $this->timetablePeriod($this->teacherId, $otherRoomId, $otherLessonId, $this->year->id);
         $otherSectionContext = app(StudentFollowUpService::class)->resolveCreationContext(
             $this->teacherId, $sameTeacherAssignment->id, $otherSectionStudent->id
         );
@@ -495,6 +499,9 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
 
         $newExam = \App\Exams2::create(['room_id' => 72, 'class_id' => $this->classId, 'lesson_id' => $this->lessonId,
             'term_id' => DB::table('term_years')->value('id'), 'name' => 'Target assessment', 'type' => '2', 'mark' => 100]);
+        // The production Admin flow assigns mark explicitly; it is not mass-assignable.
+        $newExam->mark = 100;
+        $newExam->save();
         $controller = app(\App\Http\Controllers\TeacherController_New::class);
         $rowsMethod = new \ReflectionMethod($controller, 'currentAssessmentRows');
         $rowsMethod->setAccessible(true);
@@ -598,7 +605,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         DB::table('rooms')->insert(['id' => 72, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'name' => 'Unassigned']);
         $this->actingAs(\App\User::find($this->teacherUserId));
         $this->get('/SMARMANger/dashboard/teacher/gradebook/' . $this->classId . '/72/' . $this->lessonId)->assertStatus(403);
-        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/save', ['student_id' => $student->id, 'component_id' => 'x', 'room_id' => 72, 'subject_id' => $this->lessonId])->assertStatus(403);
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/save', ['student_id' => $student->id, 'component_id' => 'x', 'room_id' => 72, 'subject_id' => $this->lessonId, 'value' => 15])->assertStatus(403);
         $account = \App\User::where('student_id', $student->id)->first();
         $this->actingAs($account);
         $before = $this->academicSnapshot($student->id);
@@ -714,6 +721,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         }
         $assignment = Teacher_room_lesson::create(['teacher_id' => $teacherId, 'lesson_id' => $this->lessonId,
             'year_id' => $this->year->id, 'class_id' => $this->classId, 'room_id' => $roomId]);
+        $this->timetablePeriod($teacherId, $roomId, $this->lessonId, $this->year->id);
         DB::table('teacher_assignment_periods')->insert(['teacher_room_lesson_id' => $assignment->id, 'teacher_id' => $teacherId,
             'lesson_id' => $this->lessonId, 'year_id' => $this->year->id, 'class_id' => $this->classId, 'room_id' => $roomId,
             'effective_from' => $this->now->copy()->subDay(), 'source' => 'test']);
@@ -752,7 +760,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         Schema::table('students', function (Blueprint $t) { $t->string('lang')->default('0'); $t->string('religion')->default('0'); });
         Schema::table('users', function (Blueprint $t) { $t->unsignedInteger('student_id')->nullable(); });
         Schema::table('room_student', function (Blueprint $t) { $t->string('term')->nullable(); });
-        Schema::table('lessons', function (Blueprint $t) { $t->unsignedInteger('class_id')->nullable(); $t->string('lang')->nullable(); $t->string('religion')->nullable(); });
+        Schema::table('lessons', function (Blueprint $t) { $t->string('lang')->nullable(); $t->string('religion')->nullable(); });
         DB::table('lessons')->update(['class_id' => $this->classId]);
         Schema::table('student_transfer_histories', function (Blueprint $t) {
             foreach (['user_id','from_class_id','from_room_id','to_class_id','to_room_id','previous_room_student_id','previous_students_mark_id','previous_report_card_id','transferred_by_user_id','from_placement_id','to_placement_id'] as $column) { $t->unsignedInteger($column)->nullable(); }
@@ -810,6 +818,30 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         return StudentAcademicPlacement::create(['student_id' => $student->id, 'year_id' => $yearId,
             'class_id' => $classId, 'room_id' => $roomId, 'effective_from' => $from,
             'effective_to' => $to, 'status' => $status, 'reason' => 'test', 'action_source' => 'test']);
+    }
+
+    public function test_retired_assignment_preserves_own_read_only_history_and_revokes_edits()
+    {
+        $student = $this->enrolledStudent('owned-history');
+        $this->placement($student, $this->year->id, $this->classId, $this->roomId, 'active', $this->now->copy()->subDay());
+        $record = app(StudentFollowUpService::class)->create($this->teacherUserId, $this->teacherId,
+            $this->assignment->id, $student->id, ['level'=>'good','note'=>'Original historical note']);
+        $before = $record->fresh()->getRawOriginal();
+        DB::table('lesson_room_teacher_lecture_time')->where('teacher_id',$this->teacherId)->delete();
+        app(\App\Services\CurrentTeacherAssignments::class)->synchronize($this->roomId);
+        $this->assertNotNull(DB::table('teacher_assignment_periods')->where('teacher_room_lesson_id',$this->assignment->id)->first()->effective_to);
+        \Illuminate\Support\Facades\View::composer('teachers2.layouts.app', function ($view) {
+            $view->setPath(__DIR__.'/../Fixtures/gradebook-layout.blade.php');
+        });
+        $this->actingAs(\App\User::findOrFail($this->teacherUserId));
+        $url='/SMARMANger/dashboard/teacher/student-follow-ups/assignments/'.$this->assignment->id;
+        $this->get($url.'/students/'.$student->id.'/history')->assertOk()->assertSee('Original historical note')
+            ->assertViewHas('canEditCurrentAssignment',false);
+        $this->getJson($url)->assertForbidden();
+        $this->postJson('/SMARMANger/dashboard/teacher/student-follow-ups/'.$record->id.'/update',['level'=>'excellent'])->assertForbidden();
+        $this->assertSame($before,$record->fresh()->getRawOriginal());
+        $this->assertSame(0,DB::table('student_follow_up_edit_audits')->count());
+        $this->assertDatabaseHas('teacher_room_lesson',['id'=>$this->assignment->id]);
     }
 
     private function createSchema()

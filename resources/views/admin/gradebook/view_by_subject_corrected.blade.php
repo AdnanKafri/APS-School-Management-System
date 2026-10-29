@@ -20,6 +20,7 @@
         </div>
 
         <div class="card-body p-3">
+            <p class="text-muted">{{ __('gradebook.summary_notice') }}</p>
             <!-- Tabs -->
             <ul class="nav nav-tabs nav-justified mb-3" id="gradebookTabs" role="tablist">
                 <li class="nav-item">
@@ -55,7 +56,7 @@
                             foreach($components as $comp) {
                                 // Display Name + Calculated Max
                                 $maxDisplay = isset($comp->calculated_max) ? " ({$comp->calculated_max})" : "";
-                                $html .= "<th>{$comp->name}{$maxDisplay}</th>";
+                                $html .= "<th>".e($comp->name).e($maxDisplay)."</th>";
                             }
                         } else {
                             // Fallback if no components (should not happen if seeded/defaulted)
@@ -69,7 +70,7 @@
                             $data = $calculatedMarks[$student->id][$termKey] ?? [];
                             
                             $html .= '<tr>';
-                            $html .= '<td class="text-right font-weight-bold">'.$student->first_name.' '.$student->last_name.'</td>';
+                            $html .= '<td class="text-right font-weight-bold">'.e($student->first_name.' '.$student->last_name).'</td>';
                             
                             // Dynamic Data
                             if (isset($components) && $components->count() > 0) {
@@ -82,7 +83,7 @@
                                 $html .= "<td>-</td><td>-</td><td>-</td>";
                             }
 
-                            $totalDisplay = isset($data['total']) && $data['total'] > 0 ? $data['total'] : '-';
+                            $totalDisplay = isset($data['total']) ? $data['total'] : '-';
                             $html .= "<td class='font-weight-bold text-primary'>{$totalDisplay}</td>";
                             $html .= '</tr>';
                         }
@@ -119,22 +120,22 @@
                                     @php
                                         // Calculate Term 1 Total
                                         $t1 = $calculatedMarks[$student->id]['term1'] ?? [];
-                                        $sum1 = $t1['total'] ?? 0;
+                                        $sum1 = $t1['total'] ?? null;
 
                                         // Calculate Term 2 Total
                                         $t2 = $calculatedMarks[$student->id]['term2'] ?? [];
-                                        $sum2 = $t2['total'] ?? 0;
+                                        $sum2 = $t2['total'] ?? null;
 
-                                        $final = $sum1 + $sum2;
+                                        $final = $sum1 === null && $sum2 === null ? null : ($sum1 ?? 0) + ($sum2 ?? 0);
                                         $status = ($final >= 50) ? 'ناجح' : 'راسب';
                                     @endphp
                                     <tr>
                                         <td class="text-right font-weight-bold">{{ $student->first_name }} {{ $student->last_name }}</td>
-                                        <td>{{ $sum1 > 0 ? $sum1 : '-' }}</td>
-                                        <td>{{ $sum2 > 0 ? $sum2 : '-' }}</td>
-                                        <td class="font-weight-bold border-left border-right">{{ $final > 0 ? $final : '-' }}</td>
+                                        <td>{{ $sum1 !== null ? $sum1 : '-' }}</td>
+                                        <td>{{ $sum2 !== null ? $sum2 : '-' }}</td>
+                                        <td class="font-weight-bold border-left border-right">{{ $final !== null ? $final : '-' }}</td>
                                         <td>
-                                            @if($final > 0)
+                                            @if($final !== null)
                                                 <span class="badge badge-{{ $final >= 50 ? 'success' : 'danger' }} p-2">{{ $status }}</span>
                                             @else
                                                 -
@@ -154,4 +155,5 @@
         </div>
     </div>
 </div>
+@include('gradebook.assessment_results')
 @endsection

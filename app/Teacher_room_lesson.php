@@ -8,6 +8,10 @@ class Teacher_room_lesson extends Model
 {
     protected $table='teacher_room_lesson';
     protected $fillable=['id','teacher_id','lesson_id','year_id','class_id','room_id'];
+    public function scopeCurrentTimetable($query)
+    {
+        return app(\App\Services\CurrentTeacherAssignments::class)->restrict($query);
+    }
     // protected $hidden=['created_at','updated_at'];
       public function teachers(){
 

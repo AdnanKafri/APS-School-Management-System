@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lesson_teacher_room_term_exam extends Model
 {
+    use \App\Concerns\PreservesAssessmentResults;
     protected $table='lesson_teacher_room_term_exam';
     protected $fillable=['lesson_id','teacher_id','room_id','term_id','video','test','quize','exam'];
        public function room()

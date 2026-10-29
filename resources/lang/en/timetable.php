@@ -2,6 +2,7 @@
 
 return [
     'validation' => [
+        'historical_session' => 'This session is used by another term. Create a new current-term session to preserve the recorded timetables.',
         'class_required' => 'Please select a class before continuing.',
         'room_required' => 'Please select at least one section before continuing.',
         'room_invalid' => 'Please select valid sections before continuing.',

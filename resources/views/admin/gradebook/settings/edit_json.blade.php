@@ -22,6 +22,11 @@
                 </div>
                 
                 <div class="card-body p-4">
+                    @if($errors->any())
+                        <div class="alert alert-danger" role="alert">
+                            <ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                        </div>
+                    @endif
                     @if(session('success'))
                         <div class="alert alert-success fade show">
                             <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
@@ -42,17 +47,21 @@
                                     </tr>
                                 </thead>
                                 <tbody id="componentsBody">
-                                    @forelse($components as $index => $comp)
+                                    @php
+                                        $formComponents = collect(old('components', $components->all()))->values()->map(function ($row) { return (object) $row; });
+                                    @endphp
+                                    @forelse($formComponents as $index => $comp)
                                     <tr class="component-row">
+                                        <td class="align-middle font-weight-bold text-muted">
                                         <input type="hidden" name="components[{{ $loop->index }}][id]" value="{{ $comp->id ?? '' }}">
                                         {{-- Hidden Source Mapping --}}
                                         <input type="hidden" name="components[{{ $loop->index }}][data_source]" value="{{ $comp->data_source ?? 'LEGACY_HOMEWORK' }}">
 
-                                        <td class="align-middle index-cell font-weight-bold text-muted">{{ $loop->iteration }}</td>
+                                        <span class="index-cell">{{ $loop->iteration }}</span></td>
                                         <td>
                                             <input type="text" name="components[{{ $loop->index }}][name]" 
                                                    class="form-control form-control-lg border-0 bg-light" 
-                                                   value="{{ $comp->name }}" required 
+                                                   value="{{ $comp->name ?? '' }}" maxlength="191" required
                                                    placeholder="اسم النشاط (مثال: وظائف، امتحان..)">
                                         </td>
                                         <td>
@@ -115,7 +124,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- State ---
-        let rowIndex = {{ $components->count() }};
+        let rowIndex = {{ $formComponents->count() }};
         const tbody = document.getElementById('componentsBody');
         const progressBar = document.getElementById('totalProgressBar');
         const saveBtn = document.getElementById('saveBtn');
@@ -189,14 +198,14 @@
             // PHP accepts sequential keys, so we can just use rowIndex counter.
             
             tr.innerHTML = `
+                <td class="align-middle font-weight-bold text-muted">
                 <input type="hidden" name="components[${rowIndex}][id]" value="">
                 <input type="hidden" name="components[${rowIndex}][data_source]" value="">
-
-                <td class="align-middle index-cell font-weight-bold text-muted">-</td>
+                <span class="index-cell">-</span></td>
                 <td>
                     <input type="text" name="components[${rowIndex}][name]" 
                            class="form-control form-control-lg border-0 bg-light" 
-                           required 
+                           maxlength="191" required
                            placeholder="اسم القسم الجديد">
                 </td>
                 <td>

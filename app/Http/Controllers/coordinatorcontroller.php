@@ -1296,7 +1296,8 @@ public function detexam(Request $request)
 public function add_quize_student(Request $request){
     $year = Year::where('current_year', '1')->first();
     $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
-    $exam11=Exams2::find($request->exam);
+    $exam11=Exams2::findOrFail($request->exam);
+    \App\Services\AssessmentResultSafety::assertDeletable($exam11);
     $exam_result=Exam_result2 ::where('exam_id',$request->exam)->where('room_id',$request->room_id)->get();
    foreach ($exam_result as $item) {
     $item->delete();
@@ -2603,6 +2604,7 @@ else{
 
    public function  quize_delete(Request $request){
     $file=Lesson_teacher_room_term_exam::find($request->id);
+                 \App\Services\AssessmentResultSafety::assertDeletable($file);
                  Exam_result::where('exam_id',$file->id)->delete();
                  if($file->type=='2'){
                     Storage::disk('public')->delete($file->quize);
@@ -3212,7 +3214,8 @@ else{
 
         $year = Year::where('current_year', '1')->first();
         $term = Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
-        $exam = Lesson_teacher_room_term_exam::find($request->exam_id);
+        $exam = Lesson_teacher_room_term_exam::findOrFail($request->exam_id);
+        \App\Services\AssessmentResultSafety::assertDeletable($exam);
 
 
 

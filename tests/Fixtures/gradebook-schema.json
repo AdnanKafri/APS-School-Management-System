@@ -1,0 +1,1596 @@
+{
+    "years":  [
+                  {
+                      "name":  "id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "name",
+                      "type":  "varchar(20)"
+                  },
+                  {
+                      "name":  "current_year",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "start",
+                      "type":  "date"
+                  },
+                  {
+                      "name":  "end",
+                      "type":  "date"
+                  },
+                  {
+                      "name":  "next_year",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "created_at",
+                      "type":  "timestamp"
+                  },
+                  {
+                      "name":  "updated_at",
+                      "type":  "timestamp"
+                  }
+              ],
+    "term_years":  [
+                       {
+                           "name":  "id",
+                           "type":  "int(11)"
+                       },
+                       {
+                           "name":  "term",
+                           "type":  "varchar(20)"
+                       },
+                       {
+                           "name":  "year_id",
+                           "type":  "int(11)"
+                       },
+                       {
+                           "name":  "current_term",
+                           "type":  "int(11)"
+                       },
+                       {
+                           "name":  "type",
+                           "type":  "int(11)"
+                       },
+                       {
+                           "name":  "created_at",
+                           "type":  "timestamp"
+                       },
+                       {
+                           "name":  "updated_at",
+                           "type":  "timestamp"
+                       },
+                       {
+                           "name":  "start",
+                           "type":  "datetime"
+                       },
+                       {
+                           "name":  "end",
+                           "type":  "datetime"
+                       }
+                   ],
+    "classes":  [
+                    {
+                        "name":  "id",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "stage_id",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "report_card",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "next_class",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "name",
+                        "type":  "varchar(20)"
+                    },
+                    {
+                        "name":  "name_en",
+                        "type":  "varchar(20)"
+                    },
+                    {
+                        "name":  "description_en",
+                        "type":  "varchar(255)"
+                    },
+                    {
+                        "name":  "description_ar",
+                        "type":  "varchar(255)"
+                    },
+                    {
+                        "name":  "image",
+                        "type":  "varchar(255)"
+                    },
+                    {
+                        "name":  "cildren_count",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "lesson_count",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "week_count",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "is_scientific",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "fixed_cost",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "created_at",
+                        "type":  "timestamp"
+                    },
+                    {
+                        "name":  "updated_at",
+                        "type":  "timestamp"
+                    }
+                ],
+    "rooms":  [
+                  {
+                      "name":  "id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "name",
+                      "type":  "varchar(200)"
+                  },
+                  {
+                      "name":  "class_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "year_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "created_at",
+                      "type":  "timestamp"
+                  },
+                  {
+                      "name":  "updated_at",
+                      "type":  "timestamp"
+                  }
+              ],
+    "lessons":  [
+                    {
+                        "name":  "id",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "base_subject_id",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "mark_base_subject_id",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "certificate_order",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "is_addable",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "is_project",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "first_total",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "is_neutral",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "is_behavior",
+                        "type":  "varchar(20)"
+                    },
+                    {
+                        "name":  "name",
+                        "type":  "varchar(40)"
+                    },
+                    {
+                        "name":  "name_en",
+                        "type":  "varchar(40)"
+                    },
+                    {
+                        "name":  "img",
+                        "type":  "varchar(191)"
+                    },
+                    {
+                        "name":  "type",
+                        "type":  "enum(\u0027termly\u0027,\u0027yearly\u0027)"
+                    },
+                    {
+                        "name":  "class_id",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "max_mark",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "min_mark",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "lang",
+                        "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                    },
+                    {
+                        "name":  "religion",
+                        "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                    },
+                    {
+                        "name":  "is_english",
+                        "type":  "tinyint(1)"
+                    },
+                    {
+                        "name":  "books",
+                        "type":  "text"
+                    },
+                    {
+                        "name":  "not_affect_and_collect",
+                        "type":  "int(11)"
+                    },
+                    {
+                        "name":  "created_at",
+                        "type":  "timestamp"
+                    },
+                    {
+                        "name":  "updated_at",
+                        "type":  "timestamp"
+                    }
+                ],
+    "teachers":  [
+                     {
+                         "name":  "id",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "first_name",
+                         "type":  "varchar(20)"
+                     },
+                     {
+                         "name":  "last_name",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "email",
+                         "type":  "varchar(100)"
+                     },
+                     {
+                         "name":  "date_birth",
+                         "type":  "date"
+                     },
+                     {
+                         "name":  "age",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "address",
+                         "type":  "varchar(100)"
+                     },
+                     {
+                         "name":  "phone",
+                         "type":  "varchar(150)"
+                     },
+                     {
+                         "name":  "image",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "Description_ar",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "Description_en",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "type",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "contract",
+                         "type":  "enum(\u0027annual\u0027,\u0027monthly\u0027)"
+                     },
+                     {
+                         "name":  "vcation_days",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "lesson_name",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "salary",
+                         "type":  "varchar(100)"
+                     },
+                     {
+                         "name":  "date_archive",
+                         "type":  "date"
+                     },
+                     {
+                         "name":  "active",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "created_at",
+                         "type":  "timestamp"
+                     },
+                     {
+                         "name":  "updated_at",
+                         "type":  "timestamp"
+                     }
+                 ],
+    "students":  [
+                     {
+                         "name":  "id",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "first_name",
+                         "type":  "varchar(80)"
+                     },
+                     {
+                         "name":  "last_name",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "first_name_en",
+                         "type":  "varchar(100)"
+                     },
+                     {
+                         "name":  "last_name_en",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "father_name",
+                         "type":  "varchar(80)"
+                     },
+                     {
+                         "name":  "mother_name",
+                         "type":  "varchar(80)"
+                     },
+                     {
+                         "name":  "place_birth",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "date_birth",
+                         "type":  "date"
+                     },
+                     {
+                         "name":  "box_birth",
+                         "type":  "varchar(30)"
+                     },
+                     {
+                         "name":  "army_room",
+                         "type":  "varchar(30)"
+                     },
+                     {
+                         "name":  "nationality",
+                         "type":  "varchar(120)"
+                     },
+                     {
+                         "name":  "age",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "phone",
+                         "type":  "varchar(191)"
+                     },
+                     {
+                         "name":  "address",
+                         "type":  "varchar(400)"
+                     },
+                     {
+                         "name":  "family_book_image",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "health_certificate_image",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "school_seq_image1",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "school_seq_image2",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "last_certificate_image",
+                         "type":  "text"
+                     },
+                     {
+                         "name":  "image",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "email",
+                         "type":  "varchar(100)"
+                     },
+                     {
+                         "name":  "password",
+                         "type":  "varchar(100)"
+                     },
+                     {
+                         "name":  "place",
+                         "type":  "varchar(20)"
+                     },
+                     {
+                         "name":  "transparent",
+                         "type":  "varchar(20)"
+                     },
+                     {
+                         "name":  "quize_status",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "oral_status",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "activity_status",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "homework_status",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "exam_status",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "status",
+                         "type":  "varchar(20)"
+                     },
+                     {
+                         "name":  "super",
+                         "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                     },
+                     {
+                         "name":  "lang",
+                         "type":  "varchar(191)"
+                     },
+                     {
+                         "name":  "religion",
+                         "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                     },
+                     {
+                         "name":  "country",
+                         "type":  "varchar(255)"
+                     },
+                     {
+                         "name":  "public_record_number",
+                         "type":  "varchar(15)"
+                     },
+                     {
+                         "name":  "country_currency",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "hidden",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "bus_id",
+                         "type":  "int(11)"
+                     },
+                     {
+                         "name":  "created_at",
+                         "type":  "timestamp"
+                     },
+                     {
+                         "name":  "updated_at",
+                         "type":  "timestamp"
+                     },
+                     {
+                         "name":  "lifecycle_status",
+                         "type":  "varchar(20)"
+                     },
+                     {
+                         "name":  "archived_at",
+                         "type":  "datetime"
+                     },
+                     {
+                         "name":  "archived_by",
+                         "type":  "bigint(20) unsigned"
+                     },
+                     {
+                         "name":  "archive_reason",
+                         "type":  "text"
+                     }
+                 ],
+    "users":  [
+                  {
+                      "name":  "id",
+                      "type":  "bigint(20) unsigned"
+                  },
+                  {
+                      "name":  "name",
+                      "type":  "varchar(255)"
+                  },
+                  {
+                      "name":  "email",
+                      "type":  "varchar(255)"
+                  },
+                  {
+                      "name":  "mobile",
+                      "type":  "varchar(20)"
+                  },
+                  {
+                      "name":  "email_verified_at",
+                      "type":  "timestamp"
+                  },
+                  {
+                      "name":  "password",
+                      "type":  "varchar(255)"
+                  },
+                  {
+                      "name":  "view_password",
+                      "type":  "varchar(30)"
+                  },
+                  {
+                      "name":  "remember_token",
+                      "type":  "varchar(100)"
+                  },
+                  {
+                      "name":  "created_at",
+                      "type":  "timestamp"
+                  },
+                  {
+                      "name":  "updated_at",
+                      "type":  "timestamp"
+                  },
+                  {
+                      "name":  "type",
+                      "type":  "enum(\u00270\u0027,\u00271\u0027,\u00272\u0027,\u00273\u0027,\u00274\u0027,\u00275\u0027,\u00276\u0027,\u00277\u0027,\u00278\u0027)"
+                  },
+                  {
+                      "name":  "type_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "role_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "student_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "teacher_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "supervisor_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "coordinator_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "acadsupervisor_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "adminstrator_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "adminEmployee_id",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "Description_ar",
+                      "type":  "text"
+                  },
+                  {
+                      "name":  "type1",
+                      "type":  "int(11)"
+                  },
+                  {
+                      "name":  "img",
+                      "type":  "varchar(191)"
+                  },
+                  {
+                      "name":  "Description_en",
+                      "type":  "text"
+                  },
+                  {
+                      "name":  "complaint_officer_active",
+                      "type":  "tinyint(1)"
+                  },
+                  {
+                      "name":  "complaint_auth_version",
+                      "type":  "int(10) unsigned"
+                  }
+              ],
+    "room_student":  [
+                         {
+                             "name":  "id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "student_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "room_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "year_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "term",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "created_at",
+                             "type":  "timestamp"
+                         },
+                         {
+                             "name":  "updated_at",
+                             "type":  "timestamp"
+                         }
+                     ],
+    "student_academic_placements":  [
+                                        {
+                                            "name":  "id",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "student_id",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "year_id",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "class_id",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "room_id",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "term_id",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "effective_from",
+                                            "type":  "datetime"
+                                        },
+                                        {
+                                            "name":  "effective_to",
+                                            "type":  "datetime"
+                                        },
+                                        {
+                                            "name":  "status",
+                                            "type":  "varchar(20)"
+                                        },
+                                        {
+                                            "name":  "reason",
+                                            "type":  "varchar(50)"
+                                        },
+                                        {
+                                            "name":  "action_source",
+                                            "type":  "varchar(50)"
+                                        },
+                                        {
+                                            "name":  "actioned_by",
+                                            "type":  "bigint(20) unsigned"
+                                        },
+                                        {
+                                            "name":  "created_at",
+                                            "type":  "timestamp"
+                                        },
+                                        {
+                                            "name":  "updated_at",
+                                            "type":  "timestamp"
+                                        }
+                                    ],
+    "student_transfer_histories":  [
+                                       {
+                                           "name":  "id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "student_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "user_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "year_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "from_class_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "from_room_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "to_class_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "to_room_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "previous_room_student_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "previous_students_mark_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "previous_report_card_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "previous_room_student_snapshot",
+                                           "type":  "longtext"
+                                       },
+                                       {
+                                           "name":  "previous_students_mark_snapshot",
+                                           "type":  "longtext"
+                                       },
+                                       {
+                                           "name":  "previous_report_card_snapshot",
+                                           "type":  "longtext"
+                                       },
+                                       {
+                                           "name":  "transferred_by_user_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "from_placement_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "to_placement_id",
+                                           "type":  "bigint(20) unsigned"
+                                       },
+                                       {
+                                           "name":  "transfer_type",
+                                           "type":  "varchar(255)"
+                                       },
+                                       {
+                                           "name":  "created_at",
+                                           "type":  "timestamp"
+                                       },
+                                       {
+                                           "name":  "updated_at",
+                                           "type":  "timestamp"
+                                       }
+                                   ],
+    "teacher_room_lesson":  [
+                                {
+                                    "name":  "id",
+                                    "type":  "int(11)"
+                                },
+                                {
+                                    "name":  "teacher_id",
+                                    "type":  "int(11)"
+                                },
+                                {
+                                    "name":  "room_id",
+                                    "type":  "int(11)"
+                                },
+                                {
+                                    "name":  "class_id",
+                                    "type":  "int(11)"
+                                },
+                                {
+                                    "name":  "year_id",
+                                    "type":  "int(11)"
+                                },
+                                {
+                                    "name":  "lesson_id",
+                                    "type":  "int(11)"
+                                },
+                                {
+                                    "name":  "quize_status",
+                                    "type":  "enum(\u00270\u0027,\u00271\u0027,\u0027\u0027,\u0027\u0027)"
+                                },
+                                {
+                                    "name":  "oral_status",
+                                    "type":  "enum(\u00270\u0027,\u00271\u0027,\u0027\u0027,\u0027\u0027)"
+                                },
+                                {
+                                    "name":  "activity_status",
+                                    "type":  "enum(\u00270\u0027,\u00271\u0027,\u0027\u0027,\u0027\u0027)"
+                                },
+                                {
+                                    "name":  "homework_status",
+                                    "type":  "enum(\u00270\u0027,\u00271\u0027,\u0027\u0027,\u0027\u0027)"
+                                },
+                                {
+                                    "name":  "exam_status",
+                                    "type":  "enum(\u00270\u0027,\u00271\u0027,\u0027\u0027,\u0027\u0027)"
+                                },
+                                {
+                                    "name":  "created_at",
+                                    "type":  "timestamp"
+                                },
+                                {
+                                    "name":  "updated_at",
+                                    "type":  "timestamp"
+                                }
+                            ],
+    "exams2":  [
+                   {
+                       "name":  "id",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "user_id",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "class_id",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "room_id",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "lesson_id",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "term_id",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "type",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "is_taken",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "is_file",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "name",
+                       "type":  "longtext"
+                   },
+                   {
+                       "name":  "question_picker",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "selected_ques",
+                       "type":  "text"
+                   },
+                   {
+                       "name":  "has_traditional",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "file",
+                       "type":  "varchar(200)"
+                   },
+                   {
+                       "name":  "required",
+                       "type":  "text"
+                   },
+                   {
+                       "name":  "period",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "mark",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "start_date",
+                       "type":  "datetime"
+                   },
+                   {
+                       "name":  "end_date",
+                       "type":  "datetime"
+                   },
+                   {
+                       "name":  "groupe",
+                       "type":  "int(11)"
+                   },
+                   {
+                       "name":  "notes",
+                       "type":  "varchar(99)"
+                   },
+                   {
+                       "name":  "created_at",
+                       "type":  "timestamp"
+                   },
+                   {
+                       "name":  "updated_at",
+                       "type":  "timestamp"
+                   }
+               ],
+    "exam_result2":  [
+                         {
+                             "name":  "id",
+                             "type":  "bigint(20)"
+                         },
+                         {
+                             "name":  "class_id",
+                             "type":  "bigint(20)"
+                         },
+                         {
+                             "name":  "room_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "exam_id",
+                             "type":  "bigint(20)"
+                         },
+                         {
+                             "name":  "user_id",
+                             "type":  "bigint(20)"
+                         },
+                         {
+                             "name":  "lesson_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "selected_ques",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "user_answers",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "result",
+                             "type":  "varchar(15)"
+                         },
+                         {
+                             "name":  "show_result",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "traditional_result",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "type",
+                             "type":  "enum(\u00271\u0027,\u00272\u0027)"
+                         },
+                         {
+                             "name":  "status",
+                             "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                         },
+                         {
+                             "name":  "start_time",
+                             "type":  "datetime"
+                         },
+                         {
+                             "name":  "medal",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "end_time",
+                             "type":  "datetime"
+                         },
+                         {
+                             "name":  "term_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "Created_at",
+                             "type":  "timestamp"
+                         },
+                         {
+                             "name":  "Updated_at",
+                             "type":  "timestamp"
+                         }
+                     ],
+    "exam_result":  [
+                        {
+                            "name":  "id",
+                            "type":  "bigint(20)"
+                        },
+                        {
+                            "name":  "class_id",
+                            "type":  "bigint(20)"
+                        },
+                        {
+                            "name":  "room_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "exam_id",
+                            "type":  "bigint(20)"
+                        },
+                        {
+                            "name":  "user_id",
+                            "type":  "bigint(20)"
+                        },
+                        {
+                            "name":  "lesson_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "lecture_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "selected_ques",
+                            "type":  "text"
+                        },
+                        {
+                            "name":  "user_answers",
+                            "type":  "text"
+                        },
+                        {
+                            "name":  "result",
+                            "type":  "varchar(15)"
+                        },
+                        {
+                            "name":  "show_result",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "traditional_result",
+                            "type":  "text"
+                        },
+                        {
+                            "name":  "type",
+                            "type":  "enum(\u00271\u0027,\u00272\u0027,\u00273\u0027,\u00274\u0027,\u00275\u0027,\u00270\u0027,\u00276\u0027,\u00277\u0027,\u00278\u0027)"
+                        },
+                        {
+                            "name":  "status",
+                            "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                        },
+                        {
+                            "name":  "start_time",
+                            "type":  "datetime"
+                        },
+                        {
+                            "name":  "end_time",
+                            "type":  "datetime"
+                        },
+                        {
+                            "name":  "medal",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "term_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "Created_at",
+                            "type":  "timestamp"
+                        },
+                        {
+                            "name":  "Updated_at",
+                            "type":  "timestamp"
+                        }
+                    ],
+    "lesson_teacher_room_term_exam":  [
+                                          {
+                                              "name":  "id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "lesson_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "teacher_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "room_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "term_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "video",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "type_video",
+                                              "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                                          },
+                                          {
+                                              "name":  "quize",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "test",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "exam",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "addition",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "type",
+                                              "type":  "enum(\u00270\u0027,\u00271\u0027,\u00272\u0027,\u00273\u0027,\u00274\u0027,\u00275\u0027,\u00276\u0027,\u00277\u0027,\u00278\u0027)"
+                                          },
+                                          {
+                                              "name":  "type_file",
+                                              "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                                          },
+                                          {
+                                              "name":  "extension",
+                                              "type":  "varchar(20)"
+                                          },
+                                          {
+                                              "name":  "start_time",
+                                              "type":  "datetime"
+                                          },
+                                          {
+                                              "name":  "end_time",
+                                              "type":  "datetime"
+                                          },
+                                          {
+                                              "name":  "namehomework",
+                                              "type":  "varchar(191)"
+                                          },
+                                          {
+                                              "name":  "homework_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "name_quize",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "name_exam",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "name_audio",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "audio_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "audio_file",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "name_video",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "name_addition",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "addition_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "type_voice",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "lecture_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "period",
+                                              "type":  "varchar(191)"
+                                          },
+                                          {
+                                              "name":  "note",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "success_mark",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "exam_status",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "class_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "selected_ques",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "has_traditional",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "test_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "video_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "quiz_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "exam_link",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "name_quize1",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "quiz_link1",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "quize1",
+                                              "type":  "text"
+                                          },
+                                          {
+                                              "name":  "coor_id",
+                                              "type":  "int(11)"
+                                          },
+                                          {
+                                              "name":  "key",
+                                              "type":  "bigint(20)"
+                                          },
+                                          {
+                                              "name":  "created_at",
+                                              "type":  "timestamp"
+                                          },
+                                          {
+                                              "name":  "updated_at",
+                                              "type":  "timestamp"
+                                          }
+                                      ],
+    "exams_files":  [
+                        {
+                            "name":  "id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "class_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "room_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "lesson_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "exam_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "student_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "term_id",
+                            "type":  "int(11)"
+                        },
+                        {
+                            "name":  "file",
+                            "type":  "text"
+                        },
+                        {
+                            "name":  "extension",
+                            "type":  "varchar(15)"
+                        },
+                        {
+                            "name":  "created_at",
+                            "type":  "timestamp"
+                        },
+                        {
+                            "name":  "updated_at",
+                            "type":  "timestamp"
+                        }
+                    ],
+    "student_lesson_teacher_room_term_exam":  [
+                                                  {
+                                                      "name":  "id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "student_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "lesson_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "teacher_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "room_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "term_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "file_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "type",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "file",
+                                                      "type":  "text"
+                                                  },
+                                                  {
+                                                      "name":  "extension",
+                                                      "type":  "varchar(20)"
+                                                  },
+                                                  {
+                                                      "name":  "exam_id",
+                                                      "type":  "int(11)"
+                                                  },
+                                                  {
+                                                      "name":  "created_at",
+                                                      "type":  "timestamp"
+                                                  },
+                                                  {
+                                                      "name":  "updated_at",
+                                                      "type":  "timestamp"
+                                                  }
+                                              ],
+    "students_marks":  [
+                           {
+                               "name":  "id",
+                               "type":  "int(11)"
+                           },
+                           {
+                               "name":  "student_id",
+                               "type":  "int(11)"
+                           },
+                           {
+                               "name":  "room_id",
+                               "type":  "int(11)"
+                           },
+                           {
+                               "name":  "year_id",
+                               "type":  "int(11)"
+                           },
+                           {
+                               "name":  "mark",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "mark2",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "result1",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "result2",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "result",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "term_result",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "year_result",
+                               "type":  "varchar(255)"
+                           },
+                           {
+                               "name":  "status",
+                               "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                           },
+                           {
+                               "name":  "adjustable",
+                               "type":  "int(11)"
+                           },
+                           {
+                               "name":  "lang",
+                               "type":  "varchar(191)"
+                           },
+                           {
+                               "name":  "religion",
+                               "type":  "enum(\u00270\u0027,\u00271\u0027)"
+                           },
+                           {
+                               "name":  "estimation",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "estimation1",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "estimation2",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "worke_degree",
+                               "type":  "text"
+                           },
+                           {
+                               "name":  "notes",
+                               "type":  "longtext"
+                           },
+                           {
+                               "name":  "key",
+                               "type":  "int(11)"
+                           },
+                           {
+                               "name":  "created_at",
+                               "type":  "timestamp"
+                           },
+                           {
+                               "name":  "updated_at",
+                               "type":  "timestamp"
+                           }
+                       ],
+    "report_cards":  [
+                         {
+                             "name":  "id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "year_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "room_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "student_id",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "adjustable",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "teacher",
+                             "type":  "varchar(60)"
+                         },
+                         {
+                             "name":  "teacher_notes",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "final_result",
+                             "type":  "varchar(35)"
+                         },
+                         {
+                             "name":  "manager_notes",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "parent_notes",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "class",
+                             "type":  "int(11)"
+                         },
+                         {
+                             "name":  "actual_attendance",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "student_attendance",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "justified_absence",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "unjustified_absence",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "teacher_name",
+                             "type":  "text"
+                         },
+                         {
+                             "name":  "created_at",
+                             "type":  "timestamp"
+                         },
+                         {
+                             "name":  "updated_at",
+                             "type":  "timestamp"
+                         }
+                     ],
+    "classes_room_role_exams":  [
+                                    {
+                                        "name":  "id",
+                                        "type":  "int(11)"
+                                    },
+                                    {
+                                        "name":  "class_id",
+                                        "type":  "int(11)"
+                                    },
+                                    {
+                                        "name":  "room_id",
+                                        "type":  "int(11)"
+                                    },
+                                    {
+                                        "name":  "roles",
+                                        "type":  "text"
+                                    },
+                                    {
+                                        "name":  "year_id",
+                                        "type":  "int(11)"
+                                    },
+                                    {
+                                        "name":  "role_id",
+                                        "type":  "int(11)"
+                                    },
+                                    {
+                                        "name":  "created_at",
+                                        "type":  "timestamp"
+                                    },
+                                    {
+                                        "name":  "updated_at",
+                                        "type":  "timestamp"
+                                    }
+                                ]
+}

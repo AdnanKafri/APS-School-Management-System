@@ -164,7 +164,7 @@
 
     .teacher-schedule-v2 .teacher-timetable-wrap {
         width: 100%;
-        overflow: visible;
+        overflow-x: auto;
     }
 
     .teacher-schedule-v2 .teacher-timetable {
@@ -261,6 +261,10 @@
         margin: 0 !important;
         color: inherit !important;
         line-height: 1.35;
+    }
+
+    .teacher-schedule-v2 .teacher-timetable__lesson-box + .teacher-timetable__lesson-box {
+        margin-top: .5rem;
     }
 
     .teacher-schedule-v2 .teacher-timetable__lesson-title {
@@ -478,82 +482,62 @@
     </div>
 
     @php
+        $schedulePeriods = collect($schedule)->unique('id')->values();
         $scheduleLookup = [];
-        foreach ($schedule as $scheduleItem) {
-            $scheduleLookup[$scheduleItem->lecture_time_id][$scheduleItem->day_id] = $scheduleItem;
+        foreach ($schedulePeriods as $scheduleItem) {
+            $timeKey = $scheduleItem->lecture_time->start_time . '|' . $scheduleItem->lecture_time->end_time;
+            $scheduleLookup[$timeKey][$scheduleItem->day_id][] = $scheduleItem;
         }
+        $timeWindows = $schedulePeriods->map(function ($period) {
+            return $period->lecture_time->start_time . '|' . $period->lecture_time->end_time;
+        })->unique()->sort()->values();
     @endphp
 
     <div class="card v2-card teacher-schedule-card">
         <div class="card-body">
             <div id="schedule-capture" class="teacher-timetable-wrap">
-                @php
-                    $primaryRoomId = $schedule
-                        ->groupBy('room_id')
-                        ->sortByDesc(function ($roomSchedule) {
-                            return $roomSchedule->count();
-                        })
-                        ->keys()
-                        ->first();
-
-                    $instructionLectureTimes = $primaryRoomId
-                        ? $lecture_times->where('room_id', $primaryRoomId)
-                            ->where('type', 1)
-                            ->sortBy(function ($lectureTime) {
-                                return sprintf('%s|%s|%06d', $lectureTime->start_time, $lectureTime->end_time, $lectureTime->id);
-                            })
-                            ->values()
-                        : collect();
-
-                    $lessonLabels = [
-                        'الحصة الأولى',
-                        'الحصة الثانية',
-                        'الحصة الثالثة',
-                        'الحصة الرابعة',
-                        'الحصة الخامسة',
-                        'الحصة السادسة',
-                        'الحصة السابعة',
-                    ];
-                @endphp
-                @if($instructionLectureTimes->isEmpty())
+                @if($timeWindows->isEmpty())
                     <p class="teacher-schedule-empty">لا يوجد جدول حصص مسجل لهذا المدرس في العام الدراسي الحالي.</p>
                 @else
-                <table class="table teacher-timetable" style="direction: rtl !important; text-align: center !important;">
+                <table class="table teacher-timetable" style="direction: rtl !important; text-align: center !important; min-width: {{ 104 + $timeWindows->count() * 144 }}px;">
                     <thead>
                         <tr>
                             <th scope="col" class="teacher-timetable__day-head">اليوم</th>
-                            @foreach($instructionLectureTimes as $index => $lecture_time)
+                            @foreach($timeWindows as $timeKey)
                                 <th scope="col" class="teacher-timetable__slot-head">
-                                    <span class="teacher-timetable__slot-name">{{ $lessonLabels[$index] ?? $lecture_time->name }}</span>
-                                    <span class="teacher-timetable__slot-time">{{ $lecture_time->start_time." - ".$lecture_time->end_time }}</span>
+                                    <span class="teacher-timetable__slot-time" dir="ltr">{{ str_replace('|', ' - ', $timeKey) }}</span>
                                 </th>
                             @endforeach
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($days->take(7) as $day)
+                        @foreach($days as $day)
                             <tr>
                                 <th scope="row" class="teacher-timetable__day-head">{{ $day->name }}</th>
-                                @foreach($instructionLectureTimes as $lecture_time)
+                                @foreach($timeWindows as $timeKey)
                                     @php
-                                        $lesson_time = $scheduleLookup[$lecture_time->id][$day->id] ?? null;
+                                        $cellPeriods = $scheduleLookup[$timeKey][$day->id] ?? [];
                                     @endphp
                                     <td class="teacher-timetable__cell">
-                                        @if($lesson_time)
+                                        @forelse($cellPeriods as $lesson_time)
                                             @php
                                                 $background = '';
                                                 if($today == $day->id - 1 && $lesson_time->attendance == false) $background = 'btn-success';
                                                 else if($today == $day->id - 1 && $lesson_time->attendance == true) $background = 'btn-danger';
                                                 else $background = 'btn-info';
                                             @endphp
-                                            <a class="btn {{ $background }} btn-sm add_time teacher-timetable__lesson-box" title="الدخول إلى الحصة">
-                                                <p class="lesson_name-schedule{{  $day->id .''. $lecture_time->id }} teacher-timetable__lesson-title">{{ $lesson_time->lesson->name }}</p>
-                                                <p class="teacher_name-schedule{{  $day->id .''. $lecture_time->id }} teacher-timetable__meta">{{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }}</p>
+                                            <a class="btn {{ $background }} btn-sm add_time teacher-timetable__lesson-box"
+                                               data-schedule-id="{{ $lesson_time->id }}" data-slot-id="{{ $lesson_time->lecture_time_id }}"
+                                               data-room-id="{{ $lesson_time->room_id }}" data-lesson-id="{{ $lesson_time->lesson_id }}"
+                                               data-teacher-id="{{ $lesson_time->teacher_id }}" data-day-id="{{ $lesson_time->day_id }}"
+                                               title="الدخول إلى الحصة">
+                                                <p class="lesson_name-schedule{{ $lesson_time->id }} teacher-timetable__lesson-title">{{ $lesson_time->lesson->name }}</p>
+                                                <p class="teacher_name-schedule{{ $lesson_time->id }} teacher-timetable__meta">{{ $lesson_time->room->classes->name." / ".$lesson_time->room->name }}</p>
                                                 <p class="teacher-timetable__meta">{{ $lesson_time->lecture_time->start_time." - ".$lesson_time->lecture_time->end_time }}</p>
                                             </a>
-                                        @else
+                                        @empty
                                             <div class="teacher-timetable__empty">لا يوجد حصة</div>
-                                        @endif
+                                        @endforelse
                                     </td>
                                 @endforeach
                             </tr>

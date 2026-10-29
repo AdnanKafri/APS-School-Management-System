@@ -474,9 +474,7 @@ border-right: 1px solid #ddd;
                                             <!--end select students-->
                                         </div>
                                          {{-- <div class="col-md-4" style="position: relative;z-index: 9;">
-                                           <a href="{{ route('export_exam',[$quize->id,$room_id,$lesson_id]) }}"  class="cssbuttons-io-button">
-                                               تصدير العلامات  &nbsp;
-                                               </a>
+                                           <form action="{{ route('export_exam',[$quize->id,$room_id,$lesson_id]) }}" method="post" data-confirm="{{ __('gradebook.import_confirm') }}" onsubmit="return confirm(this.dataset.confirm);">@csrf<button type="submit" class="cssbuttons-io-button">{{ __('gradebook.import_marks') }}</button></form>
                                               </div> --}}
 
                                     </div>
@@ -510,6 +508,10 @@ border-right: 1px solid #ddd;
                                         </thead>
                                         <tbody>
                                             @foreach ($quize_result as $item)
+                                                @if(in_array($item->continuity['state'] ?? null, ['carried', 'conflict'], true))
+                                                    @include('gradebook.continuity_row', ['continuityFile' => true])
+                                                    @continue
+                                                @endif
                                                 @if($item->student)
                                                     <tr>
                                                         <form action="{{ route('dashboard.teacher.student_save_mark_quize') }}" method="post" enctype="multipart/form-data">
@@ -758,8 +760,13 @@ $(document).on('keyup', '.number_mark', function () {
             $.ajax({
                 url: url,
                 data : data,
-                type: "get",
-                contentType: 'application/json',
+                type: "post",
+                headers: { 'X-CSRF-TOKEN': @json(csrf_token()) },
+                error: function (xhr) {
+                    var errors = (xhr.responseJSON || {}).errors || {};
+                    var messages = Object.keys(errors).map(function (key) { return errors[key].join(' '); });
+                    alert(messages.join('\n') || @json(__('gradebook.save_failed')));
+                },
                 success: function (data) {
                     location.reload();
 
@@ -800,6 +807,10 @@ console.log(data);
 if(lect==1){
     $('.table1 tbody').empty(); 
     $.each(data, function (key, value) {
+        if (value.continuity_row) {
+            $('.table1 tbody').append(value.continuity_row);
+            return;
+        }
          medal=`<td style="height: 86px"> </td>`
          c=`<input style="height: 50px; width:80px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">`
              d=`<input inputmode="decimal" style="height: 50px; width:94px;margin: auto;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">> `
@@ -952,6 +963,10 @@ ${b}</td>
 else if(lect==2){
     $('.table1 tbody').empty();
     $.each(data, function (key, value) {
+        if (value.continuity_row) {
+            $('.table1 tbody').append(value.continuity_row);
+            return;
+        }
          c=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">` 
          medal=`<td style="height: 86px"> </td>`
          d=`<input style="height: 50px; width:60px"  hidden name="exam_result_id"  id="exam_result_id" value=""  type="text">

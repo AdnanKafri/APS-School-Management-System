@@ -39,10 +39,10 @@
                     <div class="row align-items-center mb-4">
                         <div class="col-8 text-right">
                             <h3 class="mb-0 font-weight-bold" style="color: #32325d;">
-                                {{ $subject->name }} - {{ $room->name }} <span class="text-muted small">({{ $term->name }})</span>
+                                {{ $subject->name }} - {{ $room->name }} <span class="text-muted small">({{ $term->term }})</span>
                             </h3>
                         </div>
-                        <div class="col-6 text-left">
+                        <div class="col-4 text-left">
                             @if(isset($gradebookStatus) && $gradebookStatus !== 'OPEN')
                                 <span class="badge badge-lg badge-danger text-white">
                                     <i class="fa fa-lock ml-1"></i> مغلق
@@ -55,6 +55,8 @@
                         </div>
                     </div>
 
+                    <p class="text-muted">{{ __('gradebook.summary_notice') }}</p>
+                    <div id="gradebook-feedback" role="status" aria-live="polite" class="mb-2"></div>
                     <div class="card shadow border-0">
                         <div class="table-responsive">
                             <table class="table align-items-center table-hover text-right" id="gradebookTable">
@@ -91,14 +93,17 @@
                                             <td class="text-center p-0 {{ $bgClass }}" style="vertical-align: middle;">
                                                 @if($isEditable)
                                                     <input type="number" 
-                                                           step="0.1" 
+                                                           step="0.1" min="0" max="{{ $comp->calculated_max }}" inputmode="decimal"
+                                                           aria-label="{{ $student->first_name }} {{ $student->last_name }} - {{ $comp->name }}"
                                                            class="form-control border-0 text-center grade-input"
                                                            style="height: 45px; background: transparent; font-weight: bold; color: #000;"
                                                            value="{{ $val }}"
                                                            data-student="{{ $student->id }}"
                                                            data-comp="{{ $comp->id }}"
-                                                           data-weight="{{ $comp->weight }}"
+                                                           data-accepted="{{ $val }}"
                                                     >
+                                                    <small class="save-state d-block" aria-live="polite"></small>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger grade-retry" hidden>{{ __('gradebook.retry') }}</button>
                                                 @else
                                                     <span class="d-block py-2 text-muted" style="font-weight: 600;">
                                                         {{ $val !== '' ? $val : '-' }}
@@ -108,7 +113,7 @@
                                         @endforeach
 
                                         <td class="text-center font-weight-bold total-cell" style="color: #001586; font-size: 15px;">
-                                            {{ $student->gradebook_total ?? 0 }}
+                                            {{ $student->gradebook_total ?? '-' }}
                                         </td>
                                     </tr>
                                     @endforeach
@@ -116,6 +121,7 @@
                             </table>
                         </div>
                     </div>
+                    @include('gradebook.assessment_results')
                 </div>
             </div>
         </div>
@@ -125,67 +131,79 @@
 
 @section('js')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Notification Helper (using existing NotifIt if available or fallback)
-        function notify(msg, type) {
-            if (window.notif) {
-                window.notif({msg: msg, type: type});
-            } else {
-                console.log(type + ": " + msg);
+document.addEventListener('DOMContentLoaded', function () {
+    var feedback = document.getElementById('gradebook-feedback');
+    var text = {
+        saving: @json(__('gradebook.saving')),
+        saved: @json(__('gradebook.saved')),
+        failed: @json(__('gradebook.save_failed')),
+        pending: @json(__('gradebook.leave_pending'))
+    };
+    function save(input) {
+        var row = input.closest('tr');
+        if (row.dataset.saving === '1') return;
+        var cell = input.closest('td');
+        var status = cell.querySelector('.save-state');
+        var retry = cell.querySelector('.grade-retry');
+        if (!input.checkValidity()) {
+            input.reportValidity();
+            return;
+        }
+        row.dataset.saving = '1';
+        row.querySelectorAll('.grade-input').forEach(function (field) { field.disabled = true; });
+        input.dataset.unsaved = '1';
+        retry.hidden = true;
+        status.textContent = text.saving;
+        $.ajax({
+            url: @json(route('teacher.gradebook.save')),
+            type: 'POST',
+            data: {
+                _token: @json(csrf_token()), student_id: input.dataset.student,
+                component_id: input.dataset.comp, value: input.value,
+                room_id: @json($room->id), subject_id: @json($subject->id)
             }
-        }
-
-        const inputs = document.querySelectorAll('.grade-input');
-        
-        inputs.forEach(input => {
-            input.addEventListener('change', function() {
-                saveMark(this);
-                updateRowTotal(this);
-            });
+        }).done(function (response) {
+            if (!response.success) { failed(response.message); return; }
+            input.value = response.value === null ? '' : response.value;
+            input.dataset.accepted = input.value;
+            delete input.dataset.unsaved;
+            input.removeAttribute('aria-invalid');
+            row.querySelector('.total-cell').textContent = response.total === null ? '-' : response.total;
+            status.textContent = text.saved;
+            feedback.textContent = text.saved;
+            feedback.className = 'mb-2 text-success';
+        }).fail(function (xhr) {
+            var response = xhr.responseJSON || {};
+            var errors = response.errors ? Object.keys(response.errors).map(function (key) { return response.errors[key].join(' '); }).join(' ') : response.message;
+            failed(errors);
+        }).always(function () {
+            row.dataset.saving = '0';
+            row.querySelectorAll('.grade-input').forEach(function (field) { field.disabled = false; });
         });
-
-        function updateRowTotal(input) {
-            const row = input.closest('tr');
-            let total = 0;
-            row.querySelectorAll('.grade-input').forEach(inp => {
-                if(inp.value !== '') {
-                    total += parseFloat(inp.value);
-                }
-            });
-            row.querySelector('.total-cell').textContent = total.toFixed(1);
+        function failed(message) {
+            input.setAttribute('aria-invalid', 'true');
+            status.textContent = text.failed;
+            feedback.textContent = message || text.failed;
+            feedback.className = 'mb-2 text-danger';
+            retry.hidden = false;
         }
-
-        function saveMark(input) {
-            const studentId = input.getAttribute('data-student');
-            const compId = input.getAttribute('data-comp');
-            const value = input.value;
-            
-            // Visual Indicator
-            input.style.backgroundColor = '#fff3cd'; // Pending Yellow
-
-            $.ajax({
-                url: "{{ route('teacher.gradebook.save') }}", 
-                type: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    student_id: studentId,
-                    component_id: compId,
-                    value: value,
-                    room_id: "{{ $room->id }}",
-                    subject_id: "{{ $subject->id }}"
-                },
-                success: function(response) {
-                    input.style.backgroundColor = '#d4edda'; // Success Green
-                    setTimeout(() => input.style.backgroundColor = 'transparent', 1500);
-                    // notify('تم الحفظ بنجاح', 'success');
-                },
-                error: function(xhr) {
-                    input.style.backgroundColor = '#f8d7da'; // Error Red
-                    notify('خطأ في الحفظ', 'error');
-                    console.error(xhr);
-                }
-            });
+    }
+    document.querySelectorAll('.grade-input').forEach(function (input) {
+        input.addEventListener('change', function () { save(input); });
+        input.addEventListener('input', function () {
+            if (input.value !== input.dataset.accepted) input.dataset.unsaved = '1';
+            else delete input.dataset.unsaved;
+        });
+    });
+    document.querySelectorAll('.grade-retry').forEach(function (button) {
+        button.addEventListener('click', function () { save(button.closest('td').querySelector('.grade-input')); });
+    });
+    window.addEventListener('beforeunload', function (event) {
+        if (document.querySelector('.grade-input[data-unsaved="1"]')) {
+            event.preventDefault();
+            event.returnValue = text.pending;
         }
     });
+});
 </script>
 @endsection

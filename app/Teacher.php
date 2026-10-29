@@ -34,7 +34,9 @@ public function evaluation(){
     public function lessons(){
 
         $year=Year::where('current_year','1')->first();
-        return $this->BelongsToMany(Lesson::class , 'teacher_room_lesson','teacher_id','lesson_id')->where('teacher_room_lesson.year_id','=',$year->id);
+        return $this->BelongsToMany(Lesson::class , 'teacher_room_lesson','teacher_id','lesson_id')
+            ->where('teacher_room_lesson.year_id', $year ? $year->id : 0)
+            ->whereIn('teacher_room_lesson.id', Teacher_room_lesson::currentTimetable()->select('teacher_room_lesson.id'));
 
     }
 

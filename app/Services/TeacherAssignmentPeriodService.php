@@ -12,6 +12,11 @@ class TeacherAssignmentPeriodService
     public function openForAssignment(Teacher_room_lesson $assignment, $effectiveFrom = null, $source = 'teacher_room_lesson')
     {
         return DB::transaction(function () use ($assignment, $effectiveFrom, $source) {
+            $year = \App\Year::where('current_year', 1)->lockForUpdate()->first();
+            if (!$year || (int) $assignment->year_id !== (int) $year->id
+                || !Teacher_room_lesson::currentTimetable()->whereKey($assignment->id)->exists()) {
+                return null;
+            }
             $active = TeacherAssignmentPeriod::where('teacher_room_lesson_id', $assignment->id)
                 ->whereNull('effective_to')
                 ->lockForUpdate()

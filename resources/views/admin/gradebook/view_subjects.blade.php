@@ -40,8 +40,21 @@ td{
 
 @section('js')
 <script>
-    function toggleGradebookStatus(classId, termId, newStatus) {
-        if(!confirm('هل أنت متأكد من تغيير حالة دفتر العلامات؟')) return;
+    function toggleGradebookStatus(classId, termId, control) {
+        var previous = control.dataset.accepted === 'OPEN';
+        var newStatus = control.checked ? 'OPEN' : 'LOCKED';
+        if(!confirm(@json(__('gradebook.status_confirm')))) {
+            control.checked = previous;
+            return;
+        }
+        control.disabled = true;
+        var feedback = document.getElementById('gradebook-status-feedback');
+        feedback.textContent = @json(__('gradebook.saving'));
+        function failed(message) {
+            control.checked = previous;
+            feedback.textContent = message || @json(__('gradebook.write_failed'));
+            feedback.className = 'text-danger';
+        }
 
         $.ajax({
             url: "{{ route('admin.gradebook.status') }}",
@@ -53,12 +66,19 @@ td{
                 status: newStatus
             },
             success: function(response) {
-                if(response.success) {
+                if(response.success && response.status === newStatus) {
+                    control.dataset.accepted = newStatus;
                     location.reload();
+                } else {
+                    failed(response.message);
                 }
             },
             error: function(xhr) {
-                alert('Error updating status');
+                var response = xhr.responseJSON || {};
+                failed(response.message);
+            },
+            complete: function() {
+                control.disabled = false;
             }
         });
     }
@@ -87,8 +107,9 @@ td{
              @php
                   // Determine current status
                   $year = \App\Year::where('current_year', '1')->first();
-                  $term = \App\Term_year::where('current_term', '1')->where('year_id', $year->id)->first();
-                  $status = \App\Services\GradebookStatusService::getStatus($room->class_id, $term->id);
+                  $term = $year && (int) $year->id === (int) $room->year_id
+                      ? \App\Term_year::where('current_term', '1')->where('year_id', $year->id)->first() : null;
+                  $status = $term ? \App\Services\GradebookStatusService::getStatus($room->class_id, $term->id) : 'LOCKED';
                   $isLocked = $status !== 'OPEN';
              @endphp
             
@@ -96,14 +117,20 @@ td{
                 {{ $isLocked ? 'مغلق' : 'مفتوح' }}
             </span>
 
+            @if($term)
             <label class="custom-toggle custom-toggle-default ml-3 mb-0" style="vertical-align: middle;">
                 <input type="checkbox" id="statusToggle" {{ !$isLocked ? 'checked' : '' }} 
                        class="custom-toggle-input"
-                       onchange="toggleGradebookStatus({{ $room->class_id }}, {{ $term->id }}, this.checked ? 'OPEN' : 'LOCKED')">
+                       aria-label="{{ __('gradebook.status_confirm') }}" data-accepted="{{ $status }}"
+                       onchange="toggleGradebookStatus({{ $room->class_id }}, {{ $term->id }}, this)">
                 <span class="custom-toggle-slider rounded-circle"></span>
             </label>
+            @else
+                <small>{{ __('gradebook.term_missing') }}</small>
+            @endif
         </div>
     </div>
+    <div class="px-3" id="gradebook-status-feedback" role="status" aria-live="polite"></div>
 
     <div class="table-responsive">
         <table class="table align-items-center table-flush">

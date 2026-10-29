@@ -876,6 +876,7 @@ public function countries_currencies_archive($id)
 
         DB::transaction(function () use ($request) {
             $isCurrent = $request->boolean('current_term');
+            Year::whereKey($request->year_id)->lockForUpdate()->firstOrFail();
             if ($isCurrent) {
                 Term_year::where('year_id', $request->year_id)
                     ->where('current_term', 1)
@@ -913,6 +914,7 @@ public function countries_currencies_archive($id)
         }
 
         DB::transaction(function () use ($request) {
+            Year::whereKey($request->year_id)->lockForUpdate()->firstOrFail();
             $term = Term_year::findOrFail($request->term_id);
             $isCurrent = $request->boolean('current_term');
             if ($isCurrent) {
@@ -956,7 +958,9 @@ public function countries_currencies_archive($id)
         }
 
         DB::transaction(function () use ($activeYear, $term) {
+            Year::whereKey($activeYear->id)->lockForUpdate()->firstOrFail();
             Term_year::where('year_id', $activeYear->id)
+                ->where('id', '!=', $term->id)
                 ->update(['current_term' => 0]);
 
             $term->current_term = 1;
@@ -3313,6 +3317,7 @@ public function startQueueWorker()
 
         $formed_code = Auth::User()->view_password;
         if ($formed_code == $request->password) {
+            \App\Services\AssessmentResultSafety::assertContextDeletable('student_id', $request->student_id);
             $user = User::where('student_id', $request->student_id)->first();
             if (count(Students_mark::where('student_id', $request->student_id)->get()) > 0) {
                 Students_mark::where('student_id', $request->student_id)->delete();
@@ -6895,6 +6900,14 @@ public function class_update(Request $request)
         $session = $this->resolveCurrentYearLectureTime($validated['id']);
 
         DB::transaction(function () use ($session) {
+            Year::where('current_year', 1)->lockForUpdate()->firstOrFail();
+            $term = app(\App\Services\CurrentTeacherAssignments::class)->term();
+            if (!$term || Lesson_room_teacher_lecture_time::where('lecture_time_id', $session->id)
+                ->where('term_id', '!=', $term->id)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'id' => __('timetable.validation.historical_session'),
+                ]);
+            }
             $to_delete1 = Lesson_room_teacher_lecture_time::where('lecture_time_id', $session->id)->get();
             foreach ($to_delete1 as $x) {
                 $x->delete();
@@ -6902,6 +6915,7 @@ public function class_update(Request $request)
             Student_schedule_tracer::where('lecture_time_id', $session->id)->delete();
 
             $session->delete();
+            app(\App\Services\CurrentTeacherAssignments::class)->synchronize($session->room_id);
         });
 
         return redirect()->back()->with('success', __('timetable.deleted'));
@@ -6922,6 +6936,14 @@ public function class_update(Request $request)
 
 
     public function save_schedule(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            Year::where('current_year', 1)->lockForUpdate()->first();
+            return $this->saveScheduleWithLock($request);
+        }, 3);
+    }
+
+    private function saveScheduleWithLock(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'room_id' => 'required|integer|exists:rooms,id',
@@ -6989,6 +7011,12 @@ public function class_update(Request $request)
         if ((int) $lectureTime->type !== 1) {
             return $this->scheduleValidationFailure($request, [
                 'lecture_time_id' => [__('timetable.schedule.session_not_instructional')],
+            ]);
+        }
+        if (!$lectureTime->start_time || !$lectureTime->end_time
+            || strcmp((string) $lectureTime->start_time, (string) $lectureTime->end_time) >= 0) {
+            return $this->scheduleValidationFailure($request, [
+                'lecture_time_id' => [__('timetable.validation.end_after_start')],
             ]);
         }
 
@@ -7063,39 +7091,17 @@ public function class_update(Request $request)
 
         $replacedScheduleIds = $existingSlotAssignments->pluck('id')->all();
         foreach ($requestedAssignments as $assignment) {
-            $teacherConflict = Lesson_room_teacher_lecture_time::where('teacher_id', $assignment['teacher_id'])
+            $teacherConflict = app(\App\Services\CurrentTeacherAssignments::class)->schedule($assignment['teacher_id'])
                 ->where('day_id', $request->day_id)
-                ->where('term_id', $term->id)
-                ->where('year_id', $year->id)
                 ->when(!empty($replacedScheduleIds), function ($query) use ($replacedScheduleIds) {
-                    $query->whereNotIn('id', $replacedScheduleIds);
-                })
-                ->whereHas('room', function ($query) use ($year) {
-                    $query->where('year_id', $year->id);
+                    $query->whereNotIn('lesson_room_teacher_lecture_time.id', $replacedScheduleIds);
                 })
                 ->whereHas('lecture_time', function ($query) use ($lectureTime) {
-                    $query->where('type', 1)
-                        ->whereColumn('lecture_times.room_id', 'lesson_room_teacher_lecture_time.room_id')
-                        ->where('start_time', '<', $lectureTime->end_time)
+                    $query->where('start_time', '<', $lectureTime->end_time)
                         ->where('end_time', '>', $lectureTime->start_time);
                 })
-                ->whereExists(function ($query) use ($assignment, $year) {
-                    $query->select(DB::raw(1))
-                        ->from('teacher_room_lesson as active_assignment')
-                        ->join('rooms as active_room', 'active_room.id', '=', 'active_assignment.room_id')
-                        ->join('lessons as active_lesson', 'active_lesson.id', '=', 'active_assignment.lesson_id')
-                        ->whereColumn('active_assignment.room_id', 'lesson_room_teacher_lecture_time.room_id')
-                        ->whereColumn('active_assignment.lesson_id', 'lesson_room_teacher_lecture_time.lesson_id')
-                        ->whereColumn('active_assignment.teacher_id', 'lesson_room_teacher_lecture_time.teacher_id')
-                        ->where('active_assignment.teacher_id', $assignment['teacher_id'])
-                        ->where('active_assignment.year_id', $year->id)
-                        ->where('active_room.year_id', $year->id)
-                        ->whereColumn('active_assignment.class_id', 'active_room.class_id')
-                        ->whereColumn('active_lesson.class_id', 'active_room.class_id');
-                })
                 ->with(['teacher', 'day', 'lecture_time', 'lesson', 'room.classes'])
-                ->orderBy('id')
-                ->first();
+                ->orderBy('lesson_room_teacher_lecture_time.id')->first();
 
             if ($teacherConflict) {
                 $teacherName = trim(optional($teacherConflict->teacher)->first_name.' '.optional($teacherConflict->teacher)->last_name);
@@ -7174,6 +7180,7 @@ public function class_update(Request $request)
                 $schedule->year_id = $year->id;
                 $schedule->save();
             }
+            app(\App\Services\CurrentTeacherAssignments::class)->synchronize($room->id);
             });
             if ($preservationError) {
                 return $this->scheduleBusinessFailure($request, false, $preservationError);
@@ -7337,6 +7344,14 @@ public function class_update(Request $request)
 
     public function delete_lecture_time(Request $request)
     {
+        return DB::transaction(function () use ($request) {
+            Year::where('current_year', 1)->lockForUpdate()->first();
+            return $this->deleteScheduleWithLock($request);
+        }, 3);
+    }
+
+    private function deleteScheduleWithLock(Request $request)
+    {
         $year = Year::where('current_year', '1')->first();
         if (!$year) {
             return redirect()->back()->with('error', __('timetable.schedule.year_required'));
@@ -7376,6 +7391,7 @@ public function class_update(Request $request)
         }
 
         $schedule->delete();
+        app(\App\Services\CurrentTeacherAssignments::class)->synchronize($room->id);
 
         return redirect()->back()->with('success', __('timetable.schedule.deleted'));
     }
@@ -7551,11 +7567,8 @@ public function class_update(Request $request)
         // pring days
         $days = Day::all();
         // pring romm schedule
-        $schedule = Lesson_room_teacher_lecture_time::with('lesson', 'teacher')
-            ->where('room_id', $room->id)
-            ->where('year_id', $year->id)
-            ->where('term_id', $term->id)
-            ->get();
+        $schedule = app(\App\Services\CurrentTeacherAssignments::class)->schedule(null, $room->id)
+            ->with(['lesson', 'teacher'])->orderBy('id')->get();
 
         $room_name = $room->name;
         $room_id = $room->id;
@@ -7595,11 +7608,8 @@ public function class_update(Request $request)
         // pring days
         $days = Day::all();
         // pring romm schedule
-        $schedule = Lesson_room_teacher_lecture_time::with('lesson', 'teacher')
-            ->where('room_id', $room_id)
-            ->where('year_id', $year->id)
-            ->where('term_id', $term->id)
-            ->get();
+        $schedule = app(\App\Services\CurrentTeacherAssignments::class)->schedule(null, $room->id)
+            ->with(['lesson', 'teacher'])->orderBy('id')->get();
 
         $room_name = $room->name;
         $room_id = $room->id;
@@ -11026,6 +11036,7 @@ public function class_update(Request $request)
         // $delete_code = Hash::make($request->delete_code);
         $formed_code = Auth::User()->view_password;
         if ($formed_code == $request->delete_code) {
+            \App\Services\AssessmentResultSafety::assertContextDeletable('lesson_id', $request->lesson_id_delete);
 
             $to_delete1 =   Coordinator_class_lesson::where('lesson_id', $request->lesson_id_delete)->get();
 
@@ -11358,12 +11369,24 @@ public function class_update(Request $request)
             'end_time.after' => __('timetable.validation.end_after_start'),
         ]);
 
-        $session = $this->resolveCurrentYearLectureTime($validated['id']);
-        $session->name = $validated['session_name'];
-        $session->start_time = $validated['start_time'];
-        $session->type = $validated['type'];
-        $session->end_time = $validated['end_time'];
-        $session->save();
+        DB::transaction(function () use ($validated) {
+            Year::where('current_year', 1)->lockForUpdate()->firstOrFail();
+            $session = $this->resolveCurrentYearLectureTime($validated['id']);
+            $term = app(\App\Services\CurrentTeacherAssignments::class)->term();
+            $historical = Lesson_room_teacher_lecture_time::where('lecture_time_id', $session->id)
+                ->when($term, function ($q) use ($term) { $q->where('term_id', '!=', $term->id); })->exists();
+            if ($historical) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'id' => __('timetable.validation.historical_session'),
+                ]);
+            }
+            $session->name = $validated['session_name'];
+            $session->start_time = $validated['start_time'];
+            $session->type = $validated['type'];
+            $session->end_time = $validated['end_time'];
+            $session->save();
+            app(\App\Services\CurrentTeacherAssignments::class)->synchronize($session->room_id);
+        }, 3);
 
         return redirect()->back()->with('success', __('timetable.updated'));
     }
@@ -12055,33 +12078,11 @@ if($request->val){
         // pring days
         $days = Day::all();
         // pring teacher schedule
-        $schedule = Lesson_room_teacher_lecture_time::with('lesson', 'lecture_time')
-            ->where('teacher_id', $id)
-            ->where('lesson_room_teacher_lecture_time.year_id', $year->id)
-            ->where('lesson_room_teacher_lecture_time.term_id', $term->id)
-            ->whereHas('room', function ($query) use ($year) {
-                $query->where('year_id', $year->id);
-            })
-            ->whereHas('lecture_time', function ($query) {
-                $query->where('type', 1)
-                    ->whereColumn('lecture_times.room_id', 'lesson_room_teacher_lecture_time.room_id');
-            })
-            ->whereExists(function ($query) use ($id, $year) {
-                $query->select(DB::raw(1))
-                    ->from('teacher_room_lesson as current_assignment')
-                    ->whereColumn('current_assignment.room_id', 'lesson_room_teacher_lecture_time.room_id')
-                    ->whereColumn('current_assignment.lesson_id', 'lesson_room_teacher_lecture_time.lesson_id')
-                    ->whereColumn('current_assignment.teacher_id', 'lesson_room_teacher_lecture_time.teacher_id')
-                    ->where('current_assignment.teacher_id', $id)
-                    ->where('current_assignment.year_id', $year->id);
-            })
-            ->with(['room.classes' => function ($query) {
-                $query->select('id', 'name');
-            }])
+        $schedule = app(\App\Services\CurrentTeacherAssignments::class)->schedule($id)
+            ->with(['lesson', 'lecture_time', 'room.classes'])
             ->join('lecture_times', 'lecture_times.id', '=', 'lesson_room_teacher_lecture_time.lecture_time_id')
-            ->orderBy('lecture_times.start_time')
-            ->select('lesson_room_teacher_lecture_time.*')
-            ->get();
+            ->orderBy('lecture_times.start_time')->orderBy('lesson_room_teacher_lecture_time.id')
+            ->select('lesson_room_teacher_lecture_time.*')->get();
         $schedule_count = $schedule->count();
 
         // pring student schedule tracer
@@ -12955,7 +12956,22 @@ public function edit_coordinator_task($coordinator_id)
         return view('admin.quizes_of_room',compact('contents','count','rooms','room_id','lessons','class_id'));
     }
 
+   private function validateAssessmentCreationContext(Request $request, $year, array $roomIds)
+   {
+       $request->validate([
+           'class_id' => 'required|integer|exists:classes,id',
+           'lesson_id' => 'required|integer|exists:lessons,id',
+           'mark' => 'required|numeric|gt:0',
+       ]);
+       if (!$year || !$roomIds || !Lesson::whereKey($request->lesson_id)->where('class_id', $request->class_id)->exists()
+           || Room::whereIn('id', $roomIds)->where('class_id', $request->class_id)
+               ->where('year_id', $year->id)->count() !== count($roomIds)) {
+           \App\Services\AssessmentResultSafety::reject('context_invalid', 'room_id');
+       }
+   }
+
    public function quize_store(Request $request){
+         $request->validate(['room_id' => 'required|array|min:1', 'room_id.*' => 'required|integer|distinct|min:0']);
          $classes_roles = Classes_room_role_exam::where('role_id', auth()->user()->role_id)->get();
                $room_exam = [];
                   $room=[];
@@ -12966,7 +12982,7 @@ public function edit_coordinator_task($coordinator_id)
 
                 };
         $year=Year::where('current_year','1')->first();
-        $term = Term_year::where('current_term', '1')->first();
+        $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
         $rooms_id = $request->room_id ;
         if (in_array(0,$request->room_id)){
             $room = Room::findOrFail($request->my_room_id);
@@ -12983,7 +12999,10 @@ public function edit_coordinator_task($coordinator_id)
             }
 
         }
+        $this->validateAssessmentCreationContext($request, $year, $rooms_id);
         $exams = Exams2::where('id','>', '0')->latest('id')->first();
+        DB::transaction(function () use ($request, $rooms_id, $term, $exams) {
+       $createdIds = [];
        foreach ( $rooms_id as $room_id) {
 
            $exam = new Exams2();
@@ -13008,6 +13027,7 @@ public function edit_coordinator_task($coordinator_id)
            $exam->is_file = 0;
 
            $exam->save();
+           $createdIds[] = $exam->id;
         //    return $exam ;
 
             // $studens = Room::find($room_id)->student;
@@ -13024,17 +13044,18 @@ public function edit_coordinator_task($coordinator_id)
             //     $item2->save();
             // }
         }
+            app(\App\Services\AssessmentEquivalenceService::class)->createdTogether($createdIds);
+        }, 3);
         return redirect()->back()->with('success', __('admin.notifications.quiz_created_successfully'));
 
     }
      public function quize_update(Request $request){
-        $term = Term_year::where('current_term', '1')->first();
+        return DB::transaction(function () use ($request) {
 
-        $exam =  Exams2::findOrFail($request->quize_id);
+        $exam = Exams2::whereKey($request->quize_id)->lockForUpdate()->firstOrFail();
         $exam->user_id = auth()->id();
         $exam->room_id = $request->room_id;
         $exam->lesson_id = $request->lesson_id;
-        $exam->term_id = $term->id;
         $exam->name = $request->content_name;
         $exam->question_picker = $request->question_picker;
         $exam->required = $request->required_lectures;
@@ -13050,6 +13071,7 @@ public function edit_coordinator_task($coordinator_id)
         $exam->is_file = 0;
         $exam->save();
         return redirect()->back()->with('success', __('admin.notifications.quiz_updated_successfully'));
+        }, 3);
 
     }
 
@@ -13098,7 +13120,7 @@ public function edit_coordinator_task($coordinator_id)
           $room=[];
 
         $year = Year::where('current_year','1')->first();
-        $term = Term_year::where('current_term', '1')->first();
+        $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
         $room = Room::findORFail($room_id) ;
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
@@ -13131,7 +13153,7 @@ public function edit_coordinator_task($coordinator_id)
                  $room[] = $item->room_id;
         };
         $year = Year::where('current_year','1')->first();
-        $term = Term_year::where('current_term', '1')->first();
+        $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
         $room = Room::findORFail($request->room_id1) ;
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
@@ -13169,7 +13191,7 @@ public function edit_coordinator_task($coordinator_id)
                  $room[] = $item->room_id;
         };
         $year = Year::where('current_year','1')->first();
-        $term = Term_year::where('current_term', '1')->first();
+        $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
         $room = Room::findORFail($request->room_id1) ;
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
@@ -13192,8 +13214,9 @@ public function edit_coordinator_task($coordinator_id)
         //         return view('admin.exams_of_room',compact('contents','count','rooms','room_id','lessons','class_id'));
             }
         public function exam_store(Request $request) {
+            $request->validate(['room_id' => 'required|array|min:1', 'room_id.*' => 'required|integer|distinct|min:0']);
             $year = Year::where('current_year','1')->first();
-            $term = Term_year::where('current_term', '1')->first();
+            $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
             $rooms_id = $request->room_id ;
              $classes_roles = Classes_room_role_exam::where('role_id', auth()->user()->role_id)->get();
                $room_exam = [];
@@ -13217,7 +13240,10 @@ public function edit_coordinator_task($coordinator_id)
                     }
                     // $rooms_id = $class->with('room')->get() ;
                     }
+                $this->validateAssessmentCreationContext($request, $year, $rooms_id);
                 $exams = Exams2::where('id','>', '0')->latest('id')->first();
+                DB::transaction(function () use ($request, $rooms_id, $term, $exams) {
+                $createdIds = [];
                 foreach ( $rooms_id as $room_id) {
                     $exam = new Exams2();
                     $exam->user_id = auth()->id();
@@ -13240,6 +13266,7 @@ public function edit_coordinator_task($coordinator_id)
                     else
                     $exam->is_file = 0;
                     $exam->save();
+                    $createdIds[] = $exam->id;
                     //    return $exam ;
                     //   $studens = Room::find($room_id)->student;
                     //   foreach ($studens as $student) {
@@ -13253,17 +13280,18 @@ public function edit_coordinator_task($coordinator_id)
                     //         $item2->save();
                     //   }
                 }
+                    app(\App\Services\AssessmentEquivalenceService::class)->createdTogether($createdIds);
+                }, 3);
                 return redirect()->back()->with('success', __('admin.notifications.exam_created_successfully'));
 
                 }
 
         public function exam_update(Request $request){
-                $term = Term_year::where('current_term', '1')->first();
-                $exam =  Exams2::findOrFail($request->exam_id);
+                return DB::transaction(function () use ($request) {
+                $exam = Exams2::whereKey($request->exam_id)->lockForUpdate()->firstOrFail();
                 $exam->user_id = auth()->id();
                 $exam->room_id = $request->room_id;
                 $exam->lesson_id = $request->lesson_id;
-                $exam->term_id = $term->id;
                 $exam->name = $request->content_name;
                 $exam->question_picker = $request->question_picker;
                 $exam->required = $request->required_lectures;
@@ -13279,15 +13307,17 @@ public function edit_coordinator_task($coordinator_id)
                 $exam->is_file = 0;
                 $exam->save();
                 return redirect()->back()->with('success', __('admin.notifications.exam_updated_successfully'));
+                }, 3);
 
             }
 
             public function exam_quize_delete(Request $request){
+        return DB::transaction(function () use ($request) {
 
         $formed_code = Auth::User()->view_password;
                 if ($formed_code == $request->delete_code ){
-                $exam =  Exams2::findOrFail($request->content_id);
-                Exam_result2::where('exam_id',$request->content_id)->delete() ;
+                $exam = Exams2::whereKey($request->content_id)->lockForUpdate()->firstOrFail();
+                \App\Services\AssessmentResultSafety::assertDeletable($exam);
                 if ($exam->is_file == 1){
                 if ($exam->file != null) {
                    Storage::disk('public')->delete($exam->file);
@@ -13306,11 +13336,13 @@ public function edit_coordinator_task($coordinator_id)
                     }else {
                         return redirect()->back()->with('error', __('admin.notifications.delete_code_invalid'));
                 }
+        }, 3);
             }
 
 
         public function class_delete_fun($class_id)
         {
+            \App\Services\AssessmentResultSafety::assertContextDeletable('class_id', $class_id);
             $to_delete11 =   Coordinator_class_lesson::where('class_id', $class_id)->get();
             foreach ($to_delete11 as $x) {
             $x->delete();
@@ -13385,6 +13417,7 @@ public function edit_coordinator_task($coordinator_id)
 
     public function room_delete_fun($room_id)
     {
+        \App\Services\AssessmentResultSafety::assertContextDeletable('room_id', $room_id);
 
         $to_delete1 =   Exams2::where('room_id', $room_id)->get();
         foreach ($to_delete1 as $x) {
@@ -13528,6 +13561,7 @@ public function edit_coordinator_task($coordinator_id)
 
     public function lesson_delete_fun($lesson_id)
     {
+        \App\Services\AssessmentResultSafety::assertContextDeletable('lesson_id', $lesson_id);
 
         $to_delete1 =   Coordinator_class_lesson::where('lesson_id', $lesson_id)->get();
         foreach ($to_delete1 as $x) {

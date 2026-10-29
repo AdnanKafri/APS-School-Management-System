@@ -15,8 +15,9 @@
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0 text-white"><i class="fas fa-user-graduate"></i> بطاقة الطالب: <span class="text-warning">{{ $student->first_name }} {{ $student->last_name }}</span></h4>
             <div>
-                <span class="badge badge-light ml-2">{{ $student->classe ? $student->classe->name : '' }}</span>
+                <span class="badge badge-light ml-2">{{ $room ? optional($room->classes)->name : '' }}</span>
                 <span class="badge badge-secondary">{{ $room->name ?? '' }}</span>
+                <span class="badge badge-light">{{ $year->name }}</span>
             </div>
         </div>
         <div class="card-body">
@@ -45,6 +46,7 @@
                                         <th>شفهي (Oral)</th>
                                         <th>وظائف/مذاكرات (H.W/Quiz)</th>
                                         <th>امتحان (Exam)</th>
+                                        <th>'.e(__('gradebook.additional_components')).'</th>
                                         <th class="bg-light text-primary font-weight-bold">المجموع</th>
                                       </tr></thead><tbody>';
                             
@@ -59,10 +61,16 @@
                                 $totalStr = ($total !== null) ? $total : '-';
 
                                 $html .= '<tr>';
-                                $html .= '<td class="text-right font-weight-bold">'.$item['name'].'</td>';
+                                $html .= '<td class="text-right font-weight-bold">'.e($item['name']).'</td>';
                                 $html .= "<td>{$oral}</td>";
                                 $html .= "<td>{$quiz}</td>";
                                 $html .= "<td>{$exam}</td>";
+                                $html .= '<td>';
+                                foreach ($tData['additional'] ?? [] as $component) {
+                                    $html .= '<div>'.e($component['name']).': '.e($component['value'] ?? '-').'</div>';
+                                }
+                                if (empty($tData['additional'])) $html .= '-';
+                                $html .= '</td>';
                                 $html .= "<td class='font-weight-bold text-primary'>{$totalStr}</td>";
                                 $html .= '</tr>';
                             }
@@ -107,9 +115,9 @@
                                             <td class="text-right font-weight-bold">{{ $item['name'] }}</td>
                                             <td>{{ $t1Total !== null ? $t1Total : '-' }}</td>
                                             <td>{{ $t2Total !== null ? $t2Total : '-' }}</td>
-                                            <td class="font-weight-bold border-left border-right">{{ $final > 0 ? $final : '-' }}</td>
+                                            <td class="font-weight-bold border-left border-right">{{ $final !== null ? $final : '-' }}</td>
                                             <td>
-                                                 @if($final > 0)
+                                                 @if($final !== null)
                                                     <span class="badge badge-{{ $final >= 50 ? 'success' : 'danger' }}">{{ $status }}</span>
                                                  @else
                                                     -
@@ -130,4 +138,8 @@
         </div>
     </div>
 </div>
+@foreach($subjectGradebooks as $subjectGradebook)
+    <h4>{{ $subjectGradebook['subject']->name }}</h4>
+    @include('gradebook.assessment_results', ['gradebook' => $subjectGradebook['gradebook'], 'students' => collect([$student])])
+@endforeach
 @endsection
