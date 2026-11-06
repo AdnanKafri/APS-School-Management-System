@@ -120,6 +120,7 @@ $response=$http($accounts[2],'GET','/SMARMANger/lesson-content/attachments/'.$fi
 $check($response->getStatusCode()===200,'authorized Student download');
 $check($http($accounts[3],'GET','/SMARMANger/lesson-content/attachments/'.$file->id.'/download')->getStatusCode()===403,'foreign Student denied');
 require __DIR__.'/lesson-content-cases.php';
+require __DIR__.'/lesson-content-hosting-failures.php';
 $result=['database'=>$database,'storage'=>$storage,'assertions'=>$assertions,'server'=>$db::selectOne('SELECT VERSION() AS v')->v];
 file_put_contents($storage.'/result.json',json_encode($result,JSON_PRETTY_PRINT));
 echo json_encode($result,JSON_PRETTY_PRINT)."\n";
