@@ -212,7 +212,7 @@ class GradebookController extends Controller
         foreach ($subjects as $subject) {
             $read = app(\App\Services\GradebookReadService::class)->read($room, $subject, [$student->id]);
             $subjectGradebooks[] = ['subject' => $subject, 'gradebook' => $read];
-            $row = ['name' => $subject->name];
+            $row = ['name' => $subject->name, 'subject_id' => $subject->id];
             foreach ([1, 2] as $type) {
                 $term = $read['terms']->where('type', $type)->sortByDesc(function ($t) {
                     return [(int) $t->current_term, (int) $t->id];
@@ -228,6 +228,14 @@ class GradebookController extends Controller
                 })->map(function ($component) use ($data) {
                     return ['name' => $component->name, 'value' => $data[$component->id] ?? null];
                 })->values()->all();
+                // Presentation adapter only: retain exact configured IDs/sources and
+                // already-calculated values, including zero versus missing.
+                $row['term'.$type]['components'] = $read['components']->map(function ($component) use ($data, $subject) {
+                    return ['id'=>$component->id, 'name'=>$component->name,
+                        'maximum'=>\App\Services\GradebookReadService::componentMaximum($component, $subject),
+                        'value'=>$data[$component->id] ?? null];
+                })->values()->all();
+                $row['term'.$type]['term_id'] = $term ? $term->id : null;
             }
             $row['total'] = $row['term1']['total'] === null && $row['term2']['total'] === null
                 ? null : ($row['term1']['total'] ?? 0) + ($row['term2']['total'] ?? 0);

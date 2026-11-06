@@ -186,7 +186,7 @@ class websitecontroller extends Controller
 
         $redirectPath = $this->websiteLoginRedirectPath(auth()->user());
         if ($redirectPath !== null) {
-            return redirect($redirectPath);
+            return redirect(app(\App\Services\SchoolLoginNavigation::class)->afterLogin($request, auth()->user(), $redirectPath));
         }
 
         Auth::logout();

@@ -6,5 +6,5 @@
         @include('gradebook.continuity_badge', ['resolved' => $item->continuity])
     </td>
     @if($continuityFile) <td>-</td> @endif
-    <td>{{ __('gradebook.carried_read_only') }}</td>
+    <td>{{ ($item->continuity['state'] ?? null) === 'carried' ? __('gradebook.carried_read_only') : __('assessment_entry.conflict_read_only') }}</td>
 </tr>

@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('student/assets/css/student-portal-v2.css') }}" />
+    <link rel="stylesheet" href="{{ asset('student/assets/css/student-portal-v2.css') }}?v=20261105-assessments" />
     <!-- End layout styles -->
     <link rel="shortcut icon" href="{{ isset($school_data) && $school_data && $school_data->logo ? asset('storage/' . $school_data->logo) : asset('student/avatar.png') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
@@ -146,6 +146,9 @@
         : 0;
     $notification = DB::table('notifications')
         ->where('student_id', $student->id)
+        ->when(!app(\App\Services\StudentResultsVisibility::class)->enabled(), function ($query) {
+            $query->where(function ($type) { $type->whereNull('type')->orWhereNotIn('type', [3, 7, 9]); });
+        })
         ->take(100)
         ->orderBy('id', 'DESC')
         ->get();
@@ -234,12 +237,6 @@
                 <li class="sp-sidebar-entry {{ request()->routeIs('student_exam', 'dashboard.student.room.main.exams', 'dashboard.student.room.main.quizes') ? 'is-active' : '' }}">
                     <a class="nav-link" href="{{ route('student_exam') }}">
                         <i class="mdi mdi-clipboard-text-outline menu-icon"></i>
-                        <span class="menu-title">الامتحانات والتقييمات</span>
-                    </a>
-                </li>
-                <li class="sp-sidebar-entry {{ request()->routeIs('dashboard.student.results') ? 'is-active' : '' }}">
-                    <a class="nav-link" href="{{ route('dashboard.student.results', $student->id) }}">
-                        <i class="mdi mdi-chart-line menu-icon"></i>
                         <span class="menu-title">النتائج والعلامات</span>
                     </a>
                 </li>
@@ -1388,10 +1385,11 @@
 
 
         messaging.onMessage(function(payload) {
+            if (!@json(app(\App\Services\StudentResultsVisibility::class)->enabled())
+                && payload.data && ['3', '7', '9'].indexOf(String(payload.data['gcm.notification.type'])) !== -1) return;
             student_id52 = $('#student_id52').val();
             console.log('-0-0-0-0-0-0');
 
-            console.log(payload);
             console.log(payload.data['gcm.notification.type']);
             const notificationOption = {
                 body: payload.notification.body,
@@ -1451,7 +1449,7 @@
                   <div class="dropdown-divider"></div>`);
 
             }
-            if (payload.data['gcm.notification.type'] == 3) {
+            if (@json(app(\App\Services\StudentResultsVisibility::class)->enabled()) && payload.data['gcm.notification.type'] == 3) {
                 $('.notification').prepend(`
                  <a class="dropdown-item preview-item noti_href noti_href_append"  style="justify-content: space-between !important;margin-top: 6px;
                  margin-bottom: 6px;background: #f3f3f3;" data-id="${payload.data['gcm.notification.id']}"   href="{{ url('SMARMANger/dashboard/student/student_rewads') }}/${student_id52}">

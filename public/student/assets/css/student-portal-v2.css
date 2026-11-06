@@ -1126,7 +1126,7 @@ body.student-portal-body .content-wrapper > .container-fluid {
 .sp-actions-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .sp-empty--compact { min-height: 145px; }
 
-.sp-assessment-list { display: grid; gap: 13px; }
+  .sp-assessment-list { display: grid; gap: 13px; }
 
 .sp-assessment-card {
   display: grid;
@@ -1876,4 +1876,51 @@ body.student-portal-body .timeline__event {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Compact quiz/exam cards; keep the legacy card layout elsewhere unchanged. */
+body.student-portal-body .sp-assessment-card--compact {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px 20px;
+  padding: 20px;
+}
+body.student-portal-body .sp-assessment-card--compact .sp-assessment-card__title h3 {
+  margin: 0 0 7px;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+body.student-portal-body .sp-assessment-card--compact .sp-assessment-card__title p {
+  font-size: .84rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+body.student-portal-body .sp-assessment-card--compact .sp-assessment-card__actions {
+  grid-column: auto;
+  min-width: 0;
+  align-items: center;
+}
+.sp-assessment-result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 10px 16px;
+  border: 1px solid #c4d3e1;
+  border-radius: 12px;
+  background: #edf3f8;
+  color: #203d56;
+  line-height: 1.6;
+}
+.sp-assessment-result:hover, .sp-assessment-result:focus { color: #122c43; border-color: #587b99; }
+.sp-assessment-result strong { font-size: 1.15rem; white-space: nowrap; }
+.sp-assessment-card__details { grid-column: 1 / -1; min-width: 0; border-top: 1px solid var(--sp-line); padding-top: 10px; }
+.sp-assessment-card__details summary { width: fit-content; color: var(--sp-teal-700); cursor: pointer; font-size: .8rem; padding: 5px 0; }
+.sp-assessment-card__details p { margin: 10px 0; white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  body.student-portal-body .sp-assessment-card--compact { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  body.student-portal-body .sp-assessment-card--compact .sp-assessment-card__actions { justify-content: flex-start; }
+  .sp-assessment-result { max-width: 100%; box-sizing: border-box; }
 }

@@ -10,6 +10,18 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'SMT/admin/gradebook', 'middleware' => ['auth', 'roleadmin', 'can:student_marks']], function () {
     // Main menu (NO forced redirect)
     Route::get('/', 'Admin\GradebookController@index')->name('admin.gradebook.index');
+    Route::group(['prefix'=>'templates', 'as'=>'admin.gradebook.templates.'], function () {
+        Route::get('/', 'Admin\GradebookTemplateController@index')->name('index');
+        Route::post('/', 'Admin\GradebookTemplateController@store')->name('store');
+        Route::get('/{template}', 'Admin\GradebookTemplateController@show')->name('show');
+        Route::post('/{template}/draft', 'Admin\GradebookTemplateController@save')->name('save');
+        Route::post('/{template}/discard', 'Admin\GradebookTemplateController@discard')->name('discard');
+        Route::post('/{template}/start', 'Admin\GradebookTemplateController@start')->name('start');
+        Route::get('/{template}/preview', 'Admin\GradebookTemplateController@preview')->name('preview');
+        Route::post('/{template}/publish', 'Admin\GradebookTemplateController@publish')->name('publish');
+        Route::get('/{template}/versions/{version}', 'Admin\GradebookTemplateController@version')->name('version');
+        Route::post('/{template}/versions/{version}/duplicate', 'Admin\GradebookTemplateController@duplicate')->name('duplicate');
+    });
     Route::get('/equivalence', 'Admin\AssessmentEquivalenceController@index')->name('admin.gradebook.equivalence');
     Route::post('/equivalence', 'Admin\AssessmentEquivalenceController@store')->name('admin.gradebook.equivalence.store');
     Route::get('/view/options', 'Admin\GradebookController@viewOptions')->name('admin.gradebook.view_options');

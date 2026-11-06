@@ -6,7 +6,7 @@
     @include('students.partials.assessment_list', [
         'assessmentTitle' => 'الامتحانات',
         'assessmentSingular' => 'الامتحان',
-        'assessmentDescription' => 'تابع مواعيد الامتحانات، المتطلبات، والنتائج المتاحة.',
+        'assessmentDescription' => 'تابع موادك والامتحانات والنتائج المتاحة.',
         'startLabel' => 'ابدأ الامتحان',
     ])
 @endsection

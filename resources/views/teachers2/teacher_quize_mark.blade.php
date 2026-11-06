@@ -856,6 +856,7 @@ border-right: 1px solid #ddd;
                       <div class="tab-content text-center ">
                         <div class="tab-pane active" id="profile" role="tabpanel">
                          <div class="container animated bounceInLeft">
+<p class="small text-muted px-3" role="note" dir="rtl">{{ __('assessment_entry.roster_help') }}</p>
                           <!-- compact spacer removed -->
                           <div>
                             <table>
@@ -868,9 +869,9 @@ border-right: 1px solid #ddd;
                                   <th>مشاهدة</th>
                                   <th>الفترة</th>
                                   <th>العلامة</th>
-                                  <th>عرض العلامات </th>
+                                  <th>{{ __('assessment_entry.enter_marks') }} </th>
                                   <th>رفع ملف</th>
-                                  <th>اضافة طلاب</th>
+                                  <th>{{ __('assessment_entry.optional_participation') }}</th>
 
                                 </tr>
                               </thead>
@@ -902,7 +903,7 @@ border-right: 1px solid #ddd;
                                  </td>
                               <td data-label="الفترة">{{ $item->period }} </td>
                               <td data-label="العلامة">{{ $item->mark }} </td>
-                              <td data-label="عرض العلامات"><a href="{{ route('teacher_quize_students',[$room_id ,$teacher->id,$lesson_id,$item->id]) }}" class="showstate"><span>عرض العلامات</span></a></td>
+                              <td data-label="{{ __('assessment_entry.enter_marks') }}"><a href="{{ route('teacher_quize_students',[$room_id ,$teacher->id,$lesson_id,$item->id]) }}" class="showstate"><span>{{ __('assessment_entry.enter_marks') }}</span></a></td>
                               <td data-label="رفع ملف">
 
                                     @if($item->question_picker == "2")
@@ -925,10 +926,10 @@ border-right: 1px solid #ddd;
                                 <!--end add file-->
 
                               </td>
-                              <td data-label="اضافة طلاب">
+                              <td data-label="{{ __('assessment_entry.optional_participation') }}">
 
                             @if ($now < $item->start_date && $now < $item->end_date)
-                             <a href="#"  data-id="{{$item ->id}}"    data-room="{{$room_id}}" class="addstudent showstate" data-toggle="modal" data-target="#basicModal2"><span>اضافة طلاب</span></a>
+                             <a href="#"  data-id="{{$item ->id}}"    data-room="{{$room_id}}" class="addstudent showstate" data-toggle="modal" data-target="#basicModal2"><span>{{ __('assessment_entry.optional_participation') }}</span></a>
                           @else
                          غير متاح
                           @endif

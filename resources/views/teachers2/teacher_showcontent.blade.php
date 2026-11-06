@@ -149,6 +149,8 @@ a:hover {
     padding-top: 20px;
 }
     </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/lesson-workspace.css') }}?v=20261106-layout2">
+    <link rel="stylesheet" href="{{ asset('teachers_2/assets/css/lesson-content-management.css') }}?v=20261106">
 @endsection
 
 
@@ -156,7 +158,9 @@ a:hover {
 
 
 
-    <div class="main-panel" style="background: #f8f9fb;">
+    <div class="main-panel lc-page lc-lesson-page" style="background: #f8f9fb;">
+        @if (session('success'))<div class="alert alert-success m-3" role="status">{{ session('success') }}</div>@endif
+        @if ($errors->any())<div class="alert alert-danger m-3" role="alert"><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
         <ul class="breadcrumbs" style="padding-bottom: 7px;
             padding-top: 11px;">
 
@@ -175,12 +179,12 @@ a:hover {
             <!--start content-->
             <div class="container">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-12 lc-tabs-column">
 
 
                         <div class="tab" role="tabpanel" style="direction: rtl;">
                             <!-- Nav tabs -->
-                            <ul class="nav nav-tabs" role="tablist">
+                            <ul class="nav nav-tabs lc-tabs" role="tablist">
                                 <li role="presentation" class="active"><a href="#Section1" aria-controls="files"
                                         role="tab" data-toggle="tab">الملفات</a></li>
                                 <li role="presentation"><a href="#Section2" aria-controls="exams" role="tab"
@@ -192,15 +196,21 @@ a:hover {
                                 <li role="presentation"><a href="#Section5" aria-controls="homework" role="tab"
                                         data-toggle="tab">الوظائف</a></li>
                                    
+                                <li role="presentation"><a href="#Section6" role="tab" data-toggle="tab">ملفات الإشراف</a></li>
                             </ul>
                             <!-- Tab panes -->
                             <div class="tab-content tabs">
                                 <div role="tabpanel" class="tab-pane active" id="Section1">
+                                          @if (empty($additions) || count($additions) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                     <h3 style="text-align: center;padding-bottom: 20px;">الملفات </h3>
                                     <div class="container">
                                         <div class="row" style="justify-content: center;">
                                             @foreach ($additions as $item4)
-                                                @if ($item4->addition_link != null && $item4->addition == null)
+                                                @if (!empty($item4->upload_request_hash))
+                                                    @include('teachers2.partials.private_lesson_content', ['content'=>$item4])
+                                                @elseif ($item4->addition_link != null && $item4->addition == null)
                                                     <div class="col-md-4 newrow">
                                                         <div class="card12">
                                                             <h6 style="text-align:center;color: #094e89; "> &nbsp;&nbsp;
@@ -290,6 +300,9 @@ a:hover {
                                     </div>
                                 </div>
                                 <div role="tabpanel" class="tab-pane fade" id="Section2">
+                                          @if (empty($quizes1) || count($quizes1) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                     <h3 style="text-align: center;padding-bottom: 20px;">الاختبارات</h3>
                                     <div class="container">
                                         <div class="row">
@@ -439,6 +452,9 @@ a:hover {
                                 </div>
                                 </div>
                                 <div role="tabpanel" class="tab-pane fade" id="Section3">
+                                          @if (empty($voices) || count($voices) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                     <h3 style="text-align: center;padding-bottom: 20px;">مقاطع الصوت</h3>
                                     <div class="container">
                                         <div class="row" style="justify-content: center;">
@@ -518,6 +534,9 @@ a:hover {
                                     </div>
 
                                 <div role="tabpanel" class="tab-pane fade" id="Section4">
+                                          @if (empty($videos) || count($videos) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                     <h3 style="text-align: center;padding-bottom: 20px;">مقاطع الفيديو</h3>
                                     <div class="container">
                                         <div class="row" style="justify-content: center;">
@@ -613,6 +632,9 @@ a:hover {
                                     </div>
                                 </div>
                                 <div role="tabpanel" class="tab-pane fade" id="Section5">
+                                          @if (empty($tests) || count($tests) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                     <h3 style="text-align: center;padding-bottom: 20px;">الوظائف</h3>
                                     <div class="container">
                                         <div class="row" style="padding-bottom: 20px;">
@@ -740,6 +762,9 @@ a:hover {
                                     </div>
                                 </div>
                                   <div role="tabpanel" class="tab-pane fade" id="Section6">
+                                          @if (empty($super_file) || count($super_file) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                     <h3 style="text-align: center;padding-bottom: 20px;">ملفات وزارية </h3>
                                     <div class="container">
                                         <div class="row" style="padding-bottom: 20px;">
@@ -877,9 +902,10 @@ a:hover {
 @endsection
 
 @section('js')
-<script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <script>
+<script src="{{ asset('teachers_2/assets/js/lesson-content-management.js') }}?v=20261106"></script>
+<script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106"></script>
+
+<script>
         $(document).on('click', '.three', function(e) {
             var id = $(this).data('id');
             $('#s11').val($(this).data('id'));

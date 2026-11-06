@@ -435,12 +435,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/lesson-workspace.css') }}?v=20261106-layout2">
 @endsection
 
 @section('content')
 
 
-<div class="main-panel" style="background: #f8f9fb;">
+<div class="main-panel lc-page lc-lesson-page" style="background: #f8f9fb;">
+    @if ($errors->any() || session('message'))
+        <div class="alert alert-danger m-3" role="alert" dir="rtl">
+            @if (session('message'))<p class="mb-0">{{ session('message') }}</p>@endif
+            @if ($errors->any())<ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>@endif
+        </div>
+    @endif
     <ul class="breadcrumbs" style="padding-bottom: 7px;
     padding-top: 11px;">
       <li class="li"><a href="{{ route('dashboard.teacher') }}">الصفحة الرئيسية</a></li>
@@ -524,49 +531,30 @@ input[type="date"]::-webkit-calendar-picker-indicator {
          </div>
       </div>
      <!--start add lesson modal-->
-<div class="modal fade auto-off"id="demoModal4" tabindex="-1" role="dialog" aria-labelledby="demoModal" aria-hidden="true">
-<div class="modal-dialog animated zoomInLeft modal-dialog-centered" role="document">
-    <div class="modal-content" style="padding-top: 50px !important;">
-        <div class="container-fluid">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="background-color: white !important;">
-            <span aria-hidden="true">&times;</span>
-            </button>
-            <h4  style="color: #05579e;text-align: center; ">اضافة درس</h4>
-
-              <form action="{{ route('dashboard.lessons.lecture.store') }}" method="post" id="confirm4" style="text-align: right;direction: rtl;">
-                  @csrf
-            <div class="container" style="padding-top: 20px;">
-               <div class="row">
-                <div class="col-md-12" style="display: grid;">
-                  <label for="default" class="">اسم الدرس</label>
-                  <!-- This is a normal file input -->
-                  <input required  type="text" name="name" id="name" placeholder="ادخل اسم الدرس " class="border p-2"  style="width:300px">
-              </div><!--end col-->
-              <div class="col-md-12" style="display: grid;">
-                <label for="default" class="">تاريخ ظهور الدرس</label>
-                <!-- This is a normal file input -->
-                <input required  name="lecture_time" id="lecture_time"  placeholder="ادخل بداية الوقت "
-                onfocus="this.placeholder = ''" onblur="this.placeholder = 'Enter start quize time'"
-                class="border p-2" type="date" style="width:300px">
-            </div><!--end col-->
-
-               </div>
-               <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
-               <input type="hidden" name="class_id" value="{{ $class->id }}">
-               <input type="hidden" name="room_id" value="{{ $room->id }}">
-               <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
-
-               <div class="row" style="text-align: center;">
-                <div class="col-md-12" style="padding-bottom: 10px;">
-                  <button id="saveButton" class="button" style="width:150px">حفظ</button>
+<div class="modal fade lc-modal" id="demoModal4" tabindex="-1" role="dialog" aria-labelledby="demoModal4Title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="demoModal4Title">إضافة درس</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <form action="{{ route('dashboard.lessons.lecture.store') }}" method="post" id="confirm4">
+                @csrf
+                <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
+                <input type="hidden" name="class_id" value="{{ $class->id }}">
+                <input type="hidden" name="room_id" value="{{ $room->id }}">
+                <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
+                <div class="modal-body">
+                    <div class="lc-field"><label for="name">اسم الدرس</label><input required type="text" name="name" id="name" placeholder="أدخل اسم الدرس"></div>
+                    <div class="lc-field"><label for="lecture_time">تاريخ ظهور الدرس</label><input required name="lecture_time" id="lecture_time" type="date"></div>
                 </div>
-              </div>
-
-          </div>
-        </form>
-      </div>
+                <div class="modal-footer">
+                    <button type="button" class="lc-cancel" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" id="saveButton" class="lc-submit">حفظ</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 </div>
 <!--end end add lesson modal-->
 <!-- start  model-->
@@ -674,55 +662,32 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 @endif
 
 <!--edit name lesson-->
-<div class="modal fade auto-off editEmployeeModal"  id="demoModal" tabindex="-1" role="dialog" aria-labelledby="demoModal" aria-hidden="true">
-    <div class="modal-dialog animated zoomInLeft modal-dialog-centered" role="document">
-        <div class="modal-content" style="padding-top: 50px !important;">
-            <div class="container-fluid">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="background-color: white !important;">
-                <span aria-hidden="true">&times;</span>
-                </button>
-                <h4  style="color: #05579e;text-align: center; ">تعديل الدرس</h4>
-
-                 {{-- <form action="" method="post" id="confirm4" style="text-align: right;direction: rtl;">
-                      @csrf--}}
-                      <form action="{{ route('dashboard.lessons.lecture.update') }}" method="post" id="confirm4" style="text-align: right;direction: rtl;">
-                        @csrf
-                      <input type="text" hidden name="id" id="lec_id">
-                <div class="container" style="padding-top: 20px;">
-                   <div class="row">
-                    <div class="col-md-12" style="display: grid;">
-                      <label for="default" class="">اسم الدرس</label>
-                      <input type="text" class="border p-2" name="name" id="name2" placeholder="ادخل اسم الدرس " style="width:300px">
-
-
-                  </div><!--end col-->
-                  <div class="col-md-12" style="display: grid;">
-                    <label for="default" class="">تاريخ ظهور الدرس</label>
-                    <!-- This is a normal file input -->
-                    <input name="lecture_time" id="date" placeholder="ادخل بداية الوقت "
-                    onfocus="this.placeholder = ''" onblur="this.placeholder = 'Enter start quize time'"
-                    class="border p-2" type="date" style="width:300px">
-                </div><!--end col-->
-
-                   </div>
-                   <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
-                   <input type="hidden" name="class_id" value="{{ $class->id }}">
-                   <input type="hidden" name="room_id" value="{{ $room->id }}">
-                   <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
-
-                   <div class="row" style="text-align: center;">
-                    <div class="col-md-12" style="padding-bottom: 10px;">
-                      <button class="button" style="width:150px">حفظ</button>
-                    </div>
-                  </div>
-
-              </div>
+<div class="modal fade lc-modal editEmployeeModal" id="demoModal" tabindex="-1" role="dialog" aria-labelledby="demoModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="demoModalTitle">تعديل الدرس</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <form action="{{ route('dashboard.lessons.lecture.update') }}" method="post" id="confirmEdit4">
+                @csrf
+                <input type="text" hidden name="id" id="lec_id">
+                <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
+                <input type="hidden" name="class_id" value="{{ $class->id }}">
+                <input type="hidden" name="room_id" value="{{ $room->id }}">
+                <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
+                <div class="modal-body">
+                    <div class="lc-field"><label for="name2">اسم الدرس</label><input  type="text" name="name" id="name2" placeholder="أدخل اسم الدرس"></div>
+                    <div class="lc-field"><label for="date">تاريخ ظهور الدرس</label><input  name="lecture_time" id="date" type="date"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="lc-cancel" data-dismiss="modal">إلغاء</button>
+                    <button type="submit"  class="lc-submit">حفظ</button>
+                </div>
             </form>
-          </div>
         </div>
     </div>
-  </div>
-   <!-- end model-->
+</div>
 <!--end edit modal-->
 
 
@@ -771,20 +736,9 @@ aria-hidden="true">
 @endsection
 
 @section('js')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-   $(document).ready(function() {
-  $("#saveButton").click(function() {
-    // Check if the input fields are empty
-    if ($("#name").val() !== '' && $("#lecture_time").val() !== '') {
-      $(this).hide(); // Hide the button when clicked
-    } else {
-      alert("Please fill in all the fields"); // Show an alert if any of the fields are empty
-    }
-  });
-});
-</script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106"></script>
+
+
 {{--<script type="text/javascript">
     $.ajaxSetup({ headers: { 'csrftoken' : '{{ csrf_token() }}' } });
 </script>
@@ -823,7 +777,7 @@ $(document).mousemove(function( event ) {
         });
     });
 </script>--}}
-{{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script> --}}
+{{-- --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 

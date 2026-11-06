@@ -3314,103 +3314,42 @@ public function startQueueWorker()
 
     public function delete_student(Request $request)
     {
-
-        $formed_code = Auth::User()->view_password;
-        if ($formed_code == $request->password) {
-            \App\Services\AssessmentResultSafety::assertContextDeletable('student_id', $request->student_id);
-            $user = User::where('student_id', $request->student_id)->first();
-            if (count(Students_mark::where('student_id', $request->student_id)->get()) > 0) {
-                Students_mark::where('student_id', $request->student_id)->delete();
+        $this->authorize('delete_student');
+        try {
+            $request->validate([
+                'student_id' => 'required|integer|exists:students,id',
+                'password' => 'required|string',
+            ], [
+                'student_id.required' => __('student_deletion.missing'),
+                'student_id.integer' => __('student_deletion.missing'),
+                'student_id.exists' => __('student_deletion.missing'),
+                'password.required' => __('student_deletion.password_required'),
+                'password.string' => __('student_deletion.password_invalid'),
+            ]);
+            if (!Hash::check($request->password, $request->user()->password)) {
+                throw ValidationException::withMessages(['password' => __('student_deletion.password_invalid')]);
             }
-            if (count(Student_lesson_teacher_room_term_exam::where('student_id', $request->student_id)->get()) > 0) {
-                Student_lesson_teacher_room_term_exam::where('student_id', $request->student_id)->delete();
+            app(\App\Services\StudentDeletionService::class)->deleteHistoryFreeStudent((int) $request->student_id);
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                throw $e;
             }
-            if (count(Exam_result::where('user_id', $request->student_id)->get()) > 0) {
-                Exam_result::where('user_id', $request->student_id)->delete();
+            return redirect()->route('students')->withErrors($e->errors())->withInput([
+                'student_delete_form' => 1, 'student_id' => $request->student_id,
+            ]);
+        } catch (\Throwable $e) {
+            // Do not log request data, credentials, or SQL bindings.
+            Log::error('Student deletion failed', ['exception_type' => get_class($e)]);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => __('student_deletion.failed')], 500);
             }
-            if (count(Exam_result2::where('user_id', $request->student_id)->get()) > 0) {
-                Exam_result2::where('user_id', $request->student_id)->delete();
-            }
-
-            if (count(Room_student::where('student_id', $request->student_id)->get()) > 0) {
-                Room_student::where('student_id', $request->student_id)->delete();
-            }
-            $user->delete();
-            $student = Student::find($request->student_id);
-            $messgaes = Message::where('student_id', $request->student_id)->delete();
-            $certificate = Certificate::where('student_id', $request->student_id)->get();
-            $medal = Medal::where('student_id', $request->student_id)->get();
-            if ($certificate) {
-                foreach ($certificate as $item) {
-                    $item->delete();
-                }
-            }
-            if ($medal) {
-                foreach ($medal as $item) {
-                    $item->delete();
-                }
-            }
-             $rewards_and_sanction_student=Rewad_and_sanction_student::where('student_id',$request->student_id)->get();
-             foreach($rewards_and_sanction_student as $item){
-                 $item->delete();
-             }
-             $old_tokens = Studentfcmtoken::where('s_fk',$request->student_id)->get();
-             foreach($old_tokens as $item){
-                 $item->delete();
-             }
-            // $rome_user= Room_user::where('user_id',$user->id)->get();
-
-            //  if($rome_user){
-            //     foreach($rome_user as $item){
-            //       $item->delete();
-            //   }
-
-            // }
-
-            $student_detail =  Student_detail::where('student_id', $request->student_id)->first();
-
-            if ($student_detail->certification_nine != null) {
-                unlink('storage/' . $student_detail->certification_nine);
-            }
-            if ($student_detail->certification != null) {
-                unlink('storage/' . $student_detail->certification);
-            }
-            if ($student_detail->study_sequence != null) {
-                unlink('storage/' . $student_detail->study_sequence);
-            }
-            if ($student_detail->father_page != null) {
-                unlink('storage/' . $student_detail->father_page);
-            }
-            if ($student_detail->mather_page != null) {
-                unlink('storage/' . $student_detail->mather_page);
-            }
-            if ($student_detail->family_book != null) {
-                unlink('storage/' . $student_detail->family_book);
-            }
-            if ($student_detail->passport != null) {
-                unlink('storage/' . $student_detail->passport);
-            }
-            if ($student_detail->fourth_image != null) {
-                unlink('storage/' . $student_detail->fourth_image);
-            }
-            if ($student_detail->father_image != null) {
-                unlink('storage/' . $student_detail->father_image);
-            }
-            if ($student_detail->mother_image != null) {
-                unlink('storage/' . $student_detail->mother_image);
-            }
-            if ($student_detail->personal_image != null) {
-                unlink('storage/' . $student_detail->personal_image);
-            }
-
-            $student_detail->delete();
-            $student->delete();
-
-            Session::flash('success', __('admin.students.notifications.deleted'));
-        } else {
-            Session::flash('error', __('admin.students.notifications.delete_password_invalid'));
+            return redirect()->route('students')->with('error', __('student_deletion.failed'));
         }
-        return redirect()->back();
+        $message = __('admin.students.notifications.deleted');
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message, 'student_id' => (int) $request->student_id]);
+        }
+        return redirect()->route('students')->with('success', $message);
     }
     public function getstudentsprobe(Request $request)
     {
@@ -5406,6 +5345,7 @@ public function startQueueWorker()
     {
 
 
+        $this->authorize('create_student');
         $this->validate($request, [
             'first_name' => 'required|string|max:80',
             'last_name' => 'required|string|max:80',
@@ -5468,6 +5408,17 @@ public function startQueueWorker()
             ]);
         }
 
+        try {
+        DB::transaction(function () use ($request) {
+        $year = Year::where('current_year', 1)->lockForUpdate()->first();
+        $room = $year ? Room::whereKey($request->room_id)->where('class_id', $request->class_id)
+            ->where('year_id', $year->id)->lockForUpdate()->first() : null;
+        if (!$room) {
+            throw ValidationException::withMessages(['room_id' => __('admin.students.validation.room_class_mismatch')]);
+        }
+        if (Student::where('public_record_number', $request->public_record_number)->lockForUpdate()->first()) {
+            throw ValidationException::withMessages(['public_record_number' => __('admin.students.validation.public_record_number_unique')]);
+        }
         $student = Student::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -5490,6 +5441,7 @@ public function startQueueWorker()
         $student->first_name_en =$request->first_name_en;
         $student->last_name_en =$request->last_name_en;
         $student->country_currency =$request->country_currency;
+        $student->country = $request->country;
 
         $student->save() ;
         $rooom = Room::find($request->room_id);
@@ -5801,7 +5753,17 @@ public function startQueueWorker()
                 $student_mark->save();
             }
         }
-        return redirect()->back()->with('success', __('admin.students.notifications.created'));
+        return $student;
+        });
+        return redirect()->route('students')->with('success', __('admin.students.notifications.created'));
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Student creation failed', ['exception_type' => get_class($e)]);
+            return redirect()->route('students')
+                ->withInput($request->except(['password', 'password_confirmation', '_token']))
+                ->withErrors(['student_create_form' => __('student_deletion.create_failed')]);
+        }
     }
 
 
@@ -12936,8 +12898,9 @@ public function edit_coordinator_task($coordinator_id)
     //تابع المذاكرات التقليدية والمؤتمتة
     public function room_quizes($room_id){
         $year=Year::where('current_year','1')->first();
-        $term = Term_year::where('current_term', '1')->first();
-        $room = Room::findORFail($room_id) ;
+        $term = Term_year::where('current_term', '1')
+            ->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
+        $room = Room::where('year_id',$year->id)->findOrFail($room_id);
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
         $lessons = $classes->lessons ;
@@ -12945,6 +12908,7 @@ public function edit_coordinator_task($coordinator_id)
         $room_quize = [];
 
         $rooms = $classes->room;
+        $assessmentAllowedAllRooms = app(\App\Services\AdminAssessmentInput::class)->allowedAllSections(2, $room);
        $contents=Exams2::with('room','lesson')->where('room_id',$room_id)->where('term_id',$term->id)
         ->where('type','2')->get();
         foreach ($contents as $content){
@@ -12953,8 +12917,18 @@ public function edit_coordinator_task($coordinator_id)
         $count=Room::count();
 
         // $years=Year::all();
-        return view('admin.quizes_of_room',compact('contents','count','rooms','room_id','lessons','class_id'));
+        return view('admin.quizes_of_room',compact('contents','count','rooms','room_id','lessons','class_id','room','assessmentAllowedAllRooms'));
     }
+
+   private function assessmentSavedResponse(Request $request, $key)
+   {
+       $message = __('admin.notifications.'.$key);
+       if ($request->expectsJson()) {
+           session()->flash('success', $message);
+           return response()->json(['success'=>true,'message'=>$message]);
+       }
+       return redirect()->back()->with('success', $message);
+   }
 
    private function validateAssessmentCreationContext(Request $request, $year, array $roomIds)
    {
@@ -12971,6 +12945,7 @@ public function edit_coordinator_task($coordinator_id)
    }
 
    public function quize_store(Request $request){
+         app(\App\Services\AdminAssessmentInput::class)->validate($request, 2);
          $request->validate(['room_id' => 'required|array|min:1', 'room_id.*' => 'required|integer|distinct|min:0']);
          $classes_roles = Classes_room_role_exam::where('role_id', auth()->user()->role_id)->get();
                $room_exam = [];
@@ -13046,13 +13021,14 @@ public function edit_coordinator_task($coordinator_id)
         }
             app(\App\Services\AssessmentEquivalenceService::class)->createdTogether($createdIds);
         }, 3);
-        return redirect()->back()->with('success', __('admin.notifications.quiz_created_successfully'));
+        return $this->assessmentSavedResponse($request, 'quiz_created_successfully');
 
     }
      public function quize_update(Request $request){
-        return DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request) {
 
         $exam = Exams2::whereKey($request->quize_id)->lockForUpdate()->firstOrFail();
+        app(\App\Services\AdminAssessmentInput::class)->validate($request, 2, $exam);
         $exam->user_id = auth()->id();
         $exam->room_id = $request->room_id;
         $exam->lesson_id = $request->lesson_id;
@@ -13070,8 +13046,8 @@ public function edit_coordinator_task($coordinator_id)
         else
         $exam->is_file = 0;
         $exam->save();
-        return redirect()->back()->with('success', __('admin.notifications.quiz_updated_successfully'));
         }, 3);
+        return $this->assessmentSavedResponse($request, 'quiz_updated_successfully');
 
     }
 
@@ -13121,12 +13097,13 @@ public function edit_coordinator_task($coordinator_id)
 
         $year = Year::where('current_year','1')->first();
         $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
-        $room = Room::findORFail($room_id) ;
+        $room = Room::where('year_id',$year->id)->findOrFail($room_id);
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
         $lessons = $classes->lessons ;
 
         $rooms = $classes->room ;
+        $assessmentAllowedAllRooms = app(\App\Services\AdminAssessmentInput::class)->allowedAllSections(1, $room);
         $contents=Exams2::with('room','lesson')->where('room_id',$room_id)->where('term_id',$term->id)
         ->where('type','1')
         ->where(function($q) {
@@ -13138,7 +13115,7 @@ public function edit_coordinator_task($coordinator_id)
             }
             $count=Room::count();
             // $years=Year::all();
-                return view('admin.exams_of_room',compact('contents','count','rooms','room_id','lessons','class_id'));
+                return view('admin.exams_of_room',compact('contents','count','rooms','room_id','lessons','class_id','room','assessmentAllowedAllRooms'));
             }
 
    public function exam_filter_search(Request $request){
@@ -13154,7 +13131,7 @@ public function edit_coordinator_task($coordinator_id)
         };
         $year = Year::where('current_year','1')->first();
         $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
-        $room = Room::findORFail($request->room_id1) ;
+        $room = Room::where('year_id',$year->id)->findOrFail($request->room_id1);
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
         $lessons = $classes->lessons ;
@@ -13192,7 +13169,7 @@ public function edit_coordinator_task($coordinator_id)
         };
         $year = Year::where('current_year','1')->first();
         $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
-        $room = Room::findORFail($request->room_id1) ;
+        $room = Room::where('year_id',$year->id)->findOrFail($request->room_id1);
         $classes = Classe::with(['room' => fn($q) => $q->where('year_id',$year->id)])->findOrFail($room->class_id) ;
         $class_id = $classes->id;
         $lessons = $classes->lessons ;
@@ -13214,6 +13191,7 @@ public function edit_coordinator_task($coordinator_id)
         //         return view('admin.exams_of_room',compact('contents','count','rooms','room_id','lessons','class_id'));
             }
         public function exam_store(Request $request) {
+            app(\App\Services\AdminAssessmentInput::class)->validate($request, 1);
             $request->validate(['room_id' => 'required|array|min:1', 'room_id.*' => 'required|integer|distinct|min:0']);
             $year = Year::where('current_year','1')->first();
             $term = Term_year::where('current_term', '1')->whereIn('year_id', Year::where('current_year', 1)->select('id'))->firstOrFail();
@@ -13282,13 +13260,14 @@ public function edit_coordinator_task($coordinator_id)
                 }
                     app(\App\Services\AssessmentEquivalenceService::class)->createdTogether($createdIds);
                 }, 3);
-                return redirect()->back()->with('success', __('admin.notifications.exam_created_successfully'));
+                return $this->assessmentSavedResponse($request, 'exam_created_successfully');
 
                 }
 
         public function exam_update(Request $request){
-                return DB::transaction(function () use ($request) {
+                DB::transaction(function () use ($request) {
                 $exam = Exams2::whereKey($request->exam_id)->lockForUpdate()->firstOrFail();
+                app(\App\Services\AdminAssessmentInput::class)->validate($request, 1, $exam);
                 $exam->user_id = auth()->id();
                 $exam->room_id = $request->room_id;
                 $exam->lesson_id = $request->lesson_id;
@@ -13306,38 +13285,48 @@ public function edit_coordinator_task($coordinator_id)
                 else
                 $exam->is_file = 0;
                 $exam->save();
-                return redirect()->back()->with('success', __('admin.notifications.exam_updated_successfully'));
                 }, 3);
+                return $this->assessmentSavedResponse($request, 'exam_updated_successfully');
 
             }
 
-            public function exam_quize_delete(Request $request){
-        return DB::transaction(function () use ($request) {
-
-        $formed_code = Auth::User()->view_password;
-                if ($formed_code == $request->delete_code ){
+    public function exam_quize_delete(Request $request)
+    {
+        $enteredCode = $request->input('delete_code');
+        // Never let validation redirects/debug request input retain this secret.
+        $request->offsetUnset('delete_code');
+        $request->query->remove('delete_code');
+        $validator = \Validator::make(['content_id'=>$request->content_id, 'delete_code'=>$enteredCode], [
+            'content_id'=>'required|integer|min:1', 'delete_code'=>'required|string|max:4096',
+        ], ['content_id.*'=>__('assessment_entry.delete_target'), 'delete_code.*'=>__('assessment_entry.delete_required')]);
+        if ($validator->fails()) return $this->assessmentDeleteError($request, $validator->errors()->toArray());
+        $exam = Exams2::findOrFail($request->content_id);
+        $this->authorize((int) $exam->type === 2 ? 'delete_quize' : 'delete_exam');
+        // Preserve the established account-specific legacy deletion-code contract.
+        $expectedCode = (string) Auth::user()->view_password;
+        if ($expectedCode === '' || !hash_equals($expectedCode, $enteredCode)) {
+            return $this->assessmentDeleteError($request, ['delete_code'=>[__('assessment_entry.delete_invalid')]]);
+        }
+        try {
+            DB::transaction(function () use ($request) {
                 $exam = Exams2::whereKey($request->content_id)->lockForUpdate()->firstOrFail();
                 \App\Services\AssessmentResultSafety::assertDeletable($exam);
-                if ($exam->is_file == 1){
-                if ($exam->file != null) {
-                   Storage::disk('public')->delete($exam->file);
+                if ((int) $exam->is_file === 1 && $exam->file !== null) {
+                    Storage::disk('public')->delete($exam->file);
                 }
-                    $exam_files =  Exam_file::where('exam_id',$request->content_id)->get() ;
-                        foreach($exam_files as $exam_file){
-                                if ($exam_file->file != null) {
-                                   Storage::disk('public')->delete($exam->file);
-                                }
-                                $exam_file->delete() ;
-                        }
-                    }
-                    $exam->delete() ;
-                    return redirect()->back()->with('success', __('admin.notifications.assessment_deleted_successfully'));
+                $exam->delete();
+            }, 3);
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            return $this->assessmentDeleteError($request, ['assessment'=>[__('assessment_entry.delete_protected')]]);
+        }
+        return $this->assessmentSavedResponse($request, 'assessment_deleted_successfully');
+    }
 
-                    }else {
-                        return redirect()->back()->with('error', __('admin.notifications.delete_code_invalid'));
-                }
-        }, 3);
-            }
+    private function assessmentDeleteError(Request $request, array $errors)
+    {
+        if ($request->expectsJson()) return response()->json(['success'=>false,'errors'=>$errors], 422);
+        return redirect()->back()->withErrors($errors)->with('assessment_delete_id', (int) $request->content_id);
+    }
 
 
         public function class_delete_fun($class_id)

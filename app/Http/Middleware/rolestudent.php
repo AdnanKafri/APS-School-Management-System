@@ -18,6 +18,7 @@ class rolestudent
     public function handle($request, Closure $next)
     {
 
+        if (!Auth::check()) return app(\App\Services\SchoolLoginNavigation::class)->guest($request);
         if (Auth::check() && auth()->user()->type == '0') {
             $studentId = auth()->user()->student_id;
             $routeStudentId = $request->route('student_id');

@@ -76,6 +76,18 @@ class websitecontroller extends Controller
     public function __construct()
     {
         $this->year = Year::where('current_year', '1')->first();
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+            if ($response instanceof \Illuminate\Http\JsonResponse) {
+                $policy = app(\App\Services\StudentResultsVisibility::class);
+                $response->setData($policy->enabled() ? $policy->redactUnpublishedPayload($response->getData(true))
+                    : $policy->redactPayload($response->getData(true)));
+            }
+            $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
+            return $response;
+        })->only(['get_student_lesson_details', 'get_student_quest_exam', 'student_main_exams', 'student_main_quizes',
+            'view_test_exam', 'view_quize_exam', 'student_medals', 'student_graduate', 'student_graduate222',
+            'get_certificate', 'homeworke', 'test', 'quize', 'exam', 'certificates']);
     }
 
     private function requireTimetableAssignment($teacherId, $roomId, $lessonId = null)
@@ -85,11 +97,7 @@ class websitecontroller extends Controller
 
     protected function studentResultsPagesEnabled(): bool
     {
-        $value = config('student_results.student_pages_enabled', false);
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
-        }
-        return (bool) $value;
+        return app(\App\Services\StudentResultsVisibility::class)->enabled();
     }
 
     protected function studentResultsBlockedJson(string $message = null, array $extra = [])
@@ -1256,7 +1264,7 @@ class websitecontroller extends Controller
                 $homeworks = Student_lesson_teacher_room_term_exam::where('exam_id', $homework->id)
                     ->where('student_id', $student_id)->get();
 
-                if (isset($content_result) && $content_result->result != null) {
+                if (app(\App\Services\StudentResultsVisibility::class)->published($content_result) && $content_result->result !== null) {
                     $homework->result = $content_result->result;
                 } else if (isset($content_result) && $content_result->status == 1 && $content_result->show_result == 0) {
                     $homework->result = -1;
@@ -1907,6 +1915,10 @@ class websitecontroller extends Controller
         $content = Lesson_teacher_room_term_exam::findOrFail($exam_id);
         $content_mark = $content->success_mark;
         $exam_result = Exam_result::where('exam_id', $exam_id)->where('user_id', $student_id)->first();
+        abort_unless($exam_result, 404);
+        if (!app(\App\Services\StudentResultsVisibility::class)->published($exam_result)) {
+            return $this->studentResultsBlockedJson(null, ['student_result'=>null, 'content_mark'=>null, 'questions'=>[]]);
+        }
         $student_result = $exam_result->result;
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
         $room = Room::findOrFail($content->room_id);
@@ -2042,6 +2054,10 @@ $a=0;
         $content = Exams2::findOrFail($exam_id);
         $content_mark = $content->mark;
         $exam_result = Exam_result2::where('exam_id', $exam_id)->where('user_id', $student_id)->first();
+        abort_unless($exam_result, 404);
+        if (!app(\App\Services\StudentResultsVisibility::class)->published($exam_result)) {
+            return $this->studentResultsBlockedJson(null, ['student_result'=>null, 'content_mark'=>null, 'questions'=>[]]);
+        }
         $student_result = $exam_result->result;
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
         $room = Room::findOrFail($content->room_id);
@@ -2530,7 +2546,8 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
             ]);
         }
 
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->year ? Term_year::where('year_id', $this->year->id)->where('current_term', 1)->first() : null;
+        if (!$term) return response()->json(['status'=>true, 'exams'=>[]]);
         $student = Student::with('details')->findOrFail($student_id);
 
         // $exams = Exams2::where('room_id',$room_id)->
@@ -2651,7 +2668,8 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
             ]);
         }
 
-        $term = Term_year::where('current_term', 1)->first();
+        $term = $this->year ? Term_year::where('year_id', $this->year->id)->where('current_term', 1)->first() : null;
+        if (!$term) return response()->json(['status'=>true, 'exams'=>[]]);
         $student = Student::with('details')->findOrFail($student_id);
 
         // $exams = Exams2::where('room_id',$room_id)->
@@ -3092,9 +3110,11 @@ $item = Exam_result::where('user_id', $student_id)->where('exam_id', $request->c
 
     public function student_medals($student_id)
     {
-        $term = Term_year::where('current_term', 1)->first();
-        $exam_medals = Exam_result2::with('lesson')->where('medal', '!=', null)->where('term_id', $term->id)->where('user_id', $student_id)->orderBy('updated_at', 'desc')->get();
-        $test_medals = Exam_result::with('lesson')->where('medal', '!=', null)->where('term_id', $term->id)->where('user_id', $student_id)->orderBy('updated_at', 'desc')->get();
+        if (!$this->studentResultsPagesEnabled()) return $this->studentResultsBlockedJson();
+        $term = $this->year ? Term_year::where('year_id', $this->year->id)->where('current_term', 1)->first() : null;
+        if (!$term) return response()->json(['exam_medals'=>[], 'test_medals'=>[], 'medals'=>[]]);
+        $exam_medals = Exam_result2::with('lesson')->where('status', '1')->where('show_result', 1)->where('medal', '!=', null)->where('term_id', $term->id)->where('user_id', $student_id)->orderBy('updated_at', 'desc')->get();
+        $test_medals = Exam_result::with('lesson')->where('status', '1')->where('show_result', 1)->where('medal', '!=', null)->where('term_id', $term->id)->where('user_id', $student_id)->orderBy('updated_at', 'desc')->get();
 
         $medals = Medal::with('lesson')->where('student_id', $student_id)->where('term', $term->id)->orderBy('updated_at', 'desc')->get();
 

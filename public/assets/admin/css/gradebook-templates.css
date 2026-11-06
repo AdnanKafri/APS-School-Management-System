@@ -1,0 +1,25 @@
+.gbt-page .gbt-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.gbt-breadcrumbs{display:flex;flex-wrap:wrap;max-width:100%}
+.gbt-breadcrumbs .breadcrumbs__item{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.gbt-page .btn{white-space:normal}
+.gbt-page .gbt-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gbt-page .gbt-actions .btn{white-space:normal;min-height:36px}
+.gbt-page .gbt-context dt{font-size:.85rem;font-weight:400;color:#6c757d;margin-bottom:6px}
+.gbt-page .gbt-context dd{font-weight:600;line-height:1.7;margin-bottom:12px;overflow-wrap:anywhere}
+.gbt-page .gbt-component{border:1px solid #dee2e6;border-radius:.25rem;padding:16px;margin-bottom:12px;min-width:0}
+.gbt-page .gbt-component .form-group{margin-bottom:12px}
+.gbt-page .gbt-component label{display:block;width:100%}
+.gbt-page .form-control{min-width:0}
+.gbt-page .gbt-year-form{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.gbt-page .gbt-year-form .form-group{flex:1 1 220px;max-width:360px;margin-bottom:0}
+.gbt-page .gbt-name-fields{max-width:850px}
+.gbt-page .table td,.gbt-page .table th{vertical-align:middle}
+.gbt-page .gbt-publish{border-top:1px solid #dee2e6;padding-top:16px}
+.gbt-page .gbt-confirm{display:flex;align-items:flex-start;gap:10px;line-height:1.8}
+.gbt-page .gbt-confirm input{margin-top:6px;flex-shrink:0}
+.gbt-page .card-header h4,.gbt-page .card-header h5{overflow-wrap:anywhere}
+@media(max-width:575px){
+ .gbt-page .card-body{padding:16px}.gbt-page .gbt-component{padding:12px}
+ .gbt-page .gbt-actions{width:100%}.gbt-page .gbt-year-form .form-group{max-width:none}
+ .gbt-page .gbt-toolbar{align-items:flex-start}.gbt-page .gbt-context dd{margin-bottom:10px}
+}

@@ -1,0 +1,23 @@
+/* Full-width selected-file feedback, outside the native picker label. */
+body.teacher-portal-body .lc-entry-form .lc-upload-field { grid-column: 1 / -1; }
+body.teacher-portal-body .lc-entry-form .lc-upload-field .Group,
+body.teacher-portal-body .lc-entry-form .lc-upload-field .drop-container { min-width: 0; width: 100%; }
+body.teacher-portal-body .lc-entry-form .lc-upload-field > label { display: block; margin-bottom: 8px; }
+body.teacher-portal-body .lc-entry-form .lc-upload-field textarea { width: 100%; max-width: 100%; min-height: 8rem; resize: vertical; font: inherit; line-height: 1.8; }
+body.teacher-portal-body .lc-file-selection { width: 100%; min-width: 0; margin-top: 12px; text-align: right; }
+body.teacher-portal-body .lc-file-selection[hidden] { display: none; }
+body.teacher-portal-body .lc-file-selection__count { display: block; margin-bottom: 8px; font-size: .9rem; color: #526579; }
+body.teacher-portal-body .lc-file-selection__list { max-height: 14rem; overflow: auto; margin: 0; padding: 3px; list-style: none; }
+body.teacher-portal-body .lc-file-selection__item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px; border: 1px solid #dce5ee; border-radius: 9px; }
+body.teacher-portal-body .lc-file-selection__item + .lc-file-selection__item { margin-top: 8px; }
+body.teacher-portal-body .lc-file-selection__details { min-width: 0; }
+body.teacher-portal-body .lc-file-selection__details summary { cursor: pointer; min-width: 0; }
+body.teacher-portal-body .lc-file-selection__name { display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; font-weight: 500; line-height: 1.8; unicode-bidi: plaintext; }
+body.teacher-portal-body .lc-file-selection__full { display: block; margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; font-weight: 400; line-height: 1.8; unicode-bidi: plaintext; }
+body.teacher-portal-body .lc-file-selection__remove { min-width: 44px; min-height: 44px; padding: 8px; border: 1px solid #dce5ee; border-radius: 8px; background: #f4f7fb; color: #152c4f; font: inherit; cursor: pointer; }
+body.teacher-portal-body .lc-file-selection__remove:focus-visible,
+body.teacher-portal-body .lc-file-selection__details summary:focus-visible { outline: 2px solid #6498c9; outline-offset: 2px; }
+@media (max-width: 359px) {
+    body.teacher-portal-body .lc-file-selection__item { grid-template-columns: minmax(0, 1fr); }
+    body.teacher-portal-body .lc-file-selection__remove { justify-self: end; }
+}

@@ -14,6 +14,9 @@
     .total-cell {
         background-color: #f6f9fc;
     }
+    .gb-occurrences { min-width: 0; text-align: right; }
+    .gb-occurrences th { min-width: 12rem; overflow-wrap: anywhere; white-space: normal; }
+    .gb-occurrences .btn { white-space: normal; }
 </style>
 @endsection
 
@@ -45,16 +48,19 @@
                         <div class="col-4 text-left">
                             @if(isset($gradebookStatus) && $gradebookStatus !== 'OPEN')
                                 <span class="badge badge-lg badge-danger text-white">
-                                    <i class="fa fa-lock ml-1"></i> مغلق
+                                    <i class="fa fa-lock ml-1"></i> {{ __('gradebook_ux.entry_control') }}: {{ __('gradebook_ux.locked') }}
                                 </span>
                             @else
                                 <span class="badge badge-lg badge-success text-white">
-                                    <i class="fa fa-pen ml-1"></i> مفتوح
+                                    <i class="fa fa-pen ml-1"></i> {{ __('gradebook_ux.entry_control') }}: {{ __('gradebook_ux.open') }}
                                 </span>
                             @endif
                         </div>
                     </div>
 
+                    <h4>{{ __('gradebook_occurrences.components') }}</h4>
+                    <p class="text-muted mb-1">{{ __('gradebook_occurrences.components_help') }}</p>
+                    <p class="text-muted small">{{ __('gradebook_ux.summary_help') }}</p>
                     <p class="text-muted">{{ __('gradebook.summary_notice') }}</p>
                     <div id="gradebook-feedback" role="status" aria-live="polite" class="mb-2"></div>
                     <div class="card shadow border-0">
@@ -69,7 +75,9 @@
                                             @endphp
                                             <th scope="col" class="text-center" style="font-size: 13px; color: #000; font-weight: bold; {{ $isLegacy ? 'background-color: #e9ecef;' : '' }}">
                                                 {{ $comp->name }}
-                                                <span class="d-block text-muted" style="font-size: 11px;">({{ $comp->weight }}%)</span>
+                                                <span class="d-block text-muted" style="font-size: 11px;">({{ $comp->weight ?? 0 }}%)</span>
+                                                <small class="d-block">{{ __('gradebook_ux.'.(\App\Services\GradebookComponentEntry::manual($comp) ? 'manual' : 'summary')) }}</small>
+                                                <small class="d-block text-muted">{{ __('gradebook_occurrences.maximum') }}: {{ $comp->calculated_max }}</small>
                                             </th>
                                         @endforeach
                                         <th scope="col" class="text-center font-weight-bold" style="font-size: 14px; color: #001586;">المجموع</th>
@@ -77,7 +85,7 @@
                                 </thead>
                                 <tbody class="list">
                                     @foreach($students as $student)
-                                    <tr>
+                                    <tr data-student="{{ $student->id }}">
                                         <td class="font-weight-bold text-dark">
                                             {{ $student->first_name }} {{ $student->last_name }}
                                         </td>
@@ -87,10 +95,12 @@
                                                 $val = $existingMarks[$student->id][$comp->id] ?? '';
                                                 $isLegacy = is_string($comp->data_source) && strpos($comp->data_source, 'LEGACY_') === 0;
                                                 $isLockedByAdmin = isset($gradebookStatus) && $gradebookStatus !== 'OPEN';
-                                                $isEditable = !$isLegacy && !$isLockedByAdmin;
+                                                $manual = \App\Services\GradebookComponentEntry::manual($comp);
+                                                $supported = \App\Services\GradebookComponentEntry::supportedMaximum($comp->calculated_max);
+                                                $isEditable = $manual && $supported && !$isLockedByAdmin;
                                                 $bgClass = $isLegacy ? 'bg-light' : ''; 
                                             @endphp
-                                            <td class="text-center p-0 {{ $bgClass }}" style="vertical-align: middle;">
+                                            <td class="text-center p-0 {{ $bgClass }}" data-component-value="{{ $comp->id }}" style="vertical-align: middle;">
                                                 @if($isEditable)
                                                     <input type="number" 
                                                            step="0.1" min="0" max="{{ $comp->calculated_max }}" inputmode="decimal"
@@ -108,6 +118,7 @@
                                                     <span class="d-block py-2 text-muted" style="font-weight: 600;">
                                                         {{ $val !== '' ? $val : '-' }}
                                                     </span>
+                                                    @if($manual)<small>{{ __('gradebook_ux.'.(!$supported ? 'manual_bound' : 'manual_locked')) }}</small>@endif
                                                 @endif
                                             </td>
                                         @endforeach
@@ -121,7 +132,13 @@
                             </table>
                         </div>
                     </div>
-                    @include('gradebook.assessment_results')
+                    @include('teachers.gradebook.assessment_columns')
+                    @if($sourceGradebook['assessments']->isNotEmpty() || $sourceGradebook['historical']->isNotEmpty())
+                        <details class="mt-3">
+                            <summary>{{ __('gradebook_occurrences.other_sources') }}</summary>
+                            @include('gradebook.assessment_results', ['gradebook' => $sourceGradebook])
+                        </details>
+                    @endif
                 </div>
             </div>
         </div>
@@ -133,6 +150,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var feedback = document.getElementById('gradebook-feedback');
+    var busy = window.gradebookSavingStudents = window.gradebookSavingStudents || {};
     var text = {
         saving: @json(__('gradebook.saving')),
         saved: @json(__('gradebook.saved')),
@@ -141,16 +159,20 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     function save(input) {
         var row = input.closest('tr');
-        if (row.dataset.saving === '1') return;
+        if (input.readOnly || input.disabled) return;
         var cell = input.closest('td');
         var status = cell.querySelector('.save-state');
         var retry = cell.querySelector('.grade-retry');
+        if (busy[input.dataset.student]) {
+            input.dataset.unsaved = '1'; status.textContent = text.pending; retry.hidden = false; return;
+        }
         if (!input.checkValidity()) {
             input.reportValidity();
             return;
         }
         row.dataset.saving = '1';
-        row.querySelectorAll('.grade-input').forEach(function (field) { field.disabled = true; });
+        busy[input.dataset.student] = true;
+        row.querySelectorAll('.grade-input').forEach(function (field) { field.readOnly = true; });
         input.dataset.unsaved = '1';
         retry.hidden = true;
         status.textContent = text.saving;
@@ -176,9 +198,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var response = xhr.responseJSON || {};
             var errors = response.errors ? Object.keys(response.errors).map(function (key) { return response.errors[key].join(' '); }).join(' ') : response.message;
             failed(errors);
+            if (xhr.status === 403) { input.dataset.closed = '1'; input.disabled = true; retry.hidden = true; }
         }).always(function () {
             row.dataset.saving = '0';
-            row.querySelectorAll('.grade-input').forEach(function (field) { field.disabled = false; });
+            busy[input.dataset.student] = false;
+            row.querySelectorAll('.grade-input').forEach(function (field) { field.readOnly = false; });
         });
         function failed(message) {
             input.setAttribute('aria-invalid', 'true');
@@ -190,6 +214,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     document.querySelectorAll('.grade-input').forEach(function (input) {
         input.addEventListener('change', function () { save(input); });
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') { event.preventDefault(); save(input); }
+        });
         input.addEventListener('input', function () {
             if (input.value !== input.dataset.accepted) input.dataset.unsaved = '1';
             else delete input.dataset.unsaved;
@@ -206,4 +233,5 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+<script src="{{ asset('teachers_2/assets/js/gradebook-occurrences.js') }}"></script>
 @endsection

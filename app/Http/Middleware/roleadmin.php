@@ -19,6 +19,8 @@ class roleadmin
     {
         $this->registerSmtAdminRouteAliases();
 
+        if (!Auth::check()) return app(\App\Services\SchoolLoginNavigation::class)->guest($request);
+
         if (Auth::check() && (string) auth()->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
             abort(403);
         }

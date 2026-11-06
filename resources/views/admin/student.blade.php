@@ -761,27 +761,36 @@ $about = \App\Other::find(1);
     <a class="btn btn-success" >  <a href="{{ route('export_student1') }}"></a>تصدير الطلاب </a>
 </div> --}}
 
+<div id="student-delete-feedback" class="alert alert-success" role="status" aria-live="polite" hidden></div>
 <div class="modal fade " id="delete_class">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="" action="{{ route('delete_student') }}" method="POST" enctype="multipart/form-data">
+            <form id="student-delete-form" action="{{ route('delete_student') }}" method="POST"
+                data-session="{{ __('student_deletion.session') }}" data-forbidden="{{ __('student_deletion.forbidden') }}"
+                data-invalid="{{ __('student_deletion.invalid') }}" data-failed="{{ __('student_deletion.failed') }}"
+                data-network="{{ __('student_deletion.network') }}">
                 @csrf
-                <input type="text" hidden name="student_id" id="delete_class_id">
+                <input type="hidden" name="student_delete_form" value="1">
+                <input type="hidden" name="student_id" id="delete_class_id" value="{{ old('student_delete_form') ? old('student_id') : '' }}">
                 <div class="modal-header" style="direction: rtl">
                     <h2 class="modal-title">حذف طالب</h2>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
                         style="padding: 0px;margin: 0px;">&times;</button>
                 </div>
                 <div class="modal-body" style="font-size: 25px;text-align: center;color: black">
-                    <h3 id="h4_text" style="direction: ltr; color: red;"></h3>
+                    <h3 id="h4_text" style="direction: rtl; color: red;"></h3>
+                    <div id="student-delete-errors" class="alert alert-danger" role="alert" aria-live="assertive" @unless(old('student_delete_form') && $errors->any()) hidden @endunless>
+                        @if(old('student_delete_form')) @foreach($errors->all() as $message)<p class="mb-1">{{ $message }}</p>@endforeach @endif
+                    </div>
+                    <a href="{{ route('admin.students.lifecycle_archive') }}">أرشيف الطلاب</a>
                     <hr>
                     <h3>ادخل كلمة المرور للحذف</h3>
-                    <input type="password" class="form-control" name="password" placeholder="كلمة المرور"
+                    <input type="password" class="form-control" name="password" placeholder="كلمة المرور" required autocomplete="current-password" aria-label="كلمة مرور حسابك الإداري"
                         style="direction: rtl; border: 1px solid #ff053a;">
                 </div>
                 <div class="modal-footer">
                     <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                    <button class="btn btn-primary" type="submit">حذف</button>
+                    <button class="btn btn-primary" type="submit" id="student-delete-submit">حذف</button>
                 </div>
             </form>
         </div>
@@ -2327,6 +2336,8 @@ else{
 
     $(document).on('click', '.delete_class_modal', function (e) {
         $('#delete_class_id').val($(this).data('id'));
+        $('#student-delete-form [name=password]').val('');
+        $('#student-delete-errors').empty().prop('hidden', true);
         $('#h4_text').text(" هل انت متأكد من حذف الطالب " + " " + $(this).data('name'));
     });
 
@@ -2933,6 +2944,15 @@ $(document).on('click', '.financial_account', function () {
 }());
 </script>
 
+<script src="{{ asset('assets/admin/js/student-delete.js') }}?v=20261106"></script>
+@if($errors->any() && old('student_delete_form'))
+<script>
+    $(function () {
+        $('#h4_text').text('تأكيد حذف الطالب رقم ' + $('#delete_class_id').val());
+        $('#delete_class').modal('show');
+    });
+</script>
+@endif
 @if($errors->any() && old('student_create_form'))
 <script>
     $(function () {

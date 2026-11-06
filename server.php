@@ -15,10 +15,12 @@ $uri = urldecode(
 // built-in PHP web server. This provides a convenient way to test a Laravel
 // application without having installed a "real" web server software here.
 $requestedFile = realpath(__DIR__.'/public'.$uri);
-$applicationStorage = realpath(__DIR__.'/storage/app/mobile-applications');
-if ($requestedFile && $applicationStorage && strpos(str_replace('\\', '/', $requestedFile), str_replace('\\', '/', $applicationStorage).'/') === 0) {
-    http_response_code(404);
-    return;
+foreach (['mobile-applications', 'lesson-content-private'] as $privateDirectory) {
+    $privateStorage = realpath(__DIR__.'/storage/app/'.$privateDirectory);
+    if ($requestedFile && $privateStorage && strpos(str_replace('\\', '/', $requestedFile), str_replace('\\', '/', $privateStorage).'/') === 0) {
+        http_response_code(404);
+        return;
+    }
 }
 if ($uri !== '/' && file_exists(__DIR__.'/public'.$uri)) {
     return false;

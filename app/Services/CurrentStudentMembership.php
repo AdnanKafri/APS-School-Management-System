@@ -110,6 +110,44 @@ class CurrentStudentMembership
         return $this->constrain(Student::query(), $yearId, $roomId, $requirePlacement, $at);
     }
 
+    /** Operational evidence only; never substitute this for an archived placement. */
+    public function assessmentEntryContexts($studentIds, $yearId, $roomId)
+    {
+        $eligible = $this->studentsQuery($yearId, $roomId)->whereIn('students.id', $studentIds)
+            ->pluck('students.id');
+        $placements = DB::table('student_academic_placements')->whereIn('student_id', $eligible)
+            ->where('year_id', $yearId)->get()->groupBy('student_id');
+        $enrollments = DB::table('room_student')->whereIn('student_id', $eligible)
+            ->where('year_id', $yearId)->where('room_id', $roomId)->get()->groupBy('student_id');
+        $contexts = [];
+        foreach ($eligible as $studentId) {
+            $contexts[$studentId] = null; // Eligible roster, but insufficient interval evidence.
+            $history = $placements->get($studentId, collect());
+            $active = $history->where('status', 'active');
+            if ($active->count() !== 1) continue;
+            $placement = $active->first();
+            $legacy = (int) $placement->room_id !== (int) $roomId;
+            $from = $placement->effective_from;
+            if ($legacy) {
+                $rows = $enrollments->get($studentId, collect());
+                // The membership scope already proves same grade, a newer projection,
+                // no competing enrollment/placement and no later/undated transfer.
+                // Its timestamp is a conservative entry boundary, NOT an invented move.
+                // A prior visit to the target needs real interval reconciliation.
+                if ($history->contains('room_id', $roomId)
+                    || $rows->count() !== 1 || !$rows->first()->updated_at
+                    || $rows->first()->updated_at > Carbon::now('Asia/Damascus')->format('Y-m-d H:i:s')) continue;
+                $from = max($from, $rows->first()->updated_at);
+            }
+            $contexts[$studentId] = [
+                'placement_id' => $placement->id, 'stored_room_id' => $placement->room_id,
+                'room_id' => $roomId, 'effective_from' => $from,
+                'effective_to' => $placement->effective_to, 'legacy_projection' => $legacy,
+            ];
+        }
+        return $contexts;
+    }
+
     public function roomForStudent($studentId, $yearId)
     {
         if (!$yearId) {

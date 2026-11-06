@@ -17,6 +17,7 @@ class roleteacher
     public function handle($request, Closure $next)
     {
 
+        if (!Auth::check()) return app(\App\Services\SchoolLoginNavigation::class)->guest($request);
         if(Auth::check() && auth()->user()->type== '1'){
             return $next($request);
         }

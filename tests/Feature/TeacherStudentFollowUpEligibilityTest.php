@@ -777,6 +777,7 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
             $t->timestamps();
         });
         foreach (['exam_result','exam_result2'] as $table) { Schema::create($table, function (Blueprint $t) {
+            $t->integer('show_result')->default(1);
             $t->increments('id'); $t->unsignedInteger('user_id'); $t->unsignedInteger('room_id')->nullable();
             foreach (['class_id','lesson_id','term_id','exam_id'] as $column) { $t->unsignedInteger($column)->nullable(); }
             foreach (['result','type','status','start_time','end_time','medal'] as $column) { $t->string($column)->nullable(); } $t->timestamps();

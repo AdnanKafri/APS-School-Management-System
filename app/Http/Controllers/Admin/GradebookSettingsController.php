@@ -24,7 +24,11 @@ class GradebookSettingsController extends Controller
         $classes = Classe::withCount(['room' => function ($query) use ($year) {
             $query->where('year_id', $year->id);
         }])->paginate(10);
-        return view('admin.gradebook.settings.index', compact('classes', 'year'));
+        $term = \App\Term_year::where('year_id', $year->id)->where('current_term', 1)->first();
+        $classStatuses = $classes->getCollection()->mapWithKeys(function ($class) use ($term) {
+            return [$class->id => $term ? \App\Services\GradebookStatusService::getStatus($class->id, $term->id) : 'LOCKED'];
+        });
+        return view('admin.gradebook.settings.index', compact('classes', 'year', 'term', 'classStatuses'));
     }
 
     /**
@@ -81,8 +85,11 @@ class GradebookSettingsController extends Controller
         
         // Load JSON Config
         $components = \App\Services\GradebookConfigService::getConfig($subjectId, $year->id);
+        $configurationInfo = app(\App\Services\Gradebook\GradebookContextReader::class)
+            ->resolveLegacy($subjectId, $year->id)->toArray()['configuration'];
+        $usedSources = \App\Services\GradebookDistributionImpact::usedSources($subjectId, $year->id);
 
-        return view('admin.gradebook.settings.edit_json', compact('subject', 'components'));
+        return view('admin.gradebook.settings.edit_json', compact('subject', 'components', 'year', 'configurationInfo', 'usedSources'));
     }
 
     /**
@@ -90,28 +97,56 @@ class GradebookSettingsController extends Controller
      */
     public function update(Request $request, $subjectId)
     {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $subjectId) {
+        $subject = Lesson::whereKey($subjectId)->lockForUpdate()->firstOrFail();
+        // Acquire the shared configuration lock before any snapshot reads.
         $year = Year::where('current_year', '1')->firstOrFail();
-        $subject = Lesson::findOrFail($subjectId);
+        if ($request->input('_components_present') === '1' && !$request->has('components')) $request->merge(['components'=>[]]);
         
         // Validation for Weights (Percentages)
         $request->validate([
-            'components' => 'required|array',
+            'components' => 'present|array|max:100',
             'components.*.name' => 'required|string|max:191',
             'components.*.weight' => 'required|integer|min:0|max:100',
             'components.*.id' => 'nullable|string|distinct',
-            'components.*.data_source' => 'nullable',
+            'components.*.data_source' => ['nullable', function ($attribute, $value, $fail) {
+                if (!is_string($value) && !is_int($value) && !is_float($value)) $fail(__('gradebook.context_invalid'));
+            }],
+            '_allocation_subject_total' => 'sometimes|required|integer|min:1',
+            '_configuration_revision' => ['sometimes','required','regex:/^(missing|[a-f0-9]{64})$/D'],
+            '_configuration_year' => 'sometimes|required|integer',
         ]);
+        $request->merge(['components'=>array_values($request->components)]);
+        abort_if($request->has('_configuration_year') && (int) $request->_configuration_year !== (int) $year->id, 422, __('gradebook.context_invalid'));
+        $configuration = app(\App\Services\Gradebook\GradebookContextReader::class)
+            ->resolveLegacy($subjectId, $year->id)->toArray()['configuration'];
+        if (!in_array($configuration['state'], ['valid','missing'], true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['components'=>__('gradebook_ux.invalid_config')]);
+        }
+        $revision = $configuration['sha256'] ?? 'missing';
+        if ($request->has('_configuration_revision') && $request->_configuration_revision !== $revision) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['components'=>__('gradebook_editor.stale')]);
+        }
 
-        $previous = \App\Services\GradebookConfigService::getConfig($subjectId, $year->id)->keyBy('id');
+        if ($request->has('_allocation_subject_total')
+            && (string)$request->_allocation_subject_total !== (string)$subject->max_mark) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                '_allocation_subject_total'=>__('gradebook_distribution.maximum_changed'),
+            ]);
+        }
+
+        $previousRows = \App\Services\GradebookConfigService::getConfig($subjectId, $year->id);
+        $previous = $previousRows->keyBy('id');
+        if ($previous->count() !== $previousRows->count()) \App\Services\AssessmentResultSafety::reject('ambiguous_result', 'components');
         $submitted = collect($request->components)->keyBy('id');
         $reserved = \App\Exams2::where('lesson_id', $subjectId)
             ->whereIn('term_id', \App\Term_year::where('year_id', $year->id)->select('id'))
             ->where('name', 'like', 'Dynamic_Section_%')->get();
+        $usedSources = \App\Services\GradebookDistributionImpact::usedSources($subjectId, $year->id);
         foreach ($previous as $id => $old) {
             $new = $submitted->get($id);
-            $containers = $reserved->where('name', 'Dynamic_Section_'.$old->data_source);
-            $used = $containers->contains(function ($exam) { return \App\Services\AssessmentResultSafety::hasRecords($exam); });
-            if ($used && (!$new || (float) $new['weight'] !== (float) $old->weight)) {
+            $used = isset($usedSources[(string) $old->data_source]);
+            if ($used && (!$new || !property_exists($old, 'weight') || (float) $new['weight'] !== (float) $old->weight)) {
                 \App\Services\AssessmentResultSafety::reject('retained_results', 'components');
             }
         }
@@ -128,6 +163,7 @@ class GradebookSettingsController extends Controller
         $usedIds = $reserved->map(function ($exam) {
             return (int) substr($exam->name, strlen('Dynamic_Section_'));
         })->all();
+        foreach ($previous as $old) if (is_numeric($old->data_source)) $usedIds[] = (int) $old->data_source;
 
         // 1. Collect Valid Integer IDs already in use (to prevent overwriting existing mappings)
         foreach($request->components as $comp) {
@@ -140,20 +176,18 @@ class GradebookSettingsController extends Controller
 
         foreach($request->components as $idx => $comp) {
             // Ensure ID is set
-            $id = !empty($comp['id']) ? $comp['id'] : uniqid('comp_');
+            $id = isset($comp['id']) && (string) $comp['id'] !== '' ? $comp['id'] : uniqid('comp_');
             $source = $comp['data_source'] ?? null;
             $finalSource = $source;
 
-            // --- IMMUTABLE LEGACY CORE LOGIC ---
-            // If the section is one of the original 3, FORCE its source to legacy.
-            // This prevents "Homework" from accidentally becoming Type 100.
-            if ($id === 'legacy_oral') {
-                $finalSource = 'LEGACY_ORAL';
-            } elseif ($id === 'legacy_homework') {
-                $finalSource = 'LEGACY_HOMEWORK';
-            } elseif ($id === 'legacy_exam') {
-                $finalSource = 'LEGACY_EXAM';
+            $old = $previous->get($id);
+            if ($old) {
+                // Preserve even nonstandard historical ID/source pairs; labels are not identities.
+                $finalSource = $old->data_source;
             } else {
+                if (in_array($id, ['legacy_oral','legacy_homework','legacy_exam'], true)) {
+                    \App\Services\AssessmentResultSafety::reject('context_invalid', 'components');
+                }
                 // --- DYNAMIC LOGIC FOR NEW SECTIONS ---
                 // Only generic/empty sources get a new Dynamic ID.
                 $needsId = ($source === 'LEGACY_HOMEWORK' || empty($source));
@@ -187,5 +221,6 @@ class GradebookSettingsController extends Controller
             500, __('gradebook.write_failed'));
 
         return redirect()->back()->with('success', 'تم حفظ إعدادات توزيع العلامات بنجاح');
+        });
     }
 }

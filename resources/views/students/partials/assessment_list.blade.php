@@ -1,7 +1,3 @@
-@php
-    $dayNames = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
-@endphp
-
 @if (session()->has('success') || session()->has('otherday') || session()->has('othertime') || $errors->any())
     <script>
         window.addEventListener('load', function () {
@@ -44,56 +40,43 @@
                 <div class="sp-assessment-list">
                     @forelse ($exams as $item)
                         @php
-                            $hasResult = isset($item->result);
                             $isOpen = $now > $item->start_date && $now < $item->end_date;
                             $isEnded = $now > $item->end_date;
                             $subjectName = optional($item->lesson)->name ?: 'مادة غير محددة';
                         @endphp
-                        <article class="sp-card sp-assessment-card">
-                            <div class="sp-assessment-card__main">
-                                <span class="sp-assessment-card__number">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                                <div class="sp-assessment-card__title">
-                                    <span class="sp-badge {{ $item->is_file == 1 ? 'sp-badge--warning' : 'sp-badge--info' }}">{{ $item->is_file == 1 ? 'ملف' : 'مؤتمت' }}</span>
-                                    <h3>{{ $item->name }}</h3>
-                                    <p>{{ $subjectName }}</p>
-                                </div>
+                        <article class="sp-card sp-assessment-card sp-assessment-card--compact">
+                            <div class="sp-assessment-card__title">
+                                <h3>{{ $subjectName }}</h3>
+                                <p>{{ $item->name }}</p>
                             </div>
-
-                            <div class="sp-assessment-card__meta">
-                                <span><i class="mdi mdi-calendar"></i><small>التاريخ</small><strong>{{ \Carbon\Carbon::parse($item->start_date)->format('Y-m-d') }}</strong></span>
-                                <span><i class="mdi mdi-clock-outline"></i><small>الوقت</small><strong>{{ \Carbon\Carbon::parse($item->start_date)->format('g:i a') }}</strong></span>
-                                <span><i class="mdi mdi-calendar-today"></i><small>اليوم</small><strong>{{ $dayNames[(int) $item->day] ?? 'غير محدد' }}</strong></span>
-                                <span><i class="mdi mdi-timer-outline"></i><small>المدة</small><strong>{{ $item->period }}</strong></span>
-                            </div>
-
                             <div class="sp-assessment-card__actions">
-                                <button type="button" class="sp-btn sp-btn--soft exam-required" data-toggle="modal" data-target="#requirementsModal" data-required="{{ $item->required }}" data-name="{{ $item->name }}" data-lesson-name="{{ $subjectName }}"><i class="mdi mdi-information-outline"></i> المطلوب</button>
-
-                                @if ($hasResult)
-                                    @if ($item->result != -1)
-                                        <a class="sp-btn sp-btn--primary" href="{{ route('dashboard.student.exam.view_main_exam', $item->id) }}"><i class="mdi mdi-chart-box-outline"></i> النتيجة {{ $item->result }}/{{ $item->mark }}</a>
-                                    @else
-                                        <span class="sp-badge sp-badge--warning">قيد التصحيح</span>
-                                    @endif
-                                @elseif ($item->is_file == '0')
-                                    @if ($isOpen)
-                                        <a class="sp-btn sp-btn--primary" href="{{ route('dashboard.student.start_main_exam', $item->id) }}" target="_blank" rel="noopener"><i class="mdi mdi-play-circle-outline"></i> {{ $startLabel }}</a>
-                                    @elseif ($isEnded)
-                                        <span class="sp-badge sp-badge--danger">انتهى</span>
-                                    @else
-                                        <span class="sp-badge sp-badge--info">مخطط له</span>
-                                    @endif
-                                @elseif ($isOpen)
-                                    @if ($item->file)
-                                        <a class="sp-btn sp-btn--soft" href="{{ asset('storage/' . $item->file) }}" target="_blank" rel="noopener"><i class="mdi mdi-download-outline"></i> تنزيل الأسئلة</a>
-                                    @endif
-                                    <button type="button" class="sp-btn sp-btn--primary upload-files" data-toggle="modal" data-target="#uploadFilesModal" data-id="{{ $item->id }}" data-name="{{ $item->name }}" data-lesson-name="{{ $subjectName }}"><i class="mdi mdi-upload-outline"></i> رفع الحل</button>
-                                @elseif ($isEnded)
-                                    <span class="sp-badge sp-badge--danger">انتهى</span>
+                                @if ($item->result_state === 'earned')
+                                    <a class="sp-assessment-result" href="{{ route('dashboard.student.exam.view_main_exam', $item->result_exam_id) }}">
+                                        <span>{{ __('student_assessments.result') }}</span>
+                                        <strong dir="ltr">{{ $item->result_value }}@if ($item->mark > 0) / {{ $item->mark }}@endif</strong>
+                                    </a>
                                 @else
-                                    <span class="sp-badge sp-badge--info">مخطط له</span>
+                                    <span class="sp-badge sp-badge--info">{{ __('student_assessments.'.$item->result_state) }}</span>
+                                @endif
+                                @if ($item->is_file == '0' && $item->can_participate)
+                                    @if ($isOpen)
+                                        <a class="sp-btn sp-btn--primary" href="{{ route('dashboard.student.start_main_exam', $item->id) }}" target="_blank" rel="noopener">{{ $startLabel }}</a>
+                                    @else
+                                        <span class="sp-muted">{{ $isEnded ? 'انتهى' : 'مخطط له' }}</span>
+                                    @endif
                                 @endif
                             </div>
+                            @if ($item->is_file == '0' && ($item->required || $item->file))
+                                <details class="sp-assessment-card__details">
+                                    <summary>{{ __('student_assessments.details') }}</summary>
+                                    @if ($item->required)<p>{{ $item->required }}</p>@endif
+                                    <div class="sp-actions-row">
+                                        @if ($item->file && $isOpen)
+                                            <a class="sp-btn sp-btn--soft" href="{{ asset('storage/' . $item->file) }}" target="_blank" rel="noopener">تنزيل الأسئلة</a>
+                                        @endif
+                                    </div>
+                                </details>
+                            @endif
                         </article>
                     @empty
                         <div class="sp-empty"><span class="sp-empty__icon"><i class="mdi mdi-clipboard-text-off-outline"></i></span><h3>لا توجد {{ $assessmentTitle }} متاحة</h3><p>ستظهر التقييمات هنا عند نشرها لشعبتك.</p></div>
@@ -103,35 +86,3 @@
         </div>
     </div>
 </main>
-
-<div class="modal fade" id="requirementsModal" tabindex="-1" role="dialog" aria-labelledby="requirementsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="requirementsModalLabel">المطلوب دراسته</h5><button type="button" class="close" data-dismiss="modal" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button></div>
-            <div class="modal-body">
-                <div class="sp-field"><label>اسم {{ $assessmentSingular }}</label><input type="text" readonly class="form-control js-assessment-name"></div>
-                <div class="sp-field mt-3"><label>المادة</label><input type="text" readonly class="form-control js-assessment-subject"></div>
-                <div class="sp-field mt-3"><label>المطلوب</label><textarea readonly rows="6" class="form-control js-assessment-required"></textarea></div>
-            </div>
-            <div class="modal-footer"><button type="button" class="sp-btn sp-btn--soft" data-dismiss="modal">إغلاق</button></div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="uploadFilesModal" tabindex="-1" role="dialog" aria-labelledby="uploadFilesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <form action="{{ route('dashboard.student.upload_exam_files') }}" method="post" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="exam_id" class="js-upload-exam-id">
-                <div class="modal-header"><h5 class="modal-title" id="uploadFilesModalLabel">رفع الحل</h5><button type="button" class="close" data-dismiss="modal" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button></div>
-                <div class="modal-body">
-                    <div class="sp-field"><label>اسم المحتوى</label><input type="text" name="content_name" readonly class="form-control js-upload-name"></div>
-                    <div class="sp-field mt-3"><label>المادة</label><input type="text" readonly class="form-control js-upload-subject"></div>
-                    <div class="sp-field mt-3"><label for="assessmentFiles">ملفات الحل</label><input id="assessmentFiles" name="file[]" class="form-control-file" type="file" multiple required><small class="sp-muted">يمكن رفع عدة ملفات معاً.</small></div>
-                </div>
-                <div class="modal-footer"><button type="button" class="sp-btn sp-btn--soft" data-dismiss="modal">إلغاء</button><button type="submit" class="sp-btn sp-btn--primary">تأكيد الرفع</button></div>
-            </form>
-        </div>
-    </div>
-</div>

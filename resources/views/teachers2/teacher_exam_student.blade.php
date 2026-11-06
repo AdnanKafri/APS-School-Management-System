@@ -401,6 +401,7 @@ border-right: 1px solid #ddd;
     </style>
 @endsection
 @section('content')
+@include('teachers.gradebook.legacy_window', ['originalAssessment'=>$exam])
  @if (session()->has('error'))
         <script>
             window.onload = function () {
@@ -436,37 +437,16 @@ border-right: 1px solid #ddd;
                     <div class="col-lg-12 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <p style="color: #9ea7af;
-                                        text-align: right;">وقت البداية : {{ $exam->start_date }}</p>
-                                        <p style="color: #9ea7af;
-                                        text-align: right;">وقت النهاية : {{ $exam->end_date }}</p>
-                                        <p style="color: #9ea7af;
-                                        text-align: right;">العلامة  : {{ $exam->mark }}</p>
-                                        <input type="hidden" id="success_mark" value="{{$exam->mark}}">
-                                 
-                                </div>
-                                    <div class="col-md-4">
-                                <h4 style="text-align: center;padding-bottom: 20px;color: #152C4F;font-size: 28px;">علامات
-                                    الامتحان</h4>
-                                </div>
-                                   <!-- <div class="col-md-4" style="position: relative;z-index: 9;">-->
-                                   <!--     <a href="{{route('dashboard.teacher.quize_zip',['room_id' => $room_id, 'exam_id' => $exam->id])}}" class="cssbuttons-io-button">-->
-                                   <!--         <span>تنزيل جميع أوراق الامتحان</span>-->
-                                   <!--         <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none"></path><path d="M1 14.5a6.496 6.496 0 0 1 3.064-5.519 8.001 8.001 0 0 1 15.872 0 6.5 6.5 0 0 1-2.936 12L7 21c-3.356-.274-6-3.078-6-6.5zm15.848 4.487a4.5 4.5 0 0 0 2.03-8.309l-.807-.503-.12-.942a6.001 6.001 0 0 0-11.903 0l-.12.942-.805.503a4.5 4.5 0 0 0 2.029 8.309l.173.013h9.35l.173-.013zM13 12h3l-4 5-4-5h3V8h2v4z" fill="currentColor"></path></svg>-->
-                                   <!--       </a>-->
-
-                                   <!--</div>-->
-                                </div>
+                                @include('teachers.gradebook.entry_context', ['originalAssessment'=>$exam])
+<input type="hidden" id="success_mark" value="{{ $exam->mark }}">
                                 <!--select students-->
                                 <div class="container">
                                     <div class="row">
                                         <div class="col-sm">
                                             <input class="homeid" hidden value="{{ $exam->id }}">
-                                            <div class="row selectrow" style="position: relative;top: -80px;">
+                                            <div class="row selectrow">
                                                 <div class="col-md-6" style="height: 80px;">
-                                                    <div class="form-group newselect" style="width: 300px;">
+                                                    <div class="form-group newselect" style="width: 100%;">
                                                         <select class="js-example-basic-single choice"
                                                             style="width: 100%;direction: rtl;">
                                                             <option value="0"> كل الطلاب </option>
@@ -521,9 +501,8 @@ border-right: 1px solid #ddd;
                                                 @endif
                                                 @if($item->student)
                                                     <tr>
-                                                        <form action="{{ route('dashboard.teacher.student_save_mark_quize') }}" method="post" enctype="multipart/form-data">
-                                                                   @csrf
-                                                            <td data-label="الرقم التسلسلي"class="">
+<td data-label="الرقم التسلسلي"class="">
+<form id="traditional-mark-{{ $item->user_id }}" action="{{ route('dashboard.teacher.student_save_mark_quize') }}" method="post">@csrf</form>
                                                                 {{ $item->student->id }}</td>
                                                             <td data-label="اسم الطالب" class="">
                                                                 {{ $item->student->first_name }} {{ $item->student->last_name }} </td>
@@ -540,19 +519,19 @@ border-right: 1px solid #ddd;
                                                               
                                                                     
                                                                 
-                    <input style="height: 50px; width:90px"  hidden name="exam_result_id"  value="{{ $item->id }}" type="number">
+                    <input form="traditional-mark-{{ $item->user_id }}" style="height: 50px; width:90px"  hidden name="exam_result_id"  value="{{ $item->id }}" type="number">
 
-                       <input inputmode="decimal"  style="height: 50px; width:94px;" name="mark" min="0.0" max="{{$exam->mark}}" value="{{ $item->result!=null ?$item->result : '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="number_mark common-input mb-20 form-control input2"  type="number">
-
-
+                       <input form="traditional-mark-{{ $item->user_id }}" inputmode="decimal" step="any" style="height: 50px; width:94px;" name="mark" min="0.0" max="{{$exam->mark}}" value="{{ $item->result ?? '' }}" onfocus="this.placeholder = ''" onblur="this.placeholder = ''" class="number_mark common-input mb-20 form-control input2"  type="number">
 
 
 
-                     <input style="height: 50px; width:90px"  hidden name="class_id"  value="{{ $room_id }}" type="text">
-                     <input style="height: 50px; width:90px" class="room_id"  hidden name="room_id"  value="{{ $room_id }}"  type="text">
-                     <input style="height: 50px; width:90px"  hidden name="exam_id"  value="{{ $exam_id }}" type="text">
-                     <input style="height: 50px; width:90px"  hidden name="lesson_id"  value="{{ $lesson_id }}" type="text">
-                     <input style="height: 50px; width:90px"  hidden name="user_id"  value="{{ $item->student->id }}" type="text">
+
+
+                     <input form="traditional-mark-{{ $item->user_id }}" style="height: 50px; width:90px"  hidden name="class_id"  value="{{ $room_id }}" type="text">
+                     <input form="traditional-mark-{{ $item->user_id }}" style="height: 50px; width:90px" class="room_id"  hidden name="room_id"  value="{{ $room_id }}"  type="text">
+                     <input form="traditional-mark-{{ $item->user_id }}" style="height: 50px; width:90px"  hidden name="exam_id"  value="{{ $exam_id }}" type="text">
+                     <input form="traditional-mark-{{ $item->user_id }}" style="height: 50px; width:90px"  hidden name="lesson_id"  value="{{ $lesson_id }}" type="text">
+                     <input form="traditional-mark-{{ $item->user_id }}" style="height: 50px; width:90px"  hidden name="user_id"  value="{{ $item->student->id }}" type="text">
 
 
                                                             </td>
@@ -632,7 +611,7 @@ border-right: 1px solid #ddd;
                 <!--@endif-->
                 <!--                                            </td>-->
                                                             <td data-label="عمليات التعديل" class="">
-                                                                 <button class="Btn" type="submit">
+                                                                 <button form="traditional-mark-{{ $item->user_id }}" class="Btn" type="submit">
                                                                     <svg class="svg" viewBox="0 0 512 512">
                                                                         <path
                                                                             d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
@@ -642,8 +621,7 @@ border-right: 1px solid #ddd;
                                                                 </button>
 
                                                             </td>
-                                                        </form>
-                                                    </tr>
+                                                        </tr>
                                                 @endif
                                             @endforeach
 
@@ -665,124 +643,10 @@ border-right: 1px solid #ddd;
     <!--end main panels-->
 @endsection
 @section('js')
+@include('teachers.gradebook.legacy_entry')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
 <script>
-    window.teacherBulkSave = function (button) {
-    console.log('bulk save clicked', button);
-    var panel = button.closest('.teacher-bulk-panel');
-    if (!panel) {
-        console.warn('bulk save panel not found');
-        return false;
-    }
-
-    var rows = [];
-    panel.querySelectorAll('.table1 tbody tr').forEach(function (row) {
-        var visibleMark = Array.from(row.querySelectorAll('input[name="mark"]')).find(function (input) {
-            return input.offsetParent !== null;
-        });
-
-        if (!visibleMark) {
-            return;
-        }
-
-        var mark = (visibleMark.value || '').toString().trim();
-        if (!mark) {
-            return;
-        }
-
-        rows.push({
-            exam_result_id: row.querySelector('input[name="exam_result_id"]') ? row.querySelector('input[name="exam_result_id"]').value : '',
-            room_id: row.querySelector('input[name="room_id"]') ? row.querySelector('input[name="room_id"]').value : '',
-            exam_id: row.querySelector('input[name="exam_id"]') ? row.querySelector('input[name="exam_id"]').value : '',
-            lesson_id: row.querySelector('input[name="lesson_id"]') ? row.querySelector('input[name="lesson_id"]').value : '',
-            user_id: row.querySelector('input[name="user_id"]') ? row.querySelector('input[name="user_id"]').value : '',
-            mark: mark
-        });
-    });
-
-    if (!rows.length) {
-        alert(@json(__('teacher_portal.grading.empty_marks')));
-        return false;
-    }
-
-    var kindInput = panel.querySelector('.bulk-mark-kind');
-    var rowsInput = panel.querySelector('.bulk-mark-rows');
-    var form = panel.querySelector('.bulk-mark-form');
-
-    if (!kindInput || !rowsInput || !form) {
-        console.warn('bulk save form fields missing');
-        return false;
-    }
-
-    kindInput.value = button.dataset.kind || 'exam2';
-    rowsInput.value = JSON.stringify(rows);
-    form.submit();
-    return false;
-};
-
-$(document).on('keyup', '.number_mark', function () {
-    
-    if(parseInt($(this).val())>parseInt($('#success_mark').val())){
-        alert('لايمكن وضع القيمة');
-        $(this).val("");
-    }
-    
-    
-    
-})
-    $(document).on('click','.btn11', function () {
-            var mark1=$('.mark').val();
-         var room_id=$('#room_id').val();
-          var exam_id=$('#exam_id').val();
-           var lesson_id=$('#lesson_id').val();
-            var exam_result_id=$(this).parent().parent().find('#exam_result_id').val();
-           
-             var user_id=$(this).data('val');
-               $.each($('.input1'), function (key, value) {
-                 if($(this).data('id')==user_id){
-                    mark=$(this).val();  
-                    return false 
-                    
-                 }
-                
-                 
-                 
-             })
-             if(parseInt(mark1)<parseInt(mark)){
-                 alert('يرجى تعديل العلامة ');
-                 
-             }else{
-                   var data={
-                       
-                        "room_id":room_id,
-                        "exam_id":exam_id,
-                        "lesson_id":lesson_id,
-                        "user_id":user_id,
-                        "mark":mark,
-                        "exam_result_id":exam_result_id
-                        
-                    }
-         var url = "{{ URL::to('SMARMANger/dashboard/teacher/student_save_mark3') }}";
-            $.ajax({
-                url: url,
-                data : data,
-                type: "post",
-                headers: { 'X-CSRF-TOKEN': @json(csrf_token()) },
-                error: function (xhr) {
-                    var errors = (xhr.responseJSON || {}).errors || {};
-                    var messages = Object.keys(errors).map(function (key) { return errors[key].join(' '); });
-                    alert(messages.join('\n') || @json(__('gradebook.save_failed')));
-                },
-                success: function (data) {
-                    location.reload();
-
-          
-                }
-            })
-             }
-        
-   })
         function formatDate(timestamp) {
     return moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
 }
@@ -801,7 +665,7 @@ $(document).on('keyup', '.number_mark', function () {
 
 var lect=$(this).val();
 var home =$('.homeid').val();
-var mark =$('.mark').val();
+var mark =$('#success_mark').val();
 var url = "{{ URL::to('SMARMANger/dashboard/teacher/quizestudent') }}/" + lect+"/"+home +"/"+room_id;
 $.ajax({
 url: url,
@@ -820,7 +684,7 @@ if(lect==1){
         }
          medal=`<td style="height: 86px"> </td>`
          c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">`
-             d=`<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">> `
+             d=`<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">> `
              if(value.exam_result2.length>0){
     $.each(value.exam_result2, function (key1, value1) {
          if(value1.exam_id == home){
@@ -828,7 +692,7 @@ if(lect==1){
             
        c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">`     
   d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">
-  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
    
         if(value1.medal=="1"){
          medal=` <td style="height: 86px">
@@ -865,7 +729,7 @@ if(lect==1){
 
 else{
      d=`
-     <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+     <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
 }
 
 var b=[];
@@ -919,7 +783,8 @@ console.log(value2);
                                                                             </a>`);
       
  }}) 
-                  if (value.exams_files) {
+                  var date = '';
+                  if (value.exams_files && value.exams_files.length) {
                                             var number = value.exams_files.length - 1;
                                             var timestamp = value.exams_files[number].updated_at;
                                             var date = new Date(timestamp);
@@ -979,7 +844,7 @@ else if(lect==2){
          c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">` 
          medal=`<td style="height: 86px"> </td>`
          d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  id="exam_result_id" value=""  type="text">
-   <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+   <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
    
         if(value.exam_result2.length>0){
             
@@ -988,7 +853,7 @@ else if(lect==2){
        if(value1.result != null){  
             c=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">` 
   d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  id="exam_result_id" value="${value1.id}" type="text">
-   <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+   <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
   
   if(value1.medal=="1"){
          medal=` <td style="height: 86px">
@@ -1019,7 +884,7 @@ else if(lect==2){
        }
 else{
     d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id" id="exam_result_id" value="${value1.id}" type="text">
-    <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"    data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+    <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"    data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
   
 
 }
@@ -1033,7 +898,7 @@ else{
 
 else{
      d=`<input style="height: 50px; width:90px"  hidden name="exam_result_id"  id="exam_result_id" value=""  type="text">
-  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"     data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"     data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
   
 }
 
@@ -1075,7 +940,7 @@ ${c}
         }
     
          c=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="" type="text">`
-             d=`<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number"> `
+             d=`<input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number"> `
              if(value.exam_result2.length>0){
     $.each(value.exam_result2, function (key1, value1) {
          if(value1.exam_id == home){
@@ -1083,7 +948,7 @@ ${c}
 
        c=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">`
   d=`<input style="height: 50px; width:60px"  hidden name="exam_result_id" id="exam_result_id"  value="${value1.id}" type="text">
-  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+  <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value="${value1.result}"   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
 
 
 
@@ -1101,7 +966,7 @@ ${c}
 
 else{
      d=`
-     <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${ value.mark}" min="0.0"  type="number">`
+     <input inputmode="decimal" style="height: 50px; width:94px;" name="mark"  value=""   data-id="${ value.id }"  min="0.0" class="number_mark number_mark common-input mb-20 form-control input1" max="${mark}" min="0.0"  type="number">`
 }
 
 var b=[];

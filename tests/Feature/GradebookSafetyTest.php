@@ -45,6 +45,7 @@ class GradebookSafetyTest extends TestCase
         Storage::fake('local');
         config(['filesystems.default' => 'local']);
         app()->setLocale('ar');
+        config(['student_results.student_pages_enabled'=>true]);
         foreach (json_decode(file_get_contents(__DIR__.'/../Fixtures/gradebook-schema.json'), true) as $table => $columns) {
             Schema::create($table, function (Blueprint $schema) use ($columns) {
                 foreach ($columns as $column) {
@@ -63,7 +64,7 @@ class GradebookSafetyTest extends TestCase
             });
         }
         // Render the real child views; unrelated portal shell queries are isolated.
-        View::composer(['admin.master', 'teachers2.layouts.app', 'students.layouts.app4'], function ($view) {
+        View::composer(['admin.master', 'admin.layouts.v2', 'teachers2.layouts.app', 'students.layouts.app4'], function ($view) {
             $view->setPath(__DIR__.'/../Fixtures/gradebook-layout.blade.php');
         });
         DB::table('years')->insert([['id'=>5,'name'=>'2025/2026','current_year'=>0],['id'=>6,'name'=>'2026/2027','current_year'=>1]]);
@@ -91,10 +92,937 @@ class GradebookSafetyTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_occurrence_columns_discover_admin_creation_before_start_without_config_changes()
+    {
+        $this->dynamic();
+        $config = Storage::get('gradebook/409_6.json');
+        $status = Storage::get('gradebook_status/2_20.json');
+        $this->actingAs($this->admin);
+        foreach (['exam' => 'exam', 'quize' => 'quiz'] as $kind => $label) {
+            $this->post('/SMT/admin/class/room/'.$kind.'/store', [
+                'class_id'=>2, 'room_id'=>[132], 'lesson_id'=>409, 'content_name'=>'Admin '.$label,
+                'question_picker'=>2, 'required_lectures'=>0, 'is_file'=>1,
+                'start_date'=>'2026-10-23 08:00:00', 'end_date'=>'2026-10-24 08:00:00',
+                'mark'=>40, 'period'=>35, 'notes'=>'Original instructions',
+            ])->assertRedirect()->assertSessionHasNoErrors();
+        }
+        $before = DB::table('exams2')->orderBy('id')->get()->toJson();
+        $this->actingAs($this->teacher);
+        $view = app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,132,409)->getData();
+        $this->assertSame(['exam','quiz'], $view['assessmentColumns']->pluck('type')->all());
+        $this->assertSame(['upcoming','upcoming'], $view['assessmentColumns']->pluck('window')->all());
+        $this->assertSame([40.0,40.0], $view['assessmentColumns']->pluck('maximum')->all());
+        $this->assertEquals([35,35], $view['assessmentColumns']->pluck('duration')->all());
+        $response = $this->get($this->teacherUrl)->assertOk()->assertSee('Admin exam')->assertSee('Admin quiz');
+        $response->assertSee(__('gradebook_occurrences.upcoming'))->assertSee(__('gradebook_occurrences.original_maximum'));
+        $this->assertStringNotContainsString('<input', $this->occurrenceHtml($response->getContent()));
+        $this->assertSame($before, DB::table('exams2')->orderBy('id')->get()->toJson());
+        $this->assertSame(0, Exam_result2::count());
+        $this->assertSame($config, Storage::get('gradebook/409_6.json'));
+        $this->assertSame($status, Storage::get('gradebook_status/2_20.json'));
+    }
+
+    public function test_admin_quiz_list_uses_the_same_active_year_term_as_creation_and_teacher_columns()
+    {
+        $quiz=$this->exam(2,['name'=>'Current-year quiz']);
+        $this->exam(2,['term_id'=>17,'name'=>'Wrong-year term quiz']);
+        $this->actingAs($this->admin);
+        $view=app(\App\Http\Controllers\DashboardController::class)->room_quizes(132)->getData();
+        $this->assertSame([$quiz->id],$view['contents']->pluck('id')->all());
+        $this->actingAs($this->teacher);
+        $teacher=app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,132,409)->getData();
+        $this->assertSame([$quiz->id],$teacher['assessmentColumns']->pluck('id')->all());
+    }
+
+    private function occurrenceHtml($html)
+    {
+        $dom = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        libxml_clear_errors(); libxml_use_internal_errors($previous);
+        $node = (new \DOMXPath($dom))->query('//section[contains(concat(" ",normalize-space(@class)," ")," gb-occurrences ")]')->item(0);
+        $this->assertNotNull($node);
+        return $dom->saveHTML($node);
+    }
+
+    public function test_occurrence_columns_preserve_all_sections_creation_and_exact_receiving_identity()
+    {
+        $this->actingAs($this->admin);
+        foreach (['exams','quizes'] as $role) foreach ([132,133,93] as $room) {
+            DB::table('classes_room_role_exams')->insert(['role_id'=>1,'room_id'=>$room,'roles'=>$role]);
+        }
+        foreach (['exam','quize'] as $kind) {
+            $this->post('/SMT/admin/class/room/'.$kind.'/store', [
+                'class_id'=>2,'room_id'=>[0],'my_room_id'=>132,'lesson_id'=>409,
+                'content_name'=>'All sections '.$kind,'question_picker'=>2,'required_lectures'=>0,'is_file'=>0,
+                'start_date'=>'2026-10-23 08:00:00','end_date'=>'2026-10-24 08:00:00','mark'=>20,'period'=>30,
+            ])->assertRedirect()->assertSessionHasNoErrors();
+        }
+        $this->assertSame(4, Exams2::count());
+        $this->assertEquals([132,133], Exams2::pluck('room_id')->unique()->values()->all());
+        $this->timetablePeriod(166,133,409,6);
+        $this->actingAs($this->teacher);
+        foreach ([132,133] as $roomId) {
+            $view = app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,$roomId,409)->getData();
+            $this->assertCount(2,$view['assessmentColumns']);
+            $this->assertEquals(Exams2::where('room_id',$roomId)->pluck('id')->all(), $view['assessmentColumns']->pluck('id')->all());
+            $this->assertEquals([$roomId], $view['assessmentColumns']->pluck('room_id')->unique()->all());
+            $this->assertEquals([20], $view['assessmentColumns']->pluck('term_id')->unique()->all());
+        }
+        $this->assertSame(0,Exam_result2::count());
+    }
+
+    public function test_occurrence_window_is_diagnostic_and_all_new_occurrence_writes_remain_denied()
+    {
+        $this->actingAs($this->teacher);
+        $cases = [
+            ['2026-10-23 09:00:00','2026-10-24 09:00:00','upcoming'],
+            ['2026-10-22 09:00:00','2026-10-22 11:00:00','ongoing'],
+            ['2026-10-20 09:00:00','2026-10-21 09:00:00','ended'],
+            [null,null,'unknown'], ['bad','2026-10-22 11:00:00','unknown'],
+            ['2026-02-31 09:00:00','2026-03-04 09:00:00','unknown'],
+            ['2026-10-24 09:00:00','2026-10-23 09:00:00','unknown'],
+        ];
+        foreach ($cases as $case) $this->exam(1,['start_date'=>$case[0],'end_date'=>$case[1]]);
+        GradebookStatusService::setStatus(2,20,'OPEN');
+        $view = app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,132,409)->getData();
+        $this->assertSame(array_column($cases,2), $view['assessmentColumns']->pluck('window')->all());
+        foreach ($view['assessmentColumns'] as $column) {
+            $payload = ['room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>0,'exam_id'=>$column['id']];
+            $this->postJson($this->saveUrl,array_merge($payload,['component_id'=>$column['key']]))->assertNotFound();
+            $this->postJson($this->saveUrl,array_merge($payload,['component_id'=>'legacy_exam']))->assertStatus(422);
+        }
+        $this->assertSame(0,Exam_result2::count());
+    }
+
+    public function test_occurrence_columns_scope_all_actual_terms_sections_years_and_subjects()
+    {
+        $first=$this->exam(2,['name'=>'Same title']); $second=$this->exam(2,['name'=>'Same title']);
+        $makeup=$this->exam(1,['name'=>'Makeup <script>alert(1)</script> exam']);
+        $zero=$this->result($first,0); $earned=$this->result($makeup,'19.5');
+        $this->exam(1,['term_id'=>21,'name'=>'Other actual term']);
+        $this->exam(1,['room_id'=>133,'name'=>'Other section']);
+        $this->exam(1,['room_id'=>93,'term_id'=>17,'name'=>'Old year']);
+        DB::table('lessons')->insert(['id'=>410,'class_id'=>2,'name'=>'Other subject','max_mark'=>100]);
+        $this->exam(1,['lesson_id'=>410]);
+        $this->dynamic(); $container=$this->exam(1,['name'=>'Dynamic_Section_100','mark'=>20]);
+        $this->result($container,12);
+        $this->actingAs($this->teacher);
+        $view=app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,132,409)->getData();
+        $columns=$view['assessmentColumns'];
+        $this->assertSame([$first->id,$second->id,$makeup->id],$columns->pluck('id')->all());
+        $this->assertSame(0.0,$columns[0]['results'][41]['value']);
+        $this->assertEquals($zero->id,$columns[0]['results'][41]['result_id']);
+        $this->assertArrayNotHasKey(41,$columns[1]['results']);
+        $this->assertSame(19.5,$columns[2]['results'][41]['value']);
+        $this->assertEquals($earned->id,$columns[2]['results'][41]['result_id']);
+        $this->assertSame([$container->id],$view['sourceGradebook']['assessments']->pluck('id')->all());
+        $all=$this->read(); // The shared reader still supports every actual term.
+        $this->assertTrue($all['assessments']->contains('term_id',21));
+        $response=$this->get($this->teacherUrl)->assertOk()->assertDontSee('Other actual term')
+            ->assertDontSee('Other section')->assertDontSee('Old year')
+            ->assertDontSee('Makeup <script>alert(1)</script> exam',false)
+            ->assertSee('Makeup &lt;script&gt;alert(1)&lt;/script&gt; exam',false);
+        $html=$this->occurrenceHtml($response->getContent());
+        $this->assertSame(3,substr_count($html,'scope="col" data-assessment='));
+        $this->assertStringNotContainsString('Dynamic_Section_100',$html);
+        $this->assertStringNotContainsString('class="grade-input"',$html);
+    }
+
+    public function test_legacy_timing_gap_is_closed_for_traditional_teacher_writes()
+    {
+        $this->actingAs($this->teacher);
+        foreach ([['2026-10-23 09:00:00','2026-10-24 09:00:00'], ['2026-10-20 09:00:00','2026-10-21 09:00:00']] as $dates) {
+            $exam=$this->exam(1,['start_date'=>$dates[0],'end_date'=>$dates[1],'mark'=>20]);
+            try {app(TeacherAssessmentService::class)->save($exam->id,41,132,409,0);$this->fail('Outside-window mark accepted');}
+            catch (\Illuminate\Validation\ValidationException $exception) {$this->assertArrayHasKey('entry_window',$exception->errors());}
+            $view=app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,132,409)->getData();
+            $column=$view['assessmentColumns']->firstWhere('id',$exam->id);
+            $this->assertFalse($column['entry_allowed']);
+            $this->assertArrayNotHasKey(41,$column['results']);
+        }
+        $this->assertSame(0,Exam_result2::count());
+    }
+
+    public function test_occurrence_projection_uses_one_batch_query_without_changing_summary_or_raw_values()
+    {
+        $this->dynamic();
+        foreach ([10,30,0] as $value) $this->result($this->exam(2,['mark'=>40]),$value);
+        foreach ([40,60] as $value) $this->result($this->exam(1,['mark'=>80]),$value);
+        $this->result($this->exam(1,['name'=>'Dynamic_Section_100','mark'=>20]),15);
+        $read=$this->read(); $before=serialize($read);
+        $records=DB::table('exam_result2')->orderBy('id')->get()->toJson();
+        DB::enableQueryLog(); DB::flushQueryLog();
+        $columns=app(\App\Services\TeacherGradebookAssessmentColumns::class)->forContext($read,Room::find(132),Lesson::find(409),\App\Term_year::find(20));
+        $queries=DB::getQueryLog(); DB::disableQueryLog();
+        $this->assertCount(4,$queries); // Three explicit fixture models + one batched definition read.
+        $this->assertCount(5,$columns);
+        $this->assertSame($before,serialize($read));
+        $this->assertSame(['legacy_homework'=>13.3,'legacy_exam'=>60.0,'dynamic_a'=>15.0,'total'=>88.3],$read['marks'][41][20]);
+        $this->assertNull($read['marks'][42][20]['total']);
+        $this->assertSame($records,DB::table('exam_result2')->orderBy('id')->get()->toJson());
+    }
+
+    public function test_occurrence_discovery_does_not_relax_membership_or_timetable_authorization()
+    {
+        $exam=$this->exam(); $this->result($exam,12);
+        $this->actingAs($this->teacher)->get($this->teacherUrl)->assertOk();
+        DB::table('lesson_room_teacher_lecture_time')->where('teacher_id',166)->delete();
+        $this->getJson($this->teacherUrl)->assertForbidden();
+    }
+
+    public function test_distribution_bound_changes_and_locking_preserve_existing_occurrence_results()
+    {
+        $this->actingAs($this->teacher); $payload=$this->dynamic();
+        $this->postJson($this->saveUrl,$payload)->assertOk();
+        $exam=$this->exam(2,['mark'=>40]); $this->result($exam,35);
+        $config=Storage::get('gradebook/409_6.json');
+        $before=DB::table('exam_result2')->orderBy('id')->get()->toJson();
+        $components=GradebookConfigService::getConfig(409,6)->map(function($c){return (array)$c;})->all();
+        $this->actingAs($this->admin);
+        foreach ([10,30] as $weight) {
+            $proposed=$components; $proposed[3]['weight']=$weight;
+            $this->postJson('/SMT/admin/gradebook/settings/update/409',['components'=>$proposed])->assertStatus(422);
+        }
+        $this->assertSame($config,Storage::get('gradebook/409_6.json'));
+        GradebookStatusService::setStatus(2,20,'LOCKED');
+        $this->actingAs($this->teacher)->postJson($this->saveUrl,$payload)->assertForbidden();
+        $this->get($this->teacherUrl)->assertOk()->assertSee($exam->name);
+        $this->assertSame($before,DB::table('exam_result2')->orderBy('id')->get()->toJson());
+        $this->assertEquals(40,$exam->fresh()->mark);
+    }
+
+    public function test_approved_window_boundaries_are_server_authoritative_and_inclusive()
+    {
+        $this->actingAs($this->teacher);
+        $exam=$this->exam(1,['start_date'=>'2026-10-22 10:00:00','end_date'=>'2026-10-22 11:00:00']);
+        GradebookStatusService::setStatus(2,20,'OPEN');
+        foreach (['09:59:59'=>false,'10:00:00'=>true,'10:30:00'=>true,'11:00:00'=>true,'11:00:01'=>false] as $time=>$allowed) {
+            Carbon::setTestNow(Carbon::parse('2026-10-22 '.$time,config('app.timezone')));
+            $request=['student_id'=>41,'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'value'=>0];
+            $response=$this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',$request);
+            if ($allowed) $response->assertOk()->assertJsonPath('total',0);
+            else $response->assertStatus(422)->assertJsonValidationErrors('entry_window');
+        }
+        $this->assertSame(1,Exam_result2::count());
+        $this->assertSame(1,DB::table('notifications')->count());
+        Carbon::setTestNow(Carbon::parse('2026-10-22 07:00:00','UTC'));
+        $this->assertTrue(app(\App\Services\AssessmentEntryWindow::class)->state($exam)['allowed']);
+    }
+
+    public function test_all_traditional_single_ajax_and_bulk_paths_enforce_the_shared_window()
+    {
+        $this->actingAs($this->teacher); $expired=$this->exam(2,['end_date'=>'2026-10-22 09:30:00']);
+        $row=['exam_id'=>$expired->id,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'mark'=>5];
+        foreach (['student_save_mark_quize','student_save_mark2','student_save_mark3'] as $route) {
+            $this->postJson('/SMARMANger/dashboard/teacher/'.$route,$row)->assertStatus(422)->assertJsonValidationErrors('entry_window');
+        }
+        $active=$this->exam(2); $first=array_merge($row,['exam_id'=>$active->id]);
+        $bulk='/SMARMANger/dashboard/teacher/student_save_mark_bulk';
+        $this->postJson($bulk,['kind'=>'exam2','rows'=>json_encode([$first,array_merge($row,['user_id'=>42])])])->assertStatus(422);
+        $this->assertSame(0,Exam_result2::count());
+        $this->post($bulk,['kind'=>'exam2','rows'=>json_encode([$first,array_merge($first,['user_id'=>42,'mark'=>0])])])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame(2,Exam_result2::count());
+        foreach ([null,'bad','2026-02-31 09:00:00'] as $date) {
+            $invalid=$this->exam(1,['start_date'=>$date]);
+            $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark2',array_merge($row,['exam_id'=>$invalid->id]))->assertStatus(422);
+        }
+    }
+
+    public function test_occurrence_entry_synchronizes_both_interfaces_and_retry_does_not_duplicate_results_or_notifications()
+    {
+        $this->actingAs($this->teacher); $exam=$this->exam(1,['question_picker'=>2]);
+        GradebookStatusService::setStatus(2,20,'OPEN');
+        $legacy=['exam_id'=>$exam->id,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'mark'=>0];
+        $this->post('/SMARMANger/dashboard/teacher/student_save_mark_quize',$legacy)->assertRedirect()->assertSessionHasNoErrors();
+        $id=Exam_result2::first()->id;
+        $view=$this->get($this->teacherUrl)->assertOk()->assertSee('data-exam="'.$exam->id.'"',false);
+        $this->assertSame(0.0,$view->viewData('assessmentColumns')->first()['results'][41]['value']);
+        $url='/SMARMANger/dashboard/teacher/gradebook/assessment/save';
+        $payload=['student_id'=>41,'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'value'=>100];
+        $this->postJson($url,$payload)->assertOk()->assertJsonPath('result_id',$id)->assertJsonPath('total',100);
+        $this->postJson($url,$payload)->assertOk()->assertJsonPath('result_id',$id);
+        $this->assertSame(1,Exam_result2::count()); $this->assertSame(2,DB::table('notifications')->count());
+        $this->get('/SMARMANger/dashboard/teacher/teacher_exam_students/132/166/409/'.$exam->id)
+            ->assertOk()->assertSee('value="100"',false);
+        foreach ([null,-1,101] as $invalid) $this->postJson($url,array_merge($payload,['value'=>$invalid]))->assertStatus(422);
+        $this->assertEquals(100,Exam_result2::first()->result);
+        $this->result($exam,20);
+        $this->postJson($url,$payload)->assertStatus(422);
+        $this->assertSame(2,DB::table('notifications')->count());
+    }
+
+    public function test_automated_corrections_and_historical_boundaries_are_not_reinterpreted_as_new_gradebook_entry()
+    {
+        $this->actingAs($this->teacher);
+        $exam=$this->exam(1,['is_file'=>0,'end_date'=>'2026-10-21 10:00:00']);
+        $result=app(TeacherAssessmentService::class)->save($exam->id,41,132,409,12);
+        $this->post('/SMARMANger/dashboard/exam/update_result1',[
+            'exam_result_id'=>$result->id,'exam'=>$exam->id,'traditional_result'=>[3],'mark'=>[4],
+        ])->assertRedirect();
+        $this->assertEquals(7,$result->fresh()->result);
+        GradebookStatusService::setStatus(2,20,'OPEN');
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'student_id'=>41,'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'value'=>8,
+        ])->assertStatus(422)->assertJsonValidationErrors('entry_window');
+        $old=$this->exam(1,['room_id'=>93,'term_id'=>17]);
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark_quize',[
+            'user_id'=>41,'exam_id'=>$old->id,'room_id'=>93,'lesson_id'=>409,'mark'=>12,
+        ])->assertForbidden();
+        $this->assertEquals(7,$result->fresh()->result);
+    }
+
+    public function test_new_occurrence_action_rejects_tampered_context_membership_and_locked_or_carried_entry()
+    {
+        $exam=$this->exam(); $this->actingAs($this->teacher); GradebookStatusService::setStatus(2,20,'OPEN');
+        $url='/SMARMANger/dashboard/teacher/gradebook/assessment/save';
+        $payload=['student_id'=>41,'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'value'=>10];
+        foreach ([['room_id'=>133],['student_id'=>999],['subject_id'=>999]] as $bad) {
+            $response=$this->postJson($url,array_merge($payload,$bad));
+            $this->assertContains($response->status(),[403,404]);
+        }
+        $other=$this->exam(1,['room_id'=>133]);
+        $this->postJson($url,array_merge($payload,['exam_id'=>$other->id]))->assertForbidden();
+        GradebookStatusService::setStatus(2,20,'LOCKED'); $this->postJson($url,$payload)->assertOk();
+        GradebookStatusService::setStatus(2,20,'OPEN');
+        DB::table('room_student')->where('student_id',41)->update(['room_id'=>133]);
+        DB::table('student_academic_placements')->where('student_id',41)->update(['room_id'=>133]);
+        $this->postJson($url,$payload)->assertForbidden();
+        $this->assertContains($this->actingAs($this->admin)->postJson($url,$payload)->status(),[302,403]);
+        $this->assertSame(1,Exam_result2::count()); // Original entry is independent of the manual lock.
+    }
+
+    public function test_admin_modal_input_round_trip_rejects_bad_dates_bounds_and_long_notes_without_partial_insert()
+    {
+        $this->actingAs($this->admin);
+        $payload=['class_id'=>2,'my_room_id'=>132,'room_id'=>[132],'lesson_id'=>409,'content_name'=>'مذاكرة مراجعة',
+            'question_picker'=>2,'required_lectures'=>'الفصل الأول','is_file'=>1,'mark'=>20,'period'=>40,
+            'start_date'=>'2026-10-22T09:00','end_date'=>'2026-10-22T11:00:30','notes'=>'ملاحظات'];
+        foreach (['exam','quize'] as $kind) {
+            $url='/SMT/admin/class/room/'.$kind.'/store';
+            foreach ([['end_date'=>'2026-10-22T08:00'],['end_date'=>'bad'],['start_date'=>'2026-02-31T09:00'],
+                ['mark'=>2.5],['period'=>-1],['is_file'=>9],['notes'=>str_repeat('س',100)]] as $bad) {
+                $this->postJson($url,array_merge($payload,$bad))->assertStatus(422);
+            }
+            $this->assertSame($kind === 'exam' ? 0 : 1,Exams2::count());
+            $this->postJson($url,$payload)->assertOk()->assertJsonPath('success',true);
+            $record=Exams2::orderByDesc('id')->first();
+            $this->assertSame('2026-10-22 09:00:00',$record->start_date);
+            $this->assertSame('2026-10-22 11:00:30',$record->end_date);
+            $this->assertSame('ملاحظات',$record->notes);
+            $page=$this->get('/SMT/admin/class/room/'.($kind === 'quize' ? 'quizes' : 'exams').'/132')->assertOk();
+            $page->assertSee('id="assessment-create"',false)->assertSee('id="assessment-edit"',false)
+                ->assertSee('assessment-editor.js')->assertDontSee('jquery-3.4.1.min.js')->assertDontSee('@include',false);
+        }
+    }
+
+    public function test_admin_edit_protects_original_context_mode_maximum_and_requires_confirmation_to_reschedule_results()
+    {
+        $exam=$this->exam(2,['question_picker'=>2,'period'=>40,'required'=>'Work','notes'=>'Before','file'=>'keep.pdf']);
+        $record=$this->result($exam,35); $before=$record->getRawOriginal();
+        $this->actingAs($this->admin);
+        $payload=['quize_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'content_name'=>'Updated title',
+            'question_picker'=>2,'required_lectures'=>'Updated work','is_file'=>1,'mark'=>100,'period'=>40,
+            'start_date'=>'2026-10-22T09:00:00','end_date'=>'2026-10-22T11:00:00','notes'=>'After'];
+        $url='/SMT/admin/class/room/quize/update';
+        foreach ([['room_id'=>133],['mark'=>50],['mark'=>200],['is_file'=>0],['question_picker'=>1],['period'=>41]] as $bad) {
+            $this->postJson($url,array_merge($payload,$bad))->assertStatus(422);
+        }
+        $this->postJson('/SMT/admin/class/room/exam/update',array_merge($payload,['exam_id'=>$exam->id]))->assertStatus(422);
+        $this->postJson($url,$payload)->assertOk()->assertJsonPath('success',true);
+        $this->assertSame('Updated title',$exam->fresh()->name);
+        $this->assertSame('keep.pdf',$exam->fresh()->file);
+        $reschedule=array_merge($payload,['end_date'=>'2026-10-22T12:00:00']);
+        $this->postJson($url,$reschedule)->assertStatus(422)->assertJsonValidationErrors('confirm_window_change');
+        $this->postJson($url,array_merge($reschedule,['confirm_window_change'=>1]))->assertOk();
+        $this->assertSame('2026-10-22 12:00:00',$exam->fresh()->end_date);
+        $this->assertSame($before,$record->fresh()->getRawOriginal());
+    }
+
+    private function adminCreationPayload()
+    {
+        return ['class_id'=>2,'my_room_id'=>132,'room_id'=>[132],'lesson_id'=>409,'content_name'=>'New original quiz',
+            'question_picker'=>2,'required_lectures'=>'Work','is_file'=>1,'mark'=>50,'period'=>40,
+            'start_date'=>'2026-10-22T09:00:16','end_date'=>'2026-10-22T11:00:21','notes'=>''];
+    }
+
+    public function test_quiz_modal_section_modes_preserve_single_multiple_and_permission_scoped_all_contexts()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $payload=$this->adminCreationPayload();
+        foreach (['quize'=>'quizes','exam'=>'exams'] as $kind=>$list) {
+            $url='/SMT/admin/class/room/'.$kind.'/store';
+            $page=$this->get('/SMT/admin/class/room/'.$list.'/132')->assertOk();
+            $this->assertCount(0,$page->viewData('assessmentAllowedAllRooms'));
+            $page->assertSee(__('assessment_entry.no_allowed_sections'));
+            $this->postJson($url,array_merge($payload,['room_id'=>[0]]))->assertStatus(422)
+                ->assertJsonValidationErrors('room_id')->assertJsonFragment(['room_id'=>[__('assessment_entry.no_allowed_sections')]]);
+            $this->postJson($url,array_merge($payload,['room_id'=>[0,132]]))->assertStatus(422)
+                ->assertJsonValidationErrors('room_id');
+            foreach ([132,133,93] as $room) DB::table('classes_room_role_exams')->insert(['role_id'=>1,'room_id'=>$room,'roles'=>$list]);
+            $page=$this->get('/SMT/admin/class/room/'.$list.'/132')->assertOk();
+            $this->assertEquals([132,133],$page->viewData('assessmentAllowedAllRooms')->pluck('id')->all());
+            $before=Exams2::count();
+            foreach ([[132],[132,133],[0]] as $selection) {
+                $this->postJson($url,array_merge($payload,['room_id'=>$selection]))->assertOk()->assertJsonPath('success',true);
+            }
+            $this->assertSame($before+5,Exams2::count());
+            $this->assertSame(0,Exams2::where('room_id',93)->count());
+        }
+        $this->assertSame(8,DB::table('assessment_equivalence_members')->count());
+        $this->assertSame(0,Exam_result2::count());
+    }
+
+    public function test_quiz_modal_precise_context_errors_preserve_valid_entered_values_without_creating_records()
+    {
+        $this->actingAs($this->admin);$payload=$this->adminCreationPayload();
+        DB::table('classes')->insert(['id'=>3,'name'=>'Other class']);
+        DB::table('lessons')->insert(['id'=>410,'class_id'=>3,'name'=>'Other subject']);
+        DB::table('rooms')->insert(['id'=>134,'class_id'=>3,'year_id'=>6,'name'=>'Other section']);
+        foreach (['quize','exam'] as $kind) {
+            $url='/SMT/admin/class/room/'.$kind.'/store';
+            foreach ([['lesson_id'=>410],['room_id'=>[134]],['room_id'=>[93]],['my_room_id'=>93],['class_id'=>3]] as $bad) {
+                $this->postJson($url,array_merge($payload,$bad))->assertStatus(422);
+            }
+            $from='/SMT/admin/class/room/'.($kind==='quize'?'quizes':'exams').'/132';
+            $this->from($from)->post($url,array_merge($payload,['_assessment_modal'=>'assessment-create','room_id'=>[0]]))
+                ->assertRedirect($from)->assertSessionHasErrors('room_id')->assertSessionHasInput('content_name','New original quiz');
+            $this->get($from)->assertOk()->assertSee('New original quiz')->assertSee('data-validation=',false);
+        }
+        DB::table('term_years')->where('year_id',6)->update(['current_term'=>0]);
+        $this->postJson('/SMT/admin/class/room/quize/store',$payload)->assertStatus(422)->assertJsonValidationErrors('room_id');
+        $this->assertSame(0,Exams2::count());
+    }
+
+    public function test_assessment_delete_uses_the_existing_account_code_not_a_different_login_password_and_never_flashes_it()
+    {
+        $account=$this->account(2,['role_id'=>1,'password'=>\Hash::make('different-login-fixture'),'view_password'=>'deletion-fixture']);
+        $this->actingAs($account);$exam=$this->exam(2);$url='/SMT/admin/class/room/exam_quize/delete';
+        foreach ([null,'different-login-fixture',['bad']] as $code) {
+            $this->postJson($url,['content_id'=>$exam->id,'delete_code'=>$code])->assertStatus(422)->assertJsonValidationErrors('delete_code');
+            $this->assertDatabaseHas('exams2',['id'=>$exam->id]);
+        }
+        $from='/SMT/admin/class/room/quizes/132';
+        $this->from($from)->post($url,['content_id'=>$exam->id,'delete_code'=>'private-wrong-fixture'])
+            ->assertRedirect($from)->assertSessionHasErrors('delete_code')->assertSessionMissing('_old_input.delete_code');
+        $this->get($from)->assertOk()->assertSee('id="assessment-delete"',false)
+            ->assertSee(__('assessment_entry.delete_invalid'))->assertDontSee('private-wrong-fixture')->assertDontSee('deletion-fixture');
+        $this->postJson($url,['content_id'=>$exam->id,'delete_code'=>'deletion-fixture'])->assertOk()->assertJsonPath('success',true);
+        $this->assertDatabaseMissing('exams2',['id'=>$exam->id]);
+        $this->assertSame('deletion-fixture',$account->fresh()->view_password);
+        $empty=$this->account(2,['role_id'=>1,'view_password'=>null]);$this->actingAs($empty);$exam=$this->exam(1);
+        $this->postJson($url,['content_id'=>$exam->id,'delete_code'=>'x'])->assertStatus(422);
+        $this->assertDatabaseHas('exams2',['id'=>$exam->id]);
+    }
+
+    public function test_assessment_deletion_feedback_retains_results_files_and_equivalence_and_authorization()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $url='/SMT/admin/class/room/exam_quize/delete';
+        $marked=$this->exam(2);$record=$this->result($marked,0);$snapshot=$record->getRawOriginal();
+        $uploaded=$this->exam(2);DB::table('exams_files')->insert(['exam_id'=>$uploaded->id,'student_id'=>41,'file'=>'keep.pdf']);
+        $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Verified originals');
+        foreach ([$marked,$uploaded,$a] as $exam) {
+            $this->postJson($url,['content_id'=>$exam->id,'delete_code'=>'test-delete'])->assertStatus(422)
+                ->assertJsonFragment(['assessment'=>[__('assessment_entry.delete_protected')]]);
+            $this->assertDatabaseHas('exams2',['id'=>$exam->id]);
+        }
+        $this->assertSame($snapshot,$record->fresh()->getRawOriginal());
+        $this->assertSame(1,DB::table('exams_files')->count());$this->assertSame(2,DB::table('assessment_equivalence_members')->count());
+        foreach ([$this->teacher,$this->account(8)] as $account) {
+            $this->actingAs($account);$response=$this->postJson($url,['content_id'=>$a->id,'delete_code'=>'test-delete']);
+            $this->assertContains($response->status(),[302,403]);
+        }
+        auth()->logout();$this->postJson($url,['content_id'=>$a->id,'delete_code'=>'test-delete'])->assertStatus(401);
+        $this->assertDatabaseHas('exams2',['id'=>$a->id]);
+        $this->actingAs($this->admin);
+        $this->app->bind(\App\Http\Middleware\VerifyCsrfToken::class,function($app) {
+            return new class($app,$app['encrypter']) extends \App\Http\Middleware\VerifyCsrfToken {
+                protected function runningUnitTests() { return false; }
+            };
+        });
+        $this->postJson($url,['content_id'=>$a->id,'delete_code'=>'test-delete'])->assertStatus(419)
+            ->assertSessionMissing('_old_input.delete_code');
+        $this->assertDatabaseHas('exams2',['id'=>$a->id]);
+    }
+
+    public function test_quiz_2428_conflict_is_row_scoped_and_independent_quizzes_keep_their_own_results()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $quiz=$this->exam(2,['id'=>2428,'name'=>'Independent quiz']);$peer=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$quiz->id,$peer->id],'Explicit sections');
+        $different=$this->exam(2,['name'=>'Independent quiz']);
+        DB::table('student_academic_placements')->where('student_id',42)->update(['room_id'=>133,'updated_at'=>now()->subHour()]);
+        DB::table('room_student')->insert(['student_id'=>42,'year_id'=>6,'room_id'=>132,'updated_at'=>now()]);
+        $this->actingAs($this->teacher);
+        $url='/SMARMANger/dashboard/teacher/teacher_quize_students/132/166/409/2428';
+        $response=$this->get($url)->assertOk()->assertSee(__('assessment_entry.placement_conflict'))
+            ->assertSee(__('assessment_entry.conflict_read_only'))->assertDontSee(__('gradebook.carried_read_only'))
+            ->assertSee('Grade 2')->assertSee('Section 132')->assertSee('English')->assertSee('Independent quiz');
+        $this->assertCount(1,$this->traditionalEntryInputs($response->getContent()));
+        $advanced=$this->get($this->teacherUrl)->assertOk();
+        $column=$advanced->viewData('assessmentColumns')->firstWhere('id',2428);
+        $this->assertSame('placement_context',$column['results'][42]['reason']);
+        $this->assertSame('missing',$column['results'][41]['state']);
+        $this->assertSame(0,Exam_result2::count());
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',[
+            'exam_id'=>2428,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'mark'=>12,
+        ])->assertOk();
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',[
+            'exam_id'=>2428,'room_id'=>132,'lesson_id'=>409,'user_id'=>42,'mark'=>12,
+        ])->assertStatus(422);
+        $independent=$this->get($this->teacherUrl)->assertOk()->viewData('assessmentColumns')->firstWhere('id',$different->id);
+        $this->assertArrayNotHasKey(41,$independent['results']);
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$different->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>0,
+        ])->assertOk();
+        $this->assertSame(2,Exam_result2::count());
+        $this->assertEquals(12,Exam_result2::where('exam_id',2428)->value('result'));
+        $this->assertEquals(0,Exam_result2::where('exam_id',$different->id)->value('result'));
+    }
+
+    public function test_quiz_and_exam_edit_confirmation_uses_canonical_seconds_and_only_retained_records()
+    {
+        $this->actingAs($this->admin);
+        foreach ([1=>'exam', 2=>'quize'] as $type=>$kind) {
+            $exam = $this->exam($type, ['question_picker'=>2, 'period'=>40, 'required'=>'Work',
+                'start_date'=>'2026-10-22 09:03:45', 'end_date'=>'2026-10-22 11:00:58']);
+            $payload = [$kind.'_id'=>$exam->id, 'room_id'=>132, 'lesson_id'=>409, 'content_name'=>'Normal edit',
+                'question_picker'=>2, 'required_lectures'=>'Work', 'is_file'=>1, 'mark'=>100, 'period'=>40,
+                'start_date'=>'2026-10-22T09:03:45', 'end_date'=>'2026-10-22T11:00:58'];
+            $url = '/SMT/admin/class/room/'.$kind.'/update';
+            $this->postJson($url,$payload)->assertOk();
+            $payload['end_date'] = '2026-10-22T12:00:58';
+            $this->postJson($url,$payload)->assertOk(); // No records: no confirmation.
+            $record = $this->result($exam->fresh(), 0);
+            $before = $record->getRawOriginal();
+            $this->postJson($url,$payload)->assertOk(); // Unchanged, nonzero seconds.
+            $payload['end_date'] = '2026-10-22T12:00:59';
+            $this->postJson($url,$payload)->assertStatus(422)->assertJsonValidationErrors('confirm_window_change');
+            $this->assertSame('2026-10-22 12:00:58',$exam->fresh()->end_date);
+            $this->postJson($url,$payload+['confirm_window_change'=>1])->assertOk();
+            $this->assertSame($before,$record->fresh()->getRawOriginal());
+            // Stored local formats representing the same instant are not a reschedule.
+            $definition = $exam->fresh();
+            $definition->start_date = '2026-10-22T09:03:45';
+            $definition->end_date = '2026-10-22 12:00:59';
+            app(\App\Services\AdminAssessmentInput::class)->validate(new \Illuminate\Http\Request($payload),$type,$definition);
+        }
+    }
+
+    public function test_teacher_correction_cannot_bypass_a_traditional_window_or_swap_definition_ids()
+    {
+        $exam=$this->exam(1,['end_date'=>'2026-10-22 09:30:00']); $record=$this->result($exam,20);
+        $other=$this->exam(); $this->actingAs($this->teacher);
+        $payload=['exam_result_id'=>$record->id,'exam'=>$exam->id,'traditional_result'=>[5],'mark'=>[4]];
+        $url='/SMARMANger/dashboard/exam/update_result1';
+        $this->postJson($url,$payload)->assertStatus(422)->assertJsonValidationErrors('entry_window');
+        $this->postJson($url,array_merge($payload,['exam'=>$other->id]))->assertForbidden();
+        $this->assertEquals(20,$record->fresh()->result);
+    }
+
+    public function test_teacher_question_authoring_does_not_reconfigure_traditional_admin_definitions()
+    {
+        $exam=$this->exam(); $before=$exam->getRawOriginal();
+        $this->actingAs($this->teacher)->postJson('/SMARMANger/dashboard/teacher/exams/myquestions1',[
+            'room_id'=>[$exam->id],'selected_ques1'=>[999],
+        ])->assertForbidden();
+        $this->assertSame($before,$exam->fresh()->getRawOriginal());
+    }
+
+    public function test_admin_modal_non_ajax_validation_restores_values_and_old_sections_are_not_operational()
+    {
+        $this->actingAs($this->admin);
+        $url='/SMT/admin/class/room/quizes/132';
+        $this->from($url)->post('/SMT/admin/class/room/quize/store',[
+            '_assessment_modal'=>'assessment-create','class_id'=>2,'my_room_id'=>132,'room_id'=>[132],
+            'lesson_id'=>409,'content_name'=>'اسم محفوظ','question_picker'=>2,'required_lectures'=>'عمل محفوظ',
+            'is_file'=>1,'mark'=>20,'period'=>40,'start_date'=>'2026-10-22T10:00:00','end_date'=>'2026-10-22T09:00:00','notes'=>'ملاحظة محفوظة',
+        ])->assertRedirect($url)->assertSessionHasErrors('end_date');
+        $page=$this->get($url)->assertOk()->assertSee('اسم محفوظ')->assertSee('عمل محفوظ')->assertSee('ملاحظة محفوظة')
+            ->assertSee('data-restore="1"',false)->assertSee('value="2026-10-22T10:00:00"',false);
+        $this->assertSame(1,substr_count($page->getContent(),'data-restore="1"'));
+        $this->assertSame(0,Exams2::count());
+        foreach (['quizes','exams'] as $kind) $this->get('/SMT/admin/class/room/'.$kind.'/93')->assertNotFound();
+    }
+
+    public function test_unification_original_windows_ignore_manual_lock_but_manual_marks_do_not()
+    {
+        $manual = $this->dynamic();
+        GradebookStatusService::setStatus(2,20,'LOCKED');
+        $this->actingAs($this->teacher);
+        $this->postJson($this->saveUrl,$manual)->assertForbidden();
+        foreach ([1,2] as $type) {
+            $exam = $this->exam($type);
+            $response = $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'student_id'=>41,'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'value'=>0]);
+            $response->assertOk()->assertJsonPath('exam_id',$exam->id)->assertJsonPath('value',0);
+            $this->get($this->teacherUrl)->assertOk()->assertSee('data-exam="'.$exam->id.'"',false);
+            DB::table('exams2')->where('id',$exam->id)->update(['end_date'=>'2026-10-22 09:59:59']);
+            $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'student_id'=>41,'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'value'=>5])
+                ->assertStatus(422)->assertJsonValidationErrors('entry_window');
+            $this->assertDatabaseHas('exam_result2',['exam_id'=>$exam->id,'user_id'=>41,'result'=>0]);
+        }
+    }
+
+    public function test_unification_legacy_ajax_bulk_is_atomic_and_non_json_fallback_survives()
+    {
+        $exam = $this->exam(2);
+        $row = ['exam_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'mark'=>0];
+        $url = '/SMARMANger/dashboard/teacher/student_save_mark_bulk';
+        $this->actingAs($this->teacher);
+        $this->postJson($url,['kind'=>'exam2','rows'=>json_encode([$row,$row])])->assertStatus(422);
+        $this->assertSame(0,Exam_result2::count());
+        $bad = array_merge($row,['user_id'=>42,'mark'=>101]);
+        $this->postJson($url,['kind'=>'exam2','rows'=>json_encode([$row,$bad])])->assertStatus(422);
+        $this->assertSame(0,Exam_result2::count());
+        $second = array_merge($row,['user_id'=>42,'mark'=>25.5]);
+        $response = $this->postJson($url,['kind'=>'exam2','rows'=>json_encode([$row,$second])]);
+        $response->assertOk()->assertJsonPath('saved',2)->assertJsonCount(2,'rows');
+        $ids = Exam_result2::orderBy('id')->pluck('id')->all();
+        $this->postJson($url,['kind'=>'exam2','rows'=>json_encode([$row,$second])])->assertOk();
+        $this->assertSame($ids,Exam_result2::orderBy('id')->pluck('id')->all());
+        $this->post($url,['kind'=>'exam2','rows'=>json_encode([$second])])->assertRedirect();
+        $this->postJson($url,['kind'=>'exam2','rows'=>'broken'])->assertStatus(422);
+    }
+
+    public function test_unification_single_json_response_and_retry_do_not_duplicate_notifications()
+    {
+        $exam = $this->exam(2);
+        $payload = ['exam_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'mark'=>0];
+        $this->actingAs($this->teacher);
+        Storage::put('gradebook/409_6.json',json_encode(['components'=>[true]]));
+        foreach (['student_save_mark_quize','student_save_mark3','student_save_mark2'] as $route) {
+            $this->postJson('/SMARMANger/dashboard/teacher/'.$route,$payload)->assertOk()
+                ->assertJsonPath('value',0)->assertJsonPath('student_id',41)->assertJsonPath('exam_id',$exam->id);
+        }
+        $this->assertSame(1,Exam_result2::count());
+        $this->assertSame(1,DB::table('notifications')->count());
+        $this->post('/SMARMANger/dashboard/teacher/student_save_mark_quize',$payload)->assertRedirect();
+        $this->assertSame(1,DB::table('notifications')->count());
+    }
+
+    public function test_unification_manual_fields_require_real_source_and_lossless_integer_bound()
+    {
+        $manual = $this->dynamic();
+        $this->actingAs($this->teacher);
+        $manual['component_id'] = 'legacy_oral';
+        $this->postJson($this->saveUrl,$manual)->assertStatus(422);
+        $manual['component_id'] = 'dynamic_a';
+        DB::table('lessons')->where('id',409)->update(['max_mark'=>37]); // 20% cannot materialize an integer maximum.
+        $this->postJson($this->saveUrl,$manual)->assertStatus(422);
+        $this->assertSame(0,Exams2::count());
+    }
+
     private function account($type, array $attributes = [])
     {
         $id = DB::table('users')->insertGetId(array_merge(['name'=>'Isolated account','email'=>uniqid().'@test.local','password'=>'unused','type'=>$type], $attributes));
         return User::findOrFail($id);
+    }
+
+    private function studentUiFixture()
+    {
+        foreach (['school_data','student_details','certificates'] as $table) {
+            if (!Schema::hasTable($table)) Schema::create($table,function(Blueprint $s) {
+                $s->increments('id');$s->integer('student_id')->nullable();$s->integer('room_id')->nullable();
+            });
+        }
+        return $this->account(0,['student_id'=>41]);
+    }
+
+    public function test_student_e2e_admin_original_teacher_first_save_edit_zero_and_compact_result_cards_for_both_types()
+    {
+        $student=$this->studentUiFixture();
+        foreach (['quize'=>2,'exam'=>1] as $kind=>$type) {
+            $this->actingAs($this->admin)->postJson('/SMT/admin/class/room/'.$kind.'/store',[
+                'class_id'=>2,'my_room_id'=>132,'room_id'=>[132],'lesson_id'=>409,'content_name'=>'Student original '.$kind,
+                'question_picker'=>2,'required_lectures'=>0,'is_file'=>1,'mark'=>50,'period'=>40,
+                'start_date'=>'2026-10-22 09:00:00','end_date'=>'2026-10-22 11:00:00',
+            ])->assertOk();
+            $exam=Exams2::where('type',$type)->firstOrFail();
+            $list='/SMARMANger/dashboard/student/room/'.($type===1?'main_exams':'main_quizes').'/132/41';
+            $this->actingAs($this->teacher)->get('/SMARMANger/dashboard/teacher/teacher_'.($type===1?'exam':'quize').'/132/166/409')
+                ->assertOk()->assertSee('Student original '.$kind);
+            $before=Exam_result2::count();
+            $response=$this->actingAs($student)->get($list)->assertOk()->assertSee('Student original '.$kind)
+                ->assertSee(__('student_assessments.unentered'))->assertSee('English');
+            $this->assertSame($before,Exam_result2::count());
+            $this->assertStringNotContainsString('sp-assessment-card__meta',$response->getContent());
+            $this->assertStringNotContainsString('sp-assessment-card__number',$response->getContent());
+            $this->actingAs($this->teacher)->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>0,
+            ])->assertOk();
+            $row=Exam_result2::where('exam_id',$exam->id)->firstOrFail();
+            $this->assertEquals(1,$row->show_result);
+            $this->actingAs($student)->get($list)->assertOk()->assertSee('0 / 50');
+            $detail='/SMARMANger/dashboard/student/view/main_exam/'.$exam->id;
+            $this->get($detail)->assertOk()->assertViewIs('students.assessment_result')->assertSee('0 / 50')->assertSee('English');
+            $this->actingAs($this->teacher)->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',[
+                'exam_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'exam_result_id'=>$row->id,'mark'=>23,
+            ])->assertOk()->assertJsonPath('result_id',$row->id);
+            $this->actingAs($student)->get($detail)->assertOk()->assertSee('23 / 50');
+            $this->assertSame($row->id,Exam_result2::where('exam_id',$exam->id)->first()->id);
+        }
+        $this->assertSame(2,Exam_result2::count());
+    }
+
+    public function test_student_quiz_and_exam_routes_redact_published_cards_and_direct_results_for_both_flag_states()
+    {
+        $student = $this->studentUiFixture();
+        foreach ([1 => 'main_exams', 2 => 'main_quizes'] as $type => $path) {
+            $published = $this->exam($type, ['name'=>'Published '.$path, 'mark'=>900]);
+            $this->result($published, '817.25');
+            $unpublished = $this->exam($type, ['name'=>'Unpublished '.$path]);
+            $this->result($unpublished, '83.75', ['show_result'=>0]);
+            $incomplete = $this->exam($type, ['name'=>'Incomplete '.$path]);
+            $this->result($incomplete, '72.125', ['status'=>0]);
+            $other = $this->exam($type, ['name'=>'Other student '.$path]);
+            $this->result($other, '941.125', ['user_id'=>42]);
+            $before = DB::table('exam_result2')->orderBy('id')->get()->toJson();
+            $this->actingAs($student);
+            foreach ([false, true] as $enabled) {
+                config(['student_results.student_pages_enabled'=>$enabled]);
+                $url = '/SMARMANger/dashboard/student/room/'.$path.'/132/41';
+                foreach ([false, true] as $json) {
+                    $response = ($json ? $this->getJson($url) : $this->get($url))->assertOk()
+                        ->assertSee('English')->assertSee($published->name)
+                        ->assertDontSee('83.75')->assertDontSee('72.125')->assertDontSee('941.125');
+                    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+                    $card = $response->viewData('exams')->firstWhere('id', $published->id);
+                    if ($enabled) {
+                        $response->assertSee('817.25 / 900')
+                            ->assertSee('/student/view/main_exam/'.$published->id, false);
+                        $this->assertSame('earned', $card->result_state);
+                    } else {
+                        $response->assertDontSee('817.25')->assertSee(__('student_assessments.hidden'));
+                        $this->assertNull($card->result_value);
+                        $this->assertNull($card->result_exam_id);
+                        $this->assertStringNotContainsString('817.25', json_encode($response->viewData('exams')));
+                        $this->assertStringNotContainsString('/student/view/main_exam/', $response->getContent());
+                    }
+                    $detail = '/SMARMANger/dashboard/student/view/main_exam/'.$published->id;
+                    $direct = ($json ? $this->getJson($detail) : $this->get($detail))->assertOk();
+                    if ($enabled) $direct->assertSee('817.25');
+                    else $direct->assertDontSee('817.25');
+                }
+                $this->get('/SMARMANger/dashboard/student/view/main_exam/'.$unpublished->id)->assertOk()->assertDontSee('83.75');
+                $this->get('/SMARMANger/dashboard/student/view/main_exam/'.$incomplete->id)->assertOk()->assertDontSee('72.125');
+                $this->get('/SMARMANger/dashboard/student/view/main_exam/'.$other->id)->assertNotFound();
+            }
+            $this->assertSame($before, DB::table('exam_result2')->orderBy('id')->get()->toJson());
+        }
+    }
+
+    public function test_traditional_cards_have_no_disclosure_or_file_actions_while_automated_actions_remain()
+    {
+        $student = $this->studentUiFixture();
+        $this->actingAs($student);
+        config(['student_results.student_pages_enabled'=>false]);
+        foreach ([1 => 'main_exams', 2 => 'main_quizes'] as $type => $path) {
+            $traditional = $this->exam($type, ['name'=>'Traditional '.$path,
+                'required'=>'Traditional instructions', 'file'=>'traditional-handout.pdf']);
+            $automated = $this->exam($type, ['is_file'=>0, 'name'=>'Automated '.$path,
+                'required'=>'Automated instructions', 'file'=>'automated-handout.pdf']);
+            $this->result($automated, null, ['status'=>0]);
+            $before = DB::table('exams2')->orderBy('id')->get()->toJson();
+            $response = $this->get('/SMARMANger/dashboard/student/room/'.$path.'/132/41')
+                ->assertOk()->assertSee('Traditional '.$path)->assertSee('Automated '.$path)
+                ->assertSee('English')->assertDontSee('traditional-handout.pdf')
+                ->assertDontSee('Traditional instructions')->assertDontSee('uploadFilesModal')
+                ->assertDontSee('رفع الحل')->assertSee('automated-handout.pdf')
+                ->assertSee('/student/start_main_exam/'.$automated->id, false);
+            $dom = new \DOMDocument();
+            $dom->loadHTML('<?xml encoding="UTF-8">'.$response->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
+            $xpath = new \DOMXPath($dom);
+            $traditionalCard = '//article[.//p[text()="Traditional '.$path.'"]]';
+            $automatedCard = '//article[.//p[text()="Automated '.$path.'"]]';
+            $this->assertSame(1, $xpath->query($traditionalCard)->length);
+            $this->assertSame(0, $xpath->query($traditionalCard.'//details | '.$traditionalCard.'//summary | '.$traditionalCard.'//button')->length);
+            $this->assertSame(1, $xpath->query($automatedCard.'//a[contains(@href,"/start_main_exam/")]')->length);
+            $this->assertSame(1, $xpath->query($automatedCard.'//details')->length);
+            $this->assertSame($before, DB::table('exams2')->orderBy('id')->get()->toJson());
+            $this->assertTrue(app('router')->has('dashboard.student.upload_exam_files'));
+        }
+    }
+
+    public function test_student_privacy_false_redacts_all_targeted_html_json_history_and_download_views_without_mutation()
+    {
+        $student=$this->studentUiFixture();$exam=$this->exam(2,['mark'=>900]);$this->result($exam,'817.25');
+        $this->scaffold();
+        DB::table('students_marks')->where('student_id',41)->update(['result1'=>json_encode([409=>'817.25'])]);
+        DB::table('report_cards')->insert(['student_id'=>41,'year_id'=>6,'room_id'=>132,'final_result'=>'817.25','student_attendance'=>'92%']);
+        $placement=DB::table('student_academic_placements')->where('student_id',41)->value('id');
+        $before=DB::table('exam_result2')->get()->toJson();$marks=DB::table('students_marks')->get()->toJson();
+        config(['student_results.student_pages_enabled'=>false]);$this->actingAs($student);
+        foreach (['/room/main_quizes/132/41','/room/main_exams/132/41','/view/main_exam/'.$exam->id,
+            '/results/41','/medals/41','/view/report/card','/academic-record/'.$placement] as $suffix) {
+            $url='/SMARMANger/dashboard/student'.$suffix;
+            foreach ([false,true] as $json) {
+                $response=$json?$this->getJson($url):$this->get($url);
+                $response->assertOk()->assertDontSee('817.25');
+                $this->assertStringContainsString('no-store',$response->headers->get('Cache-Control'));
+            }
+        }
+        $this->get('/SMARMANger/dashboard/student/room/main_quizes/132/41')->assertSee('Assessment 2')->assertSee('English')->assertSee(__('student_assessments.hidden'));
+        $history=$this->get('/SMARMANger/dashboard/student/academic-record/'.$placement)->assertOk();
+        $this->assertCount(0,$history->viewData('quizResults'));
+        $this->assertSame(__('student_assessments.hidden'),$history->viewData('assessmentRows')[0]['result']);
+        $history->assertSee('92%');
+        $this->get('/SMARMANger/dashboard/student/academic-record')->assertOk()->assertSee('2026/2027');
+        $this->get('/SMARMANger/dashboard/student_exam')->assertOk();
+        $this->assertSame($before,DB::table('exam_result2')->get()->toJson());
+        $this->assertSame($marks,DB::table('students_marks')->get()->toJson());
+        config(['student_results.student_pages_enabled'=>true]);
+        $this->get('/SMARMANger/dashboard/student/view/main_exam/'.$exam->id)->assertOk()->assertSee('817.25');
+        $this->get('/SMARMANger/dashboard/student/academic-record/'.$placement)->assertOk()->assertSee('817.25');
+    }
+
+    public function test_student_result_identity_section_term_future_and_publication_boundaries_are_preserved()
+    {
+        $student=$this->studentUiFixture();$exam=$this->exam(2);$record=$this->result($exam,17);
+        $this->actingAs($student);
+        $snapshot=$record->getRawOriginal();
+        $this->get('/SMARMANger/dashboard/student/start_main_exam/'.$exam->id)->assertForbidden();
+        $this->post('/SMARMANger/dashboard/student/exam/save_main_exam',['content_id'=>$exam->id,'answer'=>[]])->assertForbidden();
+        $this->assertSame($snapshot,$record->fresh()->getRawOriginal());
+        $this->get('/SMARMANger/dashboard/student/room/main_quizes/133/41')->assertForbidden();
+        $this->actingAs($this->account(0,['student_id'=>42]))->get('/SMARMANger/dashboard/student/view/main_exam/'.$exam->id)->assertNotFound();
+        $this->actingAs($student)->get('/SMARMANger/dashboard/student/room/main_quizes/132/42')->assertRedirect('/SMARMANger');
+        $this->actingAs($student);
+        DB::table('exam_result2')->where('id',$record->id)->update(['show_result'=>0]);
+        $this->getJson('/SMARMANger/dashboard/student/view/main_exam/'.$exam->id)->assertOk()->assertJsonPath('blocked',true);
+        $this->get('/SMARMANger/dashboard/student/room/main_quizes/132/41')->assertOk()->assertSee(__('student_assessments.hidden'));
+        DB::table('term_years')->where('id',20)->update(['current_term'=>0]);
+        DB::table('term_years')->where('id',21)->update(['current_term'=>1]);
+        $this->get('/SMARMANger/dashboard/student/room/main_quizes/132/41')->assertOk()->assertDontSee($exam->name);
+        DB::table('years')->insert(['id'=>7,'name'=>'2027/2028','current_year'=>0]);
+        $future=DB::table('student_academic_placements')->insertGetId(['student_id'=>41,'year_id'=>7,'class_id'=>2,'room_id'=>132,'status'=>'active']);
+        $this->get('/SMARMANger/dashboard/student/academic-record/'.$future)->assertNotFound();
+        $this->assertSame(1,Exam_result2::count());
+    }
+
+    public function test_first_mark_obeys_original_publication_setting_without_overwriting_existing_decisions()
+    {
+        $student=$this->studentUiFixture();$exam=$this->exam(2,['has_traditional'=>1]);
+        config(['student_results.student_pages_enabled'=>false]);
+        $this->actingAs($this->teacher);
+        $row=app(TeacherAssessmentService::class)->save($exam->id,41,132,409,0);
+        $this->assertEquals(0,$row->show_result);
+        $this->actingAs($this->admin)->get('/SMT/admin/gradebook/view/subject/grid?room_id=132&subject_id=409')->assertOk();
+        config(['student_results.student_pages_enabled'=>true]);
+        $this->actingAs($student)->get('/SMARMANger/dashboard/student/room/main_quizes/132/41')
+            ->assertOk()->assertSee(__('student_assessments.hidden'))->assertDontSee('0 / 100');
+        DB::table('exam_result2')->where('id',$row->id)->update(['show_result'=>1]);
+        $this->actingAs($this->teacher);app(TeacherAssessmentService::class)->save($exam->id,41,132,409,25);
+        $this->assertEquals(1,$row->fresh()->show_result);
+        $this->actingAs($student)->get('/SMARMANger/dashboard/student/view/main_exam/'.$exam->id)->assertOk()->assertSee('25 / 100');
+    }
+
+    public function test_student_carried_result_uses_original_publication_and_missing_automated_participation_is_not_inferred()
+    {
+        $student=$this->studentUiFixture();$this->activateContinuity();$this->actingAs($this->admin);
+        $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);$row=$this->result($a,0,['created_at'=>now()->subHour()]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Verified original');
+        $this->moveToB();$this->actingAs($student);
+        $url='/SMARMANger/dashboard/student/room/main_quizes/133/41';
+        $this->get($url)->assertOk()->assertSee('0 / 100')->assertSee('/view/main_exam/'.$a->id,false);
+        $this->assertSame(0,Exam_result2::where('exam_id',$b->id)->count());
+        DB::table('exam_result2')->where('id',$row->id)->update(['show_result'=>0]);
+        $this->get($url)->assertOk()->assertDontSee('0 / 100')->assertSee(__('student_assessments.hidden'));
+        $auto=$this->exam(2,['room_id'=>133,'is_file'=>0,'name'=>'Assigned automated only']);
+        $this->get($url)->assertOk()->assertDontSee('Assigned automated only');
+        $this->result($auto,null,['status'=>0]);
+        $this->get($url)->assertOk()->assertSee('Assigned automated only')->assertSee('ابدأ التقييم')->assertSee(__('student_assessments.unentered'));
+        $this->assertSame(2,Exam_result2::count());
+    }
+
+    public function test_results_policy_handles_fresh_and_cached_config_without_reading_changed_env_or_school_storage()
+    {
+        $cache=storage_path('framework/cache/student-results-fixture.php');
+        $old=getenv('APP_CONFIG_CACHE');$oldFlag=getenv('STUDENT_RESULTS_PAGES_ENABLED');
+        try {
+            putenv('APP_CONFIG_CACHE='.$cache);$_ENV['APP_CONFIG_CACHE']=$cache;$_SERVER['APP_CONFIG_CACHE']=$cache;
+            foreach ([false,true] as $enabled) {
+                putenv('STUDENT_RESULTS_PAGES_ENABLED='.($enabled?'true':'false'));
+                $_ENV['STUDENT_RESULTS_PAGES_ENABLED']=$enabled?'true':'false';$_SERVER['STUDENT_RESULTS_PAGES_ENABLED']=$_ENV['STUDENT_RESULTS_PAGES_ENABLED'];
+                if (file_exists($cache)) unlink($cache);
+                $app=new \Illuminate\Foundation\Application(base_path());
+                $app->addAbsoluteCachePathPrefix(substr($cache,0,3));
+                (new \Illuminate\Foundation\Bootstrap\LoadConfiguration())->bootstrap($app);
+                $this->assertSame($enabled,$app['config']->get('student_results.student_pages_enabled'));
+                $configuration=$app['config']->all();$configuration['student_results']['student_pages_enabled']=!$enabled;
+                file_put_contents($cache,'<?php return '.var_export($configuration,true).';');
+                $cached=new \Illuminate\Foundation\Application(base_path());
+                $cached->addAbsoluteCachePathPrefix(substr($cache,0,3));
+                (new \Illuminate\Foundation\Bootstrap\LoadConfiguration())->bootstrap($cached);
+                $this->assertTrue($cached->configurationIsCached());
+                $this->assertSame(!$enabled,$cached['config']->get('student_results.student_pages_enabled'));
+            }
+        } finally {
+            if (file_exists($cache)) unlink($cache);
+            putenv($old===false?'APP_CONFIG_CACHE':'APP_CONFIG_CACHE='.$old);unset($_ENV['APP_CONFIG_CACHE'],$_SERVER['APP_CONFIG_CACHE']);
+            putenv($oldFlag===false?'STUDENT_RESULTS_PAGES_ENABLED':'STUDENT_RESULTS_PAGES_ENABLED='.$oldFlag);
+            unset($_ENV['STUDENT_RESULTS_PAGES_ENABLED'],$_SERVER['STUDENT_RESULTS_PAGES_ENABLED']);
+        }
+        config(['student_results.student_pages_enabled'=>null]);
+        $this->assertFalse(app(\App\Services\StudentResultsVisibility::class)->enabled());
+        foreach (['false','0','unexpected'] as $value) {
+            config(['student_results.student_pages_enabled'=>$value]);$this->assertFalse(app(\App\Services\StudentResultsVisibility::class)->enabled());
+        }
+    }
+
+    public function test_legacy_mobile_privacy_blocks_direct_results_and_redacts_nested_earned_payloads_without_claiming_authentication()
+    {
+        $this->studentUiFixture();$exam=$this->exam(2);$this->result($exam,'817.25');
+        config(['student_results.student_pages_enabled'=>false]);auth()->logout();
+        foreach (['/api/dashboard/student/exam/view_quize/'.$exam->id.'/41','/api/dashboard/student/main_quize/132/41'] as $url) {
+            $this->getJson($url)->assertOk()->assertJsonPath('blocked',true)->assertDontSee('817.25');
+        }
+        $payload=['name'=>'English','nested'=>[['result'=>'817.25','traditional_result'=>'817.25','medal'=>1,'user_answers'=>['grade'=>'817.25']]],
+            'student_mark'=>['year_result'=>'817.25'],'year_result'=>'817.25','term_result'=>'817.25',
+            'question'=>['mark'=>4,'student_mark'=>'817.25'],'attendance'=>92];
+        $redacted=app(\App\Services\StudentResultsVisibility::class)->redactPayload($payload);
+        $this->assertSame('English',$redacted['name']);$this->assertSame(92,$redacted['attendance']);
+        $this->assertSame(4,$redacted['question']['mark']);
+        $this->assertStringNotContainsString('817.25',json_encode($redacted));
+        $this->scaffold();
+        DB::table('students_marks')->where('student_id',41)->update(['year_result'=>'817.25']);
+        $homework=DB::table('lesson_teacher_room_term_exam')->insertGetId(['class_id'=>2,'room_id'=>132,'lesson_id'=>409,
+            'lecture_id'=>7,'term_id'=>20,'type'=>1,'namehomework'=>'Keep homework available',
+            'start_time'=>'2026-10-22 09:00:00','end_time'=>'2026-10-22 11:00:00']);
+        DB::table('exam_result')->insert(['exam_id'=>$homework,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'term_id'=>20,
+            'result'=>'817.25','status'=>'1','show_result'=>1,'type'=>1]);
+        $lessonUrl='/api/get_student_lesson_details/132/409/41/7/1';
+        $this->getJson($lessonUrl)->assertOk()->assertSee('Keep homework available')->assertDontSee('817.25')
+            ->assertJsonPath('student_mark',null)->assertJsonPath('lesson_details.0.result',null);
+        config(['student_results.student_pages_enabled'=>true]);
+        $this->getJson($lessonUrl)->assertOk()->assertJsonPath('lesson_details.0.result','817.25');
+        DB::table('exam_result')->where('exam_id',$homework)->update(['show_result'=>0]);
+        $this->getJson($lessonUrl)->assertOk()->assertJsonPath('lesson_details.0.result',-1);
+        $unpublished=app(\App\Services\StudentResultsVisibility::class)->redactUnpublishedPayload(['rows'=>[
+            ['status'=>'1','show_result'=>0,'result'=>'817.25','medal'=>1],
+        ]]);
+        $this->assertNull($unpublished['rows'][0]['result']);
+        DB::table('exam_result2')->update(['show_result'=>0]);
+        $this->getJson('/api/dashboard/student/exam/view_quize/'.$exam->id.'/41')->assertOk()->assertJsonPath('blocked',true)->assertDontSee('817.25');
+    }
+
+    public function test_student_certificate_download_views_are_gated_and_certificate_ids_cannot_select_another_student()
+    {
+        $student=$this->studentUiFixture();
+        $own=DB::table('certificates')->insertGetId(['student_id'=>41,'room_id'=>132]);
+        $other=DB::table('certificates')->insertGetId(['student_id'=>42,'room_id'=>132]);
+        $this->actingAs($student);config(['student_results.student_pages_enabled'=>false]);
+        foreach (['edit_2','newcertificate','new44','ncertificate12','newcerti12','certificate_22','new22'] as $route) {
+            $this->get('/SMARMANger/dashboard/'.$route.'/'.$own)->assertOk()->assertViewIs('students.results_blocked');
+            $this->get('/SMARMANger/dashboard/'.$route.'/'.$other)->assertNotFound();
+        }
+        config(['student_results.student_pages_enabled'=>true]);
+        $this->get('/SMARMANger/dashboard/newcertificate/'.$other)->assertNotFound();
+        $this->assertSame(2,DB::table('certificates')->count());
     }
 
     private function enroll($id, $room = 132)
@@ -109,14 +1037,14 @@ class GradebookSafetyTest extends TestCase
     {
         $id = DB::table('exams2')->insertGetId(array_merge(['user_id'=>$this->admin->id,'class_id'=>2,'room_id'=>132,'lesson_id'=>409,
             'term_id'=>20,'type'=>$type,'name'=>'Assessment '.$type,'mark'=>100,'is_file'=>1,'has_traditional'=>0,
-            'start_date'=>'2026-10-20 09:00:00','end_date'=>'2026-10-21 09:00:00'], $extra));
+            'start_date'=>'2026-10-22 09:00:00','end_date'=>'2026-10-22 11:00:00'], $extra));
         return Exams2::findOrFail($id);
     }
 
     private function result($exam, $value, array $extra = [])
     {
         $id = DB::table('exam_result2')->insertGetId(array_merge(['exam_id'=>$exam->id,'user_id'=>41,'room_id'=>$exam->room_id,
-            'class_id'=>$exam->class_id,'lesson_id'=>$exam->lesson_id,'term_id'=>$exam->term_id,'result'=>$value,'status'=>1,'type'=>$exam->type], $extra));
+            'class_id'=>$exam->class_id,'lesson_id'=>$exam->lesson_id,'term_id'=>$exam->term_id,'result'=>$value,'status'=>1,'show_result'=>1,'type'=>$exam->type], $extra));
         return Exam_result2::findOrFail($id);
     }
 
@@ -139,7 +1067,7 @@ class GradebookSafetyTest extends TestCase
         $routes = collect(app('router')->getRoutes()->getRoutes())->filter(function ($route) {
             return strpos($route->uri(), 'SMT/admin/gradebook') === 0 || $route->getName() === 'admin.gradebook.status';
         });
-        $this->assertSame(19, $routes->count());
+        $this->assertSame(29, $routes->count());
         foreach ($routes as $route) {
             $this->assertContains('auth', $route->gatherMiddleware());
             $this->assertContains('roleadmin', $route->gatherMiddleware());
@@ -276,7 +1204,7 @@ class GradebookSafetyTest extends TestCase
         $this->assertDatabaseHas('exams_files',['file'=>'keep.pdf']);
     }
 
-    public function test_participation_preserves_existing_marks_notifies_only_new_students_and_rejects_removal()
+    public function test_traditional_participation_is_additive_preserves_marks_and_notifies_only_new_students()
     {
         $this->actingAs($this->teacher);$exam=$this->exam(2);$result=$this->result($exam,'15');$snapshot=$result->getRawOriginal();
         $payload=['exam'=>$exam->id,'room_id'=>132,'class_id'=>2,'lesson_id'=>409,'all'=>1];
@@ -286,9 +1214,355 @@ class GradebookSafetyTest extends TestCase
         $this->assertSame(1,DB::table('notifications')->count());
         $this->post($url,$payload)->assertRedirect()->assertSessionHasNoErrors();
         $this->assertSame(1,DB::table('notifications')->count());
-        $this->postJson($url,array_merge($payload,['all'=>0,'student'=>[42]]))->assertStatus(422);
+        $this->postJson($url,array_merge($payload,['all'=>0,'student'=>[42]]))->assertRedirect()->assertSessionHasNoErrors();
         $this->assertSame($snapshot,$result->fresh()->getRawOriginal());
+        $this->assertSame(2,Exam_result2::count());
+        $blank=Exam_result2::where('exam_id',$exam->id)->where('user_id',42)->first();
+        $blankSnapshot=$blank->getRawOriginal();
+        DB::table('exams_files')->insert(['exam_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'student_id'=>42,'file'=>'keep-submission.pdf']);
+        $this->post($url,array_merge($payload,['all'=>0,'student'=>[]]))->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($blankSnapshot,$blank->fresh()->getRawOriginal());
+        $this->assertSame($snapshot,$result->fresh()->getRawOriginal());
+        $this->assertDatabaseHas('exams_files',['student_id'=>42,'file'=>'keep-submission.pdf']);
+        $this->assertSame(1,DB::table('notifications')->count());
         $this->postJson($url,array_merge($payload,['all'=>0,'student'=>[999]]))->assertStatus(403);
+    }
+
+    private function traditionalEntryInputs($html)
+    {
+        $dom = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        libxml_clear_errors(); libxml_use_internal_errors($previous);
+        return (new \DOMXPath($dom))->query('//table[@class="table1"]//input[@name="mark"]');
+    }
+
+    public function test_traditional_quiz_and_exam_rosters_need_no_participation_and_gets_never_write()
+    {
+        $this->actingAs($this->teacher);
+        foreach ([1=>'exam',2=>'quize'] as $type=>$kind) {
+            $exam=$this->exam($type);
+            $url='/SMARMANger/dashboard/teacher/teacher_'.$kind.'_students/132/166/409/'.$exam->id;
+            $response=$this->get($url)->assertOk()->assertSee(__('assessment_entry.ongoing'));
+            $inputs=$this->traditionalEntryInputs($response->getContent());
+            $this->assertCount(2,$inputs);
+            foreach ($inputs as $input) $this->assertSame('',$input->getAttribute('value'));
+            foreach ($inputs as $input) {
+                $this->assertStringStartsWith('traditional-mark-',$input->getAttribute('form'));
+                $this->assertSame('any',$input->getAttribute('step'));
+            }
+            $this->assertSame(0,Exam_result2::where('exam_id',$exam->id)->count());
+            $this->assertSame(0,DB::table('notifications')->count());
+            $zero=$this->result($exam,0);
+            $placeholder=$this->result($exam,null,['user_id'=>42,'status'=>null]);
+            DB::table('exams_files')->insert(['exam_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'student_id'=>41,'file'=>'original.pdf']);
+            DB::table('exams_files')->insert(['exam_id'=>$exam->id,'lesson_id'=>409,'student_id'=>41,'file'=>'legacy-null-section.pdf']);
+            $other=$this->exam($type);
+            DB::table('exams_files')->insert(['exam_id'=>$other->id,'room_id'=>132,'lesson_id'=>409,'student_id'=>41,'file'=>'unrelated-hidden.pdf']);
+            $before=Exam_result2::orderBy('id')->get()->toJson();
+            $files=DB::table('exams_files')->get()->toJson();
+            $response=$this->get($url)->assertOk()->assertSee('original.pdf')->assertSee('legacy-null-section.pdf')->assertDontSee('unrelated-hidden.pdf');
+            $this->get('/SMARMANger/dashboard/teacher/quizestudent/0/'.$exam->id.'/132')
+                ->assertOk()->assertSee('legacy-null-section.pdf')->assertDontSee('unrelated-hidden.pdf');
+            $inputs=$this->traditionalEntryInputs($response->getContent());
+            $this->assertCount(2,$inputs);
+            $this->assertSame('0',$inputs->item(0)->getAttribute('value'));
+            $this->assertSame('',$inputs->item(1)->getAttribute('value'));
+            $rows=$response->viewData($type===1?'exam_result':'quize_result');
+            $this->assertEquals($zero->id,$rows->firstWhere('user_id',41)->id);
+            $this->assertEquals($placeholder->id,$rows->firstWhere('user_id',42)->id);
+            $this->assertSame($before,Exam_result2::orderBy('id')->get()->toJson());
+            $this->assertSame($files,DB::table('exams_files')->get()->toJson());
+        }
+    }
+
+    public function test_traditional_first_saves_and_advanced_edits_share_original_ids_without_enrollment()
+    {
+        $this->actingAs($this->teacher);
+        GradebookStatusService::setStatus(2,20,'LOCKED');
+        foreach ([1=>'exam',2=>'quize'] as $type=>$kind) {
+            $exam=$this->exam($type);
+            $entry='/SMARMANger/dashboard/teacher/teacher_'.$kind.'_students/132/166/409/'.$exam->id;
+            $this->get($entry)->assertOk();
+            $this->assertSame(0,Exam_result2::where('exam_id',$exam->id)->count());
+            $payload=['exam_id'=>$exam->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'mark'=>0];
+            $response=$this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',$payload)->assertOk();
+            $id=$response->json('result_id');
+            $this->assertNotNull($id);
+            $response=$this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>19.5,
+            ])->assertOk();
+            $this->assertEquals($id,$response->json('result_id'));
+            $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',array_merge($payload,[
+                'exam_result_id'=>$id,'mark'=>20,
+            ]))->assertOk()->assertJsonFragment(['result_id'=>$id]);
+            // The student omitted from participation can also start in Advanced entry.
+            $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'exam_id'=>$exam->id,'room_id'=>132,'subject_id'=>409,'student_id'=>42,'value'=>0,
+            ])->assertOk();
+            $response=$this->get($entry)->assertOk();
+            $inputs=$this->traditionalEntryInputs($response->getContent());
+            $this->assertSame('20',$inputs->item(0)->getAttribute('value'));
+            $this->assertSame('0',$inputs->item(1)->getAttribute('value'));
+            $this->assertSame(2,Exam_result2::where('exam_id',$exam->id)->count());
+            $this->assertEquals($id,Exam_result2::where('exam_id',$exam->id)->where('user_id',41)->value('id'));
+        }
+    }
+
+    public function test_automated_participation_still_guards_earned_results_and_removes_only_unused_placeholders()
+    {
+        $this->actingAs($this->teacher);
+        $exam=$this->exam(2,['is_file'=>0]);
+        $earned=$this->result($exam,0);$blank=$this->result($exam,null,['user_id'=>42,'status'=>null]);
+        $before=$earned->getRawOriginal();
+        $url='/SMARMANger/dashboard/teacher/add_quize_student';
+        $payload=['exam'=>$exam->id,'room_id'=>132,'class_id'=>2,'lesson_id'=>409,'all'=>0,'student'=>[42]];
+        $this->postJson($url,$payload)->assertStatus(422);
+        $this->post($url,array_merge($payload,['student'=>[41]]))->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($before,$earned->fresh()->getRawOriginal());
+        $this->assertDatabaseMissing('exam_result2',['id'=>$blank->id]);
+    }
+
+    public function test_traditional_roster_keeps_transferred_results_and_placement_conflicts_read_only()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $quiz=$this->exam(2);$other=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$quiz->id,$other->id],'Verified sections');
+        $this->enroll(43,133);
+        $history=$this->result($quiz,12,['user_id'=>43]);$snapshot=$history->getRawOriginal();
+        // Duplicate projections cannot establish one reliable entry interval.
+        DB::table('student_academic_placements')->where('student_id',42)->update(['room_id'=>133,'updated_at'=>now()->subHour()]);
+        DB::table('room_student')->insert(['student_id'=>42,'year_id'=>6,'room_id'=>132,'updated_at'=>now()]);
+        $this->assertTrue(Student::currentMembership(6,132)->whereKey(42)->exists());
+        $this->actingAs($this->teacher);
+        $response=$this->get('/SMARMANger/dashboard/teacher/teacher_quize_students/132/166/409/'.$quiz->id)
+            ->assertOk()->assertSee('data-continuity="conflict"',false);
+        $this->assertCount(1,$this->traditionalEntryInputs($response->getContent()));
+        $this->assertEquals([41,42],$response->viewData('quize_result')->pluck('user_id')->all());
+        $payload=['exam_id'=>$quiz->id,'room_id'=>132,'lesson_id'=>409,'mark'=>5];
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',$payload+['user_id'=>43])->assertForbidden();
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',$payload+['user_id'=>42])->assertStatus(422);
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$quiz->id,'room_id'=>132,'subject_id'=>409,'student_id'=>42,'value'=>5,
+        ])->assertStatus(422);
+        $this->assertSame($snapshot,$history->fresh()->getRawOriginal());
+        $this->assertSame(1,Exam_result2::count());
+    }
+
+    public function test_proven_stale_same_grade_projection_allows_both_entry_paths_and_original_result_edits_without_history_writes()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        DB::table('rooms')->insert(['id'=>134,'class_id'=>2,'year_id'=>6,'name'=>'Third section']);
+        $quiz=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);$c=$this->exam(2,['room_id'=>134]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$quiz->id,$b->id,$c->id],'Three verified sections');
+        $independent=$this->exam(2,['name'=>$quiz->name]);
+        foreach ([41=>133,42=>134] as $student=>$oldRoom) {
+            DB::table('student_academic_placements')->where('student_id',$student)
+                ->update(['room_id'=>$oldRoom,'updated_at'=>now()->subHours(2)]);
+            DB::table('room_student')->where('student_id',$student)->update(['updated_at'=>now()->subHour()]);
+        }
+        $placements=DB::table('student_academic_placements')->orderBy('id')->get()->toJson();
+        $enrollments=DB::table('room_student')->orderBy('id')->get()->toJson();
+        $members=DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson();
+        $this->actingAs($this->teacher);
+        $url='/SMARMANger/dashboard/teacher/teacher_quize_students/132/166/409/'.$quiz->id;
+        $view=$this->get($url)->assertOk()->assertDontSee('data-continuity="conflict"',false);
+        $this->assertCount(2,$this->traditionalEntryInputs($view->getContent()));
+        $advanced=$this->get($this->teacherUrl)->assertOk()->viewData('assessmentColumns')->firstWhere('id',$quiz->id);
+        foreach ([41,42] as $student) $this->assertSame('missing',$advanced['results'][$student]['state']);
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',[
+            'exam_id'=>$quiz->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'mark'=>0,
+        ])->assertOk();
+        $id=Exam_result2::where('exam_id',$quiz->id)->where('user_id',41)->value('id');
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$quiz->id,'room_id'=>132,'subject_id'=>409,'student_id'=>42,'value'=>23,
+        ])->assertOk();
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$quiz->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>12,
+        ])->assertOk()->assertJsonPath('result_id',$id);
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',[
+            'exam_id'=>$quiz->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'exam_result_id'=>$id,'mark'=>0,
+        ])->assertOk()->assertJsonPath('result_id',$id);
+        $advanced=$this->get($this->teacherUrl)->assertOk()->viewData('assessmentColumns')->firstWhere('id',$quiz->id);
+        foreach ([41,42] as $student) $this->assertSame('current',$advanced['results'][$student]['state']);
+        $this->assertSame(0.0,$advanced['results'][41]['value']);
+        $this->assertSame(23.0,$advanced['results'][42]['value']);
+        $this->assertCount(2,$this->traditionalEntryInputs($this->get($url)->assertOk()->getContent()));
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$independent->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>9,
+        ])->assertOk();
+        $this->assertSame(3,Exam_result2::count());
+        $this->assertSame(0,Exam_result2::whereIn('exam_id',[$b->id,$c->id])->count());
+        $this->assertSame($placements,DB::table('student_academic_placements')->orderBy('id')->get()->toJson());
+        $this->assertSame($enrollments,DB::table('room_student')->orderBy('id')->get()->toJson());
+        $this->assertSame($members,DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson());
+    }
+
+    public function test_stale_projection_preserves_prior_equivalent_earned_zero_and_blocks_duplicate_entry()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $target=$this->exam(2);$source=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$target->id,$source->id],'Verified sections');
+        DB::table('student_academic_placements')->where('student_id',41)
+            ->update(['room_id'=>133,'updated_at'=>now()->subHours(2)]);
+        DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->subHour()]);
+        $record=$this->result($source,0,['created_at'=>now()->subMinutes(90)]);$before=$record->getRawOriginal();
+        $this->actingAs($this->teacher);
+        $resolved=app(\App\Services\AssessmentContinuityService::class)->resolve($target,[41])[41];
+        $this->assertSame('carried',$resolved['state']);$this->assertSame(0.0,$resolved['value']);
+        $this->assertSame($record->id,$resolved['result_id']);$this->assertSame($source->id,$resolved['exam_id']);
+        $this->get('/SMARMANger/dashboard/teacher/teacher_quize_students/132/166/409/'.$target->id)
+            ->assertOk()->assertSee('data-continuity="carried"',false);
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$target->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>12,
+        ])->assertStatus(422);
+        $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark3',[
+            'exam_id'=>$target->id,'room_id'=>132,'lesson_id'=>409,'user_id'=>41,'mark'=>12,
+        ])->assertStatus(422);
+        $this->assertSame($before,$record->fresh()->getRawOriginal());$this->assertSame(1,Exam_result2::count());
+    }
+
+    public function test_stale_projection_never_invents_ownership_for_unknown_pre_boundary_or_overlapping_results()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Verified sections');
+        DB::table('student_academic_placements')->where('student_id',41)
+            ->update(['room_id'=>133,'updated_at'=>now()->subHours(2)]);
+        DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->subHour()]);
+        $row=$this->result($a,12);$resolver=app(\App\Services\AssessmentContinuityService::class);
+        foreach ([null,now()->subMinutes(90)] as $date) {
+            DB::table('exam_result2')->where('id',$row->id)->update(['created_at'=>$date]);
+            $this->assertSame('conflict',$resolver->resolve($a,[41])[41]['state']);
+        }
+        DB::table('exam_result2')->where('id',$row->id)->update(['created_at'=>now()]);
+        $this->assertSame('current',$resolver->resolve($a,[41])[41]['state']);
+        DB::table('student_academic_placements')->insert(['student_id'=>41,'year_id'=>6,'class_id'=>2,'room_id'=>132,
+            'status'=>'closed','effective_from'=>now()->subDay(),'effective_to'=>now()->addMinute()]);
+        $this->assertSame('conflict',$resolver->resolve($a,[41])[41]['state']);
+        DB::table('student_academic_placements')->where('student_id',41)->where('status','closed')->delete();
+        DB::table('exam_result2')->where('id',$row->id)->update(['exam_id'=>$b->id,'room_id'=>133]);
+        $this->assertSame('conflict',$resolver->resolve($a,[41])[41]['state']); // Stale source after the boundary.
+        $this->actingAs($this->teacher)->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>$a->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>12,
+        ])->assertStatus(422);
+        $this->assertSame(1,Exam_result2::count());
+    }
+
+    public function test_competing_placements_enrollments_and_later_transfers_never_gain_compatibility_access()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Verified sections');
+        $placement=DB::table('student_academic_placements')->where('student_id',41)->first();
+        DB::table('student_academic_placements')->where('id',$placement->id)->update(['room_id'=>133,'updated_at'=>now()->subHours(2)]);
+        DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->subHour()]);
+        $this->actingAs($this->teacher);
+        foreach (['active','enrollment','transfer','undated','cross_grade','future'] as $case) {
+            if ($case==='active') DB::table('student_academic_placements')->insert(['student_id'=>41,'year_id'=>6,'class_id'=>2,'room_id'=>132,'status'=>'active','effective_from'=>now()->subDay()]);
+            if ($case==='enrollment') DB::table('room_student')->insert(['student_id'=>41,'year_id'=>6,'room_id'=>133,'updated_at'=>now()]);
+            if (in_array($case,['transfer','undated'],true)) DB::table('student_transfer_histories')->insert(['student_id'=>41,'year_id'=>6,'created_at'=>$case==='transfer'?now():null]);
+            if ($case==='cross_grade') DB::table('student_academic_placements')->where('id',$placement->id)->update(['class_id'=>3]);
+            if ($case==='future') DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->addDay()]);
+            $contexts=app(\App\Services\CurrentStudentMembership::class)->assessmentEntryContexts([41],6,132);
+            $this->assertNull($contexts[41]??null,$case);
+            $response=$this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'exam_id'=>$a->id,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>12,
+            ]);
+            $this->assertSame($case==='future'?422:403,$response->status(),$case);
+            DB::table('student_academic_placements')->where('student_id',41)->where('id','<>',$placement->id)->delete();
+            DB::table('student_academic_placements')->where('id',$placement->id)->update(['class_id'=>2]);
+            DB::table('room_student')->where('student_id',41)->where('room_id',133)->delete();
+            DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->subHour()]);
+            DB::table('student_transfer_histories')->where('student_id',41)->delete();
+        }
+        $this->assertSame(0,Exam_result2::count());
+    }
+
+    public function test_empty_mapped_and_placeholder_assessments_stay_protected_until_an_audited_unlink_contract_exists()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Retain verification evidence');
+        $placeholderExam=$this->exam(2);$this->result($placeholderExam,null,['status'=>0,'show_result'=>1]);
+        DB::table('notifications')->insert(['student_id'=>41,'room_id'=>132,'lesson_id'=>409,'term_id'=>20,'body'=>$placeholderExam->name]);
+        $before=[];foreach (['exams2','exam_result2','assessment_equivalence_members','notifications'] as $table) $before[$table]=DB::table($table)->orderBy('id')->get()->toJson();
+        foreach ([$a,$placeholderExam,$a] as $exam) {
+            $this->postJson('/SMT/admin/class/room/exam_quize/delete',['content_id'=>$exam->id,'delete_code'=>'test-delete'])->assertStatus(422);
+        }
+        foreach ($before as $table=>$rows) $this->assertSame($rows,DB::table($table)->orderBy('id')->get()->toJson());
+        DB::statement('PRAGMA foreign_keys = ON');
+        try {DB::transaction(function() use ($a) {DB::table('exams2')->where('id',$a->id)->delete();});$this->fail('Unsafe mapped delete accepted');}
+        catch (\Illuminate\Database\QueryException $e) {}
+        $this->assertSame($before['assessment_equivalence_members'],DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson());
+    }
+
+    public function test_stale_projection_write_rollback_and_rejected_delete_preserve_original_group_and_automated_attempt_guard()
+    {
+        $this->activateContinuity();$this->actingAs($this->admin);
+        $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Verified sections');
+        DB::table('student_academic_placements')->where('student_id',41)->update(['room_id'=>133,'updated_at'=>now()->subHours(2)]);
+        DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->subHour()]);
+        $before=DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson();
+        $delete='/SMT/admin/class/room/exam_quize/delete';
+        $this->postJson($delete,['content_id'=>$a->id,'delete_code'=>'test-delete'])->assertStatus(422);
+        $this->actingAs($this->teacher);
+        $listener=function($row) {throw new \RuntimeException('Isolated post-save failure');};
+        \Event::listen('eloquent.saved: '.Exam_result2::class,$listener);
+        try {app(TeacherAssessmentService::class)->save($a->id,41,132,409,12);$this->fail('Fixture did not fail');}
+        catch (\RuntimeException $e) {$this->assertSame('Isolated post-save failure',$e->getMessage());}
+        \Event::forget('eloquent.saved: '.Exam_result2::class);
+        $this->assertSame(0,Exam_result2::count());
+        $this->assertSame($before,DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson());
+        $id=app(TeacherAssessmentService::class)->save($a->id,41,132,409,12)->id;
+        $this->assertSame($id,app(TeacherAssessmentService::class)->save($a->id,41,132,409,13)->id);
+        $this->actingAs($this->admin)->postJson($delete,['content_id'=>$a->id,'delete_code'=>'test-delete'])->assertStatus(422);
+        $this->assertDatabaseHas('exam_result2',['id'=>$id,'result'=>13]);
+        $this->assertSame($before,DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson());
+        // The model hook used by automated writers cannot create an equivalent duplicate.
+        $attempt=new Exam_result2();$attempt->forceFill(['exam_id'=>$b->id,'user_id'=>41,'room_id'=>133,'result'=>15]);
+        app(\App\Services\AssessmentContinuityService::class)->assertWritable($a,41);
+        // Exercise that hook through the eligible receiving definition, as an automated flow would.
+        $source=$this->exam(2,['room_id'=>133]);$target=$this->exam(2,['is_file'=>0]);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$source->id,$target->id],'Separate automated occurrence');
+        $this->result($source,0,['created_at'=>now()->subMinutes(90)]);
+        $attempt->forceFill(['exam_id'=>$target->id,'room_id'=>132]);
+        try {$attempt->save();$this->fail('Automated equivalent result duplicated');}
+        catch (\Illuminate\Validation\ValidationException $e) {}
+        $this->assertSame(0,Exam_result2::where('exam_id',$target->id)->count());
+    }
+
+    public function test_quiz_2423_window_equivalence_and_empty_results_do_not_require_placeholders()
+    {
+        $this->activateContinuity();
+        Carbon::setTestNow(Carbon::parse('2026-11-05 19:35:00',config('app.timezone')));
+        $this->actingAs($this->admin);
+        $quiz=$this->exam(2,['id'=>2423,'mark'=>50,'start_date'=>'2026-11-04 19:13:44','end_date'=>'2026-11-15 19:13:47']);
+        $other=$this->exam(2,['room_id'=>133,'mark'=>50,'start_date'=>'2026-11-08 19:13:44','end_date'=>'2026-11-15 19:13:47']);
+        app(\App\Services\AssessmentEquivalenceService::class)->verify([$quiz->id,$other->id],'Explicit multi-section assessment creation');
+        GradebookStatusService::setStatus(2,20,'LOCKED');
+        $this->actingAs($this->teacher);
+        $response=$this->get($this->teacherUrl)->assertOk();
+        $column=$response->viewData('assessmentColumns')->firstWhere('id',2423);
+        $this->assertTrue($column['entry_allowed']);
+        $this->assertSame('missing',$column['results'][41]['state']);
+        $this->assertStringContainsString('data-exam="2423"',$this->occurrenceHtml($response->getContent()));
+        $this->assertSame(0,Exam_result2::count());
+        $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+            'exam_id'=>2423,'room_id'=>132,'subject_id'=>409,'student_id'=>41,'value'=>0,
+        ])->assertOk();
+        $id=Exam_result2::where('exam_id',2423)->value('id');
+        $this->get('/SMARMANger/dashboard/teacher/teacher_quize_students/132/166/409/2423')->assertOk();
+        $this->assertSame(1,Exam_result2::count());
+        foreach (['2026-11-04 19:13:43'=>422,'2026-11-04 19:13:44'=>200,
+            '2026-11-15 19:13:47'=>200,'2026-11-15 19:13:48'=>422] as $now=>$status) {
+            Carbon::setTestNow(Carbon::parse($now,config('app.timezone')));
+            $this->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'exam_id'=>2423,'room_id'=>132,'subject_id'=>409,'student_id'=>42,'value'=>0,
+            ])->assertStatus($status);
+        }
+        $this->assertEquals($id,Exam_result2::where('exam_id',2423)->where('user_id',41)->value('id'));
     }
 
     public function test_bulk_save_is_atomic_and_invalid_row_does_not_leave_partial_marks()
@@ -364,7 +1638,7 @@ class GradebookSafetyTest extends TestCase
                 protected function runningUnitTests() { return false; }
             };
         });
-        $this->postJson($url)->assertRedirect(route('login'));
+        $this->postJson($url)->assertStatus(419);
         $this->assertSame($before,DB::table('students_marks')->orderBy('id')->get()->toJson());
     }
 
@@ -533,6 +1807,7 @@ class GradebookSafetyTest extends TestCase
 
     public function test_phase0b_complete_admin_exam_and_quiz_workflow_with_individual_bulk_and_reports()
     {
+        Carbon::setTestNow(Carbon::parse('2026-10-23 09:00:00',config('app.timezone')));
         $this->scaffold(41); $this->scaffold(42);
         foreach (['exam'=>1,'quize'=>2] as $kind=>$type) {
             $this->actingAs($this->admin)->post('/SMT/admin/class/room/'.$kind.'/store', [
@@ -633,7 +1908,7 @@ class GradebookSafetyTest extends TestCase
         DB::table('lessons')->insert(['id'=>410,'class_id'=>2,'name'=>'Second term only','max_mark'=>100]);
         DB::table('students_marks')->where('id',$markId)->update(['mark2'=>json_encode([410=>['exam'=>0,'quize'=>18]])]);
         $legacy=DB::table('lesson_teacher_room_term_exam')->insertGetId(['class_id'=>2,'room_id'=>132,'lesson_id'=>409,'term_id'=>20,'type'=>8]);
-        DB::table('exam_result')->insert(['exam_id'=>$legacy,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'term_id'=>20,'result'=>'0','status'=>'1']);
+        DB::table('exam_result')->insert(['exam_id'=>$legacy,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'term_id'=>20,'result'=>'0','status'=>'1','show_result'=>1]);
         $this->actingAs($this->account(0,['student_id'=>41]));
         $placement=DB::table('student_academic_placements')->where('student_id',41)->value('id');
         $view=app(\App\Http\Controllers\studentscontroller::class)->academic_record_show($placement);
@@ -665,7 +1940,7 @@ class GradebookSafetyTest extends TestCase
         $this->dynamic();
         $this->result($this->exam(1,['name'=>'Dynamic_Section_100','mark'=>20]),'12');
         $response=$this->actingAs($this->admin)->get('/SMT/admin/gradebook/view/student/card?student_id=41')
-            ->assertOk()->assertSee('Section 132')->assertSee('Grade 2')->assertSee('2026/2027')->assertSee(__('gradebook.additional_components'));
+            ->assertOk()->assertSee('Section 132')->assertSee('Grade 2')->assertSee('2026/2027')->assertSee(__('gradebook_distribution.configured_maximum'))->assertSee('مشروع');
         $row=$response->viewData('studentMarks')[0]['term1'];
         $this->assertSame([['name'=>'مشروع','value'=>12.0]],$row['additional']);
         $this->assertSame(12.0,$row['total']);
@@ -703,7 +1978,8 @@ class GradebookSafetyTest extends TestCase
         $this->actingAs($this->teacher)->getJson($this->teacherUrl)->assertForbidden();
         $this->postJson('/SMARMANger/dashboard/teacher/student_save_mark_quize',[
             'exam_id'=>$result->exam_id,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'mark'=>30])->assertForbidden();
-        $this->actingAs($this->account(1,['teacher_id'=>167]))->get($this->teacherUrl)->assertOk()->assertSee('>35</td>',false);
+        $response=$this->actingAs($this->account(1,['teacher_id'=>167]))->get($this->teacherUrl)->assertOk();
+        $response->assertSee('data-result="'.$result->id.'"',false)->assertSee('value="35"',false);
         $this->assertSame($before,$result->fresh()->getRawOriginal());
     }
 
@@ -769,6 +2045,7 @@ class GradebookSafetyTest extends TestCase
 
     public function test_phase1_shared_creation_real_transfer_and_all_four_receiving_views_preserve_originals()
     {
+        Carbon::setTestNow(Carbon::parse('2026-10-23 09:00:00',config('app.timezone')));
         $this->activateContinuity();
         $account=$this->account(0,['student_id'=>41]); $identity=$account->getRawOriginal();
         $student=Student::find(41)->getRawOriginal();
@@ -791,7 +2068,11 @@ class GradebookSafetyTest extends TestCase
         }
         $original=Exam_result2::orderBy('id')->get()->toJson();
         $this->moveToB();
+        GradebookStatusService::setStatus(2,20,'OPEN');
         foreach ($targets as $kind=>$target) {
+            $this->actingAs($this->teacher)->postJson('/SMARMANger/dashboard/teacher/gradebook/assessment/save',[
+                'student_id'=>41,'exam_id'=>$target->id,'room_id'=>133,'subject_id'=>409,'value'=>10,
+            ])->assertStatus(422);
             $response=$this->actingAs($this->teacher)->get('/SMARMANger/dashboard/teacher/teacher_'.$kind.'_students/133/166/409/'.$target->id)
                 ->assertOk()->assertSee('data-continuity="carried"',false)->assertSee(__('gradebook.carried'));
             file_put_contents(sys_get_temp_dir().'/aladham-phase1-'.$kind.'-1.html',$response->getContent());
@@ -1028,9 +2309,9 @@ class GradebookSafetyTest extends TestCase
         $this->actingAs($this->teacher);
         $payload=['exam_id'=>$a->id,'user_id'=>41,'room_id'=>132,'lesson_id'=>409,'mark'=>0];
         $url='/SMARMANger/dashboard/teacher/student_save_mark3';
-        $this->postJson($url,$payload)->assertRedirect();
+        $this->postJson($url,$payload)->assertOk()->assertJsonPath('value',0);
         $id=Exam_result2::firstOrFail()->id;
-        $this->postJson($url,array_merge($payload,['exam_result_id'=>$id,'mark'=>25]))->assertRedirect();
+        $this->postJson($url,array_merge($payload,['exam_result_id'=>$id,'mark'=>25]))->assertOk()->assertJsonPath('result_id',$id);
         $this->assertSame(1,Exam_result2::count());
         $this->assertDatabaseHas('exam_result2',['id'=>$id,'result'=>25,'exam_id'=>$a->id]);
         $this->assertSame(2,DB::table('notifications')->where('student_id',41)->count());
@@ -1040,10 +2321,94 @@ class GradebookSafetyTest extends TestCase
                 protected function runningUnitTests() { return false; }
             };
         });
-        // The existing application handler redirects CSRF failures to login.
-        $this->postJson($url,$payload)->assertRedirect(route('login'));
+        // AJAX CSRF failures remain explicit errors, not successful login-page HTML.
+        $this->postJson($url,$payload)->assertStatus(419);
         $this->assertDatabaseHas('exam_result2',['id'=>$id,'result'=>25]);
         $this->assertSame(2,DB::table('notifications')->where('student_id',41)->count());
+    }
+
+    public function test_phase2a_context_snapshot_preserves_existing_reader_and_controller_outputs()
+    {
+        $this->dynamic();
+        DB::table('term_years')->insert(['id'=>22,'year_id'=>6,'type'=>1,'term'=>'Another actual term','current_term'=>0]);
+        foreach (['certificates','school_data'] as $table) Schema::create($table, function (Blueprint $schema) {
+            $schema->increments('id'); $schema->integer('student_id')->nullable(); $schema->integer('room_id')->nullable();
+        });
+        $quizA = $this->exam(2); $quizB = $this->exam(2);
+        $exam = $this->exam(1); $termTwo = $this->exam(2, ['term_id'=>21]);
+        $dynamic = $this->exam(1, ['name'=>'Dynamic_Section_100','mark'=>20]);
+        $anotherTerm = $this->exam(2, ['term_id'=>22]);
+        $resultIds = [$this->result($quizA, '0')->id, $this->result($quizB, '10')->id,
+            $this->result($exam, '30')->id, $this->result($termTwo, '14')->id,
+            $this->result($dynamic, null)->id, $this->result($anotherTerm, '0')->id];
+        $this->scaffold();
+        $placement = DB::table('student_academic_placements')->where('student_id',41)->value('id');
+        $studentAccount = $this->account(0, ['student_id'=>41]);
+        $renderReaders = function () use ($placement, $studentAccount) {
+            $this->actingAs($this->admin);
+            $admin = app(\App\Http\Controllers\Admin\GradebookController::class)->viewGridSimple(
+                \Illuminate\Http\Request::create('/isolated', 'GET', ['room_id'=>132,'subject_id'=>409]));
+            $adminData = $admin->getData()['gradebook'];
+            $adminHtml = $admin->render();
+            $this->actingAs($this->teacher);
+            $teacher = app(\App\Http\Controllers\Teacher\TeacherGradebookController::class)->index(2,132,409);
+            $teacherData = $teacher->getData()['gradebook'];
+            $teacherHtml = $teacher->render();
+            $this->actingAs($studentAccount);
+            $record = app(\App\Http\Controllers\studentscontroller::class)->academic_record_show($placement);
+            return [$adminHtml, $teacherHtml, $record->render(), $record->getData()['assessmentRows'],
+                $adminData['marks'], $teacherData['marks'],
+                $adminData['assessments']->pluck('key')->all(), $adminData['terms']->pluck('id')->all()];
+        };
+        $rowsBefore = Exam_result2::orderBy('id')->get()->toJson();
+        $filesBefore = [Storage::get('gradebook/409_6.json'), Storage::get('gradebook_status/2_20.json')];
+        $before = $renderReaders();
+        $reader = app(\App\Services\Gradebook\GradebookContextReader::class);
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $started = microtime(true);
+        $this->read();
+        $baseline = ['fixture_students'=>2, 'fixture_assessments'=>6, 'fixture_terms'=>3,
+            'shared_reader_queries'=>count(DB::getQueryLog()),
+            'shared_reader_ms'=>round((microtime(true) - $started) * 1000, 3)];
+        DB::flushQueryLog();
+        foreach ([20,21] as $term) {
+            $snapshot = $reader->resolve(new \App\Services\Gradebook\GradebookContext(6,409,$term,2,132));
+            $this->assertEquals(GradebookConfigService::getConfig(409,6), $snapshot->components());
+            $this->assertSame($term, $snapshot->context()->termId());
+            $this->assertSame(20.0, GradebookReadService::componentMaximum(
+                $snapshot->components()->firstWhere('id','dynamic_a'), Lesson::find(409)));
+        }
+        // Each contextual resolve uses six SELECTs; two explicit Lesson lookups above add two.
+        $this->assertCount(14, DB::getQueryLog());
+        $baseline['two_context_resolves_plus_two_lesson_lookups'] = count(DB::getQueryLog());
+        DB::disableQueryLog();
+        if (getenv('ALADHAM_TEST_STORAGE')) {
+            file_put_contents(sys_get_temp_dir().'/gradebook-2a-read-baseline.json', json_encode($baseline));
+        }
+        // An inactive 2B publication must leave all three existing consumers byte-for-byte compatible.
+        require_once base_path('database/migrations/2026_10_29_000001_create_gradebook_template_foundation.php');
+        (new \CreateGradebookTemplateFoundation())->up();
+        $this->actingAs($this->admin);
+        $templates = app(\App\Services\Gradebook\GradebookTemplateService::class);
+        $template = $templates->create(6,409,'Independent template');
+        $template = $templates->save($template->id,1,['name_ar'=>'Independent template','components'=>[
+            ['id'=>'','name_ar'=>'Independent component','maximum'=>999],
+        ]]);
+        $review = $templates->preview($template->id);
+        $templates->publish($template->id,$review['revision'],$review['preview_token'],1);
+        $this->assertSame(1,\App\GradebookTemplateVersion::count());
+        $this->assertSame($before, $renderReaders());
+        $this->assertSame(35.0, $before[4][41][20]['total']);
+        $this->assertSame(14.0, $before[4][41][21]['total']);
+        $this->assertSame(5.0, $before[4][41][20]['legacy_homework']);
+        $this->assertArrayNotHasKey('dynamic_a', $before[4][41][20]);
+        $this->assertArrayNotHasKey(21, $before[5][41]);
+        $this->assertSame([20,21,22], array_map('intval', $before[7]));
+        $this->assertCount(6, $before[6]);
+        $this->assertSame($resultIds, Exam_result2::orderBy('id')->pluck('id')->all());
+        $this->assertSame($rowsBefore, Exam_result2::orderBy('id')->get()->toJson());
+        $this->assertSame($filesBefore, [Storage::get('gradebook/409_6.json'),Storage::get('gradebook_status/2_20.json')]);
     }
 
     public function test_phase1_explicit_report_import_counts_carried_marks_once_and_never_rewrites_old_reports()

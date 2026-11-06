@@ -6,6 +6,7 @@ Route::group(['prefix' => 'SMARMANger', 'middleware' => ['roleteacher']], functi
     // Phase 4: Unified Teacher Gradebook (Parallel Module)
     Route::get('dashboard/teacher/gradebook/{class_id}/{room_id}/{subject_id}', 'Teacher\TeacherGradebookController@index')->name('teacher.gradebook.index');
     Route::post('dashboard/teacher/gradebook/save', 'Teacher\TeacherGradebookController@saveMark')->name('teacher.gradebook.save');
+    Route::post('dashboard/teacher/gradebook/assessment/save', 'Teacher\TeacherGradebookController@saveAssessment')->name('teacher.gradebook.assessment.save');
 
     //new teachers2 routes
  //1
@@ -55,6 +56,9 @@ Route::post('teacher_events/edit', 'TeacherController_New@update_teacher_event')
 //add_content
 Route::get('dashboard/teacher/teacher_rooms2/{class_id}/{teacher_id}/{room_id}/{lecture_id}', 'TeacherController_New@teacher_rooms2')->name('dashboard.teacher_rooms2');
 Route::post('dashboard/teacher/classes_lessons/store_items', 'TeacherController_New@store_items')->name('dashboard.store_items');
+Route::post('dashboard/teacher/lesson-content/{content}/update', 'LessonContentController@update')->name('teacher.lesson_content.update');
+Route::post('dashboard/teacher/lesson-content/{content}/attachments/{attachment}/remove', 'LessonContentController@remove')->name('teacher.lesson_content.remove');
+Route::post('dashboard/teacher/lesson-content/{content}/delete', 'LessonContentController@destroy')->name('teacher.lesson_content.delete');
 //show_content
 Route::get('dashboard/teacher/lessons/book_details/{lesson_id}/{teacher_id}/{room_id}/{lecture_id}', 'TeacherController_New@book_details')->name('dashboard.student.lessons.book_details');
 //Route for book of subject

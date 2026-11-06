@@ -1,47 +1,26 @@
-@extends('admin.master')
-
+@extends('admin.gradebook.layout')
+@section('page_title', __('gradebook_ui.choose_section'))
+@section('page_subtitle', __('gradebook_ui.settings_help'))
 @section('breadcrumbs')
-    <nav class="breadcrumbs">
-        <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">الرئيسية</a>
-        <a href="{{ route('admin.gradebook.index') }}" class="breadcrumbs__item">دفتر العلامات</a>
-        <a href="{{ route('admin.gradebook.settings') }}" class="breadcrumbs__item">إعدادات التوزيع</a>
-        <a class="breadcrumbs__item is-active">الشعب الصفية</a>
-    </nav>
+    @include('admin.gradebook.partials.breadcrumbs', ['items'=>[['label'=>__('gradebook_ui.settings'), 'url'=>route('admin.gradebook.settings')], ['label'=>__('gradebook_ui.sections')]]])
 @endsection
-
-@section('content')
-<div class="container-fluid mt-3">
-    <div class="card">
-        <div class="card-header bg-white border-bottom">
-            <h4 class="mb-0 text-primary"><i class="fas fa-door-open"></i> اختر الشعبة</h4>
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped text-center">
-                <thead class="bg-light">
-                    <tr>
-                        <th>#</th>
-                        <th>الشعبة (Room)</th>
-                        <th>عدد الطلاب</th>
-                        <th>إجراءات</th>
-                    </tr>
-                </thead>
+@section('gradebook-content')
+<section class="card">
+    <div class="card-header"><h3>{{ __('gradebook_ui.choose_section') }}</h3></div>
+    <div class="card-body">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="{{ __('gradebook_ui.sections') }}">
+            <table class="table table-hover gb-table">
+                <thead><tr><th scope="col">#</th><th scope="col">{{ __('gradebook_ui.section') }}</th><th scope="col">{{ __('gradebook_ui.student_count') }}</th><th scope="col">{{ __('gradebook_ui.actions') }}</th></tr></thead>
                 <tbody>
-                    @foreach($rooms as $room)
-                        <tr>
-                            <td>{{ $room->id }}</td>
-                            <td class="font-weight-bold">{{ $room->name }}</td>
-                            <td>{{ optional($room->student)->count() ?? 0 }}</td>
-                            <td>
-                                <a href="{{ route('admin.gradebook.settings.subjects', $room->id) }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-book"></i> ضبط المواد
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
+                @forelse($rooms as $room)
+                    <tr><td>{{ $room->id }}</td><th scope="row">{{ $room->name }}</th><td>{{ optional($room->student)->count() ?? 0 }}</td><td><a href="{{ route('admin.gradebook.settings.subjects', $room->id) }}" class="btn btn-outline-primary">{{ __('gradebook_ui.subjects') }}</a></td></tr>
+                @empty
+                    <tr><td colspan="4">{{ __('gradebook_ui.empty') }}</td></tr>
+                @endforelse
                 </tbody>
             </table>
-            {{ $rooms->links() }}
         </div>
+        {{ $rooms->links() }}
     </div>
-</div>
+</section>
 @endsection

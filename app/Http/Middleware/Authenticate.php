@@ -15,7 +15,7 @@ class Authenticate extends Middleware
     protected function redirectTo($request)
     {
         if (! $request->expectsJson()) {
-            return('/SMARMANger');
+            return app(\App\Services\SchoolLoginNavigation::class)->loginUrl($request);
         }
     }
 }

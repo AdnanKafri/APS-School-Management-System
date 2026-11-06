@@ -1,4 +1,4 @@
-<section class="card mt-3" aria-label="{{ __('gradebook.assessment_results') }}" dir="rtl">
+<section class="card mt-3" aria-label="{{ __('gradebook.assessment_results') }}" dir="{{ $gradebookDirection ?? 'rtl' }}">
     <div class="card-header">
         <h4 class="mb-1">{{ __('gradebook.assessment_results') }}</h4>
         <p class="text-muted mb-0">{{ __('gradebook.read_only') }}</p>

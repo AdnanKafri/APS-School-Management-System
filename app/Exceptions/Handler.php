@@ -70,7 +70,10 @@ class Handler extends ExceptionHandler
             if ($request->is('complaint-portal/*')) {
                 return redirect()->route('complaint-portal.login')->withErrors(['session' => __('complaint_portal.session_expired')]);
             }
-            return redirect()->route('login');
+            $navigation = app(\App\Services\SchoolLoginNavigation::class);
+            $message = __('auth.session_expired', [], $navigation->locale($request));
+            if ($request->expectsJson()) return response()->json(['message' => $message], 419);
+            return redirect()->to($navigation->loginUrl($request))->withErrors(['session' => $message]);
         }
         return parent::render($request, $exception);
     }

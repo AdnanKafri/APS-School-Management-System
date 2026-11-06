@@ -14,6 +14,7 @@ return [
     */
 
     'failed' => 'These credentials do not match our records.',
+    'session_expired' => 'Your session has expired. Please sign in again and retry.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
 
 ];

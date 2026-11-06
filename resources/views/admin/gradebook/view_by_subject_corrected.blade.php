@@ -1,15 +1,12 @@
-@extends('admin.master')
+@extends('admin.gradebook.layout')
+@section('page_title', __('gradebook_ui.results'))
+@section('page_subtitle', __('gradebook_ui.review_help'))
 
 @section('breadcrumbs')
-    <nav class="breadcrumbs">
-        <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">الرئيسية</a>
-        <a href="{{ route('admin.gradebook.index') }}" class="breadcrumbs__item">دفتر العلامات</a>
-        <a href="{{ route('admin.gradebook.view_options') }}" class="breadcrumbs__item">خيارات العرض</a>
-        <a class="breadcrumbs__item is-active">جدول العلامات</a>
-    </nav>
+    @include('admin.gradebook.partials.breadcrumbs', ['items'=>[['label'=>__('gradebook_ui.review'), 'url'=>route('admin.gradebook.view_options')], ['label'=>__('gradebook_ui.sections'), 'url'=>route('admin.gradebook.view_rooms', $room->class_id)], ['label'=>$room->name, 'url'=>route('admin.gradebook.view_subjects', $room->id)], ['label'=>$subject->name]]])
 @endsection
 
-@section('content')
+@section('gradebook-content')
 <div class="container-fluid mt-3">
     <div class="card">
         <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
@@ -21,6 +18,7 @@
 
         <div class="card-body p-3">
             <p class="text-muted">{{ __('gradebook.summary_notice') }}</p>
+            @if($components->isEmpty())<p class="alert alert-info">{{ __('gradebook_distribution.no_components') }}</p>@endif
             <!-- Tabs -->
             <ul class="nav nav-tabs nav-justified mb-3" id="gradebookTabs" role="tablist">
                 <li class="nav-item">
@@ -58,9 +56,6 @@
                                 $maxDisplay = isset($comp->calculated_max) ? " ({$comp->calculated_max})" : "";
                                 $html .= "<th>".e($comp->name).e($maxDisplay)."</th>";
                             }
-                        } else {
-                            // Fallback if no components (should not happen if seeded/defaulted)
-                            $html .= "<th>شفهي</th><th>وظائف</th><th>امتحان</th>";
                         }
 
                         $html .= '<th class="bg-light text-primary font-weight-bold">المجموع (Total)</th>
@@ -78,9 +73,6 @@
                                     $val = $data[$comp->id] ?? '-';
                                     $html .= "<td>{$val}</td>";
                                 }
-                            } else {
-                                // Fallback
-                                $html .= "<td>-</td><td>-</td><td>-</td>";
                             }
 
                             $totalDisplay = isset($data['total']) ? $data['total'] : '-';
@@ -93,17 +85,17 @@
                 @endphp
 
                 <!-- Term 1 Tab -->
-                <div class="tab-pane fade show active" id="term1" role="tabpanel">
+                <div class="tab-pane fade show active" id="term1" role="tabpanel" aria-labelledby="t1-tab" aria-label="{{ __('gradebook.term_one') }}">
                     {!! $renderTermTable('term1') !!}
                 </div>
 
                 <!-- Term 2 Tab -->
-                <div class="tab-pane fade" id="term2" role="tabpanel">
+                <div class="tab-pane fade" id="term2" role="tabpanel" aria-labelledby="t2-tab" aria-label="{{ __('gradebook.term_two') }}">
                     {!! $renderTermTable('term2') !!}
                 </div>
 
                 <!-- Final Tab -->
-                <div class="tab-pane fade" id="final" role="tabpanel">
+                <div class="tab-pane fade" id="final" role="tabpanel" aria-labelledby="final-tab">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover text-center">
                             <thead class="bg-success text-white">
@@ -155,5 +147,5 @@
         </div>
     </div>
 </div>
-@include('gradebook.assessment_results')
+@include('gradebook.assessment_results', ['gradebookDirection'=>strpos(app()->getLocale(), 'ar') === 0 ? 'rtl' : 'ltr'])
 @endsection

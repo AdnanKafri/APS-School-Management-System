@@ -43,6 +43,12 @@ return [
 
     'disks' => [
 
+        'lesson_content_private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/lesson-content-private'),
+            'visibility' => 'private',
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),

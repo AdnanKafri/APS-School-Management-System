@@ -22,7 +22,7 @@ class RedirectIfAuthenticated
             if ((string) Auth::guard($guard)->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
                 return redirect()->route('complaint-portal.index');
             }
-            return redirect(RouteServiceProvider::HOME);
+            return redirect(app(\App\Services\SchoolLoginNavigation::class)->home(Auth::guard($guard)->user()) ?: '/SMARMANger');
         }
 
         return $next($request);

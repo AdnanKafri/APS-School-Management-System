@@ -200,7 +200,13 @@ Route::group([
 
 
 
-Route::get('/SMARMANger', function () {
+// Register after Auth::routes so locale redirects cannot intercept this legacy alias.
+Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
+
+Route::get('/SMARMANger', function (\Illuminate\Http\Request $request) {
+  if (!Auth::check()) {
+    return redirect()->to(app(\App\Services\SchoolLoginNavigation::class)->loginUrl($request));
+  }
   if (Auth::check()) {
     if ((string) auth()->user()->type === \App\Services\ComplaintAccess::OFFICER_TYPE) {
       return redirect()->route('complaint-portal.index');
@@ -221,6 +227,8 @@ Route::get('/SMARMANger', function () {
 
 
 Route::post('login1', 'websitecontroller@login1')->name('login1');
+Route::get('SMARMANger/lesson-content/attachments/{attachment}/{mode?}', 'LessonContentController@download')
+    ->middleware('auth')->where(['attachment'=>'[0-9]+','mode'=>'view|download'])->name('lesson_content.download');
 Route::post('logout', 'Auth\LoginController@logout')->name('logout');
 
 

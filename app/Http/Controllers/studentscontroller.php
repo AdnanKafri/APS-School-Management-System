@@ -91,7 +91,9 @@ class studentscontroller extends Controller
                 Alert::warning(session('warning'));
             }
 
-            return $next($request);
+            $response = $next($request);
+            $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
+            return $response;
         });
     }
 
@@ -115,17 +117,12 @@ class studentscontroller extends Controller
 
     protected function studentResultsPagesEnabled()
     {
-        $value = $this->studentResultsSetting('student_pages_enabled', false);
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
-        }
-
-        return (bool) $value;
+        return app(\App\Services\StudentResultsVisibility::class)->enabled();
     }
 
     protected function studentResultsBlockedResponse($student, $room_id, $school_data, $pageLabel)
     {
+        if (request()->expectsJson()) return app(\App\Services\StudentResultsVisibility::class)->blockedJson();
         return view('students.results_blocked', [
             'student' => $student,
             'room_id' => $room_id,
@@ -134,6 +131,14 @@ class studentscontroller extends Controller
             'blockedTitle' => $this->studentResultsSetting('blocked_title', 'النتائج غير متاحة حالياً'),
             'blockedMessage' => $this->studentResultsSetting('blocked_message', 'العلامات قيد المعالجة حالياً. يرجى المحاولة مرة أخرى لاحقاً.'),
         ]);
+    }
+
+    private function hiddenStudentResults($pageLabel = 'النتائج')
+    {
+        $student = Student::findOrFail(auth()->user()->student_id);
+        $year = Year::where('current_year', '1')->first();
+        $room = $year ? app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $year->id) : null;
+        return $this->studentResultsBlockedResponse($student, $room ? $room->id : 0, School_data::first(), $pageLabel);
     }
 
 
@@ -691,6 +696,7 @@ class studentscontroller extends Controller
     }
     public function student_exams($room_id, $student_id)
     {
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $years = Year::where('current_year', '1')->first();
         $term1 = $this->currentTermForActiveYear();
 
@@ -720,122 +726,28 @@ class studentscontroller extends Controller
     }
     public function student_main_exams($room_id, $student_id)
     {
-        $term = $this->currentTermForActiveYear();
-        $student = Student::with('details')->findOrFail($student_id);
-        $room = Room::findOrFail($room_id);
-        $room_name = $room->name;
-        $room_id = $room->id;
-        $class_name =  $room->classes->name;
-        $now = Carbon::now();
-
-        $exams_id = Exam_result2::where('room_id', $room_id)->where('user_id', $student_id)->where('type', '1')->pluck('exam_id');
-
-
-        $exams = $term
-            ? Exams2::where('term_id', $term->id)->whereIn('id', $exams_id)->where('type', '1')->orderBy('created_at', 'asc')->with(['lesson' => fn ($q) => $q->select('name', 'lessons.id')])->get()
-            : collect();
-        foreach ($exams  as $item) {
-            $timestamp = strtotime($item->start_date);
-            $day = date('l', $timestamp);
-            $day = $this->getDay($day);
-            $item->day = $day;
-            $start_date = Carbon::parse($item->start_date);
-            $end_date = Carbon::parse($item->end_date);
-            $totalDuration = $start_date->diffInSeconds($end_date);
-            $item->period =  gmdate('H:i:s',  $item->period * 60);
-
-            if ($item->is_file == 1) {
-                $exam_file = Exam_file::where('student_id', $student_id)->where('exam_id', $item->id)->first();
-            }
-            $exam_result = Exam_result2::where('user_id', $student->id)->where('exam_id', $item->id)->first();
-
-            // هذا العنصر لمعرفة اذا كان الطالب دخل الى الامتحان لكن خرج منه و لم يقم بانهائه
-            if ($exam_result->start_time != null && $exam_result->status != '1') {
-                $item->not_terminate = '1';
-            } else {
-                $item->not_terminate = '0';
-            }
-
-            if (isset($exam_result) && $exam_result->status == '1' && $exam_result->show_result == 1) {
-                $item->result = $exam_result->result;
-            } else if (isset($exam_result) && $exam_result->status == '1' && $exam_result->show_result == 0) {
-                $item->result = -1;
-            }
-
-            //exam start ability
-            if (isset($exam_result) && isset($exam_result->end_time) && (Carbon::now()->subMinutes(1) >=  $exam_result->end_time)) {
-                $item->start_exam = 0; // الامتحان قيد التصحيح
-            } else {
-                $item->start_exam = 1;
-            }
-        }
-
-        $class = Classe::find($room->class_id);
-        $school_data = School_data::first();
-        if (! $this->studentResultsPagesEnabled()) {
-            return $this->studentResultsBlockedResponse($student, $room_id, $school_data, 'الاختبارات النهائية');
-        }
-        return view('students.new_student_exams', compact('school_data','exams', 'room_name', 'class_name', 'student', 'now', 'room_id', 'class'));
+        return $this->studentMainAssessments($room_id, $student_id, 1);
     }
-
-
 
     public function student_main_quizes($room_id, $student_id)
     {
-        $term = $this->currentTermForActiveYear();
-        $student = Student::with('details')->findOrFail($student_id);
-        $room = Room::findOrFail($room_id);
+        return $this->studentMainAssessments($room_id, $student_id, 2);
+    }
+
+    private function studentMainAssessments($room_id, $student_id, $type)
+    {
+        $reader = app(\App\Services\StudentAssessmentReadService::class);
+        [$room, $term] = $reader->context($student_id, $room_id);
+        $student = Student::with('details')->findOrFail(auth()->user()->student_id);
+        $exams = $reader->listing($student, $room, $term, $type);
+        $class = $room->classes;
+        $class_name = $class->name;
         $room_name = $room->name;
         $room_id = $room->id;
-        $class_name =  $room->classes->name;
         $now = Carbon::now();
-
-
-        $exams_id = Exam_result2::where('room_id', $room_id)->where('user_id', $student_id)->where('type', '2')->pluck('exam_id');
-
-        $exams = $term
-            ? Exams2::where('term_id', $term->id)->whereIn('id', $exams_id)->where('type', '2')->orderBy('created_at', 'asc')->with(['lesson' => fn ($q) => $q->select('name', 'lessons.id')])->get()
-            : collect();
-
-        foreach ($exams  as $item) {
-            $timestamp = strtotime($item->start_date);
-            $day = date('l', $timestamp);
-            $day = $this->getDay($day);
-            $item->day = $day;
-            $start_date = Carbon::parse($item->start_date);
-            $end_date = Carbon::parse($item->end_date);
-            $totalDuration = $start_date->diffInSeconds($end_date);
-            $item->period =  gmdate('H:i:s', $item->period * 60);
-
-            $exam_result = Exam_result2::where('user_id', $student->id)->where('exam_id', $item->id)->first();
-
-            // هذا العنصر لمعرفة اذا كان الطالب دخل الى الامتحان لكن خرج منه و لم يقم بانهائه
-            if ($exam_result->start_time != null && $exam_result->status != '1') {
-                $item->not_terminate = '1';
-            } else {
-                $item->not_terminate = '0';
-            }
-
-            if (isset($exam_result) && $exam_result->status == '1' && $exam_result->show_result == 1) {
-                $item->result = $exam_result->result;
-            } else if (isset($exam_result) && $exam_result->status == '1' && $exam_result->show_result == 0) {
-                $item->result = -1;
-            }
-
-            //exam start ability
-            if (isset($exam_result) && isset($exam_result->end_time) && (Carbon::now()->subMinutes(2) >=  $exam_result->end_time)) {
-                $item->start_exam = 0; // الامتحان قيد التصحيح
-            } else {
-                $item->start_exam = 1;
-            }
-        }
-        $class = Classe::find($room->class_id);
-
         $school_data = School_data::first();
-        if (! $this->studentResultsPagesEnabled()) {
-            return $this->studentResultsBlockedResponse($student, $room_id, $school_data, 'الاختبارات القصيرة');
-        }
-        return view('students.new_student_quizes', compact('school_data','exams', 'room_name', 'class_name', 'student', 'now', 'room_id', 'class'));
+        return view($type === 1 ? 'students.new_student_exams' : 'students.new_student_quizes',
+            compact('school_data', 'exams', 'room_name', 'class_name', 'student', 'now', 'room_id', 'class'));
     }
 
     public function student_schedule($room_id, $student_id, $time_zone_offset)
@@ -1309,7 +1221,9 @@ class studentscontroller extends Controller
         }
 
 
-        $student_mark = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $room_id)->first();
+        $student_mark = $this->studentResultsPagesEnabled()
+            ? Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $room_id)->first()
+            : null;
 
         $answers = [];
         $available_lesson_detail = Lesson_teacher_room_term_exam::where('lesson_id', $lesson_id)
@@ -1773,6 +1687,8 @@ class studentscontroller extends Controller
         $student_id = auth()->user()->student_id;
         $content = Lesson_teacher_room_term_exam::findOrFail($exam_id);
         $exam_result = Exam_result::where('exam_id', $exam_id)->where('user_id', $student_id)->first();
+        abort_unless($exam_result, 404);
+        if (!app(\App\Services\StudentResultsVisibility::class)->published($exam_result)) return $this->hiddenStudentResults();
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
         $room = Room::findOrFail($content->room_id);
         $room_id = $room->name;
@@ -1846,6 +1762,9 @@ class studentscontroller extends Controller
          $term_name = $term->term;
 
         $exam_result = Exam_result2::where('exam_id', $exam_id)->where('user_id', $student->id)->first();
+        abort_unless($exam_result && (int) $content->is_file === 0
+            && $this->currentTermForActiveYear()
+            && (int) $content->term_id === (int) $this->currentTermForActiveYear()->id, 403);
         if (isset($exam_result) && $exam_result->status == 1) {
             session()->flash('error', 'لا يمكن اعادة الاختبار ');
             return redirect()->back()->with('error', 'عذراً لايمكن أعادة الامتحان');
@@ -1943,6 +1862,8 @@ class studentscontroller extends Controller
     {
 
         $exam = Exams2::findOrFail($request->content_id);
+        abort_unless((int) $exam->is_file === 0 && $this->currentTermForActiveYear()
+            && (int) $exam->term_id === (int) $this->currentTermForActiveYear()->id, 403);
         if (!$this->studentHasCurrentMembershipForRoom(auth()->user()->student_id, $exam->room_id)) {
             return redirect()->back()->with('error', 'لا يمكن تعديل سجل أكاديمي مغلق');
         }
@@ -2253,17 +2174,23 @@ class studentscontroller extends Controller
     {
         $student_id = auth()->user()->student_id;
         $content = Exams2::findOrFail($exam_id);
-        $exam_result = Exam_result2::where('exam_id', $exam_id)->where('user_id', $student_id)->first();
+        $exam_result = app(\App\Services\StudentAssessmentReadService::class)->ownedResult($content, $student_id);
+        if (!app(\App\Services\StudentResultsVisibility::class)->published($exam_result)) return $this->hiddenStudentResults();
+        $school_data = School_data::first();
+        if ((int) $content->is_file === 1) {
+            $student = Student::findOrFail($student_id);
+            $room = Room::with('classes')->findOrFail($content->room_id);
+            $room_id = $room->id;
+            $term = Term_year::findOrFail($content->term_id);
+            return view('students.assessment_result', compact('student', 'content', 'exam_result', 'room', 'room_id', 'term', 'school_data'));
+        }
         $lesson_name = Lesson::findOrFail($content->lesson_id)->name;
         $room = Room::findOrFail($content->room_id);
         $room_id = $room->name;
         $year_id = $room->year_id;
         $class_name = Classe::findOrFail($content->class_id)->name;
         $year = Year::findOrFail($year_id)->name;
-        $term = $content->term_id;
-        $first = 'الفصل الأول';
-        $second = 'الفصل الثاني';
-        $term_name = $term == 1 ? $first : $second;
+        $term_name = Term_year::findOrFail($content->term_id)->term;
         $student = Student::find($student_id);
 
 
@@ -2310,15 +2237,15 @@ class studentscontroller extends Controller
             'lesson_name',
             'room_id',
             'term_name',
-            'year'
+            'year',
+            'school_data'
         ));
     }
 
 
     public function lecture_content($lesson_id, $student_id, $lecture_id)
     {
-
-
+        $authorizedLecture = app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
         $super_file  = Super_file ::where('lecture_id', $lecture_id)->orderBy("id", 'desc')->get();
         $year = Year::where('current_year', '1')->first();
 
@@ -2329,7 +2256,7 @@ class studentscontroller extends Controller
 
         $lecture = Lecture::findOrFail($lecture_id);
         $year = Year::where('current_year', '1')->first();
-        $room_id = $student->room[0]->id;
+        $room_id = $authorizedLecture->room_id;
         $date = new DateTime();
         $now = $date->format('Y-m-d H:i:s');
 
@@ -2344,6 +2271,15 @@ class studentscontroller extends Controller
         //      ->get(); //  امتحان
           $lecture_others = Lesson_teacher_room_term_exam::Where('lecture_id', $lecture_id)->where('type', '4')
             ->get();  // ملفات
+        $lecture_others = $lecture_others->filter(function ($content) use ($authorizedLecture) {
+            return (int)$content->room_id === (int)$authorizedLecture->room_id
+                && (int)$content->lesson_id === (int)$authorizedLecture->lesson_id
+                && (int)$content->term_id === (int)$authorizedLecture->term_id;
+        })->values();
+        if (app(\App\Services\LessonContentFeature::class)->enabled()) {
+            $lecture_others = $lecture_others->whereNull('upload_deleted_at')->values();
+            $lecture_others->load('privateAttachments');
+        }
         //   $lecture_audios = Lesson_teacher_room_term_exam::Where('lecture_id',$lecture_id)->where('type','5')
         //      ->get();
         $lecture_audios = Lesson_teacher_room_term_exam::Where('lecture_id', $lecture_id)->where('type', '6')
@@ -2364,9 +2300,9 @@ class studentscontroller extends Controller
                 $content->not_terminate = '0';
             }
 }
-            if (isset($content_result) && $content_result->status == 1 && $content_result->show_result == 1) {
+            if (app(\App\Services\StudentResultsVisibility::class)->published($content_result)) {
                 $content->result = $content_result->result;
-            } else if (isset($content_result) && $content_result->status == 1 && $content_result->show_result == 0) {
+            } else if ($this->studentResultsPagesEnabled() && isset($content_result) && $content_result->status == 1 && $content_result->show_result == 0) {
                 $content->result = -1;
             }
 
@@ -2383,9 +2319,9 @@ class studentscontroller extends Controller
                 ->where('student_id', $student_id)->count();
                  $homeworks = Student_lesson_teacher_room_term_exam::where('exam_id', $content->id)
                 ->where('student_id', $student_id)->get();
-            if (isset($content_result) && $content_result->result != null) {
+            if (app(\App\Services\StudentResultsVisibility::class)->published($content_result) && $content_result->result !== null) {
                 $content->result = $content_result->result;
-            } else if (isset($content_result) && $content_result->status == 1 && $content_result->show_result == 0) {
+            } else if ($this->studentResultsPagesEnabled() && isset($content_result) && $content_result->status == 1 && $content_result->show_result == 0) {
                 $content->result = -1;
             }
             $content->previous_file_count = $previous_homeworks;
@@ -2511,6 +2447,7 @@ class studentscontroller extends Controller
 
     public function results($student_id)
     {
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $authenticatedStudentId = (int) auth()->user()->student_id;
         if ((int) $student_id !== $authenticatedStudentId) {
             abort(403);
@@ -2525,7 +2462,7 @@ class studentscontroller extends Controller
         $student_mark = null;
 
         if ($year) {
-            $room = $student->room()->where('rooms.year_id', $year->id)->first();
+            $room = app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $year->id);
         }
 
         if ($room) {
@@ -2663,7 +2600,7 @@ class studentscontroller extends Controller
         $year = Year::where('current_year', '1')->first();
         $student = Student::with('details')->findOrFail($authenticatedStudentId);
         $room = $year
-            ? $student->room()->where('rooms.year_id', $year->id)->first()
+            ? app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $year->id)
             : null;
 
         if (!$room) {
@@ -2889,6 +2826,7 @@ class studentscontroller extends Controller
     // os
     public function student_medals($student_id)
     {
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $term = $this->currentTermForActiveYear();
         $student = Student::find($student_id);
         $year = Year::where('current_year', '1')->first();
@@ -2898,8 +2836,8 @@ class studentscontroller extends Controller
 
 
 
-        $test_medals = $term ? Exam_result::with('lesson')->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
-        $exam_medals = $term ? Exam_result2::with('lesson')->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
+        $test_medals = $term ? Exam_result::with('lesson')->where('status', '1')->where('show_result', 1)->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
+        $exam_medals = $term ? Exam_result2::with('lesson')->where('status', '1')->where('show_result', 1)->where('medal', '!=', null)->where('user_id', $student_id)->where('term_id', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
         $medals = $term ? Medal::with('lesson')->where('student_id', $student_id)->where('term', $term->id)->orderBy('updated_at', 'desc')->get() : collect();
 
 
@@ -2936,6 +2874,7 @@ class studentscontroller extends Controller
     }
     public function student_certificates($student_id)
     {
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
 
         $student = Student::find($student_id);
         $year = Year::where('current_year', '1')->first();
@@ -2989,6 +2928,8 @@ class studentscontroller extends Controller
 
     public function edit_2($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3001,6 +2942,8 @@ class studentscontroller extends Controller
     }
     public function newcertificate($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3013,6 +2956,8 @@ class studentscontroller extends Controller
     }
     public function new44($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3026,6 +2971,8 @@ class studentscontroller extends Controller
     }
     public function ncertificate12($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3040,6 +2987,8 @@ class studentscontroller extends Controller
 
     public function newcerti($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3053,6 +3002,8 @@ class studentscontroller extends Controller
     }
     public function certificate_22($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3066,6 +3017,8 @@ class studentscontroller extends Controller
     }
     public function new2($id)
     {
+        Certificate::whereKey($id)->where('student_id', auth()->user()->student_id)->firstOrFail();
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         $cer = Certificate::find($id);
         $certificate = Certificate_Fields::find($cer->certificate);
@@ -3087,7 +3040,7 @@ class studentscontroller extends Controller
         // Prefer the active-year enrollment, but keep the portal usable when
         // the active year has not yet received this student's enrollment.
         $room = $year
-            ? $student->room()->where('rooms.year_id', $year->id)->first()
+            ? app(\App\Services\CurrentStudentMembership::class)->roomForStudent($student->id, $year->id)
             : null;
 
         if (!$room) {
@@ -3202,6 +3155,8 @@ class studentscontroller extends Controller
             ->where('id', $placement_id)
             ->where('student_id', $student->id)
             ->firstOrFail();
+
+        abort_unless($currentYear && (int) $placement->year_id <= (int) $currentYear->id, 404);
 
         $roomId = $placement->room_id;
         $yearId = $placement->year_id;
@@ -3327,7 +3282,7 @@ class studentscontroller extends Controller
                 'name' => optional($assessment)->name_exam ?: optional($assessment)->name_quize ?: optional($assessment)->name_quize1 ?: 'تقييم محفوظ',
                 'type' => $assessmentType(optional($assessment)->type, true),
                 'term' => optional($termsById->get($termId))->term ?: 'فصل غير محدد',
-                'result' => $readableValue($result->result) ?? 'غير مرصودة',
+                'result' => app(\App\Services\StudentResultsVisibility::class)->published($result) ? ($readableValue($result->result) ?? 'غير مرصودة') : __('student_assessments.hidden'),
                 'maximum' => null,
             ];
         }
@@ -3339,7 +3294,7 @@ class studentscontroller extends Controller
                 'name' => optional($assessment)->name ?: 'تقييم محفوظ',
                 'type' => $assessmentType(optional($assessment)->type, false),
                 'term' => optional($termsById->get($termId))->term ?: 'فصل غير محدد',
-                'result' => $readableValue($result->result) ?? 'غير مرصودة',
+                'result' => app(\App\Services\StudentResultsVisibility::class)->published($result) ? ($readableValue($result->result) ?? 'غير مرصودة') : __('student_assessments.hidden'),
                 'maximum' => $readableValue(optional($assessment)->mark),
             ];
         }
@@ -3377,8 +3332,28 @@ class studentscontroller extends Controller
         $class = $placement->classRoom ?: optional($room)->classes;
         $school_data = School_data::first();
 
+        $gradesVisible = $this->studentResultsPagesEnabled();
+        if (!$gradesVisible) {
+            foreach ($markRows as &$row) {
+                $row['components'] = [];
+                $row['term_one'] = $row['term_two'] = $row['year'] = null;
+            }
+            unset($row);
+            foreach ($assessmentRows as &$row) {
+                $row['result'] = __('student_assessments.hidden');
+                $row['maximum'] = null;
+            }
+            unset($row);
+            $reportRows = $reportRows->map(function ($row) {
+                $row['status'] = __('student_assessments.hidden');
+                return $row; // Attendance is not a grade and stays available.
+            });
+            // Do not leave raw grade-bearing models in view data/embedded JSON.
+            $marks = $reportCards = $examResults = $quizResults = collect();
+        }
+
         return view('students.academic_record_show', compact(
-            'school_data', 'student', 'placement', 'currentYear', 'room', 'room_id', 'class',
+            'school_data', 'student', 'placement', 'currentYear', 'room', 'room_id', 'class', 'gradesVisible',
             'marks', 'reportCards', 'examResults', 'quizResults',
             'submissions', 'examFiles', 'certificates', 'markRows',
             'assessmentRows', 'fileRows', 'reportRows', 'certificateRows'
@@ -3396,6 +3371,7 @@ class studentscontroller extends Controller
     }
     public function student_view_report_card()
     {
+        if (!$this->studentResultsPagesEnabled()) return $this->hiddenStudentResults();
         $year = Year::where('current_year', '1')->first();
         if (!isset($year)) {
             return redirect()->back()->with('error66', ' يجب تحديد العام الدراسي, تواصل مع الإدارة');

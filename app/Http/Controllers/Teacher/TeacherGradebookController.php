@@ -45,6 +45,12 @@ class TeacherGradebookController extends Controller
         $subject = Lesson::findOrFail($subject_id);
         $students = $room->operationalStudents()->orderBy('first_name')->get();
         $gradebook = app(GradebookReadService::class)->read($room, $subject, $students->pluck('id'), [$term->id]);
+        $assessmentColumns = app(\App\Services\TeacherGradebookAssessmentColumns::class)
+            ->forContext($gradebook, $room, $subject, $term);
+        $occurrenceKeys = $assessmentColumns->keyBy('key');
+        $sourceGradebook = array_replace($gradebook, ['assessments' => $gradebook['assessments']->reject(function ($assessment) use ($occurrenceKeys) {
+            return $occurrenceKeys->has($assessment['key']);
+        })]);
         $components = $gradebook['components'];
         $existingMarks = [];
         foreach ($components as $component) {
@@ -58,7 +64,8 @@ class TeacherGradebookController extends Controller
         $teacher = \App\Teacher::findOrFail(Auth::user()->teacher_id);
         $message = \App\Message::where('teacher_id', $teacher->id)->where('type', 1)->where('view', 0)->count();
         return view('teachers.gradebook.index', compact('room', 'subject', 'students', 'components',
-            'existingMarks', 'term', 'teacher', 'message', 'year', 'gradebookStatus', 'gradebook'));
+            'existingMarks', 'term', 'teacher', 'message', 'year', 'gradebookStatus', 'gradebook',
+            'assessmentColumns', 'sourceGradebook'));
     }
 
     public function saveMark(Request $request)
@@ -75,13 +82,15 @@ class TeacherGradebookController extends Controller
             Room::whereKey($request->room_id)->lockForUpdate()->firstOrFail();
             [$year, $term, $room] = $this->currentContext($request->room_id, $request->subject_id, $request->student_id);
             abort_unless(GradebookStatusService::getStatus($room->class_id, $term->id) === 'OPEN', 403, __('gradebook.locked'));
-            $subject = Lesson::findOrFail($request->subject_id);
+            // Serialize manual container creation against Admin structural configuration changes.
+            $subject = Lesson::whereKey($request->subject_id)->lockForUpdate()->firstOrFail();
             $component = GradebookConfigService::getConfig($subject->id, $year->id)->first(function ($c) use ($request) {
                 return (string) $c->id === (string) $request->component_id;
             });
             abort_unless($component, 404);
-            abort_unless(is_numeric($component->data_source) && (int) $component->data_source >= 100, 422, __('gradebook.read_only'));
+            abort_unless(\App\Services\GradebookComponentEntry::manual($component), 422, __('gradebook.read_only'));
             $maximum = GradebookReadService::componentMaximum($component, $subject);
+            abort_unless(\App\Services\GradebookComponentEntry::supportedMaximum($maximum), 422, __('gradebook_ux.manual_bound'));
             $value = $request->value;
             if ($value !== null && $value !== '') {
                 AssessmentResultSafety::validateMark($value, $maximum, 'value');
@@ -132,5 +141,33 @@ class TeacherGradebookController extends Controller
             return response()->json(['success' => true, 'value' => $result ? $result->result : null,
                 'total' => $read['marks'][$request->student_id][$term->id]['total'], 'message' => __('gradebook.saved')]);
         }, 3);
+    }
+
+    public function saveAssessment(Request $request)
+    {
+        $request->validate(['student_id'=>'required|integer','exam_id'=>'required|integer',
+            'room_id'=>'required|integer','subject_id'=>'required|integer','value'=>'required|numeric|min:0']);
+        return DB::transaction(function () use ($request) {
+            Student::whereKey($request->student_id)->lockForUpdate()->firstOrFail();
+            [$year, $term, $room] = $this->currentContext($request->room_id, $request->subject_id, $request->student_id);
+            $exam = Exams2::whereKey($request->exam_id)->lockForUpdate()->firstOrFail();
+            abort_unless((int)$exam->room_id === (int)$room->id && (int)$exam->lesson_id === (int)$request->subject_id
+                && (int)$exam->term_id === (int)$term->id && (int)$exam->class_id === (int)$room->class_id,403);
+            app(\App\Services\AssessmentEntryWindow::class)->assertWritable($exam);
+            $before = Exam_result2::where('exam_id',$exam->id)->where('user_id',$request->student_id)->first();
+            $changed = !$before || GradebookReadService::number($before->result) !== GradebookReadService::number($request->value);
+            $record = app(\App\Services\TeacherAssessmentService::class)->save($exam->id,$request->student_id,
+                $room->id,$request->subject_id,$request->value);
+            if ($changed) {
+                $notification = new \App\Notification();
+                $notification->forceFill(['user_id'=>Auth::id(),'student_id'=>$request->student_id,
+                    'room_id'=>$room->id,'lesson_id'=>$exam->lesson_id,'term_id'=>$term->id,
+                    'title'=>__('gradebook.saved'),'body'=>$exam->name,'type'=>(int)$exam->type === 2 ? 4 : 5])->save();
+            }
+            $read = app(GradebookReadService::class)->read($room,Lesson::findOrFail($request->subject_id),[$request->student_id],[$term->id]);
+            return response()->json(['success'=>true,'value'=>$record->result,'result_id'=>$record->id,
+                'exam_id'=>$exam->id,'components'=>$read['marks'][$request->student_id][$term->id],
+                'total'=>$read['marks'][$request->student_id][$term->id]['total'],'message'=>__('gradebook.saved')]);
+        },3);
     }
 }

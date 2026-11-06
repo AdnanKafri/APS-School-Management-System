@@ -41,7 +41,7 @@ vm.runInNewContext(script, {
 handlers.input(); handlers.change();
 assert.equal(requests, 1); assert.equal(payload.type, 'POST');
 assert.equal(payload.data._token, 'isolated-csrf'); assert.equal(payload.data.student_id, '41');
-assert.equal(total.textContent, '55'); assert.equal(input.disabled, true);
+assert.equal(total.textContent, '55'); assert.equal(input.readOnly, true); assert.equal(input.disabled, false);
 handlers.change(); assert.equal(requests, 1); // Repeated change cannot duplicate an in-flight save.
 callbacks.fail({ responseJSON: { errors: { value: ['Rejected mark'] } } }); callbacks.always();
 assert.equal(total.textContent, '55'); assert.equal(retry.hidden, false);

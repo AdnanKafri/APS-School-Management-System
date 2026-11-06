@@ -1,6 +1,11 @@
-@extends('admin.master')
-@section('content')
-<section class="card m-3" dir="rtl">
+@extends('admin.gradebook.layout')
+@section('page_title', __('gradebook.equivalence'))
+@section('page_subtitle', __('gradebook_ui.equivalence_help'))
+@section('breadcrumbs')
+    @include('admin.gradebook.partials.breadcrumbs', ['items'=>[['label'=>__('gradebook_ui.review'), 'url'=>route('admin.gradebook.view_options')], ['label'=>__('gradebook.equivalence')]]])
+@endsection
+@section('gradebook-content')
+<section class="card" dir="{{ strpos(app()->getLocale(), 'ar') === 0 ? 'rtl' : 'ltr' }}">
     <div class="card-header"><h3>{{ __('gradebook.equivalence') }}</h3></div>
     <div class="card-body">
         <p>{{ __('gradebook.equivalence_help') }}</p>

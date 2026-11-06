@@ -14,6 +14,7 @@ return [
     */
 
     'failed' => 'These credentials do not match our records.',
+    'session_expired' => 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً ثم إعادة المحاولة.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
 
 ];

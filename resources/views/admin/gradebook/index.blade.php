@@ -1,57 +1,24 @@
-@extends('admin.master')
-
+@extends('admin.gradebook.layout')
+@section('page_title', __('gradebook_ui.gradebook'))
+@section('page_subtitle', __('gradebook_ui.overview'))
 @section('breadcrumbs')
-    <nav class="breadcrumbs">
-        <a href="{{ route('dashboard.index') }}" class="breadcrumbs__item">الرئيسية</a>
-        <a class="breadcrumbs__item is-active">دفتر العلامات</a>
-    </nav>
+    @include('admin.gradebook.partials.breadcrumbs')
 @endsection
-
-@section('content')
-<div class="container-fluid mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3 class="mb-0"><i class="fas fa-book"></i> دفتر العلامات</h3>
-                </div>
-                <div class="card-body p-5">
-                    <a class="btn btn-outline-secondary mb-3" href="{{ route('admin.gradebook.equivalence') }}">{{ __('gradebook.equivalence') }}</a>
-                    @if(session('error'))
-                        <div class="alert alert-warning" role="alert">{{ session('error') }}</div>
-                    @endif
-                    <div class="row">
-                        <!-- View Option -->
-                        <div class="col-md-6 mb-4">
-                            <div class="card border-success h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-eye fa-4x text-success mb-3"></i>
-                                    <h4 class="card-title">استعراض دفتر العلامات</h4>
-                                    <p class="card-text text-muted">عرض علامات الطلاب (للقراءة فقط)</p>
-                                    <a href="{{ route('admin.gradebook.view_options') }}" class="btn btn-success btn-lg mt-3">
-                                        <i class="fas fa-arrow-left"></i> استعراض
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Edit Option (Disabled for Phase 2) -->
-                        <div class="col-md-6 mb-4">
-                            <div class="card border-secondary h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-edit fa-4x text-secondary mb-3"></i>
-                                    <h4 class="card-title">تعديل دفتر العلامات</h4>
-                                    <p class="card-text text-muted">ضبط توزيع العلامات للمواد والصفوف</p>
-                                    <a href="{{ route('admin.gradebook.settings') }}" class="btn btn-secondary btn-lg mt-3">
-                                        <i class="fas fa-cogs"></i> إعداد التوزيع
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+@section('gradebook-content')
+    @if(session('error'))<div class="alert alert-warning" role="alert">{{ session('error') }}</div>@endif
+    <div class="gb-entry-grid">
+        <section class="gb-entry">
+            <i class="fas fa-table" aria-hidden="true"></i>
+            <h2>{{ __('gradebook_ui.review') }}</h2>
+            <p>{{ __('gradebook_ui.review_help') }}</p>
+            <a class="btn btn-primary" href="{{ route('admin.gradebook.view_options') }}">{{ __('gradebook_ui.open') }}</a>
+        </section>
+        <section class="gb-entry">
+            <i class="fas fa-sliders-h" aria-hidden="true"></i>
+            <h2>{{ __('gradebook_ui.settings') }}</h2>
+            <p>{{ __('gradebook_ui.settings_help') }}</p>
+            <a class="btn btn-outline-primary" href="{{ route('admin.gradebook.settings') }}">{{ __('gradebook_ui.settings') }}</a>
+        </section>
     </div>
-</div>
+    <div class="mt-3"><a class="btn btn-secondary" href="{{ route('admin.gradebook.equivalence') }}">{{ __('gradebook.equivalence') }}</a></div>
 @endsection

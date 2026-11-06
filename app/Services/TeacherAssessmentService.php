@@ -41,6 +41,12 @@ class TeacherAssessmentService
             $exam = Exams2::whereKey($examId)->lockForUpdate()->firstOrFail();
             abort_unless((int) $exam->room_id === (int) $roomId && (int) $exam->lesson_id === (int) $lessonId, 403);
             $this->context($exam, $studentId);
+            // Use the same subject lock as operational distribution changes.
+            \App\Lesson::whereKey($exam->lesson_id)->lockForUpdate()->firstOrFail();
+            // Automated correction has a separate contract. Traditional marks share one window.
+            if ((int) $exam->is_file === 1 && strpos((string) $exam->name, 'Dynamic_Section_') !== 0) {
+                app(AssessmentEntryWindow::class)->assertWritable($exam);
+            }
             app(AssessmentContinuityService::class)->assertWritable($exam, $studentId);
             AssessmentResultSafety::validateMark($value, $exam->mark);
             $rows = Exam_result2::where('exam_id', $exam->id)->where('user_id', $studentId)->lockForUpdate()->get();
@@ -54,7 +60,10 @@ class TeacherAssessmentService
             if ($record) {
                 AssessmentResultSafety::assertResultContext($record, $exam);
             }
-            $record = $record ?: new Exam_result2();
+            if (!$record) {
+                $record = new Exam_result2();
+                $record->show_result = $exam->has_traditional == 0 ? 1 : 0;
+            }
             $difference = (float) $exam->mark - (float) $value;
             $medal = $difference == 0 ? '1' : (in_array($difference, [1, 2, 3]) ? '2' : (in_array($difference, [4, 5, 6]) ? '3' : null));
             $record->forceFill([
@@ -81,7 +90,12 @@ class TeacherAssessmentService
             if ($records->groupBy('user_id')->contains(function ($rows) { return $rows->count() > 1; })) {
                 AssessmentResultSafety::reject('ambiguous_result');
             }
-            $removed = $records->whereIn('user_id', $current)->whereNotIn('user_id', $selected);
+            // Traditional participation is optional and additive. Keep every original
+            // result/submission, even when an older caller omits an enrolled student.
+            $traditional = (int) $exam->is_file === 1 && in_array((int) $exam->type, [1, 2], true)
+                && strpos((string) $exam->name, 'Dynamic_Section_') !== 0
+                && (int) \App\User::whereKey($exam->user_id)->value('type') === 2;
+            $removed = $traditional ? collect() : $records->whereIn('user_id', $current)->whereNotIn('user_id', $selected);
             foreach ($removed as $record) {
                 if (AssessmentResultSafety::hasEarnedData($record)
                     || DB::table('exams_files')->where('exam_id', $exam->id)->where('student_id', $record->user_id)->exists()) {

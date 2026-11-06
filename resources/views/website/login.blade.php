@@ -56,7 +56,7 @@
 
                         @if ($errors->any())
                             <div class="login-modern-alert login-modern-alert--error">
-                                {{ $copy['validation'] }}
+                                {{ $errors->has('session') ? $errors->first('session') : $copy['validation'] }}
                             </div>
                         @endif
 

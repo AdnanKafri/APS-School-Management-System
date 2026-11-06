@@ -431,12 +431,14 @@ School
 
     <link rel="stylesheet" href="{{ asset('student/assets/css/demo_1/showcontent_style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/lesson-workspace.css') }}?v=20261106-layout2">
+    <link rel="stylesheet" href="{{ asset('student/assets/css/lesson-content-cards.css') }}?v=20261106-responsive3">
 
      @endsection
 @section('content')
 
 
-<div class="main-panel sp-content-page">
+<div class="main-panel sp-content-page lc-page lc-lesson-page">
     @if (session()->has('success'))
 
     <script>
@@ -545,26 +547,30 @@ School
    </ul>
     <div class="content-wrapper pb-0">
 
-      <div class="container">
-          <div class="row">
+      <div class="container slc-workspace">
+          <div class="row slc-workspace-row">
               <div class="col-md-12">
                   <!--tablist-->
-                  <div class="container">
-                      <div class="row">
-                          <div class="col-md-6">
+                  <div class="container slc-workspace-inner">
+                      <div class="row slc-workspace-row">
+                          <div class="col-12 lc-tabs-column">
                               <div class="tab" role="tabpanel">
                                   <!-- Nav tabs -->
-                                  <ul class="nav nav-tabs" role="tablist">
-                                      <li role="presentation" class="active"><a href="#Section1" aria-controls="book" role="tab" data-toggle="tab"><i class="fa fa-globe"></i> المحتوى العلمي</a></li>
-                                      <li role="presentation"><a href="#Section2" aria-controls="files" role="tab" data-toggle="tab"><i class="fa fa-file"></i> الملفات</a></li>
-                                      <li role="presentation"><a href="#Section3" aria-controls="homework" role="tab" data-toggle="tab"><i class="fa fa-tasks"></i> الوظائف</a></li>
-                                      <li role="presentation"><a href="#Section4" aria-controls="exams" role="tab" data-toggle="tab"><i class="fa fa-question"></i> الاختبارات</a></li>
-                                      <li role="presentation"><a href="#Section5" aria-controls="audio" role="tab" data-toggle="tab"><i class="fa fa-file-audio-o"></i> مقاطع الصوت</a></li>
-                                      <li role="presentation"><a href="#Section6" aria-controls="video" role="tab" data-toggle="tab"><i class="fa fa-youtube-play"></i> مقاطع الفيديو</a></li>
+                                  <ul class="nav nav-tabs lc-tabs" role="tablist">
+                                      <li role="presentation"><a href="#Section1" id="lc-tab-Section1" aria-controls="Section1" aria-selected="false" tabindex="-1" role="tab" data-toggle="tab"><i class="fa fa-globe"></i> المحتوى العلمي</a></li>
+                                      <li role="presentation" class="active"><a href="#Section2" id="lc-tab-Section2" class="active" aria-controls="Section2" aria-selected="true" tabindex="0" role="tab" data-toggle="tab"><i class="fa fa-file"></i> الملفات</a></li>
+                                      <li role="presentation"><a href="#Section3" id="lc-tab-Section3" aria-selected="false" tabindex="-1" aria-controls="Section3" role="tab" data-toggle="tab"><i class="fa fa-tasks"></i> الوظائف</a></li>
+                                      <li role="presentation"><a href="#Section4" id="lc-tab-Section4" aria-selected="false" tabindex="-1" aria-controls="Section4" role="tab" data-toggle="tab"><i class="fa fa-question"></i> الاختبارات</a></li>
+                                      <li role="presentation"><a href="#Section5" id="lc-tab-Section5" aria-selected="false" tabindex="-1" aria-controls="Section5" role="tab" data-toggle="tab"><i class="fa fa-file-audio-o"></i> مقاطع الصوت</a></li>
+                                      <li role="presentation"><a href="#Section6" id="lc-tab-Section6" aria-selected="false" tabindex="-1" aria-controls="Section6" role="tab" data-toggle="tab"><i class="fa fa-youtube-play"></i> مقاطع الفيديو</a></li>
+                                      <li role="presentation"><a href="#Section7" id="lc-tab-Section7" aria-controls="Section7" aria-selected="false" tabindex="-1" role="tab" data-toggle="tab"><i class="fa fa-folder-open" aria-hidden="true"></i> ملفات الإشراف</a></li>
                                   </ul>
                                   <!-- Tab panes -->
                                   <div class="tab-content tabs">
-                                      <div role="tabpanel" class="tab-pane active" id="Section1">
+                                      <div role="tabpanel" class="tab-pane fade" id="Section1" aria-labelledby="lc-tab-Section1">
+                                          @if (empty($lesson->books) || count($lesson->books) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                           <!--h3 style="text-align: center;">المحتوى العلمي</h3-->
                                           <!--start content-->
                                                <!--new cards-->
@@ -595,14 +601,7 @@ School
                                   @else
                                   href=" {{ asset('storage/'.$book->value) }}"
                                   @endif
-                                  class=" " title="عرض">
-                                  <button class="learn-more">
-                                    <span class="circle" aria-hidden="true">
-                                    <span class="icon arrow"></span>
-                                    </span>
-                                    <span class="button-text">استعراض المحتوى</span>
-                                  </button>
-                                  </a>
+                                  title="عرض" class="slc-content-action">استعراض المحتوى</a>
 
 
                                 </div>
@@ -621,7 +620,10 @@ School
                         <!--end new cards-->
                                           <!--end content-->
                                       </div>
-                                      <div role="tabpanel" class="tab-pane fade" id="Section2">
+                                      <div role="tabpanel" class="tab-pane active" id="Section2" aria-labelledby="lc-tab-Section2">
+                                          @if (empty($lecture_others) || count($lecture_others) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                           <!--h3 style="text-align: center;">الملفات </h3-->
                                           <div class="container" style="direction: ltr;">
                                               <div class="row" style="justify-content: center; margin:auto">
@@ -629,8 +631,9 @@ School
                                                 <!--start card tow-->
                                                 @if(isset($lecture_others))
                                                 @foreach ($lecture_others as $lecture_other )
-                                                {{-- <a href="#"><img src="../img/icons8-export-pdf-100.png" alt=""></a> --}}
-                                                 @if(isset($lecture_other) &&  isset($lecture_other->addition))
+                                                 @if (!empty($lecture_other->upload_request_hash))
+                                                     @include('students.partials.private_lesson_content', ['content'=>$lecture_other])
+                                                 @elseif(isset($lecture_other) &&  isset($lecture_other->addition))
                                                 <div class="col-md-4  step1">
                                                   <div class="row box shape-1 animated bounceInLeft">
                                                     <div class="col-md-4  shape">
@@ -644,14 +647,7 @@ School
                                                     </div>
                                                     <div class="col-md-8 ">
                                                       <p> {{ $lecture_other->name_addition }}</p>
-                                                      <a href="{{ asset('storage/'.$lecture_other->addition) }}">
-                                                          <button class="learn-more">
-                                                              <span class="circle" aria-hidden="true">
-                                                              <span class="icon arrow"></span>
-                                                              </span>
-                                                              <span class="button-text">استعراض المحتوى</span>
-                                                            </button>
-                                                      </a>
+                                                      <a href="{{ asset('storage/'.$lecture_other->addition) }}" class="slc-content-action">استعراض المحتوى</a>
 
                                                     </div>
 
@@ -671,14 +667,7 @@ School
                                                     </div>    
                                                     <div class="col-md-8 ">
                                                       <p> {{ $lecture_other->name_addition }}</p>
-                                                      <a target=_blank href="{{$lecture_other->addition_link}}">
-                                                          <button class="learn-more">
-                                                              <span class="circle" aria-hidden="true">
-                                                              <span class="icon arrow"></span>
-                                                              </span>
-                                                              <span class="button-text">استعراض المحتوى</span>
-                                                            </button>
-                                                      </a>
+                                                      <a target=_blank href="{{$lecture_other->addition_link}}" class="slc-content-action">استعراض المحتوى</a>
 
                                                     </div>
 
@@ -696,7 +685,10 @@ School
                                                               <!--end content-->
 
                                       </div>
-                                      <div role="tabpanel" class="tab-pane fade" id="Section3">
+                                      <div role="tabpanel" class="tab-pane fade" id="Section3" aria-labelledby="lc-tab-Section3">
+                                          @if (empty($lecture_tests) || count($lecture_tests) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                           <!--h3 style="text-align: center;">الوظائف</h3-->
                                            <!--new cards for homework card-->
                                                     <div class="container">
@@ -989,7 +981,10 @@ School
 
                                           <!--end content of homework-->
                                       </div>
-                                      <div role="tabpanel" class="tab-pane fade" id="Section4">
+                                      <div role="tabpanel" class="tab-pane fade" id="Section4" aria-labelledby="lc-tab-Section4">
+                                          @if (empty($lecture_quizes) || count($lecture_quizes) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                           <!--h3 style="text-align: center;">الاختبارات</h3-->
 
                             <div class="container">
@@ -1070,7 +1065,10 @@ School
                                           <!--end content of quize-->
                                       </div>
 
-                                      <div role="tabpanel" class="tab-pane fade" id="Section5">
+                                      <div role="tabpanel" class="tab-pane fade" id="Section5" aria-labelledby="lc-tab-Section5">
+                                          @if (empty($lecture_audios) || count($lecture_audios) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                           <!--h3 style="text-align: center;">مقاطع الصوت </h3-->
                                           <!--content of audio-->
                                           <div class="container" style="direction: ltr;">
@@ -1121,7 +1119,10 @@ School
                                           <!--end content of audio-->
                                       </div>
 
-                                      <div role="tabpanel" class="tab-pane fade" id="Section6">
+                                      <div role="tabpanel" class="tab-pane fade" id="Section6" aria-labelledby="lc-tab-Section6">
+                                          @if (empty($lecture_videos) || count($lecture_videos) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                           <!--h3 style="text-align: center;">مقاطع الفيديو</h3-->
                                           <!--content of video-->
                                                <!--video content-->
@@ -1170,7 +1171,10 @@ School
                          <!--end video content-->
                                           <!--end content of video-->
                                       </div>
-                                      <div role="tabpanel" class="tab-pane fade" id="Section7">
+                                      <div role="tabpanel" class="tab-pane fade" id="Section7" aria-labelledby="lc-tab-Section7">
+                                          @if (empty($super_file) || count($super_file) === 0)
+                                              <p class="lc-empty" role="status">لا يوجد محتوى في هذا القسم حالياً.</p>
+                                          @endif
                                         <!--h3 style="text-align: center;">المحتوى العلمي</h3-->
                                         <!--start content-->
                                              <!--new cards-->
@@ -1203,14 +1207,7 @@ School
                                 
                                 href=" {{ asset('storage/'.$file->file) }}"
                               
-                                class=" " title="عرض">
-                                <button class="learn-more">
-                                  <span class="circle" aria-hidden="true">
-                                  <span class="icon arrow"></span>
-                                  </span>
-                                  <span class="button-text">استعراض المحتوى</span>
-                                </button>
-                                </a>
+                                title="عرض" class="slc-content-action">استعراض المحتوى</a>
 
 
                               </div>
@@ -1374,10 +1371,9 @@ top: -30px;">
 </div>
 	@endsection
 	@section('js')
-  <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-   
-    <script>
+<script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106"></script>
+
+  <script>
 
       $(document).ready(function(){
       $(document).on("click", ".homeworks", function (event) {

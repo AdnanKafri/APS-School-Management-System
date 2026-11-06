@@ -1,0 +1,9 @@
+.lc-private-content .lc-content-note { white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 12px; padding: 12px; border-radius: 9px; background: #f4f7fb; line-height: 1.8; }
+.lc-private-content .lc-attachment-list { list-style: none; padding: 0; margin-block: 16px; }
+.lc-private-content .lc-attachment-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-block: 12px; border-bottom: 1px solid #dce5ee; }
+.lc-private-content .lc-attachment-list bdi { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.lc-private-content .lc-attachment-list form { margin: 0; }
+.lc-private-content .lc-content-edit { margin-top: 16px; }
+.lc-private-content summary { cursor: pointer; min-height: 44px; line-height: 1.8; }
+.lc-private-content label { display: block; margin-block: 12px 6px; }
+.lc-private-content .form-control { min-width: 0; max-width: 100%; font: inherit; }

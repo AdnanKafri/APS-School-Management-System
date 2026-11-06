@@ -29,10 +29,13 @@
           }
       }
     </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/lesson-workspace.css') }}?v=20261106-layout2">
+    <link rel="stylesheet" href="{{ asset('teachers_2/assets/css/lesson-upload-selection.css') }}?v=20261106">
 @endsection
 
 
 @section('content')
+@php($privateLessonContent = app(\App\Services\LessonContentFeature::class)->enabled())
 @if (session()->has('Add'))
 <script>
     window.onload = function () {
@@ -43,23 +46,13 @@
     }
 </script>
 @endif
-@if ($errors->any())
-
-        @foreach ($errors->all() as $error)
-        {{-- <li>{{ $error }}</li> --}}
-        <script>
-            window.onload = function() {
-                notif({
-                    msg: 'يرجى  ترفيع   الفيديو بالشروط المحددة ' ,
-                    type: "error"
-                })
-            }
-
-        </script>
-        @endforeach
-
-@endif
-<div class="main-panel" style="background: #f8f9fb;">
+<div class="main-panel lc-page lc-lesson-page" style="background: #f8f9fb;">
+    @if ($errors->any() || session('message'))
+        <div class="alert alert-danger m-3" role="alert" dir="rtl">
+            @if (session('message'))<p class="mb-0">{{ session('message') }}</p>@endif
+            @if ($errors->any())<ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>@endif
+        </div>
+    @endif
     <ul class="breadcrumbs" style="padding-bottom: 7px;
     padding-top: 11px;">
       <li class="li"><a href="{{ route('dashboard.teacher') }}">الصفحة الرئيسية</a></li>
@@ -77,7 +70,7 @@
                 @endif
        <div class="container">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-12 lc-tabs-column">
 
 
             <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
@@ -93,7 +86,7 @@
                 <input type="hidden" value="7" id="tab4" name="type">
                 <input type="hidden" value="4" id="tab5" name="type"-->
                     <!-- Nav tabs -->
-                    <ul class="nav nav-tabs" role="tablist">
+                    <ul class="nav nav-tabs lc-tabs" role="tablist">
                         <li role="presentation" class="active">
 
                             <a href="#Section1"  role="tab" data-toggle="tab">اضافة ملف</a>
@@ -124,7 +117,7 @@
                     <div class="tab-content tabs">
                         <div role="tabpanel" class="tab-pane active" id="Section1">
 
-                            <form action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
+                            <form class="lc-entry-form" action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data" @if ($privateLessonContent) data-lesson-manage @endif>
                                 @csrf
                                 <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
                                 <input type="hidden" name="lesson_id" value="{{ $lecture_id->lesson->id }}">
@@ -132,6 +125,10 @@
                                 <input type="hidden" name="room_id" value="{{ $room_id }}">
                                 <input type="hidden" name="lecture_id" value="{{ $lecture_id->id }}">
                                 <input hidden type="text" name="type" value="4" >
+                                @if ($privateLessonContent)
+                                    <input type="hidden" name="upload_token" value="{{ old('upload_token', (string)\Illuminate\Support\Str::uuid()) }}">
+                                    <input type="hidden" name="attachment_count" value="">
+                                @endif
                             <div class="container">
                                <div class="row">
                                  <!--start card-->
@@ -139,8 +136,7 @@
                                   <div class="card13">
                                      <span style="color: #444bba;text-align: center;"></span>
                                     <div class="Group" style="justify-content: right;">
-                                       <label style="text-align: right;">اسم الملف</label>
-                                       <input name="name_addition" type="text" class="form-control" placeholder="ادخل اسم الملف ">
+                                       <label for="lc-name_addition">اسم الملف</label><input id="lc-name_addition" name="name_addition" type="text" class="form-control" placeholder="ادخل اسم الملف " @if ($privateLessonContent) maxlength="500" value="{{ old('name_addition') }}" @endif>
                                     </div>
                                   </div>
 
@@ -150,31 +146,38 @@
                                   <div class="card13">
                                      <span style="color: #444bba;text-align: center;"></span>
                                     <div class="Group" style="justify-content: right;">
-                                       <label style="text-align: right;">اضافة رابط خارجي</label>
-                                       <input name="addition_link" type="text" class="form-control" placeholder="اضافة رابط خارجي">
+                                       <label for="lc-addition_link">اضافة رابط خارجي</label><input id="lc-addition_link" name="addition_link" inputmode="url" dir="ltr" type="text" class="form-control" placeholder="اضافة رابط خارجي" @if ($privateLessonContent) maxlength="2048" value="{{ old('addition_link') }}" @endif>
                                     </div>
                                   </div>
 
                                  </div>
                                  <!--end card-->
-                                 <div class="col-md-6 newrow">
+                                 <div class="col-md-6 newrow lc-upload-field" data-files-label="الملفات المحددة:" data-remove-label="إزالة" data-reselect-label="تعذر إزالة الملف. يرجى إعادة اختيار الملفات المطلوبة.">
                                     <div class="card13">
                                         <span style="color: #444bba;text-align: center;"></span>
                                           <div class="Group" style="justify-content: right;">
                                              <label style="text-align: right;">تحميل ملف</label>
-                                             <label for="file-input" class="drop-container">
+                                             <label for="lc-addition" class="drop-container">
                                                 <span class="drop-title">
                                                    <br>
                                                    <br>
                                                 </span>
-                                                <input type="file" name="addition"  id="file-input">
+                                                <input type="file" data-lesson-file-picker name="{{ $privateLessonContent ? 'attachments[]' : 'addition' }}" @if ($privateLessonContent) multiple data-max-files="5" @endif id="lc-addition" aria-label="رفع ملف">
                                               </label>
+                                             @if ($privateLessonContent)<small>خمسة ملفات كحد أقصى، 10 MiB لكل ملف و25 MiB للمجموع.</small>@endif
 
                                           </div>
                                         </div>
                                  </div>
+                                @if ($privateLessonContent)
+                                    <div class="newrow lc-upload-field">
+                                        <label for="lc-content-note">ملاحظات للطلاب (اختياري)</label>
+                                          <textarea class="form-control" id="lc-content-note" name="note" rows="5" maxlength="2000" aria-describedby="lc-content-note-help">{{ old('note') }}</textarea>
+                                          <small id="lc-content-note-help">2000 حرف كحد أقصى. تظهر الملاحظات للطلاب المصرح لهم.</small>
+                                    </div>
+                                @endif
                                </div><!--end row-->
-                              <div class="row" style="justify-content: center;padding-top: 20px;">
+                              <div class="row lc-form-actions" style="justify-content: center;padding-top: 20px;">
                                  <div class="col-md-2">
                                   <button class="btn" type="submit">
                                     <strong>حفظ </strong>
@@ -218,7 +221,7 @@
                         </div>
                         <div role="tabpanel" class="tab-pane fade" id="Section3">
 
-                            <form action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
+                            <form class="lc-entry-form" action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
                                 <input type="hidden" name="lesson_id" value="{{ $lecture_id->lesson->id }}">
@@ -233,8 +236,7 @@
                                  <div class="card13">
                                     <span style="color: #444bba;text-align: center;"></span>
                                    <div class="Group" style="justify-content: right;">
-                                      <label style="text-align: right;">اسم مقطع الصوت</label>
-                                      <input  name="name_audio" type="text" class="form-control" placeholder="ادخل اسم الملف ">
+                                      <label for="lc-name_audio">اسم مقطع الصوت</label><input id="lc-name_audio"  name="name_audio" type="text" class="form-control" placeholder="ادخل اسم الملف ">
                                    </div>
                                  </div>
 
@@ -244,31 +246,30 @@
                                  <div class="card13">
                                     <span style="color: #444bba;text-align: center;"></span>
                                    <div class="Group" style="justify-content: right;">
-                                      <label style="text-align: right;">اضافة رابط خارجي</label>
-                                      <input name="audio_link" type="text" class="form-control" placeholder="اضافة رابط خارجي">
+                                      <label for="lc-audio_link">اضافة رابط خارجي</label><input id="lc-audio_link" name="audio_link" inputmode="url" dir="ltr" type="text" class="form-control" placeholder="اضافة رابط خارجي">
                                    </div>
                                  </div>
 
                                 </div>
                                 <!--end card-->
-                                <div class="col-md-6 newrow">
+                                <div class="col-md-6 newrow lc-upload-field" data-files-label="الملفات المحددة:" data-remove-label="إزالة" data-reselect-label="تعذر إزالة الملف. يرجى إعادة اختيار الملفات المطلوبة.">
                                     <div class="card13">
                                         <span style="color: #444bba;text-align: center;"></span>
                                           <div class="Group" style="justify-content: right;">
                                              <label style="text-align: right;">تحميل ملف</label>
-                                             <label for="file-input" class="drop-container">
+                                             <label for="lc-audio_file" class="drop-container">
                                                 <span class="drop-title">
                                                    <br>
                                                    <br>
                                                 </span>
-                                                <input type="file" name="audio_file"    id="file-input">
+                                                <input type="file" data-lesson-file-picker name="audio_file"    id="lc-audio_file" aria-label="تحميل مقطع صوتي">
                                               </label>
 
                                           </div>
                                         </div>
                                 </div>
                               </div><!--end row-->
-                             <div class="row" style="justify-content: center;padding-top: 20px;">
+                             <div class="row lc-form-actions" style="justify-content: center;padding-top: 20px;">
                                 <div class="col-md-3">
                                  <button class="btn" type="submit">
                                    <strong>حفظ </strong>
@@ -290,7 +291,7 @@
                         </div>
                         <div role="tabpanel" class="tab-pane fade" id="Section4">
 
-                            <form action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
+                            <form class="lc-entry-form" action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
                                 <input type="hidden" name="lesson_id" value="{{ $lecture_id->lesson->id }}">
@@ -305,8 +306,7 @@
                                <div class="card13">
                                   <span style="color: #444bba;text-align: center;"></span>
                                  <div class="Group" style="justify-content: right;">
-                                    <label style="text-align: right;">عنوان الفيديو</label>
-                                    <input type="text" name="name_video"  class="form-control" placeholder="ادخل اسم الملف ">
+                                    <label for="lc-name_video">عنوان الفيديو</label><input id="lc-name_video" type="text" name="name_video"  class="form-control" placeholder="ادخل اسم الملف ">
                                  </div>
                                </div>
 
@@ -316,14 +316,13 @@
                                <div class="card13">
                                   <span style="color: #444bba;text-align: center;"></span>
                                  <div class="Group" style="justify-content: right;">
-                                    <label style="text-align: right;">اضافة رابط خارجي</label>
-                                    <input type="text" name="video"  class="form-control" placeholder="اضافة رابط خارجي">
+                                    <label for="lc-video">اضافة رابط خارجي</label><input id="lc-video" type="text" name="video" inputmode="url" dir="ltr"  class="form-control" placeholder="اضافة رابط خارجي">
                                  </div>
                                </div>
 
                               </div>
                               <!--end card-->
-                              <div class="col-md-6 newrow">
+                              <div class="col-md-6 newrow lc-upload-field" data-files-label="الملفات المحددة:" data-remove-label="إزالة" data-reselect-label="تعذر إزالة الملف. يرجى إعادة اختيار الملفات المطلوبة.">
                                 <div class="card13">
                                     <span style="color: #444bba;text-align: center;"></span>
                                       <div class="Group" style="justify-content: right;">
@@ -332,19 +331,19 @@
                                             color: #8080805e;
                                             font-size: small;">لايمكن تحميل اكثر من 50M</span>
                                          </label>
-                                         <label for="file-input" class="drop-container">
+                                         <label for="lc-video_in" class="drop-container">
                                             <span class="drop-title">
                                                <br>
                                                <br>
                                             </span>
-                                            <input type="file" name="video_in"    id="file-input">
+                                            <input type="file" data-lesson-file-picker name="video_in"    id="lc-video_in" aria-label="تحميل مقطع فيديو">
                                           </label>
 
                                       </div>
                                     </div>
                               </div>
                             </div><!--end row-->
-                           <div class="row" style="justify-content: center;padding-top: 20px;">
+                           <div class="row lc-form-actions" style="justify-content: center;padding-top: 20px;">
                               <div class="col-md-3">
                                <button class="btn" type="submit">
                                  <strong>حفظ </strong>
@@ -366,7 +365,7 @@
                       </div>
                       <div role="tabpanel" class="tab-pane fade" id="Section5">
 
-                        <form action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
+                        <form class="lc-entry-form" action="{{ route('dashboard.store_items') }}" method="post" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
                             <input type="hidden" name="lesson_id" value="{{ $lecture_id->lesson->id }}">
@@ -381,8 +380,7 @@
                              <div class="card13">
                                 <span style="color: #444bba;text-align: center;"></span>
                                <div class="Group" style="justify-content: right;">
-                                  <label style="text-align: right;">اسم الوظيفة</label>
-                                  <input name="namehomework"  type="text" class="form-control" placeholder="ادخل اسم الملف ">
+                                  <label for="lc-namehomework">اسم الوظيفة</label><input id="lc-namehomework" name="namehomework"  type="text" class="form-control" placeholder="ادخل اسم الملف ">
                                </div>
                              </div>
 
@@ -392,8 +390,7 @@
                              <div class="card13">
                                 <span style="color: #444bba;text-align: center;"></span>
                                <div class="Group" style="justify-content: right;">
-                                  <label style="text-align: right;">اضافة رابط خارجي</label>
-                                  <input name="test_link" type="text" class="form-control" placeholder="اضافة رابط خارجي">
+                                  <label for="lc-test_link">اضافة رابط خارجي</label><input id="lc-test_link" name="test_link" type="text" class="form-control" placeholder="اضافة رابط خارجي">
                                </div>
                              </div>
 
@@ -404,8 +401,7 @@
                               <div class="card13">
                                  <span style="color: #444bba;text-align: center;"></span>
                                 <div class="Group" style="justify-content: right;">
-                                   <label style="text-align: right;">بداية الوقت</label>
-                                   <input  name="test_start_time" type="datetime-local" required  class="form-control dateinput" placeholder="اضافة رابط خارجي">
+                                   <label for="lc-test_start_time">بداية الوقت</label><input id="lc-test_start_time"  name="test_start_time" type="datetime-local" required  class="form-control dateinput" placeholder="اضافة رابط خارجي">
                                 </div>
                               </div>
 
@@ -416,8 +412,7 @@
                                 <div class="card13">
                                    <span style="color: #444bba;text-align: center;"></span>
                                   <div class="Group" style="justify-content: right;">
-                                     <label style="text-align: right;">نهاية الوقت</label>
-                                     <input name="test_end_time" type="datetime-local"  required  class="form-control dateinput" placeholder="اضافة رابط خارجي">
+                                     <label for="lc-test_end_time">نهاية الوقت</label><input id="lc-test_end_time" name="test_end_time" type="datetime-local"  required  class="form-control dateinput" placeholder="اضافة رابط خارجي">
                                   </div>
                                 </div>
 
@@ -427,23 +422,22 @@
                              <div class="card13">
                                 <span style="color: #444bba;text-align: center;"></span>
                                <div class="Group" style="justify-content: right;">
-                                  <label style="text-align: right;">علامة الوظيفة  </label>
-                                  <input name="mark" type="number" inputmode="decimal" class="form-control" placeholder="علامة الوظيفة ">
+                                  <label for="lc-mark">علامة الوظيفة  </label><input id="lc-mark" name="mark" type="number" inputmode="decimal" class="form-control" placeholder="علامة الوظيفة ">
                                </div>
                              </div>
 
                             </div>
-                               <div class="col-md-6 newrow">
+                               <div class="col-md-6 newrow lc-upload-field" data-files-label="الملفات المحددة:" data-remove-label="إزالة" data-reselect-label="تعذر إزالة الملف. يرجى إعادة اختيار الملفات المطلوبة.">
                                 <div class="card13">
                                 <span style="color: #444bba;text-align: center;"></span>
                                   <div class="Group" style="justify-content: right;">
                                      <label style="text-align: right;">تحميل ملف</label>
-                                     <label for="file-input" class="drop-container">
+                                     <label for="lc-test" class="drop-container">
                                         <span class="drop-title">
                                            <br>
                                            <br>
                                         </span>
-                                        <input type="file" name="test"  id="file-input">
+                                        <input type="file" data-lesson-file-picker name="test"  id="lc-test" aria-label="تحميل ملف الوظيفة">
                                       </label>
 
                                   </div>
@@ -453,18 +447,18 @@
                              <form class="form">
                                <span class="form-title" style="text-align: right;">تحميل ملف</span>
 
-                            <label for="file-input" class="drop-container">
+                            <label for="lc-test" class="drop-container">
                                <span class="drop-title">
                                   <br>
                                   <br>
                                </span>
-                               <input type="file" name="test"  accept="file_extension/*"  id="file-input">
+                               <input type="file" name="test"  accept="file_extension/*"  id="lc-test" aria-label="تحميل ملف الوظيفة">
                              </label>
                              </form>
                             </div-->
 
                           </div><!--end row-->
-                         <div class="row" style="justify-content: center;padding-top: 20px;">
+                         <div class="row lc-form-actions" style="justify-content: center;padding-top: 20px;">
                             <div class="col-md-3">
                              <button class="btn" type="submit">
                                <strong>حفظ </strong>
@@ -500,6 +494,8 @@
 
 @endsection
 @section('js')
-<script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261106-groups"></script>
+<script src="{{ asset('teachers_2/assets/js/lesson-content-management.js') }}?v=20261106"></script>
+<script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106-selection"></script>
+
 @endsection

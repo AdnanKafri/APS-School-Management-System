@@ -38,6 +38,10 @@
                 </div>
             @endunless
 
+            @if (isset($gradesVisible) && !$gradesVisible)
+                <div class="sp-alert sp-alert--warning">{{ __('student_assessments.hidden') }}</div>
+            @endif
+
             <section class="sp-grid sp-grid--4 sp-summary-grid" aria-label="ملخص السجل">
                 <div class="sp-summary-card"><span class="sp-icon-box"><i class="mdi mdi-book-education-outline"></i></span><span><strong>{{ count($markRows) }}</strong><small>سجلات المواد</small></span></div>
                 <div class="sp-summary-card"><span class="sp-icon-box sp-icon-box--blue"><i class="mdi mdi-clipboard-check-outline"></i></span><span><strong>{{ count($assessmentRows) }}</strong><small>التقييمات</small></span></div>

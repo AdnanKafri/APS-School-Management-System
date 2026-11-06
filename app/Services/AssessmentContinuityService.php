@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Exams2;
 use App\Exam_result2;
-use App\Student;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -37,8 +36,9 @@ class AssessmentContinuityService
             } catch (ValidationException $e) { $valid = false; }
         }
         // Never widen historical reads: carry only into the student's operational placement.
-        $eligible = Student::currentMembership($member->year_id, $target->room_id)
-            ->whereIn('students.id', $studentIds)->pluck('students.id')->all();
+        $entryContexts = app(CurrentStudentMembership::class)->assessmentEntryContexts(
+            $studentIds, $member->year_id, $target->room_id);
+        $eligible = array_keys($entryContexts);
         $placements = DB::table('student_academic_placements')->whereIn('student_id', $eligible)
             ->where('year_id', $member->year_id)->where('class_id', $member->class_id)->get()->groupBy('student_id');
         $results = Exam_result2::whereIn('exam_id', $members->pluck('exam_id'))
@@ -47,9 +47,10 @@ class AssessmentContinuityService
         foreach ($eligible as $studentId) {
             $state = ['state' => 'missing', 'value' => null, 'identity' => $member->identity];
             $history = $placements->get($studentId, collect());
-            $active = $history->where('status', 'active')->where('room_id', $target->room_id);
-            if (!$valid || $active->count() !== 1) {
-                $answer[$studentId] = array_merge($state, ['state' => 'conflict']);
+            $current = $entryContexts[$studentId] ?? null;
+            if (!$valid || !$current) {
+                $answer[$studentId] = array_merge($state, ['state' => 'conflict',
+                    'reason' => !$valid ? 'assessment_context' : 'placement_context']);
                 continue;
             }
             $earned = [];
@@ -67,7 +68,6 @@ class AssessmentContinuityService
                     return $placement->effective_from && ($placement->status === 'active'
                         || ($placement->effective_to && $placement->effective_to >= $placement->effective_from));
                 });
-                if ($prior->isEmpty()) { $conflict = true; continue; }
                 // Legacy MySQL returns this column as Created_at; Eloquent's
                 // lowercase timestamp accessor does not resolve that attribute.
                 $recordedAt = $row->getRawOriginal('created_at') ?: $row->getRawOriginal('Created_at');
@@ -78,12 +78,25 @@ class AssessmentContinuityService
                         return $time >= $placement->effective_from
                             && (!$placement->effective_to || $time <= $placement->effective_to);
                     });
-                    if ($intervals->count() !== 1) { $conflict = true; continue; }
-                } elseif ($prior->count() !== 1) {
+                    if ($current['legacy_projection']) {
+                        $intervals = $intervals->reject(function ($placement) use ($current, $recordedAt) {
+                            return (int) $placement->id === (int) $current['placement_id']
+                                && (string) $recordedAt >= $current['effective_from'];
+                        });
+                    }
+                    // A proven operational projection can own NEW original results
+                    // without rewriting or pretending to close its stale history row.
+                    $projected = $current['legacy_projection']
+                        && (int) $definition->room_id === (int) $current['room_id']
+                        && (string) $recordedAt >= $current['effective_from']
+                        && (!$current['effective_to'] || (string) $recordedAt <= $current['effective_to']);
+                    if ($intervals->count() + (int) $projected !== 1) { $conflict = true; continue; }
+                } elseif ($prior->count() !== 1 || ($current['legacy_projection']
+                    && in_array((int) $definition->room_id, [(int) $current['room_id'], (int) $current['stored_room_id']], true))) {
                     $conflict = true; continue;
                 }
                 $carried = (int) $examId !== (int) $target->id
-                    || ($recordedAt && (string) $recordedAt < $active->first()->effective_from);
+                    || ($recordedAt && (string) $recordedAt < $current['effective_from']);
                 $earned[] = array_merge($state, [
                     'state' => $carried ? 'carried' : 'current', 'value' => $value,
                     'result_id' => $row->id, 'exam_id' => $definition->id,
