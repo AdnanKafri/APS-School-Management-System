@@ -176,6 +176,51 @@ class LessonWorkspaceViewTest extends TestCase
         foreach (['https://example.test/book','original/one.pdf','original/audio.mp3','original/video.mp4'] as $url) $this->assertStringContainsString($url,$html);
     }
 
+    public function test_teacher_lesson_empty_state_is_contained_and_absent_from_populated_lists()
+    {
+        foreach ([0, 1, 3] as $count) {
+            $data = $this->data();
+            $data['lesson_id'] = 409;
+            $data['class'] = (object)['id' => 2];
+            $data['lectures'] = collect();
+            for ($i = 0; $i < $count; $i++) {
+                $data['lectures']->push((object)[
+                    'id' => 5000 + $i, 'name' => 'Lesson '.$i, 'lecture_time' => '2026-11-14', 'active' => 0,
+                ]);
+            }
+            [$html, $xp] = $this->dom('teachers2.teacher_lessons', $data);
+            $this->assertCount($count ? 0 : 1, $xp->query('//div[@class="col-12"]/div[@class="teacher-lessons-empty"]'));
+            $this->assertCount($count, $xp->query('//div[contains(@class,"div_lesson")]//article'));
+            $this->assertCount($count ? 0 : 6, $xp->query('//div[@class="teacher-lessons-empty"]//div[@class="symbol"]'));
+            $this->assertCount(0, $xp->query('//div[@class="box"]'));
+        }
+    }
+
+    public function test_grouped_content_edit_disclosure_preserves_authorized_form_and_attachment_actions()
+    {
+        $feature = $this->getMockBuilder(\App\Services\LessonContentFeature::class)->onlyMethods(['enabled'])->getMock();
+        $feature->method('enabled')->willReturn(true);
+        $this->app->instance(\App\Services\LessonContentFeature::class, $feature);
+        foreach ([true, false] as $allowed) {
+            foreach ([0, 1, 3] as $files) {
+                $content = (object)['id'=>123, 'name_addition'=>'Content title', 'note'=>'Plain note',
+                    'addition_link'=>'https://example.test/content', 'upload_revision'=>2, 'privateAttachments'=>collect()];
+                for ($i=0; $i<$files; $i++) $content->privateAttachments->push((object)['id'=>100+$i,'original_name'=>'file.pdf']);
+                [$html,$xp] = $this->dom('teachers2.partials.private_lesson_content', ['content'=>$content,'canManageLessonContent'=>$allowed]);
+                $this->assertCount($allowed ? 1 : 0, $xp->query('//details[@class="lc-content-edit"]/summary'));
+                $this->assertCount($files, $xp->query('//ul[@class="lc-attachment-list"]//a'));
+                if ($allowed) {
+                    $form = $xp->query('//details/form')->item(0);
+                    $this->assertSame(route('teacher.lesson_content.update',123),$form->getAttribute('action'));
+                    $this->assertSame('post',$form->getAttribute('method'));
+                    foreach (['name_addition','note','addition_link','revision','_token'] as $name) {
+                        $this->assertCount(1,$xp->query('.//*[@name="'.$name.'"]',$form));
+                    }
+                }
+            }
+        }
+    }
+
     public function test_upload_forms_and_add_edit_modal_fields_keep_their_contract()
     {
         $data=$this->data(); $data['lecture_id']=$data['lecture'];
@@ -193,6 +238,7 @@ class LessonWorkspaceViewTest extends TestCase
         [$html,$xp]=$this->dom('teachers2.teacher_lessons',$data);
         foreach (['demoModal4','demoModal'] as $id) {
             $this->assertCount(1,$xp->query('//*[@id="'.$id.'"]'));
+            $this->assertCount(1,$xp->query('//*[@id="'.$id.'"]//button[@type="button" and @data-lc-date-picker and @aria-label and @hidden]'));
             foreach (['name','lecture_time','teacher_id','room_id','lesson_id','class_id'] as $name) $this->assertCount(1,$xp->query('//*[@id="'.$id.'"]//input[@name="'.$name.'"]'));
         }
         $this->assertCount(1,$xp->query('//form[@id="confirm4"]'));

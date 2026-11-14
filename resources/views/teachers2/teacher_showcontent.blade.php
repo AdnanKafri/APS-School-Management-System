@@ -150,7 +150,7 @@ a:hover {
 }
     </style>
     <link rel="stylesheet" href="{{ asset('assets/css/lesson-workspace.css') }}?v=20261106-layout2">
-    <link rel="stylesheet" href="{{ asset('teachers_2/assets/css/lesson-content-management.css') }}?v=20261106">
+    <link rel="stylesheet" href="{{ asset('teachers_2/assets/css/lesson-content-management.css') }}?v=20261114">
 @endsection
 
 

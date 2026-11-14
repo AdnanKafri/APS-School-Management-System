@@ -80,65 +80,40 @@
     color: #4382E0;
 }
 
-.box {
- /* width:100%;*/
-  height: 100%;
-  max-height: 600px;
-  min-height: 450px;
-  background: transparent !important;
-  border-radius: 20px;
-  position: absolute;
-  left: 59%;
-  top: 28%;
-  /*transform: translate(-50%, -50%);
-  padding: 30px 50px;*/
-}
-@media(min-width:100px) and (max-width:594px){
+@media(min-width:100px) and (max-width:695px){
     .container-2{
         position: relative;
         z-index: 9;
     }
-    .box {
-        left: 0% !important;
-        top: 100% !important;
-    }
 }
-
-@media(min-width:595px) and (max-width:695px)
-{
-     .container-2{
-        position: relative;
-        z-index: 9;
-    }
-    .box {
-        left: 0% !important;
-        top: 100% !important;
-    }
-}
-
 @media(min-width:696px) and (max-width:700px){
-     .container-2{
+    .container-2{
         position: relative;
         z-index: 9;
     }
-    .box {
-        left: 50% !important;
-        top: 28% !important;
-    }
 }
-
-.box .box__ghost {
-  padding: 15px 25px 25px;
-  position: absolute;
-  left: 50%;
-  top: 30%;
-  transform: translate(-50%, -0%);
+.teacher-lessons-empty {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 32px 12px;
+  text-align: center;
 }
-.box .box__ghost .symbol:nth-child(1) {
+.teacher-lessons-empty .box__ghost {
+  flex: 0 0 auto;
+  width: 200px;
+  max-width: 100%;
+  padding: 15px 25px 75px;
+  position: relative;
+}
+.teacher-lessons-empty .box__ghost .symbol:nth-child(1) {
   opacity: 0.2;
   animation: shine 4s ease-in-out 3s infinite;
 }
-.box .box__ghost .symbol:nth-child(1):before, .box .box__ghost .symbol:nth-child(1):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(1):before, .teacher-lessons-empty .box__ghost .symbol:nth-child(1):after {
   content: '';
   width: 12px;
   height: 4px;
@@ -148,13 +123,13 @@
   bottom: 65px;
   left: 0;
 }
-.box .box__ghost .symbol:nth-child(1):before {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(1):before {
   transform: rotate(45deg);
 }
-.box .box__ghost .symbol:nth-child(1):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(1):after {
   transform: rotate(-45deg);
 }
-.box .box__ghost .symbol:nth-child(2) {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(2) {
   position: absolute;
   left: -5px;
   top: 30px;
@@ -166,11 +141,11 @@
   opacity: 0.2;
   animation: shine 4s ease-in-out 1.3s infinite;
 }
-.box .box__ghost .symbol:nth-child(3) {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(3) {
   opacity: 0.2;
   animation: shine 3s ease-in-out 0.5s infinite;
 }
-.box .box__ghost .symbol:nth-child(3):before, .box .box__ghost .symbol:nth-child(3):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(3):before, .teacher-lessons-empty .box__ghost .symbol:nth-child(3):after {
   content: '';
   width: 12px;
   height: 4px;
@@ -180,17 +155,17 @@
   top: 5px;
   left: 40px;
 }
-.box .box__ghost .symbol:nth-child(3):before {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(3):before {
   transform: rotate(90deg);
 }
-.box .box__ghost .symbol:nth-child(3):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(3):after {
   transform: rotate(180deg);
 }
-.box .box__ghost .symbol:nth-child(4) {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(4) {
   opacity: 0.2;
   animation: shine 6s ease-in-out 1.6s infinite;
 }
-.box .box__ghost .symbol:nth-child(4):before, .box .box__ghost .symbol:nth-child(4):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(4):before, .teacher-lessons-empty .box__ghost .symbol:nth-child(4):after {
   content: '';
   width: 15px;
   height: 4px;
@@ -200,13 +175,13 @@
   top: 10px;
   right: 30px;
 }
-.box .box__ghost .symbol:nth-child(4):before {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(4):before {
   transform: rotate(45deg);
 }
-.box .box__ghost .symbol:nth-child(4):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(4):after {
   transform: rotate(-45deg);
 }
-.box .box__ghost .symbol:nth-child(5) {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(5) {
   position: absolute;
   right: 5px;
   top: 40px;
@@ -218,11 +193,11 @@
   opacity: 0.2;
   animation: shine 1.7s ease-in-out 7s infinite;
 }
-.box .box__ghost .symbol:nth-child(6) {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(6) {
   opacity: 0.2;
   animation: shine 2s ease-in-out 6s infinite;
 }
-.box .box__ghost .symbol:nth-child(6):before, .box .box__ghost .symbol:nth-child(6):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(6):before, .teacher-lessons-empty .box__ghost .symbol:nth-child(6):after {
   content: '';
   width: 15px;
   height: 4px;
@@ -232,29 +207,30 @@
   bottom: 65px;
   right: -5px;
 }
-.box .box__ghost .symbol:nth-child(6):before {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(6):before {
   transform: rotate(90deg);
 }
-.box .box__ghost .symbol:nth-child(6):after {
+.teacher-lessons-empty .box__ghost .symbol:nth-child(6):after {
   transform: rotate(180deg);
 }
-.box .box__ghost .box__ghost-container {
+.teacher-lessons-empty .box__ghost .box__ghost-container {
   background: #332F63;
   width: 150px;
+  max-width: 100%;
   height: 150px;
   border-radius: 100px 100px 0 0;
   position: relative;
   margin: 0 auto;
   animation: upndown 3s ease-in-out infinite;
 }
-.box .box__ghost .box__ghost-container .box__ghost-eyes {
+.teacher-lessons-empty .box__ghost .box__ghost-container .box__ghost-eyes {
   position: absolute;
   left: 50%;
   top: 45%;
   height: 12px;
   width: 70px;
 }
-.box .box__ghost .box__ghost-container .box__ghost-eyes .box__eye-left {
+.teacher-lessons-empty .box__ghost .box__ghost-container .box__ghost-eyes .box__eye-left {
   width: 12px;
   height: 12px;
   background: #ffff;
@@ -263,7 +239,7 @@
   position: absolute;
   left: 0;
 }
-.box .box__ghost .box__ghost-container .box__ghost-eyes .box__eye-right {
+.teacher-lessons-empty .box__ghost .box__ghost-container .box__ghost-eyes .box__eye-right {
   width: 12px;
   height: 12px;
   background: #ffff;
@@ -272,14 +248,14 @@
   position: absolute;
   right: 0;
 }
-.box .box__ghost .box__ghost-container .box__ghost-bottom {
+.teacher-lessons-empty .box__ghost .box__ghost-container .box__ghost-bottom {
   display: flex;
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
 }
-.box .box__ghost .box__ghost-container .box__ghost-bottom div {
+.teacher-lessons-empty .box__ghost .box__ghost-container .box__ghost-bottom div {
   flex-grow: 1;
   position: relative;
   top: -10px;
@@ -287,43 +263,42 @@
   border-radius: 100%;
   background-color: #332F63;
 }
-.box .box__ghost .box__ghost-container .box__ghost-bottom div:nth-child(2n) {
+.teacher-lessons-empty .box__ghost .box__ghost-container .box__ghost-bottom div:nth-child(2n) {
   top: -12px;
   margin: 0 0px;
   border-top: 15px solid #332F63;
   background: transparent;
 }
-.box .box__ghost .box__ghost-shadow {
+.teacher-lessons-empty .box__ghost .box__ghost-shadow {
   height: 20px;
   box-shadow: 0 50px 15px 5px #3B3769;
   border-radius: 50%;
   margin: 0 auto;
   animation: smallnbig 3s ease-in-out infinite;
 }
-.box .box__description {
-  position: absolute;
-  bottom: 150px;
-  left: 50%;
-  transform: translateX(-50%);
+.teacher-lessons-empty .box__description {
+  width: 100%;
+  min-width: 0;
 }
-.box .box__description .box__description-container {
+.teacher-lessons-empty .box__description .box__description-container {
   color: #fff;
   text-align: center;
-  width: 500px;
+  max-width: 500px;
   font-size: 16px;
   margin: 0 auto;
 }
-.box .box__description .box__description-container .box__description-title {
+.teacher-lessons-empty .box__description .box__description-container .box__description-title {
   font-size: 24px;
   letter-spacing: 0.5px;
 }
-.box .box__description .box__description-container .box__description-text {
+.teacher-lessons-empty .box__description .box__description-container .box__description-text {
   color: #8C8AA7;
-  line-height: 20px;
   margin-top: 20px;
-  font-size: 40px
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  font-size: clamp(24px, 4vw, 40px);
 }
-.box .box__description .box__button {
+.teacher-lessons-empty .box__description .box__button {
   display: block;
   position: relative;
   background: #FF5E65;
@@ -342,7 +317,7 @@
   overflow: hidden;
   -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
-.box .box__description .box__button:before {
+.teacher-lessons-empty .box__description .box__button:before {
   content: '';
   position: absolute;
   width: 20px;
@@ -354,11 +329,11 @@
   transform: translateX(-50px) rotate(45deg);
   transition: transform 0.5s ease;
 }
-.box .box__description .box__button:hover {
+.teacher-lessons-empty .box__description .box__button:hover {
   background: transparent;
   border-color: #fff;
 }
-.box .box__description .box__button:hover:before {
+.teacher-lessons-empty .box__description .box__button:hover:before {
   transform: translateX(250px) rotate(45deg);
 }
 @keyframes upndown {
@@ -434,6 +409,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0);
 }
 
+.lc-modal .lc-date-control { display: flex; align-items: center; gap: 8px; }
+.lc-modal .lc-date-control input[type="date"] { flex: 1 1 0; width: 0 !important; min-width: 0; color-scheme: light; }
+.lc-modal .lc-date-control input[type="date"]::-webkit-calendar-picker-indicator { filter: none; opacity: 1; cursor: pointer; padding: 8px; }
+.lc-modal .lc-date-control .lc-date-picker { flex: 0 0 44px; width: 44px; height: 46px; margin: 0; padding: 0; border: 1px solid #b8c9da; border-radius: 9px; background: #f4f7fb; color: #285c91; font-size: 22px; }
+.lc-modal .lc-date-picker[hidden] { display: none; }
 </style>
     <link rel="stylesheet" href="{{ asset('assets/css/lesson-workspace.css') }}?v=20261106-layout2">
 @endsection
@@ -546,7 +526,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                 <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
                 <div class="modal-body">
                     <div class="lc-field"><label for="name">اسم الدرس</label><input required type="text" name="name" id="name" placeholder="أدخل اسم الدرس"></div>
-                    <div class="lc-field"><label for="lecture_time">تاريخ ظهور الدرس</label><input required name="lecture_time" id="lecture_time" type="date"></div>
+                    <div class="lc-field"><label for="lecture_time">تاريخ ظهور الدرس</label><div class="lc-date-control"><input required name="lecture_time" id="lecture_time" type="date"><button type="button" class="lc-date-picker" data-lc-date-picker="lecture_time" aria-label="فتح التقويم" aria-controls="lecture_time" hidden><i class="mdi mdi-calendar" aria-hidden="true"></i></button></div></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="lc-cancel" data-dismiss="modal">إلغاء</button>
@@ -622,10 +602,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
            </div>
            @endforeach
            @else
-    <div>
+    <div class="col-12">
        
         <!--style for no lectures found-->
-        <div class="box">
+        <div class="teacher-lessons-empty">
             <div class="box__ghost">
               <div class="symbol"></div>
               <div class="symbol"></div>
@@ -678,7 +658,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                 <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
                 <div class="modal-body">
                     <div class="lc-field"><label for="name2">اسم الدرس</label><input  type="text" name="name" id="name2" placeholder="أدخل اسم الدرس"></div>
-                    <div class="lc-field"><label for="date">تاريخ ظهور الدرس</label><input  name="lecture_time" id="date" type="date"></div>
+                    <div class="lc-field"><label for="date">تاريخ ظهور الدرس</label><div class="lc-date-control"><input name="lecture_time" id="date" type="date"><button type="button" class="lc-date-picker" data-lc-date-picker="date" aria-label="فتح التقويم" aria-controls="date" hidden><i class="mdi mdi-calendar" aria-hidden="true"></i></button></div></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="lc-cancel" data-dismiss="modal">إلغاء</button>
@@ -737,6 +717,7 @@ aria-hidden="true">
 
 @section('js')
 <script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106"></script>
+<script src="{{ asset('teachers_2/assets/js/lesson-date-picker.js') }}?v=20261114"></script>
 
 
 {{--<script type="text/javascript">

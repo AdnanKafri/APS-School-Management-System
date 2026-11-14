@@ -7,3 +7,4 @@
 .lc-private-content summary { cursor: pointer; min-height: 44px; line-height: 1.8; }
 .lc-private-content label { display: block; margin-block: 12px 6px; }
 .lc-private-content .form-control { min-width: 0; max-width: 100%; font: inherit; }
+.lc-private-content a::after { content: none; }
