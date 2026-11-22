@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class CurrentStudentMembership
 {
+    /** Placement columns use Laravel's application-local, timezone-less timestamps. */
+    public function placementTime(Carbon $at = null): string
+    {
+        return ($at ?: Carbon::now('Asia/Damascus'))->copy()
+            ->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s');
+    }
+
     /**
      * room_student is the operational projection, not an academic archive.
      * A unique effective placement resolves competing legacy enrollment rows.
@@ -17,7 +24,7 @@ class CurrentStudentMembership
      */
     public function constrain($query, $yearId = null, $roomId = null, $requirePlacement = true, Carbon $at = null)
     {
-        $at = ($at ?: Carbon::now('Asia/Damascus'))->format('Y-m-d H:i:s');
+        $at = $this->placementTime($at);
 
         return $query->where('students.lifecycle_status', Student::LIFECYCLE_ACTIVE)
             ->whereExists(function ($enrollment) use ($yearId, $roomId, $requirePlacement, $at) {
@@ -136,7 +143,7 @@ class CurrentStudentMembership
                 // A prior visit to the target needs real interval reconciliation.
                 if ($history->contains('room_id', $roomId)
                     || $rows->count() !== 1 || !$rows->first()->updated_at
-                    || $rows->first()->updated_at > Carbon::now('Asia/Damascus')->format('Y-m-d H:i:s')) continue;
+                    || $rows->first()->updated_at > $this->placementTime()) continue;
                 $from = max($from, $rows->first()->updated_at);
             }
             $contexts[$studentId] = [

@@ -2180,6 +2180,12 @@ class TeacherController_New extends Controller
         //item for video
         }
         else if ($item->type == 0) {
+            $incomingVideo = $request->file('video_in');
+            if ($incomingVideo && !$incomingVideo->isValid()) {
+                \App\Services\LessonContentInput::reject(
+                    in_array($incomingVideo->getError(), [UPLOAD_ERR_INI_SIZE,UPLOAD_ERR_FORM_SIZE], true)
+                        ? __('lesson_content.server_limit') : 'تعذر استقبال ملف الفيديو. يرجى إعادة اختياره.', 'video_in');
+            }
             $item->lecture_id = $request->lecture_id;
             $item->namehomework = $request->namehomework;
             $item->lesson_id = $request->lesson_id;
@@ -2192,8 +2198,14 @@ class TeacherController_New extends Controller
                 return redirect()->back()->with('message', 'محتوى الفيديو فارغ يرجى تعبئة البيانات من جديد');
             }
             if ($request->video_in && $request->hasFile('video_in')) {
+                 $uploadPolicy = app(\App\Services\LessonContentLimits::class);
+                 $uploadLimits = $uploadPolicy->values();
                  $this->validate($request, [
-                     'video_in' => 'required|mimetypes:video/mp4,video/avi,video/mpeg|max:50000'
+                     'video_in' => ['required','mimetypes:video/mp4,video/avi,video/mpeg',
+                         function ($attribute, $file, $fail) use ($uploadPolicy, $uploadLimits) {
+                             if ($file->getSize() <= 0 || $file->getSize() > $uploadLimits['max_file_bytes']) $fail($uploadPolicy->message('limit_file'));
+                             if ($file->getSize() > $uploadLimits['max_total_bytes']) $fail($uploadPolicy->message('limit_total'));
+                         }]
                 ], [
                     'file.required' => 'يرجى  ترفيع  بالشروط المحددة  ',
 

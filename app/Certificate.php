@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Certificate extends Model
 {
+    use \App\Concerns\BelongsToAcademicVisit;
+
     public function teacher(){
 
         return $this->belongsTo(Teacher::class, 'teacher_id');

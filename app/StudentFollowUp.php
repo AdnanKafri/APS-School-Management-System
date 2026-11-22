@@ -56,6 +56,14 @@ class StudentFollowUp extends Model
 
     public function isEditableBy($teacherId, $now)
     {
+        if (app(\App\Services\AcademicVisitRecords::class)->enabled()) {
+            if ($this->student_academic_placement_id) {
+                if (!StudentAcademicPlacement::whereKey($this->student_academic_placement_id)
+                    ->where('student_id',$this->student_id)->where('year_id',$this->year_id)
+                    ->where('room_id',$this->room_id)->where('status','active')->exists()) return false;
+            } elseif (!app(\App\Services\CurrentStudentMembership::class)->studentsQuery($this->year_id,$this->room_id)
+                ->whereKey($this->student_id)->exists()) return false;
+        }
         return (int) $this->teacher_id === (int) $teacherId
             && !$this->voided_at
             && $now->lt($this->created_at->copy()->addHours(2));

@@ -1275,9 +1275,7 @@ $about = \App\Other::find(1);
 
                     <input type="hidden" name="year_id" id="years" value="{{ $year2 ? $year2->id : '' }}">
 
-                    <div class="alert alert-info text-right" style="direction: rtl;">
-                        {{ __('student_transfer.notice') }}
-                    </div>
+                    @include('admin.students._transfer_history_notice', ['hasAcademicRecords'=>false])
 
                     <div id="mydivclass">
                         <div class="form-group" style="text-align:right">
@@ -1296,7 +1294,7 @@ $about = \App\Other::find(1);
                 </div>
                 <div class="modal-footer">
                     <a class="btn btn-default" data-dismiss="modal">الغاء</a>
-                    <button class="btn btn-info">حفظ</button>
+                    <button class="btn btn-info" type="submit">{{ __('student_transfer.ui.confirm_button') }}</button>
                 </div>
 
             </form>
@@ -2596,17 +2594,20 @@ $.ajax({
 
     $(document).on('click', '.change_student', function () {
 
+        $('.changeStudentModal .student-transfer-record-notice').prop('hidden', true);
         $('#mydivroom').empty();
         $('#student_id').val($(this).data('id'));
 
         var student_id = $(this).data('id');
         var student_name = $(this).data('name');
-        var url = "{{ URL::to('SMARMANger/admin/students/student_detail_prev') }}/" + student_id;
+        var url = @json(route('student_detail_prev', ['student_id'=>'__STUDENT_ID__'])).replace('__STUDENT_ID__', encodeURIComponent(student_id));
         $.ajax({
             url: url,
             type: "get",
             contentType: 'application/json',
             success: function (data) {
+                if (String($('.changeStudentModal input[name="student_id"]').val()) !== String(student_id)) return;
+                $('.changeStudentModal .student-transfer-record-notice').prop('hidden', !data.has_academic_records);
                 $('.student_name').text(student_name + " عام " + data.year_name + " كان" +
                     " في الصف  " + data.class_name + " " + data.room_name);
             },

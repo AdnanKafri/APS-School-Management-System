@@ -73,7 +73,8 @@ class StudentAssessmentReadService
             'is_file'=>$exam->is_file, 'mark'=>$exam->mark, 'start_date'=>$exam->start_date,
             'end_date'=>$exam->end_date, 'required'=>$exam->required, 'file'=>$exam->file,
             'result_state'=>$state, 'result_value'=>$value, 'result_exam_id'=>$resultExamId,
-            'can_participate'=>$record && (string) $record->status !== '1',
+            'can_participate'=>$record && (string) $record->status !== '1'
+                && !in_array(app(AcademicVisitRecords::class)->resultState($record),['carried','conflict'],true),
         ];
     }
 

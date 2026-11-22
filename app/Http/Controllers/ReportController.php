@@ -475,7 +475,7 @@ class ReportController extends Controller
 
             foreach ($lessons as $key => $value) {
 
-                $rows = DB::table('students_marks')->where('student_id',$request->id)->where('year_id',$year->id)
+                $rows = \App\Students_mark::where('student_id',$request->id)->where('year_id',$year->id)
                 ->selectRaw("CAST( JSON_EXTRACT(mark, '$.\"$value->id\".oral') AS DECIMAL(10,6) )*100/(10*$value->max_mark/100) AS 'oral'")
                 ->selectRaw("CAST( JSON_EXTRACT(mark, '$.\"$value->id\".homework') AS DECIMAL(10,6) )*100/(10*$value->max_mark/100) AS 'homework'")
                 ->selectRaw("CAST( JSON_EXTRACT(mark, '$.\"$value->id\".activities') AS DECIMAL(10,6) )*100/(20*$value->max_mark/100) AS 'activities'")

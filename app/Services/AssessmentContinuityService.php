@@ -14,14 +14,15 @@ class AssessmentContinuityService
     public function resolve(Exams2 $target, $studentIds)
     {
         $answer = [];
-        if (!Schema::hasTable('assessment_equivalence_members')) return $answer;
-        $member = DB::table('assessment_equivalence_members')->where('exam_id', $target->id)->first();
-        if (!$member) return $answer; // Independent legacy assessments are never inferred equivalent.
+        $member = Schema::hasTable('assessment_equivalence_members')
+            ? DB::table('assessment_equivalence_members')->where('exam_id', $target->id)->first() : null;
+        if (!$member) return $this->originalVisitResults($target,$studentIds);
         if (!\App\Year::whereKey($member->year_id)->where('current_year', 1)->exists()) return $answer;
 
         $members = DB::table('assessment_equivalence_members')->where('identity', $member->identity)->get();
         $definitions = Exams2::whereIn('id', $members->pluck('exam_id'))->get()->keyBy('id');
-        $valid = $members->count() >= 2 && $definitions->count() === $members->count();
+        // An unused peer may be withdrawn by Admin, leaving a valid singleton.
+        $valid = $members->count() >= 1 && $definitions->count() === $members->count();
         $expected = null;
         foreach ($members as $mapped) {
             if (!$definitions->has($mapped->exam_id)) { $valid = false; continue; }
@@ -41,8 +42,9 @@ class AssessmentContinuityService
         $eligible = array_keys($entryContexts);
         $placements = DB::table('student_academic_placements')->whereIn('student_id', $eligible)
             ->where('year_id', $member->year_id)->where('class_id', $member->class_id)->get()->groupBy('student_id');
-        $results = Exam_result2::whereIn('exam_id', $members->pluck('exam_id'))
-            ->whereIn('user_id', $eligible)->get()->groupBy('user_id');
+        $originals = Exam_result2::whereIn('exam_id', $members->pluck('exam_id'))->whereIn('user_id', $eligible)->get();
+        $visits = new AcademicVisitReadContext($originals);
+        $results = $originals->groupBy('user_id');
         $roomNames = DB::table('rooms')->whereIn('id', $members->pluck('room_id'))->pluck('name', 'id');
         foreach ($eligible as $studentId) {
             $state = ['state' => 'missing', 'value' => null, 'identity' => $member->identity];
@@ -68,11 +70,20 @@ class AssessmentContinuityService
                     return $placement->effective_from && ($placement->status === 'active'
                         || ($placement->effective_to && $placement->effective_to >= $placement->effective_from));
                 });
+                $visitLink = $visits->link($row);
+                if ($visitLink) {
+                    $prior = $prior->where('id', $visitLink->placement_id);
+                    if ((int)$visitLink->student_id !== (int)$studentId || (int)$visitLink->room_id !== (int)$definition->room_id
+                        || $prior->count() !== 1) { $conflict = true; continue; }
+                }
                 // Legacy MySQL returns this column as Created_at; Eloquent's
                 // lowercase timestamp accessor does not resolve that attribute.
                 $recordedAt = $row->getRawOriginal('created_at') ?: $row->getRawOriginal('Created_at');
                 // A known result timestamp must belong to a real placement interval.
-                if ($recordedAt) {
+                if ($visitLink) {
+                    // Explicit original attribution survives return visits and
+                    // uncertain legacy timestamps without rewriting the result.
+                } elseif ($recordedAt) {
                     $intervals = $prior->filter(function ($placement) use ($recordedAt) {
                         $time = (string) $recordedAt;
                         return $time >= $placement->effective_from
@@ -96,6 +107,7 @@ class AssessmentContinuityService
                     $conflict = true; continue;
                 }
                 $carried = (int) $examId !== (int) $target->id
+                    || ($visitLink && (int)$visitLink->placement_id !== (int)$current['placement_id'])
                     || ($recordedAt && (string) $recordedAt < $current['effective_from']);
                 $earned[] = array_merge($state, [
                     'state' => $carried ? 'carried' : 'current', 'value' => $value,
@@ -112,8 +124,36 @@ class AssessmentContinuityService
 
     public function assertWritable(Exams2 $exam, $studentId)
     {
+        foreach (Exam_result2::where('exam_id',$exam->id)->where('user_id',$studentId)->get() as $original) {
+            if (in_array(app(AcademicVisitRecords::class)->resultState($original),['carried','conflict'],true)) {
+                AssessmentResultSafety::reject('carried_read_only');
+            }
+        }
         $state = $this->resolve($exam, [$studentId])[$studentId]['state'] ?? null;
         if ($state === 'carried') AssessmentResultSafety::reject('carried_read_only');
         if ($state === 'conflict') AssessmentResultSafety::reject('ambiguous_result');
+    }
+
+    private function originalVisitResults(Exams2 $exam, $studentIds)
+    {
+        $visits=app(AcademicVisitRecords::class);
+        if (!$visits->enabled()) return [];
+        $year=\App\Room::whereKey($exam->room_id)->value('year_id');
+        if (!\App\Year::whereKey($year)->where('current_year',1)->exists()) return [];
+        $contexts=app(CurrentStudentMembership::class)->assessmentEntryContexts($studentIds,$year,$exam->room_id);
+        $answer=[];
+        $originals=Exam_result2::where('exam_id',$exam->id)->whereIn('user_id',array_keys($contexts))->get();
+        $visits=new AcademicVisitReadContext($originals, [$exam->room_id]);
+        foreach ($originals->groupBy('user_id') as $id=>$rows) {
+            $row=$rows->first();$state=$visits->resultState($row);
+            if ($state === null || $state === 'current') continue;
+            try { AssessmentResultSafety::assertResultContext($row,$exam); }
+            catch (ValidationException $e) { $state='conflict'; }
+            if ($rows->count() !== 1) $state='conflict';
+            $answer[$id]=['state'=>$state,'value'=>$state==='conflict'?null:GradebookReadService::number($row->result),
+                'result_id'=>$row->id,'exam_id'=>$exam->id,'room_id'=>$exam->room_id,'assessment_name'=>$exam->name,
+                'room_name'=>$visits->roomName($exam->room_id)];
+        }
+        return $answer;
     }
 }

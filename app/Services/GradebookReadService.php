@@ -154,6 +154,7 @@ class GradebookReadService
     private function assessment($table, $definition, $source, $records, $terms, &$issues)
     {
         $values = [];
+        $visits = new AcademicVisitReadContext($records, [$definition->room_id]);
         foreach ($records->groupBy('user_id') as $studentId => $rows) {
             if ($rows->count() !== 1) {
                 $issues[] = $table . ':' . $definition->id . ':duplicate';
@@ -172,6 +173,13 @@ class GradebookReadService
                 $issues[] = $table . ':' . $definition->id . ':value';
             }
             $values[$studentId] = ['result_id' => $row->id, 'value' => $value];
+            $visitState = $visits->resultState($row);
+            if ($visitState !== null) {
+                if ($visitState === 'conflict') $values[$studentId]['value'] = null;
+                $values[$studentId] += ['state'=>$visitState,'exam_id'=>$definition->id,'room_id'=>$definition->room_id,
+                    'assessment_name'=>$definition->name ?: ($definition->name_exam ?: $definition->name_quize1),
+                    'room_name'=>$visits->roomName($definition->room_id)];
+            }
         }
         $component = is_numeric($source) ? GradebookConfigService::getConfig($definition->lesson_id, $terms->first()->year_id)
             ->first(function ($c) use ($source) { return (string) $c->data_source === (string) $source; }) : null;

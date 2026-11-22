@@ -451,6 +451,85 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
         )->orderBy('students.id');
     }
 
+    public function test_student_portal_keeps_old_and_new_section_follow_ups_visible_after_transfer()
+    {
+        $this->createTransferSchema();
+        $student = $this->transferStudent();
+        Schema::create('student_details', function (Blueprint $t) { $t->increments('id'); $t->integer('student_id'); });
+        Schema::create('school_data', function (Blueprint $t) { $t->increments('id'); });
+        \Illuminate\Support\Facades\View::composer('students.layouts.app4', function ($view) {
+            $view->setPath(__DIR__.'/../Fixtures/gradebook-layout.blade.php');
+        });
+        StudentFollowUp::where('student_id', $student->id)->update(['note'=>'Previous section follow-up']);
+        $original = StudentFollowUp::first()->getRawOriginal();
+        DB::table('rooms')->insert(['id'=>72,'year_id'=>$this->year->id,'class_id'=>$this->classId,'name'=>'B']);
+        $this->moveStudent($student->id, $this->classId, 72);
+        $assignment = $this->assignmentForRoom(72, 42);
+        app(StudentFollowUpService::class)->create($this->teacherUserId, 42, $assignment->id, $student->id,
+            ['level'=>'very_good','note'=>'Destination section follow-up']);
+        $this->actingAs(\App\User::where('student_id',$student->id)->firstOrFail());
+        $response=$this->get('/SMARMANger/dashboard/student/follow-ups?month=2026-10')->assertOk()
+            ->assertSee('Previous section follow-up')->assertSee('Destination section follow-up');
+        $rows=$response->viewData('followUps')->flatten(1);
+        $this->assertCount(2,$rows);
+        $this->assertEqualsCanonicalizing([$this->roomId,72],$rows->pluck('room_id')->all());
+        $this->assertSame($original,StudentFollowUp::whereKey($original['id'])->first()->getRawOriginal());
+    }
+
+    public function test_winter_transfer_immediately_resolves_destination_follow_up_placement()
+    {
+        $this->createTransferSchema();
+        $student=$this->transferStudent();
+        Carbon::setTestNow(Carbon::parse('2026-11-19 10:00:00','Asia/Riyadh'));
+        DB::table('rooms')->insert(['id'=>72,'year_id'=>$this->year->id,'class_id'=>$this->classId,'name'=>'B']);
+        $this->moveStudent($student->id,$this->classId,72);
+        $assignment=$this->assignmentForRoom(72,42);
+        $context=app(StudentFollowUpService::class)->resolveCreationContext(42,$assignment->id,$student->id);
+        $this->assertNotNull($context['placement']);
+        $this->assertSame(72,(int)$context['placement']->room_id);
+        $this->actingAs(\App\User::create(['name'=>'Winter destination teacher','email'=>'winter@test.local',
+            'password'=>bcrypt('fixture-only'),'type'=>'1','teacher_id'=>42]));
+        $this->assertSame([$student->id],$this->rosterStudentIds($assignment->id));
+    }
+
+    public function test_return_visits_preserve_follow_ups_and_login_with_new_context_and_read_only_old_visits()
+    {
+        $this->createTransferSchema();$student=$this->transferStudent();
+        require_once base_path('database/migrations/2026_11_19_000001_create_student_academic_visit_records.php');
+        (new \CreateStudentAcademicVisitRecords)->up();
+        Schema::create('student_details',function(Blueprint $t){$t->increments('id');$t->integer('student_id');});
+        Schema::create('school_data',function(Blueprint $t){$t->increments('id');});
+        \Illuminate\Support\Facades\View::composer('students.layouts.app4',function($view){
+            $view->setPath(__DIR__.'/../Fixtures/gradebook-layout.blade.php');
+        });
+        $original=StudentFollowUp::firstOrFail()->getRawOriginal();
+        DB::table('rooms')->insert(['id'=>72,'year_id'=>$this->year->id,'class_id'=>$this->classId,'name'=>'B']);
+        $b=$this->assignmentForRoom(72,42);
+        $account=\App\User::where('student_id',$student->id)->firstOrFail();
+        $identity=$account->getRawOriginal();$before=$this->academicSnapshot($student->id);
+        foreach ([72,$this->roomId,72,$this->roomId] as $room) {
+            $this->moveStudent($student->id,$this->classId,$room);
+            $assignment=$room===72?$b:$this->assignment;
+            app(StudentFollowUpService::class)->create($this->teacherUserId,$assignment->teacher_id,
+                $assignment->id,$student->id,['level'=>'good','note'=>'New visit '.$room]);
+            $current=StudentAcademicPlacement::where('student_id',$student->id)->where('status','active')->firstOrFail();
+            $latest=StudentFollowUp::orderByDesc('id')->firstOrFail();
+            $this->assertEquals($current->id,$latest->student_academic_placement_id);
+            $this->assertSame($before,$this->academicSnapshot($student->id));
+            $this->assertSame([(int)$student->id],\App\Room::find($room)->operationalStudents()->pluck('students.id')->map(function($id){return (int)$id;})->all());
+        }
+        $this->assertFalse(StudentFollowUp::find($original['id'])->isEditableBy($this->teacherId,$this->now));
+        $this->assertSame($identity,$account->fresh()->getRawOriginal());
+        $this->assertTrue(\Illuminate\Support\Facades\Auth::validate(['email'=>$account->email,'password'=>'unchanged']));
+        $this->actingAs(\App\User::findOrFail($this->teacherUserId));
+        $this->postJson('/SMARMANger/dashboard/teacher/student-follow-ups/'.$original['id'].'/update',
+            ['level'=>'excellent'])->assertForbidden();
+        $this->actingAs($account);
+        $response=$this->get('/SMARMANger/dashboard/student/follow-ups?month=2026-10')->assertOk();
+        $this->assertCount(5,$response->viewData('followUps')->flatten(1));
+        $this->assertSame($original,StudentFollowUp::find($original['id'])->getRawOriginal());
+    }
+
     public function test_same_grade_transfer_moves_current_rosters_and_preserves_academic_identity_and_history()
     {
         $this->createTransferSchema();
@@ -817,8 +896,10 @@ class TeacherStudentFollowUpEligibilityTest extends TestCase
     private function placement(Student $student, $yearId, $classId, $roomId, $status, Carbon $from, Carbon $to = null)
     {
         return StudentAcademicPlacement::create(['student_id' => $student->id, 'year_id' => $yearId,
-            'class_id' => $classId, 'room_id' => $roomId, 'effective_from' => $from,
-            'effective_to' => $to, 'status' => $status, 'reason' => 'test', 'action_source' => 'test']);
+            'class_id' => $classId, 'room_id' => $roomId,
+            'effective_from' => $from->copy()->setTimezone(config('app.timezone')),
+            'effective_to' => $to ? $to->copy()->setTimezone(config('app.timezone')) : null,
+            'status' => $status, 'reason' => 'test', 'action_source' => 'test']);
     }
 
     public function test_retired_assignment_preserves_own_read_only_history_and_revokes_edits()

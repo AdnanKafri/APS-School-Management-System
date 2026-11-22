@@ -196,6 +196,7 @@ class StudentLifecycleService
             }
 
             if ($currentPlacement) {
+                app(AcademicVisitRecords::class)->closeVisit($currentPlacement);
                 $currentPlacement->status = StudentAcademicPlacement::STATUS_WITHDRAWN;
                 $currentPlacement->effective_to = $now;
                 $currentPlacement->reason = 'withdrawal';
@@ -401,7 +402,7 @@ class StudentLifecycleService
 
     private function hasMeaningfulRoomYearActivity($studentId, $user, $yearId, $roomId): bool
     {
-        $marks = Students_mark::where('student_id', $studentId)->where('year_id', $yearId);
+        $marks = Students_mark::withoutGlobalScope('academic_visit')->where('student_id', $studentId)->where('year_id', $yearId);
         if ($roomId !== null) {
             $marks->where('room_id', $roomId);
         }
@@ -420,7 +421,7 @@ class StudentLifecycleService
             }
         }
 
-        $reports = Report_card::where('student_id', $studentId)->where('year_id', $yearId);
+        $reports = Report_card::withoutGlobalScope('academic_visit')->where('student_id', $studentId)->where('year_id', $yearId);
         if ($roomId !== null) {
             $reports->where('room_id', $roomId);
         }

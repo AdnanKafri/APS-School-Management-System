@@ -624,6 +624,7 @@ $class= $room->classes->name;
 $a=['year_name'=>$year->name,
     'room_name'=>$room->name,
     'class_name'=>$class,
+    'has_academic_records'=>app(\App\Services\StudentTransferService::class)->hasAcademicRecords($student_id),
 ];
 return $a;
 
@@ -681,8 +682,20 @@ public function student_details($student_id){
         $student->country = $student->address;
     }
 
-    // $rooms=
-     return view('admin.student_details',compact('student_details_departments','country_currency','student','student_mark','lessons','classes','rooms','student_detail','activeYear'));
+    $transferPlacements = \App\StudentAcademicPlacement::where('student_id',$student->id)
+        ->where('year_id',$activeYear->id)->where('status','active')->orderBy('id')->get();
+    $transferReconciliation = $contextYear->id == $activeYear->id && (($transferPlacements->isEmpty() && app(\App\Services\AcademicVisitRecords::class)->enabled()) || $transferPlacements->count() > 1
+        || ($transferPlacements->count() === 1 && (!$transferPlacements->first()->effective_from || $transferPlacements->first()->effective_to !== null
+            || (int)$transferPlacements->first()->room_id !== (int)$room->first()->id
+            || (int)$transferPlacements->first()->class_id !== (int)$room->first()->class_id))
+        || Students_mark::where('student_id',$student->id)->where('year_id',$activeYear->id)->where('room_id',$room->first()->id)->count() > 1
+        || Report_card::where('student_id',$student->id)->where('year_id',$activeYear->id)->where('room_id',$room->first()->id)->count() > 1);
+    $hasAcademicRecords=app(\App\Services\StudentTransferService::class)->hasAcademicRecords($student->id);
+    $review=session('student_transfer_review');
+    $transferReviewRoom=$transferReconciliation && is_array($review) && (int)($review['student_id']??0)===(int)$student->id
+        ? Room::with('classes')->whereKey($review['room_id']??0)->where('class_id',$review['class_id']??0)->where('year_id',$activeYear->id)->first()
+        : null;
+     return view('admin.student_details',compact('student_details_departments','country_currency','student','student_mark','lessons','classes','rooms','student_detail','activeYear','transferPlacements','hasAcademicRecords','transferReviewRoom'));
 
 }
 

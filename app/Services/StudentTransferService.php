@@ -29,6 +29,17 @@ class StudentTransferService
         return $this->bulkLastSucceeded;
     }
 
+    public function hasAcademicRecords($studentId): bool
+    {
+        foreach (AcademicVisitRecords::TYPES as $table=>$type) {
+            $key=in_array($table,['exam_result','exam_result2'],true)?'user_id':'student_id';
+            if (\Illuminate\Support\Facades\Schema::hasTable($table) && DB::table($table)->where($key,$studentId)->exists()) return true;
+        }
+        return (\Illuminate\Support\Facades\Schema::hasTable('student_follow_ups')
+                && DB::table('student_follow_ups')->where('student_id',$studentId)->exists())
+            || StudentAcademicPlacement::where('student_id',$studentId)->whereIn('status',['closed','withdrawn'])->exists();
+    }
+
     public function handleBulk(Request $request): RedirectResponse
     {
         $request->validate([
@@ -62,6 +73,9 @@ class StudentTransferService
                 $student = Student::find($studentId);
                 $key = $e->getMessage();
                 $translated = __($key);
+                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                    $translated = \Illuminate\Support\Arr::flatten($e->errors())[0] ?? __('student_transfer.notifications.transfer_failed');
+                }
                 $failures[] = [
                     'student_id' => $studentId,
                     'student_name' => $student ? trim($student->first_name . ' ' . $student->last_name) : (string) $studentId,
@@ -136,7 +150,7 @@ class StudentTransferService
             ->orderBy('id')
             ->get();
 
-        if ($currentMarks->count() > 1) {
+        if ($currentMarks->count() > 1 && !app(AcademicVisitRecords::class)->enabled()) {
             return $this->warning('student_transfer.validation.transfer_conflicting_marks');
         }
 
@@ -146,7 +160,7 @@ class StudentTransferService
             ->orderBy('id')
             ->get();
 
-        if ($currentReportCards->count() > 1) {
+        if ($currentReportCards->count() > 1 && !app(AcademicVisitRecords::class)->enabled()) {
             return $this->warning('student_transfer.validation.transfer_conflicting_report_card');
         }
 
@@ -173,19 +187,39 @@ class StudentTransferService
                 $currentReportCard,
                 $currentRoom
             ) {
-                Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+                $lockedStudent = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+                if (!$lockedStudent->isActiveLifecycle()
+                    || !Year::whereKey($year->id)->where('current_year', 1)->lockForUpdate()->first()
+                    || !Room::whereKey($targetRoom->id)->where('year_id', $year->id)
+                        ->where('class_id', $targetClassId)->lockForUpdate()->first()) {
+                    throw new \RuntimeException('student_transfer.validation.transfer_conflicting_enrollment');
+                }
                 $lockedEnrollment = Room_student::whereKey($currentEnrollment->id)->lockForUpdate()->firstOrFail();
-                if ((int) $lockedEnrollment->room_id !== (int) $currentRoom->id
+                if ((int) $lockedEnrollment->student_id !== (int) $student->id
+                    || (int) $lockedEnrollment->year_id !== (int) $year->id
+                    || (int) $lockedEnrollment->room_id !== (int) $currentRoom->id
                     || Room_student::where('student_id', $student->id)->where('year_id', $year->id)->count() !== 1) {
                     throw new \RuntimeException('student_transfer.validation.transfer_conflicting_enrollment');
                 }
-                // Room-scoped legacy academic rows cannot distinguish two visits
-                // to the same room in one year. Do not create duplicate scaffolds.
-                if (StudentAcademicPlacement::where('student_id', $student->id)
+                $currentEnrollment = $lockedEnrollment;
+                $sourceRoom = Room::whereKey($currentRoom->id)->where('year_id', $year->id)
+                    ->where('class_id', $currentClassId)->lockForUpdate()->first();
+                $marks = Students_mark::where('student_id', $student->id)->where('year_id', $year->id)
+                    ->where('room_id', $currentRoom->id)->lockForUpdate()->get();
+                $cards = Report_card::where('student_id', $student->id)->where('year_id', $year->id)
+                    ->where('room_id', $currentRoom->id)->lockForUpdate()->get();
+                if (!$sourceRoom || ((!app(AcademicVisitRecords::class)->enabled()) && ($marks->count() > 1 || $cards->count() > 1))
+                    || $this->hasUnscopedAcademicActivity($student->id, $year->id)) {
+                    throw new \RuntimeException('student_transfer.validation.transfer_conflicting_enrollment');
+                }
+                $currentMark = $marks->first();
+                $currentReportCard = $cards->first();
+                // Until the additive visit foundation is activated, fail closed.
+                if (!app(AcademicVisitRecords::class)->enabled() && (StudentAcademicPlacement::where('student_id', $student->id)
                     ->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists()
                     || Students_mark::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists()
-                    || Report_card::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists()) {
-                    throw new \RuntimeException('student_transfer.validation.transfer_existing_assessments');
+                    || Report_card::where('student_id', $student->id)->where('year_id', $year->id)->where('room_id', $targetRoom->id)->exists())) {
+                    throw new \RuntimeException('student_transfer.validation.visit_migration_required');
                 }
                 $activePlacements = StudentAcademicPlacement::where('student_id', $student->id)
                     ->where('year_id', $year->id)
@@ -193,10 +227,12 @@ class StudentTransferService
                     ->orderByDesc('id')
                     ->lockForUpdate()
                     ->get();
-                if ($activePlacements->count() > 1) {
-                    throw new \RuntimeException('student_transfer.validation.transfer_conflicting_enrollment');
-                }
                 $currentPlacement = $activePlacements->first();
+                if ((app(AcademicVisitRecords::class)->enabled() && (!$currentPlacement || !$currentPlacement->effective_from || $currentPlacement->effective_to !== null))
+                    || $marks->count() > 1 || $cards->count() > 1 || $activePlacements->count() > 1 || ($currentPlacement && ((int)$currentPlacement->room_id !== (int)$currentRoom->id
+                    || (int)$currentPlacement->class_id !== $currentClassId))) {
+                    $currentPlacement=app(StudentPlacementReconciliation::class)->resolve($request,$currentEnrollment,$activePlacements);
+                }
 
                 if (!$currentPlacement) {
                     $currentPlacement = StudentAcademicPlacement::create([
@@ -211,13 +247,31 @@ class StudentTransferService
                     ]);
                 }
 
-                if ((int) $currentPlacement->room_id !== (int) $currentEnrollment->room_id) {
-                    throw new \RuntimeException('The active placement does not match the legacy enrollment.');
+                if ((int) $currentPlacement->room_id !== (int) $currentEnrollment->room_id
+                    || (int) $currentPlacement->class_id !== $currentClassId
+                    || !$currentPlacement->effective_from || $currentPlacement->effective_from->gt(now())
+                    || $currentPlacement->effective_to !== null) {
+                    throw new \RuntimeException('student_transfer.validation.transfer_placement_mismatch');
                 }
 
+                app(AcademicVisitRecords::class)->closeVisit($currentPlacement);
                 $currentPlacement->effective_to = now();
                 $currentPlacement->status = 'closed';
                 $currentPlacement->save();
+
+                // A sole documented older target visit can be attributed before
+                // the return creates a second interval. Never guess among visits.
+                if (app(AcademicVisitRecords::class)->enabled()) {
+                    $priorTarget = StudentAcademicPlacement::where('student_id',$student->id)
+                        ->where('year_id',$year->id)->where('room_id',$targetRoom->id)->lockForUpdate()->get();
+                    if ($priorTarget->count() === 1) {
+                        $prior = $priorTarget->first();
+                        if (in_array($prior->status,['closed','withdrawn'],true) && $prior->effective_from && $prior->effective_to
+                            && $prior->effective_to->gte($prior->effective_from) && $prior->effective_to->lte(now())) {
+                            app(AcademicVisitRecords::class)->closeVisit($prior);
+                        }
+                    }
+                }
 
                 $targetPlacement = StudentAcademicPlacement::create([
                     'student_id' => $student->id,
@@ -258,13 +312,19 @@ class StudentTransferService
                 $currentEnrollment->room_id = $targetRoom->id;
                 $currentEnrollment->save();
 
-                Students_mark::create($this->buildStudentMarkPayload($student, $targetClassId, $targetRoom->id, $year->id, $request));
+                Students_mark::create($this->buildStudentMarkPayload($student, $targetClassId, $targetRoom->id, $year->id));
                 $this->createStudentReportCard($student->id, $targetRoom->id, $year->id, $targetClassId);
             });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             report($e);
 
             $key = $e->getMessage();
+            if (!$this->bulkMode && $key === 'student_transfer.validation.reconciliation_required') {
+                return redirect()->route('student_details',$student->id)->with('warning',__($key))
+                    ->with('student_transfer_review',['student_id'=>$student->id,'class_id'=>$targetClassId,'room_id'=>$targetRoom->id]);
+            }
             return $this->warning(strpos($key, 'student_transfer.validation.') === 0
                 ? $key : 'student_transfer.notifications.transfer_failed');
         }
@@ -372,7 +432,7 @@ class StudentTransferService
         return true;
     }
 
-    private function buildStudentMarkPayload(Student $student, int $classId, int $roomId, int $yearId, Request $request): array
+    private function buildStudentMarkPayload(Student $student, int $classId, int $roomId, int $yearId): array
     {
         $lessons = Lesson::where('class_id', $classId)->get();
 
@@ -384,19 +444,19 @@ class StudentTransferService
 
         foreach ($lessons as $lesson) {
             $mark[$lesson->id] = [
-                'oral' => $request->oral,
-                'homework' => $request->homework,
-                'activities' => $request->activities,
-                'quize' => $request->quize,
-                'exam' => $request->exam,
+                'oral' => null,
+                'homework' => null,
+                'activities' => null,
+                'quize' => null,
+                'exam' => null,
             ];
 
             $mark2[$lesson->id] = [
-                'oral' => $request->oral,
-                'homework' => $request->homework,
-                'activities' => $request->activities,
-                'quize' => $request->quize,
-                'exam' => $request->exam,
+                'oral' => null,
+                'homework' => null,
+                'activities' => null,
+                'quize' => null,
+                'exam' => null,
             ];
 
             $result1[$lesson->id] = [

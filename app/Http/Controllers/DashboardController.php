@@ -2726,7 +2726,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['report_cards.adjustable' => 0]);
@@ -2738,7 +2742,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['report_cards.adjustable' => 1]);
@@ -2753,7 +2761,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['report_cards.adjustable' => 1]);
@@ -2800,7 +2812,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['students_marks.adjustable' => '2', 'report_cards.adjustable' => 2]);
@@ -2859,7 +2875,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['students_marks.adjustable' => '0']);
@@ -2873,7 +2893,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['students_marks.adjustable' => '1']);
@@ -2886,7 +2910,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['students_marks.adjustable' => '1']);
@@ -2897,7 +2925,11 @@ public function startQueueWorker()
                         ->join('room_student', 'rooms.id', '=', 'room_student.room_id')
                         ->join('students', 'students.id', '=', 'room_student.student_id')
                         ->join('students_marks', 'students.id', '=', 'students_marks.student_id')
+                        ->whereColumn('students_marks.room_id','rooms.id')->whereColumn('students_marks.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'students_marks','marks',true); })
                         ->join('report_cards', 'students.id', '=', 'report_cards.student_id')
+                        ->whereColumn('report_cards.room_id','rooms.id')->whereColumn('report_cards.year_id','rooms.year_id')
+                        ->tap(function ($q) { app(\App\Services\AcademicVisitRecords::class)->current($q,'report_cards','report',true); })
                         ->where('classes.id', '=', $request->class_id)
                         ->where('rooms.year_id', '=', $year->id)
                         ->update(['students_marks.adjustable' => '2']);
@@ -13025,9 +13057,15 @@ public function edit_coordinator_task($coordinator_id)
 
     }
      public function quize_update(Request $request){
+        $this->authorize('update_quize');
         DB::transaction(function () use ($request) {
 
         $exam = Exams2::whereKey($request->quize_id)->lockForUpdate()->firstOrFail();
+        if ((int)$exam->type !== 2) \App\Services\AssessmentResultSafety::reject('context_invalid');
+        if ((string)$exam->mark !== (string)$request->mark) {
+            if ((int)$request->lesson_id !== (int)$exam->lesson_id) \App\Services\AssessmentResultSafety::reject('context_invalid');
+            app(\App\Services\UnusedQuizMaintenance::class)->prepare($exam);
+        }
         app(\App\Services\AdminAssessmentInput::class)->validate($request, 2, $exam);
         $exam->user_id = auth()->id();
         $exam->room_id = $request->room_id;
@@ -13310,6 +13348,7 @@ public function edit_coordinator_task($coordinator_id)
         try {
             DB::transaction(function () use ($request) {
                 $exam = Exams2::whereKey($request->content_id)->lockForUpdate()->firstOrFail();
+                if ((int)$exam->type === 2) app(\App\Services\UnusedQuizMaintenance::class)->prepare($exam);
                 \App\Services\AssessmentResultSafety::assertDeletable($exam);
                 if ((int) $exam->is_file === 1 && $exam->file !== null) {
                     Storage::disk('public')->delete($exam->file);

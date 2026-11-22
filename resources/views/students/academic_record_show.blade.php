@@ -31,6 +31,39 @@
                 </div>
             </section>
 
+            @if ($yearPlacements->count() > 1)
+                <section class="sp-card sp-section">
+                    <div class="sp-card__header">
+                        <h2 class="sp-card__title">{{ __('student_history.placements') }}</h2>
+                        <p class="sp-card__meta">{{ __('student_history.placement_hint') }}</p>
+                    </div>
+                    <div class="sp-card__body sp-chip-list">
+                        @foreach ($yearPlacements as $movement)
+                            <a class="sp-badge {{ (int) $movement->id === (int) $placement->id ? 'sp-badge--success' : '' }}"
+                               href="{{ route('dashboard.student.academic_record.show', $movement->id) }}"
+                               @if ((int) $movement->id === (int) $placement->id) aria-current="page" @endif>
+                                {{ optional($movement->classRoom)->name }} / {{ optional($movement->room)->name }}
+                                ({{ $movement->status === 'active' && (int) $movement->year_id === (int) optional($currentYear)->id ? __('student_history.current') : __('student_history.previous') }})
+                                @if ($movement->interval_unverified)
+                                    <small>{{ __('student_history.observed_context') }}</small>
+                                @else
+                                    {{ optional($movement->effective_from)->format('Y-m-d') }}
+                                    @if ($movement->effective_to) / {{ $movement->effective_to->format('Y-m-d') }} @endif
+                                @endif
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            @if ($hasLegacyContext)
+                <div class="sp-alert sp-alert--warning">
+                    {{ __('student_history.legacy_context') }}
+                    <a href="{{ route('dashboard.student.academic_record.show', $placement->id) }}{{ $legacyContext ? '' : '?legacy_context=1' }}">
+                        {{ $legacyContext ? __('student_history.visit_records') : __('student_history.legacy_records') }}
+                    </a>
+                </div>
+            @endif
             @unless ($isCurrentPlacement)
                 <div class="sp-alert sp-alert--warning">
                     <i class="mdi mdi-lock-outline"></i>
@@ -128,7 +161,11 @@
                         @else
                             <div class="sp-list">
                                 @foreach ($fileRows as $row)
-                                    <div class="sp-list__item"><span class="sp-icon-box"><i class="mdi mdi-file-check-outline"></i></span><span><strong>{{ $row['subject'] }}</strong><small>{{ $row['type'] }} · {{ $row['format'] }}</small></span></div>
+                                    <div class="sp-list__item"><span class="sp-icon-box"><i class="mdi mdi-file-check-outline"></i></span><span><strong>{{ $row['subject'] }}</strong><small>{{ $row['type'] }} · {{ $row['format'] }}</small></span>
+                                        @if ($row['download'])
+                                            <a class="sp-btn sp-btn--secondary" href="{{ $row['download'] }}">{{ __('student_history.download_submission') }}</a>
+                                        @endif
+                                    </div>
                                 @endforeach
                             </div>
                         @endif

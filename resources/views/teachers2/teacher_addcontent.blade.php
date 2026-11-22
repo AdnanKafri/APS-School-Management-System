@@ -36,6 +36,7 @@
 
 @section('content')
 @php($privateLessonContent = app(\App\Services\LessonContentFeature::class)->enabled())
+@php($lessonUploadLimits = app(\App\Services\LessonContentLimits::class)->values())
 @if (session()->has('Add'))
 <script>
     window.onload = function () {
@@ -162,9 +163,9 @@
                                                    <br>
                                                    <br>
                                                 </span>
-                                                <input type="file" data-lesson-file-picker name="{{ $privateLessonContent ? 'attachments[]' : 'addition' }}" @if ($privateLessonContent) multiple data-max-files="5" @endif id="lc-addition" aria-label="رفع ملف">
+                                                <input type="file" data-lesson-file-picker name="{{ $privateLessonContent ? 'attachments[]' : 'addition' }}" @if ($privateLessonContent) multiple data-max-files="{{ $lessonUploadLimits['max_files'] }}" data-max-file-bytes="{{ $lessonUploadLimits['max_file_bytes'] }}" data-max-total-bytes="{{ $lessonUploadLimits['max_total_bytes'] }}" data-count-error="{{ app(\App\Services\LessonContentLimits::class)->message('limit_count') }}" data-file-error="{{ app(\App\Services\LessonContentLimits::class)->message('limit_file') }}" data-total-error="{{ app(\App\Services\LessonContentLimits::class)->message('limit_total') }}" @endif id="lc-addition" aria-label="رفع ملف">
                                               </label>
-                                             @if ($privateLessonContent)<small>خمسة ملفات كحد أقصى، 10 MiB لكل ملف و25 MiB للمجموع.</small>@endif
+                                             @if ($privateLessonContent)<small>{{ app(\App\Services\LessonContentLimits::class)->message('limits_help') }}</small>@endif
 
                                           </div>
                                         </div>
@@ -329,14 +330,14 @@
                                          <label style="text-align: right;">تحميل  مقطع الفيديو
                                           <span style="    display: contents;
                                             color: #8080805e;
-                                            font-size: small;">لايمكن تحميل اكثر من 50M</span>
+                                            font-size: small;">{{ app(\App\Services\LessonContentLimits::class)->message('limit_file') }}</span>
                                          </label>
                                          <label for="lc-video_in" class="drop-container">
                                             <span class="drop-title">
                                                <br>
                                                <br>
                                             </span>
-                                            <input type="file" data-lesson-file-picker name="video_in"    id="lc-video_in" aria-label="تحميل مقطع فيديو">
+                                            <input type="file" data-lesson-file-picker name="video_in" data-max-files="1" data-max-file-bytes="{{ $lessonUploadLimits['max_file_bytes'] }}" data-max-total-bytes="{{ $lessonUploadLimits['max_total_bytes'] }}" data-count-error="{{ __('lesson_content.limit_count',['count'=>1]) }}" data-file-error="{{ app(\App\Services\LessonContentLimits::class)->message('limit_file') }}" data-total-error="{{ app(\App\Services\LessonContentLimits::class)->message('limit_total') }}" id="lc-video_in" aria-label="تحميل مقطع فيديو">
                                           </label>
 
                                       </div>
@@ -494,7 +495,7 @@
 
 @endsection
 @section('js')
-<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261106-groups"></script>
+<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261118-limits"></script>
 <script src="{{ asset('teachers_2/assets/js/lesson-content-management.js') }}?v=20261106"></script>
 <script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106-selection"></script>
 

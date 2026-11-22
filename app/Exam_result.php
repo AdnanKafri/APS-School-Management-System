@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam_result extends Model
 {
+    use \App\Concerns\BelongsToAcademicVisit;
     use \App\Concerns\PreservesEarnedResult;
     public function scopeCurrentRoster($query)
     {

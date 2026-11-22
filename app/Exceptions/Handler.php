@@ -50,6 +50,13 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if ($exception instanceof \Illuminate\Http\Exceptions\PostTooLargeException
+            && $request->isMethod('POST')
+            && $request->is('SMARMANger/dashboard/teacher/classes_lessons/store_items')) {
+            $message = __('lesson_content.server_limit', [], 'ar');
+            return $request->expectsJson() ? response()->json(['message'=>$message], 413)
+                : response(e($message), 413)->header('Content-Type', 'text/html; charset=UTF-8');
+        }
         $publicComplaintSubmission = $request->isMethod('POST') && $request->routeIs(
             'website.complaints.store', 'website.staff_feedback.store.ar', 'website.staff_feedback.store.en'
         );

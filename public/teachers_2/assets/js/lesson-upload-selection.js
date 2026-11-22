@@ -21,9 +21,9 @@
                 if (input.dataset.maxFiles) {
                     var message = '';
                     var total = files.reduce(function (sum, file) { return sum + file.size; }, 0);
-                    if (files.length > 5) message = 'يمكن اختيار خمسة ملفات كحد أقصى.';
-                    else if (files.some(function (file) { return file.size > 10 * 1024 * 1024; })) message = 'حجم أحد الملفات أكبر من 10 MiB.';
-                    else if (total > 25 * 1024 * 1024) message = 'مجموع الملفات أكبر من 25 MiB.';
+                    if (files.length > Number(input.dataset.maxFiles)) message = input.dataset.countError;
+                    else if (files.some(function (file) { return file.size > Number(input.dataset.maxFileBytes); })) message = input.dataset.fileError;
+                    else if (total > Number(input.dataset.maxTotalBytes)) message = input.dataset.totalError;
                     input.setCustomValidity(message);
                     var selectedCount = input.closest('form').querySelector('[name="attachment_count"]');
                     if (selectedCount) selectedCount.value = files.length;

@@ -106,7 +106,7 @@ class TeacherAssessmentService
                 AssessmentResultSafety::assertResultContext($record, $exam);
             }
             foreach ($removed as $record) {
-                $record->delete(); // Only unused current-roster placeholders passed the guard.
+                app(UnusedAssessmentParticipation::class)->remove($record, $exam);
             }
             $notifications = collect();
             $continuity = app(AssessmentContinuityService::class)->resolve($exam, $selected);

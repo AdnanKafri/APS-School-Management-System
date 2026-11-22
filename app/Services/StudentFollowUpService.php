@@ -109,14 +109,15 @@ class StudentFollowUpService
             $this->denyStudent($teacherId, $studentId, $year, $assignment, 'eligibility_context_mismatch');
         }
 
+        $placementTime = app(CurrentStudentMembership::class)->placementTime($now);
         $placement = StudentAcademicPlacement::where('student_id', $student->id)
             ->where('year_id', $year->id)
             ->where('class_id', $assignment->class_id)
             ->where('room_id', $assignment->room_id)
             ->where('status', StudentAcademicPlacement::STATUS_ACTIVE)
-            ->where('effective_from', '<=', $now)
-            ->where(function ($query) use ($now) {
-                $query->whereNull('effective_to')->orWhere('effective_to', '>', $now);
+            ->where('effective_from', '<=', $placementTime)
+            ->where(function ($query) use ($placementTime) {
+                $query->whereNull('effective_to')->orWhere('effective_to', '>', $placementTime);
             })
             ->orderByDesc('id')
             ->first();
@@ -207,6 +208,7 @@ class StudentFollowUpService
         $this->validateContent($level, $note);
 
         return DB::transaction(function () use ($followUp, $teacherUserId, $teacherId, $level, $note, $now) {
+            Student::whereKey($followUp->student_id)->lockForUpdate()->firstOrFail();
             Year::where('current_year', 1)->lockForUpdate()->firstOrFail();
             $record = StudentFollowUp::whereKey($followUp->id)->lockForUpdate()->firstOrFail();
             $authority = app(CurrentTeacherAssignments::class);

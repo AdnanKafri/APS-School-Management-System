@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam_file extends Model
 {
+    use \App\Concerns\BelongsToAcademicVisit;
 
   protected  $table='exams_files';
 

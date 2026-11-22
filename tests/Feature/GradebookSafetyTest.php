@@ -27,6 +27,11 @@ use Tests\TestCase;
 class GradebookSafetyTest extends TestCase
 {
     use \Tests\Concerns\TimetableFixtures;
+    use \Tests\Concerns\SectionTransferHistoryChecks;
+    use \Tests\Concerns\AcademicVisitChecks;
+    use \Tests\Concerns\StudentTransferUxChecks;
+    use \Tests\Concerns\PostTransferRegressionChecks;
+    use \Tests\Concerns\PostTransferCorrectiveChecks;
     private $teacher;
     private $admin;
     private $studentId = 41;
@@ -524,6 +529,7 @@ class GradebookSafetyTest extends TestCase
         $uploaded=$this->exam(2);DB::table('exams_files')->insert(['exam_id'=>$uploaded->id,'student_id'=>41,'file'=>'keep.pdf']);
         $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
         app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Verified originals');
+        $this->result($b,0); // A used peer keeps the identity protected.
         foreach ([$marked,$uploaded,$a] as $exam) {
             $this->postJson($url,['content_id'=>$exam->id,'delete_code'=>'test-delete'])->assertStatus(422)
                 ->assertJsonFragment(['assessment'=>[__('assessment_entry.delete_protected')]]);
@@ -1479,11 +1485,12 @@ class GradebookSafetyTest extends TestCase
         $this->assertSame(0,Exam_result2::count());
     }
 
-    public function test_empty_mapped_and_placeholder_assessments_stay_protected_until_an_audited_unlink_contract_exists()
+    public function test_used_mapped_and_published_placeholder_assessments_stay_protected()
     {
         $this->activateContinuity();$this->actingAs($this->admin);
         $a=$this->exam(2);$b=$this->exam(2,['room_id'=>133]);
         app(\App\Services\AssessmentEquivalenceService::class)->verify([$a->id,$b->id],'Retain verification evidence');
+        $this->result($b,0);
         $placeholderExam=$this->exam(2);$this->result($placeholderExam,null,['status'=>0,'show_result'=>1]);
         DB::table('notifications')->insert(['student_id'=>41,'room_id'=>132,'lesson_id'=>409,'term_id'=>20,'body'=>$placeholderExam->name]);
         $before=[];foreach (['exams2','exam_result2','assessment_equivalence_members','notifications'] as $table) $before[$table]=DB::table($table)->orderBy('id')->get()->toJson();
@@ -1506,7 +1513,10 @@ class GradebookSafetyTest extends TestCase
         DB::table('room_student')->where('student_id',41)->update(['updated_at'=>now()->subHour()]);
         $before=DB::table('assessment_equivalence_members')->orderBy('id')->get()->toJson();
         $delete='/SMT/admin/class/room/exam_quize/delete';
-        $this->postJson($delete,['content_id'=>$a->id,'delete_code'=>'test-delete'])->assertStatus(422);
+        // Direct model deletion remains guarded; only the explicit Admin workflow
+        // can withdraw an unused target after checking every group member.
+        try {$a->delete();$this->fail('Direct mapped deletion accepted');}
+        catch (\Illuminate\Validation\ValidationException $e) {}
         $this->actingAs($this->teacher);
         $listener=function($row) {throw new \RuntimeException('Isolated post-save failure');};
         \Event::listen('eloquent.saved: '.Exam_result2::class,$listener);

@@ -341,6 +341,9 @@
 @endif
 
 
+@if ($transferReviewRoom)
+    @include('admin.students._transfer_review', ['enrollmentRoom'=>$student->room->first(), 'targetRoom'=>$transferReviewRoom, 'placements'=>$transferPlacements])
+@endif
 
 <div class="row">
 
@@ -2060,9 +2063,7 @@
                         value="{{ optional($student->room->first())->class_id }}">
                     <input type="hidden" name="year_id" id="years" value="{{ optional($activeYear)->id }}">
 
-                    <div class="alert alert-info text-right" style="direction: rtl;">
-                        {{ __('student_transfer.notice') }}
-                    </div>
+                    @include('admin.students._transfer_history_notice')
 
                     <div id="mydivclass">
                         <br>
@@ -2081,7 +2082,7 @@
                 </div>
                 <div class="modal-footer">
                     <a class="btn btn-default" data-dismiss="modal">إلغاء</a>
-                    <button class="btn btn-info" type="submit">حفظ</button>
+                    <button class="btn btn-info" type="submit">{{ __('student_transfer.ui.confirm_button') }}</button>
                 </div>
             </form>
         </div>

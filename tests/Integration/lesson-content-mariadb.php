@@ -100,6 +100,8 @@ try{$migration->up();$check(false,'blind migration reapply must refuse');}catch(
 $check($db::table('lesson_teacher_room_term_exam')->where('id',1)->value('addition')===$legacy->addition,'MariaDB additive up/down/up preserves legacy file');
 $check($db::table('lesson_content_attachments')->count()===0,'no legacy attachment backfill');
 config(['lesson_content.enabled'=>true,'app.debug'=>false,'queue.default'=>'sync']);
+// Preserve the original limit-profile regression cases before testing the new profile.
+config(['lesson_content.max_files'=>5,'lesson_content.max_file_bytes'=>10*1048576,'lesson_content.max_total_bytes'=>25*1048576]);
 Illuminate\Support\Facades\View::composer(['teachers2.layouts.app','students.layouts.app4'],function($view)use($project){$view->setPath($project.'/tests/Fixtures/lesson-workspace-layout.blade.php');});
 $http=function($user,$method,$url,$data=[],$files=[],$headers=[])use($app){
     if($user)Illuminate\Support\Facades\Auth::setUser($user);
@@ -122,6 +124,7 @@ $check($http($accounts[3],'GET','/SMARMANger/lesson-content/attachments/'.$file-
 require __DIR__.'/lesson-content-cases.php';
 require __DIR__.'/lesson-content-hosting-failures.php';
 require __DIR__.'/lesson-content-unicode.php';
+require __DIR__.'/quiz-upload-capacity.php';
 $result=['database'=>$database,'storage'=>$storage,'assertions'=>$assertions,'server'=>$db::selectOne('SELECT VERSION() AS v')->v];
 file_put_contents($storage.'/result.json',json_encode($result,JSON_PRETTY_PRINT));
 echo json_encode($result,JSON_PRETTY_PRINT)."\n";

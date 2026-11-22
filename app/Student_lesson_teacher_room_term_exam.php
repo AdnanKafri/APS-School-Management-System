@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student_lesson_teacher_room_term_exam extends Model
 {
+    use \App\Concerns\BelongsToAcademicVisit;
 
   protected  $table='student_lesson_teacher_room_term_exam';
 

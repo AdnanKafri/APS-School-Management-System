@@ -752,6 +752,8 @@ class studentscontroller extends Controller
 
     public function student_schedule($room_id, $student_id, $time_zone_offset)
     {
+        abort_unless((int)auth()->user()->student_id === (int)$student_id
+            && $this->studentHasCurrentMembershipForRoom($student_id,$room_id),403);
 
         $user_id = auth()->user()->id;
         $timestamp = strtotime(now());
@@ -1165,7 +1167,11 @@ class studentscontroller extends Controller
     {
         $term = $this->currentTermForActiveYear();
         $year = Year::where('current_year', '1')->first();
+        abort_unless($year && (int) auth()->user()->student_id === (int) $student_id
+            && Student::currentMembership($year->id, $room_id)->whereKey($student_id)->exists(), 403);
         $lesson = Lesson::find($lesson_id);
+        abort_unless($lesson && Room::whereKey($room_id)->where('class_id', $lesson->class_id)
+            ->where('year_id', $year->id)->exists(), 403);
         $lectures = $lesson->lectures()->where('room_id', $room_id)->where('lesson_id', $lesson_id)
             ->whereHas('term_years', function ($q) use ($year) {
         $q->where('year_id', $year->id);
@@ -1270,6 +1276,7 @@ class studentscontroller extends Controller
 
     public function lecture_extra_file($lesson_id, $student_id, $lecture_id)
     {
+        app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
         $student = Student::with('details')->find($student_id);
         $lesson = Lesson::find($lesson_id);
         $lecture = Lecture::findOrFail($lecture_id);
@@ -1292,6 +1299,7 @@ class studentscontroller extends Controller
 
     public function lecture_video($lesson_id, $student_id, $lecture_id)
     {
+        app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
         $student = Student::with('details')->find($student_id);
         $lesson = Lesson::find($lesson_id);
         $lecture = Lecture::findOrFail($lecture_id);
@@ -1314,6 +1322,7 @@ class studentscontroller extends Controller
 
     public function lecture_audio($lesson_id, $student_id, $lecture_id)
     {
+        app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
 
         $student = Student::with('details')->find($student_id);
         $lesson = Lesson::find($lesson_id);
@@ -1341,6 +1350,7 @@ class studentscontroller extends Controller
 
     public function lecture_homework($lesson_id, $student_id, $lecture_id)
     {
+        app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
         $student = Student::with('details')->find($student_id);
         $lesson = Lesson::find($lesson_id);
         $lecture = Lecture::findOrFail($lecture_id);
@@ -1362,6 +1372,7 @@ class studentscontroller extends Controller
 
     public function lecture_quize($lesson_id, $student_id, $lecture_id)
     {
+        app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
         $student = Student::with('details')->find($student_id);
         $lesson = Lesson::find($lesson_id);
         $lecture = Lecture::findOrFail($lecture_id);
@@ -1384,6 +1395,7 @@ class studentscontroller extends Controller
 
     public function lecture_exam($lesson_id, $student_id, $lecture_id)
     {
+        app(\App\Services\LessonContentAccess::class)->studentLecture($lecture_id, $lesson_id, $student_id);
         $student = Student::with('details')->find($student_id);
         $lesson = Lesson::find($lesson_id);
         $lecture = Lecture::findOrFail($lecture_id);
@@ -2351,8 +2363,11 @@ class studentscontroller extends Controller
 
     public function upload_files(Request $request)
     {
+        $newFiles=[];
+        try {
+        return DB::transaction(function () use ($request,&$newFiles) {
         $student_id = auth()->user()->student_id;
-        $student = Student::find($student_id);
+        $student = Student::whereKey($student_id)->lockForUpdate()->firstOrFail();
         $content = Lesson_teacher_room_term_exam::findOrFail($request->item_id);
         if (!$this->studentHasCurrentMembershipForRoom($student_id, $content->room_id)) {
             return redirect()->back()->with('error', 'لا يمكن تعديل ملفات سجل أكاديمي مغلق');
@@ -2377,9 +2392,12 @@ class studentscontroller extends Controller
             foreach ($request->file as $k => $file) {
 
                 $i = $i + 1;
-                $filename = $i . " - " . $student->first_name ." ". $student->last_name ." ".  $content->namehomework . '.' . $file->extension();
+                $filename = \Illuminate\Support\Str::uuid() . '.' . $file->extension();
+                $path=$file->storeAs('public/filesstudents', $filename);
+                if (!$path) throw new \RuntimeException('Student submission storage failed.');
+                $newFiles[]=$path;
                 $values[] = [
-                    'file' => $file->storeAs('public/filesstudents', $filename),
+                    'file' => $path,
                     'exam_id' => $request->item_id,
                     'student_id' => auth()->user()->student_id,
                     'type' => $content->type,
@@ -2392,18 +2410,25 @@ class studentscontroller extends Controller
             }
 
 
-            DB::table('student_lesson_teacher_room_term_exam')->insert($values);
+            foreach ($values as $value) (new Student_lesson_teacher_room_term_exam)->forceFill($value)->save();
             return redirect()->back()->with('success_uploading', 'تم ترفيع الوظيفة بنجاح');
         }
 
 
 
         return redirect()->back()->with('error', 'لا يوجد ملف  ');
-
+        });
+        } catch (\Throwable $e) {
+            foreach ($newFiles as $path) \Illuminate\Support\Facades\Storage::delete($path);
+            throw $e;
+        }
     }
     public function upload_exam_files(Request $request)
     {
-
+        $newFiles=[];
+        try {
+        return DB::transaction(function () use ($request,&$newFiles) {
+        Student::whereKey(auth()->user()->student_id)->lockForUpdate()->firstOrFail();
         $this->validate($request, [
             'file' => 'required',
             'exam_id' => 'required',
@@ -2419,29 +2444,32 @@ class studentscontroller extends Controller
         }
 
         if ($request->file && $request->hasFile('file')) {
-            $old_exam = Exam_file::where('student_id', $student_id)->where('exam_id', $request->exam_id)->delete();
-            // if (isset($old_exam)){
-            //     $old_exam->delete() ;
-            // }
-            $term = Term::where('is_active', '1')->first();
+            // Student submissions are originals, not a replaceable room cache.
             $i = 0;
             foreach ($request->file as $file) {
                 $i = $i + 1;
                 $student_uploaded_file = new Exam_file();
-                $filename = $i . " - " . $student->first_name ." ".  $student->last_name ." ".  $content->name . '.' . $file->extension();
+                $filename = \Illuminate\Support\Str::uuid() . '.' . $file->extension();
                 $student_uploaded_file->file = $file->storeAs('public/filesstudents', $filename);
+                if (!$student_uploaded_file->file) throw new \RuntimeException('Student submission storage failed.');
+                $newFiles[]=$student_uploaded_file->file;
                 $student_uploaded_file->extension   = $file->extension();
                 $student_uploaded_file->exam_id =  $request->exam_id;  // the file is coming from storage
                 $student_uploaded_file->student_id =  auth()->user()->student_id;
                 $student_uploaded_file->class_id =  $content->class_id;
                 $student_uploaded_file->room_id =  $content->room_id;
                 $student_uploaded_file->lesson_id =  $content->lesson_id;
-                $student_uploaded_file->term_id =  $term->id;
+                $student_uploaded_file->term_id =  $content->term_id;
                 $student_uploaded_file->save();
             }
             return redirect()->back()->with('success', 'تم التخزين بنجاح');
         }
         return redirect()->back()->with('error', 'لا يوجد ملف  ');
+        });
+        } catch (\Throwable $e) {
+            foreach ($newFiles as $path) \Illuminate\Support\Facades\Storage::delete($path);
+            throw $e;
+        }
     }
 
 
@@ -3151,45 +3179,36 @@ class studentscontroller extends Controller
     {
         $student = Student::findOrFail(auth()->user()->student_id);
         $currentYear = Year::where('current_year', '1')->first();
-        $placement = StudentAcademicPlacement::with(['year', 'classRoom', 'room'])
-            ->where('id', $placement_id)
-            ->where('student_id', $student->id)
-            ->firstOrFail();
+        $history = app(\App\Services\StudentAcademicHistory::class);
+        $placement = $history->placement($placement_id);
+        $yearPlacements = $history->movements($placement);
 
         abort_unless($currentYear && (int) $placement->year_id <= (int) $currentYear->id, 404);
 
         $roomId = $placement->room_id;
         $yearId = $placement->year_id;
-        $marks = Students_mark::where('student_id', $student->id)
-            ->where('year_id', $yearId)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
-        $reportCards = Report_card::where('student_id', $student->id)
-            ->where('year_id', $yearId)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
-        $examResults = Exam_result::where('user_id', $student->id)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
-        $quizResults = Exam_result2::where('user_id', $student->id)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
-        $submissions = Student_lesson_teacher_room_term_exam::where('student_id', $student->id)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
-        $examFiles = Exam_file::where('student_id', $student->id)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
-        $certificates = Certificate::where('student_id', $student->id)
-            ->where('room_id', $roomId)
-            ->orderBy('id')
-            ->get();
+        $visits = app(\App\Services\AcademicVisitRecords::class);
+        $legacyContext = $visits->enabled() && request()->boolean('legacy_context');
+        $read = function ($model) use ($visits, $placement, $legacyContext) {
+            return $visits->historical($model::withoutGlobalScope('academic_visit'), (new $model)->getTable(), $placement, $legacyContext)
+                ->orderBy('id')->get();
+        };
+        $marks = $read(Students_mark::class);
+        $reportCards = $read(Report_card::class);
+        $examResults = $read(Exam_result::class);
+        $quizResults = $read(Exam_result2::class);
+        $submissions = $read(Student_lesson_teacher_room_term_exam::class);
+        $examFiles = $read(Exam_file::class);
+        $hasLegacyContext = false;
+        if ($visits->enabled()) {
+            foreach ([Students_mark::class, Report_card::class, Exam_result::class, Exam_result2::class,
+                Student_lesson_teacher_room_term_exam::class, Exam_file::class, Certificate::class] as $model) {
+                if ($visits->historical($model::withoutGlobalScope('academic_visit'), (new $model)->getTable(), $placement, true)->exists()) {
+                    $hasLegacyContext = true;
+                }
+            }
+        }
+        $certificates = $read(Certificate::class);
 
         $decodeAcademicValue = function ($value) {
             if (!is_string($value) || trim($value) === '') {
@@ -3203,18 +3222,14 @@ class studentscontroller extends Controller
             return is_scalar($value) && $value !== '' ? (string) $value : null;
         };
 
-        $markRecord = $marks->first();
-        $markValues = $markRecord ? $decodeAcademicValue($markRecord->mark) : [];
-        $secondTermMarkValues = $markRecord ? $decodeAcademicValue($markRecord->mark2) : [];
-        $resultValues = $markRecord ? $decodeAcademicValue($markRecord->result) : [];
-        $termOneValues = $markRecord ? $decodeAcademicValue($markRecord->result1) : [];
-        $termTwoValues = $markRecord ? $decodeAcademicValue($markRecord->result2) : [];
+        $markLessonIds = [];
+        foreach ($marks as $record) {
+            foreach (['mark','mark2','result','result1','result2'] as $field) {
+                $markLessonIds = array_merge($markLessonIds,array_keys($decodeAcademicValue($record->$field)));
+            }
+        }
         $lessonIds = array_unique(array_merge(
-            array_keys($markValues),
-            array_keys($secondTermMarkValues),
-            array_keys($resultValues),
-            array_keys($termOneValues),
-            array_keys($termTwoValues),
+            $markLessonIds,
             $examResults->pluck('lesson_id')->filter()->all(),
             $quizResults->pluck('lesson_id')->filter()->all(),
             $submissions->pluck('lesson_id')->filter()->all(),
@@ -3231,6 +3246,12 @@ class studentscontroller extends Controller
             'exam' => 'امتحان',
         ];
         $markRows = [];
+        foreach ($marks as $markRecord) {
+        $markValues = $decodeAcademicValue($markRecord->mark);
+        $secondTermMarkValues = $decodeAcademicValue($markRecord->mark2);
+        $resultValues = $decodeAcademicValue($markRecord->result);
+        $termOneValues = $decodeAcademicValue($markRecord->result1);
+        $termTwoValues = $decodeAcademicValue($markRecord->result2);
         foreach ($lessonIds as $lessonId) {
             $components = [];
             foreach (['term_one' => $markValues, 'term_two' => $secondTermMarkValues] as $termLabel => $values) {
@@ -3255,6 +3276,7 @@ class studentscontroller extends Controller
             }
         }
 
+        }
         $termIds = $examResults->pluck('term_id')
             ->merge($quizResults->pluck('term_id'))
             ->merge($examResults->map(function ($item) {
@@ -3266,7 +3288,7 @@ class studentscontroller extends Controller
             ->filter()
             ->unique()
             ->values();
-        $termsById = Term_year::whereIn('id', $termIds)->get()->keyBy('id');
+        $termsById = Term_year::where('year_id',$yearId)->whereIn('id', $termIds)->get()->keyBy('id');
         $assessmentType = function ($type, $legacy) {
             if ($legacy) {
                 return in_array((string) $type, ['2', '11'], true) ? 'مذاكرة' : (in_array((string) $type, ['3', '6'], true) ? 'امتحان' : 'اختبار');
@@ -3299,15 +3321,17 @@ class studentscontroller extends Controller
             ];
         }
 
-        $fileRows = $submissions->map(function ($item) use ($lessonsById) {
+        $fileRows = $submissions->map(function ($item) use ($lessonsById, $placement) {
             return [
+                'download' => $item->file ? route('dashboard.student.academic_record.submission', [$placement->id, 'lesson', $item->id]) : null,
                 'type' => ((string) $item->type === '1' ? 'اختبار' : ((string) $item->type === '2' ? 'مذاكرة' : 'امتحان')),
                 'subject' => optional($lessonsById->get($item->lesson_id))->name ?: 'مادة غير محددة',
                 'format' => $item->extension ?: 'ملف مرفوع',
             ];
         });
-        $fileRows = $fileRows->concat($examFiles->map(function ($item) use ($lessonsById) {
+        $fileRows = $fileRows->concat($examFiles->map(function ($item) use ($lessonsById, $placement) {
             return [
+                'download' => $item->file ? route('dashboard.student.academic_record.submission', [$placement->id, 'exam', $item->id]) : null,
                 'type' => 'ملف امتحان',
                 'subject' => optional($lessonsById->get($item->lesson_id))->name ?: 'مادة غير محددة',
                 'format' => $item->extension ?: 'ملف مرفوع',
@@ -3353,7 +3377,7 @@ class studentscontroller extends Controller
         }
 
         return view('students.academic_record_show', compact(
-            'school_data', 'student', 'placement', 'currentYear', 'room', 'room_id', 'class', 'gradesVisible',
+            'school_data', 'student', 'placement', 'yearPlacements', 'currentYear', 'room', 'room_id', 'class', 'gradesVisible', 'legacyContext', 'hasLegacyContext',
             'marks', 'reportCards', 'examResults', 'quizResults',
             'submissions', 'examFiles', 'certificates', 'markRows',
             'assessmentRows', 'fileRows', 'reportRows', 'certificateRows'

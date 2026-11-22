@@ -16,7 +16,7 @@ function fixture(transferAvailable = true, limited = false) {
     const group = new Element('div'), input = new Element('input'), field = new Element('div');
     const selectedCount = {}, form = {querySelector: () => selectedCount};
     field.dataset = {filesLabel: 'الملفات المحددة:', removeLabel: 'إزالة', reselectLabel: 'أعد الاختيار'};
-    if (limited) input.dataset.maxFiles = '5';
+    if (limited) Object.assign(input.dataset, {maxFiles:'5', maxFileBytes:String(10*1024*1024), maxTotalBytes:String(25*1024*1024), countError:'5 files maximum', fileError:'10 MiB', totalError:'25 MiB'});
     input.setCustomValidity = value => input.validationMessage = value;
     input.closest = selector => selector === '.Group' ? group : selector === 'form' ? form : field;
     input.files = [];
@@ -74,9 +74,16 @@ assert.equal(f.count.textContent, 'أعد الاختيار'); assert.equal(f.inp
 
 const limits = fixture(true, true);
 limits.select(['a.txt','b.txt']); assert.equal(limits.selectedCount.value, 2); assert.equal(limits.input.validationMessage, '');
-limits.select(Array(6).fill('a.txt')); assert.match(limits.input.validationMessage, /خمسة/);
+limits.select(Array(6).fill('a.txt')); assert.match(limits.input.validationMessage, /5 files/);
 limits.select([{name:'large.txt',size:10*1024*1024+1}]); assert.match(limits.input.validationMessage, /10 MiB/);
 limits.select(Array(3).fill({name:'nine.txt',size:9*1024*1024})); assert.match(limits.input.validationMessage, /25 MiB/);
 limits.select(['valid.txt']); assert.equal(limits.input.validationMessage, ''); assert.equal(limits.selectedCount.value, 1);
 limits.list.children[0].children[1].dispatchEvent({type:'click'}); assert.equal(limits.selectedCount.value, 0);
+Object.assign(limits.input.dataset, {maxFiles:'30', maxFileBytes:String(100*1024*1024), maxTotalBytes:String(150*1024*1024), countError:'30 files maximum', fileError:'100 MiB', totalError:'150 MiB'});
+limits.select([{name:'video.mp4',size:100*1024*1024}]); assert.equal(limits.input.validationMessage,'');
+limits.select([{name:'video.mp4',size:100*1024*1024+1}]); assert.equal(limits.input.validationMessage,'100 MiB');
+limits.select([{name:'a.mp4',size:100*1024*1024},{name:'b.mp4',size:50*1024*1024}]); assert.equal(limits.input.validationMessage,'');
+limits.select([{name:'a.mp4',size:100*1024*1024},{name:'b.mp4',size:50*1024*1024+1}]); assert.equal(limits.input.validationMessage,'150 MiB');
+limits.select(Array(30).fill('a.txt')); assert.equal(limits.input.validationMessage,'');
+limits.select(Array(31).fill('a.txt')); assert.equal(limits.input.validationMessage,'30 files maximum');
 console.log('PASS: previews, long/mixed/duplicate names, safe text, removal, fallback, pageshow, upload limits and submitted file count.');

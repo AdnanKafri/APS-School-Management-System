@@ -1,5 +1,7 @@
 <?php
 return [
+    'quiz_used'=>'This quiz has retained results, attempts, publication, files or academic links. Its maximum cannot be changed and it cannot be deleted. No data changed.',
+    'quiz_history'=>'This quiz is outside the current academic year/term or its section context needs review. Its maximum cannot be changed and it cannot be deleted.',
     'upcoming'=>'Mark entry has not started yet.', 'ended'=>'The mark-entry window has ended. Contact Admin.',
     'unknown'=>'Mark entry is unavailable because assessment dates are missing or invalid.',
     'ongoing'=>'Mark entry is available within the current window.',
@@ -31,7 +33,7 @@ return [
     'delete_required'=>'Enter your account deletion confirmation code.',
     'delete_invalid'=>'The deletion confirmation code is incorrect or unavailable for this account. Contact the account administrator.',
     'delete_target'=>'The assessment could not be identified. Close and reopen the dialog.',
-    'delete_protected'=>'This assessment has results, student files or verified equivalent-assessment links and cannot be deleted. Keep it and contact Admin if necessary; no data was deleted.',
+    'delete_protected'=>'This assessment has retained results, attempts, publication, student files or protected academic links and cannot be deleted. No data was deleted.',
     'confirm_delete'=>'Confirm deletion', 'session_expired'=>'Your session or request token expired. Refresh, sign in if necessary, and retry.',
     'permission_denied'=>'You are not authorized to perform this action.', 'not_found'=>'This assessment is unavailable. Refresh the page.',
     'class'=>'Class', 'section'=>'Section', 'context_title'=>'Mark-entry context',

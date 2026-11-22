@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Report_card extends Model
 {
+    use \App\Concerns\BelongsToAcademicVisit;
 
     protected $table='report_cards';
 

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam_result2 extends Model
 {
+    use \App\Concerns\BelongsToAcademicVisit;
     use \App\Concerns\PreservesEarnedResult;
     protected static function boot()
     {
