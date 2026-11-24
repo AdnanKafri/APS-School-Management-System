@@ -84,6 +84,21 @@ class StudentPlacementReconciliation
             'manual',['basis'=>'explicit_authorized_admin_confirmation']);
     }
 
+    /** Internal academic writer only; manual Admin reconciliation remains separately authorized. */
+    public function observeAcademicWrite($enrollment, $placements, array $evidence)
+    {
+        if (DB::transactionLevel() < 1 || !auth()->id()
+            || ($evidence['basis'] ?? null) !== 'verified_legacy_current_projection'
+            || empty($evidence['context']['legacy_projection'])
+            || $placements->count() !== 1 || (int)$placements->first()->room_id === (int)$enrollment->room_id
+            || $this->reliableEvidence($enrollment, $placements) === null) {
+            AssessmentResultSafety::reject('placement_inconsistent');
+        }
+        return $this->observe($enrollment, $placements,
+            'Current membership observed during authorized academic creation; earlier transition date remains unknown.',
+            'academic_write', $evidence);
+    }
+
     private function observe($enrollment, $placements, $reason, $mode, array $evidence)
     {
         $now=now();
@@ -102,7 +117,7 @@ class StudentPlacementReconciliation
         $room=\App\Room::whereKey($enrollment->room_id)->where('year_id',$enrollment->year_id)->firstOrFail();
         $observed=StudentAcademicPlacement::create(['student_id'=>$enrollment->student_id,'year_id'=>$enrollment->year_id,
             'class_id'=>$room->class_id,'room_id'=>$room->id,'status'=>'active','effective_from'=>$now,
-            'reason'=>'verified_current_observation','action_source'=>$mode==='manual'?'admin_explicit_reconciliation':'admin_verified_reconciliation','actioned_by'=>auth()->id()]);
+            'reason'=>'verified_current_observation','action_source'=>$mode==='academic_write'?'academic_write_observation':($mode==='manual'?'admin_explicit_reconciliation':'admin_verified_reconciliation'),'actioned_by'=>auth()->id()]);
         DB::table('student_placement_reconciliations')->insert(['student_id'=>$enrollment->student_id,'year_id'=>$enrollment->year_id,
             'actioned_by'=>auth()->id(),'from_placement_id'=>$placements->count()===1?$placements->first()->id:null,
             'observed_placement_id'=>$observed->id,'observed_room_id'=>$room->id,'reason'=>$reason,

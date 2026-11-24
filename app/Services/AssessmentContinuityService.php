@@ -108,7 +108,7 @@ class AssessmentContinuityService
                 }
                 $carried = (int) $examId !== (int) $target->id
                     || ($visitLink && (int)$visitLink->placement_id !== (int)$current['placement_id'])
-                    || ($recordedAt && (string) $recordedAt < $current['effective_from']);
+                    || (!$visitLink && $recordedAt && (string) $recordedAt < $current['effective_from']);
                 $earned[] = array_merge($state, [
                     'state' => $carried ? 'carried' : 'current', 'value' => $value,
                     'result_id' => $row->id, 'exam_id' => $definition->id,
@@ -125,13 +125,16 @@ class AssessmentContinuityService
     public function assertWritable(Exams2 $exam, $studentId)
     {
         foreach (Exam_result2::where('exam_id',$exam->id)->where('user_id',$studentId)->get() as $original) {
-            if (in_array(app(AcademicVisitRecords::class)->resultState($original),['carried','conflict'],true)) {
-                AssessmentResultSafety::reject('carried_read_only');
+            $visitState = app(AcademicVisitRecords::class)->resultState($original);
+            if ($visitState === 'conflict') AssessmentResultSafety::reject('ambiguous_result');
+            if ($visitState === 'carried') {
+                AssessmentResultSafety::reject(AssessmentResultSafety::hasEarnedData($original) ? 'carried_read_only' : 'historical_record_read_only');
             }
         }
-        $state = $this->resolve($exam, [$studentId])[$studentId]['state'] ?? null;
+        $projection = $this->resolve($exam, [$studentId])[$studentId] ?? [];
+        $state = $projection['state'] ?? null;
         if ($state === 'carried') AssessmentResultSafety::reject('carried_read_only');
-        if ($state === 'conflict') AssessmentResultSafety::reject('ambiguous_result');
+        if ($state === 'conflict') AssessmentResultSafety::reject(($projection['reason'] ?? null) === 'placement_context' ? 'placement_inconsistent' : 'ambiguous_result');
     }
 
     private function originalVisitResults(Exams2 $exam, $studentIds)

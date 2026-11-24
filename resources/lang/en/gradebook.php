@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'historical_record_read_only' => 'This participation record belongs to a closed academic visit and cannot be reused for a new result. Please ask the administration to review it.',
+    'placement_inconsistent' => 'The current enrollment and academic history could not be safely matched. No new academic record was saved. Please ask the administration to review the enrollment.',
     'carried' => 'Mark retained from a previous section',
     'carried_read_only' => 'Read only: the original mark is preserved and cannot be duplicated here.',
     'equivalence' => 'Verify equivalent assessments',

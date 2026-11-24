@@ -64,7 +64,10 @@ class AcademicVisitRecords
             ->when($record->year_id !== null, function($q)use($record){$q->where('year_id',$record->year_id);})->get();
         if ($placements->count() > 1) AssessmentResultSafety::reject('ambiguous_result');
         if ($placements->isEmpty() && StudentAcademicPlacement::where('student_id',$student)
-            ->where('year_id',$room->year_id)->exists()) AssessmentResultSafety::reject('carried_read_only');
+            ->where('year_id',$room->year_id)->exists()) {
+            app(AcademicWriteObservation::class)->forCreation($record, $room);
+            return;
+        }
         if ($placements->count() === 1) $this->bind($record,$placements->first(),'created_in_active_visit');
     }
 
