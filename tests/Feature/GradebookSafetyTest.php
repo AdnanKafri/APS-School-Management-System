@@ -33,6 +33,7 @@ class GradebookSafetyTest extends TestCase
     use \Tests\Concerns\PostTransferRegressionChecks;
     use \Tests\Concerns\PostTransferCorrectiveChecks;
     use \Tests\Concerns\AcademicWriteObservationChecks;
+    use \Tests\Concerns\TeacherMediaUploadChecks;
     private $teacher;
     private $admin;
     private $studentId = 41;

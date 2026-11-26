@@ -2198,22 +2198,6 @@ class TeacherController_New extends Controller
                 return redirect()->back()->with('message', 'محتوى الفيديو فارغ يرجى تعبئة البيانات من جديد');
             }
             if ($request->video_in && $request->hasFile('video_in')) {
-                 $uploadPolicy = app(\App\Services\LessonContentLimits::class);
-                 $uploadLimits = $uploadPolicy->values();
-                 $this->validate($request, [
-                     'video_in' => ['required','mimetypes:video/mp4,video/avi,video/mpeg',
-                         function ($attribute, $file, $fail) use ($uploadPolicy, $uploadLimits) {
-                             if ($file->getSize() <= 0 || $file->getSize() > $uploadLimits['max_file_bytes']) $fail($uploadPolicy->message('limit_file'));
-                             if ($file->getSize() > $uploadLimits['max_total_bytes']) $fail($uploadPolicy->message('limit_total'));
-                         }]
-                ], [
-                    'file.required' => 'يرجى  ترفيع  بالشروط المحددة  ',
-
-                ]);
-                 if( !$request->video_in->extension()){
-                     return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
-                }
-                $item->video = $request->video_in->store('filesteachers', 'public');
                 $item->type_video = '0';
 
                 if ($request->name_video == null) {
@@ -2221,7 +2205,6 @@ class TeacherController_New extends Controller
                 }
 
                 $item->name_video = $request->name_video;
-                $item->extension =  $request->video_in->extension();
             }
 
 
@@ -2235,7 +2218,8 @@ class TeacherController_New extends Controller
                 $item->type_video = '1';
             }
 
-            $item->save();
+            if ($request->file('video_in') !== null) app(\App\Services\TeacherLessonMedia::class)->save($item,'video',$request,'video_in','video');
+            else $item->save();
             if($lecture->lecture_time < $now ) {
               $room = Room::find($request->room_id);
             $students = $room->operationalStudents;
@@ -2283,17 +2267,11 @@ class TeacherController_New extends Controller
             }
 
             if ($request->audio_file && $request->hasFile('audio_file')) {
-                $item->audio_file = $request->audio_file->store('filesteachers', 'public');
                 $item->type_voice = '0';
                 if ($request->name_audio == null) {
                     return redirect()->back()->with('message', 'اسم مقطع الصوت فارغ يرجى تعبئة البيانات من جديد');
                 }
-                if( !$request->audio_file->extension()){
-                     return redirect()->back()->with('message', 'هناك خطأ بالملف المدخل ');
-                }
                 $item->name_audio = $request->name_audio;
-
-                $item->extension =  $request->audio_file->extension();
             }
 
 
@@ -2307,7 +2285,8 @@ class TeacherController_New extends Controller
                 $item->type_voice = '1';
             }
 
-            $item->save();
+            if ($request->file('audio_file') !== null) app(\App\Services\TeacherLessonMedia::class)->save($item,'audio_file',$request,'audio_file','audio');
+            else $item->save();
             if($lecture->lecture_time < $now ) {
              $room = Room::find($request->room_id);
             $students = $room->operationalStudents;
@@ -3363,7 +3342,6 @@ public function audio_update($file_id, Request $request)
     }
     $item->name_audio = $request->name_audio;
         if ($request->audio_file && $request->hasFile('audio_file')) {
-            $item->audio_file = $request->audio_file->store('filesteachers', 'public');
             $item->type_voice = '0';
 
                 if ($request->name_audio == null){
@@ -3385,7 +3363,8 @@ public function audio_update($file_id, Request $request)
 
 
 
-    $item->save();
+    if ($request->file('audio_file') !== null) app(\App\Services\TeacherLessonMedia::class)->save($item,'audio_file',$request,'audio_file','audio');
+    else $item->save();
     return redirect()->back()->with('success', '! تمت العملية بنجاح ');
 }
 public function correct_exam($exam_id, $student_id)
@@ -3485,14 +3464,6 @@ public function video_update($file_id, Request $request)
                     return redirect()->back()->with('message', 'المحتوى الاسم  فارغ يرجى اعادة تعبئة البيانات من جديد');
                 }
         if ($request->video && $request->hasFile('video')) {
-             $this->validate($request, [
-                     'video' => 'required|mimetypes:video/mp4,video/avi,video/mpeg|max:50000'
-                ], [
-                    'file.required' => 'يرجى  ترفيع  بالشروط المحددة  ',
-
-                ]);
-            Storage::disk('public')->delete($item->video);
-            $item->video = $request->video->store('filesteachers', 'public');
             $item->type_video = '0';
 
 
@@ -3514,7 +3485,8 @@ public function video_update($file_id, Request $request)
 
 
 
-    $item->save();
+    if ($request->file('video') !== null) app(\App\Services\TeacherLessonMedia::class)->save($item,'video',$request,'video','video');
+    else $item->save();
     return redirect()->back()->with('success', '! تمت العملية بنجاح ');
 }
 

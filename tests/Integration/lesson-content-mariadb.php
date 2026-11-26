@@ -101,6 +101,9 @@ $check($db::table('lesson_teacher_room_term_exam')->where('id',1)->value('additi
 $check($db::table('lesson_content_attachments')->count()===0,'no legacy attachment backfill');
 config(['lesson_content.enabled'=>true,'app.debug'=>false,'queue.default'=>'sync']);
 // Preserve the original limit-profile regression cases before testing the new profile.
+app()->instance(App\Services\LessonContentLimits::class,new class extends App\Services\LessonContentLimits {
+    protected function runtime() { return ['file'=>2147483648,'post'=>2147483648,'count'=>20]; }
+});
 config(['lesson_content.max_files'=>5,'lesson_content.max_file_bytes'=>10*1048576,'lesson_content.max_total_bytes'=>25*1048576]);
 Illuminate\Support\Facades\View::composer(['teachers2.layouts.app','students.layouts.app4'],function($view)use($project){$view->setPath($project.'/tests/Fixtures/lesson-workspace-layout.blade.php');});
 $http=function($user,$method,$url,$data=[],$files=[],$headers=[])use($app){

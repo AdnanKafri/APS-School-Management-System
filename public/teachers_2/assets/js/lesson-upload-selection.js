@@ -1,10 +1,29 @@
 (function () {
     'use strict';
+    function validate(input) {
+        var files = Array.prototype.slice.call(input.files || []);
+        if (input.dataset.maxFiles) {
+            var message = '';
+            var total = files.reduce(function (sum, file) { return sum + file.size; }, 0);
+            if (files.length > Number(input.dataset.maxFiles)) message = input.dataset.countError;
+            else if (files.some(function (file) { return file.size <= 0 || file.size > Number(input.dataset.maxFileBytes); })) message = input.dataset.fileError;
+            else if (total > Number(input.dataset.maxTotalBytes)) message = input.dataset.totalError;
+            input.setCustomValidity(message);
+            var selectedCount = input.closest('form').querySelector('[name="attachment_count"]');
+            if (selectedCount) selectedCount.value = files.length;
+        }
+        return files;
+    }
     function initialize() {
         document.querySelectorAll('[data-lesson-file-picker]').forEach(function (input) {
             var field = input.closest('.lc-upload-field');
             var group = input.closest('.Group');
-            if (!field || !group) return;
+            if (!field || !group) {
+                input.addEventListener('change', function () { validate(input); });
+                window.addEventListener('pageshow', function () { validate(input); });
+                validate(input);
+                return;
+            }
             var preview = document.createElement('div');
             preview.className = 'lc-file-selection';
             var count = document.createElement('output');
@@ -17,17 +36,7 @@
             group.appendChild(preview);
 
             function render() {
-                var files = Array.prototype.slice.call(input.files || []);
-                if (input.dataset.maxFiles) {
-                    var message = '';
-                    var total = files.reduce(function (sum, file) { return sum + file.size; }, 0);
-                    if (files.length > Number(input.dataset.maxFiles)) message = input.dataset.countError;
-                    else if (files.some(function (file) { return file.size > Number(input.dataset.maxFileBytes); })) message = input.dataset.fileError;
-                    else if (total > Number(input.dataset.maxTotalBytes)) message = input.dataset.totalError;
-                    input.setCustomValidity(message);
-                    var selectedCount = input.closest('form').querySelector('[name="attachment_count"]');
-                    if (selectedCount) selectedCount.value = files.length;
-                }
+                var files = validate(input);
                 preview.hidden = files.length === 0;
                 count.textContent = field.dataset.filesLabel + ' ' + files.length;
                 while (list.firstChild) list.removeChild(list.firstChild);

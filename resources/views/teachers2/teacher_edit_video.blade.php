@@ -232,13 +232,13 @@
                                         تحميل الفيديو 
                                         <span style="    display: contents;
                                             color: #8080805e;
-                                            font-size: small;">لايمكن تحميل اكثر من 50M</span></label>
+                                            font-size: small;">{{ app(\App\Services\LessonContentLimits::class)->message('limit_file') }}</span></label>
                                         <label for="file-input" class="drop-container">
                                             <span class="drop-title">
                                                 <br>
                                                 <br>
                                             </span>
-                                            <input type="file" id="file-input" name="video" value="{{$file->video}}" accept="video/*">
+                                            <input type="file" data-lesson-file-picker @include('teachers2.partials.lesson_media_limits') id="file-input" name="video" accept="video/*">
                                         </label>
                                         </a>
                                     </div>
@@ -315,4 +315,8 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('js')
+<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261125-limits"></script>
 @endsection

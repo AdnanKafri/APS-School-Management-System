@@ -34,8 +34,9 @@ class LessonContentInput
         if (!empty($data['addition_link']) && !in_array(strtolower(parse_url($data['addition_link'], PHP_URL_SCHEME)), ['http','https'], true)) {
             self::reject('يرجى إدخال رابط يبدأ بـ http أو https.', 'addition_link');
         }
-        if ((int)$request->server('CONTENT_LENGTH', 0) > $limits['max_total_bytes'] + 1048576) self::reject($policy->message('limit_request'));
+        if ((int)$request->server('CONTENT_LENGTH', 0) > $policy->requestBytes()) self::reject($policy->message('limit_request'));
         $all = $request->all();
+        if (array_diff(array_keys($request->allFiles()),['attachments','addition'])) self::reject('يرجى استخدام حقل ملفات واحد.');
         if (array_key_exists('attachments', $all) && array_key_exists('addition', $all)) self::reject('يرجى استخدام حقل ملفات واحد.');
         $files = $all['attachments'] ?? (isset($all['addition']) ? [$all['addition']] : []);
         if (!is_array($files) || count($files) > $limits['max_files'] || array_keys($files) !== range(0, count($files)-1) && $files !== []) {
@@ -57,45 +58,12 @@ class LessonContentInput
         foreach ($files as $file) {
             $name = $file->getClientOriginalName();
             if (!preg_match('/^.{1,255}$/us', $name) || preg_match('~[\x00-\x1f\x7f/\\\\]~u', $name)) self::reject('اسم أحد الملفات غير صالح أو أطول من 255 حرفاً.');
-            [$mime, $extension] = $this->type($file);
-            $metadata[] = ['original_name'=>$name, 'mime_type'=>$mime, 'extension'=>$extension,
+            $type = app(LessonContentFileTypes::class)->inspect($file);
+            $metadata[] = ['original_name'=>$name, 'mime_type'=>$type['mime_type'], 'extension'=>$type['extension'],
                 'size_bytes'=>$file->getSize(), 'sha256'=>hash_file('sha256', $file->getRealPath())];
         }
         return ['title'=>$data['name_addition'], 'note'=>$data['note'] ?? null, 'link'=>$data['addition_link'] ?? null,
             'token'=>$data['upload_token'] ?? (string)Str::uuid(), 'files'=>array_values($files), 'metadata'=>$metadata];
     }
 
-    private function type(UploadedFile $file)
-    {
-        $extension = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
-        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file->getRealPath());
-        $types = [
-            'pdf'=>['application/pdf'], 'jpg'=>['image/jpeg'], 'jpeg'=>['image/jpeg'],
-            'png'=>['image/png'], 'gif'=>['image/gif'], 'webp'=>['image/webp'],
-            'txt'=>['text/plain'], 'csv'=>['text/plain','text/csv','application/csv'], 'sha256sum'=>['text/plain'],
-            'mp3'=>['audio/mpeg'], 'mp4'=>['video/mp4'], 'mov'=>['video/quicktime'],
-            'avi'=>['video/x-msvideo','video/avi'], 'mpeg'=>['video/mpeg'],
-            'docx'=>['application/zip','application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-            'xlsx'=>['application/zip','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-            'pptx'=>['application/zip','application/vnd.openxmlformats-officedocument.presentationml.presentation'],
-        ];
-        if (!isset($types[$extension]) || !in_array($mime, $types[$extension], true)) self::reject('نوع أحد الملفات غير مسموح أو لا يطابق محتواه.');
-        if (in_array($extension, ['docx','xlsx','pptx'], true)) {
-            $zip = new \ZipArchive();
-            if ($zip->open($file->getRealPath()) !== true) self::reject('ملف Office غير صالح.');
-            try {
-                $directory = ['docx'=>'word/','xlsx'=>'xl/','pptx'=>'ppt/'][$extension];
-                if ($zip->numFiles > 2000 || $zip->locateName('[Content_Types].xml') === false) self::reject('ملف Office غير صالح.');
-                $bytes = 0; $found = false;
-                for ($i=0;$i<$zip->numFiles;$i++) {
-                    $stat = $zip->statIndex($i); $entry = $stat['name']; $bytes += $stat['size'];
-                    if (strpos($entry, $directory) === 0) $found = true;
-                    if ($bytes > 100 * 1024 * 1024 || preg_match('~(^/|(^|/)\.\.(/|$)|\\\\|vbaproject|\.exe$|\.js$)~i', $entry)) self::reject('ملف Office يحتوي على محتوى غير مسموح.');
-                }
-                if (!$found) self::reject('امتداد ملف Office لا يطابق محتواه.');
-            } finally { $zip->close(); }
-            $mime = $types[$extension][1];
-        }
-        return [$mime, $extension === 'sha256sum' ? 'txt' : $extension];
-    }
 }

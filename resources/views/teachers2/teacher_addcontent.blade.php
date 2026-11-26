@@ -263,7 +263,7 @@
                                                    <br>
                                                    <br>
                                                 </span>
-                                                <input type="file" data-lesson-file-picker name="audio_file"    id="lc-audio_file" aria-label="تحميل مقطع صوتي">
+                                                <input type="file" data-lesson-file-picker name="audio_file" @include('teachers2.partials.lesson_media_limits') id="lc-audio_file" accept="audio/*" aria-label="تحميل مقطع صوتي">
                                               </label>
 
                                           </div>
@@ -495,7 +495,7 @@
 
 @endsection
 @section('js')
-<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261118-limits"></script>
+<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261125-limits"></script>
 <script src="{{ asset('teachers_2/assets/js/lesson-content-management.js') }}?v=20261106"></script>
 <script src="{{ asset('assets/js/lesson-workspace.js') }}?v=20261106-selection"></script>
 

@@ -1,5 +1,6 @@
 <?php
 return [
+    'invalid_type'=>'A file type is not allowed or does not match its contents. Use protected Files uploads for source files and documents.',
     'limit_count'=>'Upload at most :count files.',
     'limit_file'=>'Each file must be nonempty and no larger than :file MiB.',
     'limit_total'=>'The combined files must not exceed :total MiB.',

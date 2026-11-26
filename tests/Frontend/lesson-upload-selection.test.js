@@ -12,13 +12,13 @@ class Element {
     dispatchEvent(event) { if (this.events[event.type]) this.events[event.type](event); }
     focus() { this.focused = true; }
 }
-function fixture(transferAvailable = true, limited = false) {
+function fixture(transferAvailable = true, limited = false, standalone = false) {
     const group = new Element('div'), input = new Element('input'), field = new Element('div');
     const selectedCount = {}, form = {querySelector: () => selectedCount};
     field.dataset = {filesLabel: 'الملفات المحددة:', removeLabel: 'إزالة', reselectLabel: 'أعد الاختيار'};
     if (limited) Object.assign(input.dataset, {maxFiles:'5', maxFileBytes:String(10*1024*1024), maxTotalBytes:String(25*1024*1024), countError:'5 files maximum', fileError:'10 MiB', totalError:'25 MiB'});
     input.setCustomValidity = value => input.validationMessage = value;
-    input.closest = selector => selector === '.Group' ? group : selector === 'form' ? form : field;
+    input.closest = selector => selector === 'form' ? form : standalone ? null : selector === '.Group' ? group : field;
     input.files = [];
     Object.defineProperty(input, 'value', {set(value) { assert.equal(value, ''); this.files = []; }});
     const listeners = {};
@@ -30,7 +30,7 @@ function fixture(transferAvailable = true, limited = false) {
         window: {DataTransfer: transferAvailable ? Transfer : undefined, addEventListener: (key, callback) => listeners[key] = callback},
         Event: class { constructor(type) { this.type = type; } }
     });
-    const preview = group.children[0], count = preview.children[0], list = preview.children[1];
+    const preview = group.children[0], count = preview && preview.children[0], list = preview && preview.children[1];
     function select(names) { input.files = names.map(name => typeof name === 'string' ? {name, size: 1} : name); input.dispatchEvent({type: 'change'}); }
     return {input, group, preview, count, list, select, listeners, selectedCount};
 }
@@ -87,3 +87,18 @@ limits.select([{name:'a.mp4',size:100*1024*1024},{name:'b.mp4',size:50*1024*1024
 limits.select(Array(30).fill('a.txt')); assert.equal(limits.input.validationMessage,'');
 limits.select(Array(31).fill('a.txt')); assert.equal(limits.input.validationMessage,'30 files maximum');
 console.log('PASS: previews, long/mixed/duplicate names, safe text, removal, fallback, pageshow, upload limits and submitted file count.');
+Object.assign(limits.input.dataset, {maxFiles:'20',maxFileBytes:String(2040*1024*1024),maxTotalBytes:String(2040*1024*1024),countError:'20 files maximum',fileError:'2040 MiB',totalError:'2040 MiB combined'});
+limits.select([{name:'large.mp4',size:2040*1024*1024}]); assert.equal(limits.input.validationMessage,'');
+limits.select([{name:'large.mp4',size:2040*1024*1024+1}]); assert.equal(limits.input.validationMessage,'2040 MiB');
+limits.select([{name:'a.mp4',size:1020*1024*1024},{name:'b.mp4',size:1020*1024*1024+1}]); assert.equal(limits.input.validationMessage,'2040 MiB combined');
+limits.select(Array(20).fill('a.txt')); assert.equal(limits.input.validationMessage,'');
+limits.select(Array(21).fill('a.txt')); assert.equal(limits.input.validationMessage,'20 files maximum');
+
+const edit = fixture(true, true, true);
+assert.equal(edit.group.children.length, 0);
+edit.select([{name:'too-large.mp4',size:11*1024*1024}]);
+assert.equal(edit.input.validationMessage, '10 MiB');
+edit.select([{name:'valid.mp4',size:1024}]);
+assert.equal(edit.input.validationMessage, '');
+edit.input.files = [{name:'empty.mp4',size:0}]; edit.listeners.pageshow();
+assert.equal(edit.input.validationMessage, '10 MiB');

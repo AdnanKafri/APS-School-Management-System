@@ -70,7 +70,7 @@ $assertStatus($create([$upload()],$maxNote),422,'2001 character note rejected');
 
 $before=$snapshot();
 foreach([
-    'unsupported extension'=>[$upload('bad.php','<?php echo 1;')],
+    'unsupported extension'=>[$upload('bad.exe',"MZ\0executable fixture")],
     'MIME spoof'=>[$upload('fake.pdf','<html>not PDF</html>')],
     'empty file'=>[$upload('empty.txt','')],
     'too many files'=>array_map(function()use($upload){return $upload();},range(1,6)),

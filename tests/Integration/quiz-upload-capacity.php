@@ -99,17 +99,17 @@ foreach (['edit','delete'] as $operation) {
         && $membersBefore===$db::table('assessment_equivalence_members')->orderBy('id')->get()->toJson(),'transaction restores quiz, scaffold and equivalence on '.$operation.' failure');
 }
 
-// Current defaults: 30 files / 100 MiB each / 150 MiB aggregate.
-config(['lesson_content.max_files'=>30,'lesson_content.max_file_bytes'=>100*1048576,'lesson_content.max_total_bytes'=>150*1048576]);
-$check(app(App\Services\LessonContentLimits::class)->values()===['max_files'=>30,'max_file_bytes'=>104857600,'max_total_bytes'=>157286400],'one upload policy resolves exact byte limits');
+// Smaller explicit deployment overrides remain supported; the file-count cap is now 20.
+config(['lesson_content.max_files'=>20,'lesson_content.max_file_bytes'=>100*1048576,'lesson_content.max_total_bytes'=>150*1048576]);
+$check(app(App\Services\LessonContentLimits::class)->values()===['max_files'=>20,'max_file_bytes'=>104857600,'max_total_bytes'=>157286400],'one upload policy resolves exact byte limits');
 $sizedUpload=function($bytes,$name='boundary.txt')use($storage) {
     $path=$storage.'/uploads/'.bin2hex(random_bytes(8));$handle=fopen($path,'w+b');
     $block=str_repeat('x',1048576);while($bytes>0){$part=min($bytes,1048576);fwrite($handle,substr($block,0,$part));$bytes-=$part;}fclose($handle);
     return new Illuminate\Http\UploadedFile($path,$name,null,UPLOAD_ERR_OK,true);
 };
-$before=$snapshot();$files=[];for($i=0;$i<30;$i++)$files[]=$upload();
-$assertStatus($create($files),200,'30 files accepted');
-$files[]=$upload();$assertStatus($create($files),422,'31 files rejected');
+$before=$snapshot();$files=[];for($i=0;$i<20;$i++)$files[]=$upload();
+$assertStatus($create($files),200,'20 files accepted');
+$files[]=$upload();$assertStatus($create($files),422,'21 files rejected');
 $assertStatus($create([$sizedUpload(100*1048576)]),200,'exact 100 MiB accepted');
 $before=$snapshot();$assertStatus($create([$sizedUpload(100*1048576+1)]),422,'100 MiB plus one byte rejected');$check($snapshot()===$before,'over-size rejection has no side effects');
 $assertStatus($create([$sizedUpload(100*1048576),$sizedUpload(50*1048576)]),200,'exact 150 MiB aggregate accepted');

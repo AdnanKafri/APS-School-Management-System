@@ -216,7 +216,8 @@
                                                 <br>
                                                 <br>
                                             </span>
-                                            <input type="file" id="file-input" name="audio_file" value="{{ $file->audio_file }}"  accept="audio/*" >
+                                            <input type="file" data-lesson-file-picker @include('teachers2.partials.lesson_media_limits') id="file-input" name="audio_file" accept="audio/*">
+                                            <small>{{ app(\App\Services\LessonContentLimits::class)->message('limit_file') }}</small>
                                         </label>
                                         </a>
                                     </div>
@@ -234,4 +235,8 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('js')
+<script src="{{ asset('teachers_2/assets/js/lesson-upload-selection.js') }}?v=20261125-limits"></script>
 @endsection

@@ -51,9 +51,12 @@ class LessonContentController extends Controller
             'Content-Type'=>$file->mime_type,'Cache-Control'=>'private, no-store, max-age=0',
             'X-Content-Type-Options'=>'nosniff','Content-Security-Policy'=>"sandbox; default-src 'none'",
         ]);
-        $video = in_array($file->mime_type, ['video/mp4','video/quicktime','video/x-msvideo','video/avi','video/mpeg'], true);
-        if ($video) $response->headers->set('Content-Security-Policy', "sandbox; default-src 'none'; media-src 'self'");
-        $inline = $mode === 'view' && ($video || in_array($file->mime_type,['application/pdf','image/jpeg','image/png','image/gif','image/webp'],true));
+        $safePreview = app(\App\Services\LessonContentFileTypes::class)->inline($file->mime_type, $file->original_name);
+        $media = $safePreview && (preg_match('~^(video|audio)/~', $file->mime_type)
+            || in_array($file->mime_type, ['application/ogg','application/x-matroska','application/vnd.ms-asf'], true));
+        if ($media) $response->headers->set('Content-Security-Policy', "sandbox; default-src 'none'; media-src 'self'");
+        $inline = $mode === 'view' && $safePreview;
+        if (!$safePreview && substr($file->path,-4) === '.bin') $response->headers->set('Content-Type','application/octet-stream');
         $response->setContentDisposition($inline?'inline':'attachment',$file->original_name,'attachment-'.(int)$file->id);
         return $response;
     }
